@@ -1118,9 +1118,12 @@
                 </div>
 
                 <div class="example-urls">
-                    <span style="font-size: 12px; color: var(--text-light);">Ejemplo:</span>
+                    <span style="font-size: 12px; color: var(--text-light);">Ejemplos:</span>
                     <span class="example-url" onclick="setExampleUrl('https://www.tiktok.com/@usuario/video/1234567890')">
                         https://www.tiktok.com/@usuario/video/1234567890
+                    </span>
+                    <span class="example-url" onclick="setExampleUrl('https://vt.tiktok.com/ZS5bVHxhG')">
+                        https://vt.tiktok.com/xxxxx
                     </span>
                 </div>
 
@@ -1422,9 +1425,11 @@
             if (url.includes('www.tiktok.com') && !url.includes('x2tiktok.com')) {
                 return url.replace('www.tiktok.com', 'www.x2tiktok.com');
             }
-            // If already has x2, keep it; if it's vm.tiktok.com, convert to x2tiktok.com
-            if (url.includes('vm.tiktok.com')) {
-                return url.replace('vm.tiktok.com', 'www.x2tiktok.com');
+            // If already has x2, keep it; if it's vm.tiktok.com or vt.tiktok.com, keep original (short URLs need redirect)
+            // No aplicar x2 a URLs cortas porque necesitan seguir el redirect primero
+            if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
+                // Para URLs cortas, mantenerlas como están - el backend manejará el redirect
+                return url;
             }
             return url;
         }
@@ -1437,16 +1442,19 @@
             url = url.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
             
             // Patrones más flexibles para móvil
+            // TikTok usa tanto vm.tiktok.com como vt.tiktok.com para URLs cortas
             const patterns = [
                 // Formato estándar: https://www.tiktok.com/@usuario/video/1234567890
                 /^https?:\/\/(www\.)?(x2)?tiktok\.com\/@[^\/]+\/video\/\d+/i,
                 // Formato con vm: https://vm.tiktok.com/xxxxx
-                /^https?:\/\/vm\.tiktok\.com\/[A-Za-z0-9]+/i,
-                // Formato móvil sin https: vm.tiktok.com/xxxxx o www.tiktok.com/@usuario/video/123
-                /^(vm\.tiktok\.com|www\.(x2)?tiktok\.com)\//i,
-                // Solo verificar que contiene tiktok.com y video o vm
+                /^https?:\/\/vm\.tiktok\.com\/[A-Za-z0-9\/\-_]+/i,
+                // Formato con vt: https://vt.tiktok.com/xxxxx
+                /^https?:\/\/vt\.tiktok\.com\/[A-Za-z0-9\/\-_]+/i,
+                // Formato móvil sin https: vm.tiktok.com/xxxxx, vt.tiktok.com/xxxxx o www.tiktok.com/@usuario/video/123
+                /^((vm|vt)\.tiktok\.com|www\.(x2)?tiktok\.com)\//i,
+                // Solo verificar que contiene tiktok.com y video o vm/vt
                 /tiktok\.com.*\/video\/\d+/i,
-                /vm\.tiktok\.com/i
+                /(vm|vt)\.tiktok\.com/i
             ];
             
             // Verificar que al menos un patrón coincida Y que tenga estructura válida
@@ -1457,7 +1465,7 @@
                 return false;
             }
             
-            // Validación adicional: debe contener tiktok.com o vm.tiktok.com
+            // Validación adicional: debe contener tiktok.com (vm, vt, o www)
             const hasTikTokDomain = /tiktok\.com/i.test(url);
             
             if (!hasTikTokDomain) {
@@ -1517,7 +1525,7 @@
             
             if (!isValidTikTokUrl(url)) {
                 console.error('[ERROR] URL no válida después de validación');
-                showError('Por favor, ingresa un enlace válido de TikTok. Ejemplo: https://www.tiktok.com/@usuario/video/1234567890 o https://vm.tiktok.com/xxxxx');
+                showError('Por favor, ingresa un enlace válido de TikTok. Ejemplo: https://www.tiktok.com/@usuario/video/1234567890 o https://vt.tiktok.com/xxxxx o https://vm.tiktok.com/xxxxx');
                 return;
             }
             

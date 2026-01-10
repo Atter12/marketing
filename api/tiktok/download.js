@@ -48,8 +48,9 @@ export default async function handler(req, res) {
     console.log('Received URL (normalized):', url);
 
     // Validar URL de TikTok - Patrón mejorado y más flexible
-    // Acepta: www.tiktok.com, vm.tiktok.com, x2tiktok.com, con o sin https
-    const tiktokUrlPattern = /^https?:\/\/((www\.)?(x2)?tiktok\.com|vm\.tiktok\.com)/i;
+    // Acepta: www.tiktok.com, vm.tiktok.com, vt.tiktok.com, x2tiktok.com, con o sin https
+    // TikTok usa tanto vm.tiktok.com como vt.tiktok.com para URLs cortas
+    const tiktokUrlPattern = /^https?:\/\/((www\.)?(x2)?tiktok\.com|(vm|vt)\.tiktok\.com)/i;
     if (!tiktokUrlPattern.test(url)) {
       console.log('ERROR: Invalid TikTok URL pattern:', url);
       console.log('URL recibida completa:', JSON.stringify(url));
@@ -62,14 +63,14 @@ export default async function handler(req, res) {
           return res.status(400).json({ 
             error: 'URL de TikTok inválida', 
             receivedUrl: url,
-            hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890'
+            hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890 o https://vt.tiktok.com/xxxxx'
           });
         }
       } else {
         return res.status(400).json({ 
           error: 'URL de TikTok inválida', 
           receivedUrl: url,
-          hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890'
+          hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890 o https://vt.tiktok.com/xxxxx'
         });
       }
     }
@@ -89,28 +90,71 @@ export default async function handler(req, res) {
       videoId = videoIdMatch[1];
       console.log('Extracted Video ID (método 1):', videoId);
     } else {
-      // Método 2: Para URLs vm.tiktok.com, necesitamos seguir el redirect
-      if (normalizedUrl.includes('vm.tiktok.com')) {
-        console.log('URL es vm.tiktok.com, intentando obtener video ID del redirect...');
+      // Método 2: Para URLs vm.tiktok.com o vt.tiktok.com, necesitamos seguir el redirect
+      if (normalizedUrl.includes('vm.tiktok.com') || normalizedUrl.includes('vt.tiktok.com')) {
+        const shortUrlType = normalizedUrl.includes('vm.tiktok.com') ? 'vm.tiktok.com' : 'vt.tiktok.com';
+        console.log(`URL es ${shortUrlType}, intentando obtener video ID del redirect...`);
         // Intentar obtener el video ID desde la respuesta del redirect
         try {
+          // Usar GET para seguir redirects correctamente y obtener el HTML
           const redirectResponse = await fetch(normalizedUrl, {
-            method: 'HEAD',
+            method: 'GET',
             redirect: 'follow',
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Referer': 'https://www.tiktok.com/',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9'
             }
           });
           const finalUrl = redirectResponse.url;
           console.log('URL final después de redirect:', finalUrl);
+          
+          // Intentar extraer video ID de la URL final primero
           const redirectVideoMatch = finalUrl.match(/\/video\/(\d+)/);
           if (redirectVideoMatch) {
             videoId = redirectVideoMatch[1];
             normalizedUrl = finalUrl; // Usar la URL final
-            console.log('Extracted Video ID (método 2 - redirect):', videoId);
+            console.log('Extracted Video ID (método 2 - redirect URL):', videoId);
+          } else {
+            console.log('No se encontró video ID en la URL después del redirect, parseando HTML...');
+            // Si no encontramos el ID en la URL, intentar extraerlo del HTML
+            const html = await redirectResponse.text();
+            const htmlVideoMatch = html.match(/\/video\/(\d+)/);
+            if (htmlVideoMatch) {
+              videoId = htmlVideoMatch[1];
+              console.log('Extracted Video ID (método 2b - HTML parse):', videoId);
+            } else {
+              // Buscar en el JSON embebido
+              const jsonMatch = html.match(/window\.__UNIVERSAL_DATA_FOR_REHYDRATION__\s*=\s*({.+?});/s);
+              if (jsonMatch) {
+                try {
+                  const jsonData = JSON.parse(jsonMatch[1]);
+                  // Buscar video ID en el JSON usando varios paths posibles
+                  const jsonStr = JSON.stringify(jsonData);
+                  const jsonIdMatches = [
+                    jsonStr.match(/"videoId"\s*:\s*"?(\d+)"?/),
+                    jsonStr.match(/"aweme_id"\s*:\s*"?(\d+)"?/),
+                    jsonStr.match(/"itemId"\s*:\s*"?(\d+)"?/),
+                    jsonStr.match(/"id"\s*:\s*"?(\d{15,})"?/) // IDs largos de TikTok
+                  ];
+                  
+                  for (const match of jsonIdMatches) {
+                    if (match && match[1] && match[1].length >= 15) {
+                      videoId = match[1];
+                      console.log('Extracted Video ID (método 2c - JSON parse):', videoId);
+                      break;
+                    }
+                  }
+                } catch (e) {
+                  console.log('Error parseando JSON:', e.message);
+                }
+              }
+            }
           }
         } catch (redirectError) {
           console.log('Error obteniendo redirect:', redirectError.message);
+          console.error('Redirect error stack:', redirectError.stack);
         }
       }
     }
