@@ -669,15 +669,48 @@ function parseHtmlForAdData(html, adId) {
         // Ordenar por longitud (URLs más largas suelen tener mejor calidad)
         imageUrlsToUse.sort((a, b) => b.length - a.length);
         
-        // Tomar la mejor imagen
+        // Tomar la mejor imagen y limpiar
         let imageUrl = imageUrlsToUse[0].replace(/&amp;/g, '&').replace(/\\\//g, '/').replace(/\\u002F/g, '/');
         
-        // CORREGIR: Si la URL tiene & después de .jpg/.png/.webp, cambiarlo por ?
+        console.log('[parseHtmlForAdData] Pattern 3 - Raw image URL before fix:', imageUrl.substring(0, 200));
+        
+        // CORREGIR CRÍTICO: Si la URL tiene & después de .jpg/.png/.webp, cambiarlo por ?
         // Este es el bug que causa el 403 Forbidden
-        const imageExtMatch = imageUrl.match(/\.(jpg|jpeg|png|webp)(&|%26)/i);
-        if (imageExtMatch) {
-          imageUrl = imageUrl.replace(/\.(jpg|jpeg|png|webp)(&|%26)/i, '.$1?');
-          console.log('[parseHtmlForAdData] Pattern 3 - Fixed malformed image URL (replaced & with ?)');
+        // Usar múltiples estrategias para asegurar que funcione
+        
+        const imageUrlBefore = imageUrl;
+        
+        // Estrategia más simple y directa: buscar cualquier extensión seguida de &
+        // Esto cubre: .jpg&, .jpeg&, .png&, .webp&
+        imageUrl = imageUrl.replace(/\.(jpg|jpeg|png|webp)&/gi, '.$1?');
+        
+        // Si la estrategia anterior no funcionó, usar split y join
+        if (imageUrl === imageUrlBefore && imageUrl.includes('&_nc_cat')) {
+          // Buscar el índice de la extensión
+          const extMatch = imageUrl.match(/\.(jpg|jpeg|png|webp)/i);
+          if (extMatch) {
+            const extEnd = extMatch.index + extMatch[0].length;
+            // Si el siguiente carácter es &, reemplazarlo con ?
+            if (imageUrl.charAt(extEnd) === '&') {
+              imageUrl = imageUrl.substring(0, extEnd) + '?' + imageUrl.substring(extEnd + 1);
+              console.log('[parseHtmlForAdData] Pattern 3 - Fixed using character index replacement');
+            }
+          }
+        }
+        
+        // Verificar si la corrección funcionó
+        if (imageUrl !== imageUrlBefore) {
+          console.log('[parseHtmlForAdData] Pattern 3 - Fixed malformed image URL');
+          console.log('[parseHtmlForAdData] Pattern 3 - Before fix:', imageUrlBefore.substring(0, 150));
+          console.log('[parseHtmlForAdData] Pattern 3 - After fix:', imageUrl.substring(0, 150));
+        } else if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
+          // Si todavía tiene el problema, usar split manual
+          console.log('[parseHtmlForAdData] Pattern 3 - WARNING: Still has & after extension, using manual split...');
+          const parts = imageUrl.split(/(\.(jpg|jpeg|png|webp))&/i);
+          if (parts.length >= 3) {
+            imageUrl = parts[0] + parts[1] + '?' + parts.slice(2).join('');
+            console.log('[parseHtmlForAdData] Pattern 3 - Fixed using manual split');
+          }
         }
         
         // Intentar mejorar la URL removiendo parámetros de tamaño si es necesario
@@ -714,8 +747,21 @@ function parseHtmlForAdData(html, adId) {
           imageUrl = 'https:' + imageUrl;
         }
         
+        // Asegurar que la URL sea válida y empiece con http
+        if (!imageUrl.startsWith('http')) {
+          imageUrl = 'https:' + imageUrl;
+        }
+        
+        // Verificar que la corrección funcionó
+        if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
+          console.log('[parseHtmlForAdData] Pattern 3 - WARNING: URL still has & after extension, attempting final fix...');
+          // Último intento: reemplazo directo
+          imageUrl = imageUrl.replace(/(\.(jpg|jpeg|png|webp))&/gi, '$1?');
+        }
+        
         console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL directly from HTML');
-        console.log('[parseHtmlForAdData] Pattern 3 - Image URL (first 150 chars):', imageUrl.substring(0, 150));
+        console.log('[parseHtmlForAdData] Pattern 3 - Final image URL (first 200 chars):', imageUrl.substring(0, 200));
+        console.log('[parseHtmlForAdData] Pattern 3 - URL validation (has ? after extension):', /\.(jpg|jpeg|png|webp)\?/.test(imageUrl));
         console.log('[parseHtmlForAdData] Pattern 3 - Total images found:', imageMatches.length, 'Large images:', largeImages.length);
         
         // Buscar datos adicionales con patrones mejorados
@@ -760,8 +806,57 @@ function parseHtmlForAdData(html, adId) {
         };
       }
       
+      // Verificar si el anuncio tiene video buscando indicadores en el HTML
+      console.log('[parseHtmlForAdData] Checking if ad has video (looking for video indicators)...');
+      const videoIndicators = [
+        /"media_type":\s*"VIDEO"/i,
+        /"type":\s*"video"/i,
+        /"has_video":\s*true/i,
+        /video/i,
+        /<video/i,
+        /video-player/i,
+        /"video_id"/i
+      ];
+      
+      let hasVideoIndicator = false;
+      for (const indicator of videoIndicators) {
+        if (indicator.test(html)) {
+          hasVideoIndicator = true;
+          console.log('[parseHtmlForAdData] Found video indicator:', indicator.toString());
+          break;
+        }
+      }
+      console.log('[parseHtmlForAdData] Video indicators found:', hasVideoIndicator);
+      
+      // Si hay indicadores de video, buscar más agresivamente
+      if (hasVideoIndicator || videoMatches.length === 0) {
+        console.log('[parseHtmlForAdData] Pattern 4: Deep search for videos (aggressive mode)...');
+        
+        // Buscar en todo el HTML cualquier mención de video
+        const aggressiveVideoPatterns = [
+          // Buscar URLs que contengan "video" o "v/" en fbcdn
+          /https?:\/\/[^"'\s<>]+fbcdn[^"'\s<>]*\/v\/[^"'\s<>]*/gi,
+          // Buscar en atributos src con "video"
+          /src=["']([^"']*video[^"']*)["']/gi,
+          // Buscar en data attributes
+          /data-video=["']([^"']+)["']/gi,
+          // Buscar en estructuras de Facebook específicas
+          /"__typename":\s*"Video"/gi,
+          // Buscar IDs de video
+          /"video_id":\s*"(\d+)"/gi,
+        ];
+        
+        for (const pattern of aggressiveVideoPatterns) {
+          const matches = html.match(pattern);
+          if (matches && matches.length > 0) {
+            console.log('[parseHtmlForAdData] Pattern 4 - Found', matches.length, 'matches with pattern:', pattern.toString().substring(0, 100));
+            videoMatches.push(...matches.filter(m => m.includes('http')));
+          }
+        }
+      }
+      
       // Patrón 4: Buscar videos en estructuras JSON embebidas más específicas (buscar más profundo)
-      console.log('[parseHtmlForAdData] Pattern 4: Searching for videos in embedded JSON structures (deep search)...');
+      console.log('[parseHtmlForAdData] Pattern 4b: Searching for videos in embedded JSON structures (deep search)...');
       
       // Buscar estructuras JSON que contengan información de video (nombres diferentes para evitar conflicto)
       const deepJsonVideoPatterns = [
@@ -781,7 +876,7 @@ function parseHtmlForAdData(html, adId) {
         while ((match = pattern.exec(html)) !== null) {
           if (match[1]) {
             const url = match[1].replace(/\\\//g, '/').replace(/\\u002F/g, '/').replace(/&amp;/g, '&');
-            if (url.includes('.mp4') || url.includes('fbcdn.net/v/')) {
+            if (url.includes('.mp4') || url.includes('fbcdn.net/v/') || url.includes('video')) {
               jsonVideoUrls.push(url);
             }
           }
@@ -792,19 +887,30 @@ function parseHtmlForAdData(html, adId) {
       const jsonArrayPattern = /"url_list":\s*\["([^"]+)"/gi;
       let arrayMatch;
       while ((arrayMatch = jsonArrayPattern.exec(html)) !== null) {
-        if (arrayMatch[1] && (arrayMatch[1].includes('.mp4') || arrayMatch[1].includes('fbcdn.net/v/'))) {
+        if (arrayMatch[1] && (arrayMatch[1].includes('.mp4') || arrayMatch[1].includes('fbcdn.net/v/') || arrayMatch[1].includes('video'))) {
           jsonVideoUrls.push(arrayMatch[1].replace(/\\\//g, '/'));
         }
       }
       
       // Filtrar y limpiar URLs de video de JSON
       jsonVideoUrls = [...new Set(jsonVideoUrls.filter(url => 
-        (url.includes('fbcdn.net') || url.includes('.mp4')) &&
+        (url.includes('fbcdn.net') || url.includes('.mp4') || url.includes('video')) &&
         !url.includes('thumbnail') &&
         !url.includes('preview')
       ))];
       
-      console.log('[parseHtmlForAdData] Pattern 4 - Found', jsonVideoUrls.length, 'video URLs from JSON patterns');
+      console.log('[parseHtmlForAdData] Pattern 4b - Found', jsonVideoUrls.length, 'video URLs from JSON patterns');
+      
+      // Si encontramos indicadores pero no videos, buscar más específicamente
+      if (hasVideoIndicator && videoMatches.length === 0 && jsonVideoUrls.length === 0) {
+        console.log('[parseHtmlForAdData] Pattern 4c: Video indicator found but no URLs, searching HTML sample...');
+        // Buscar en una muestra del HTML alrededor de palabras clave
+        const videoSections = html.match(/[^<]{0,500}video[^<]{0,500}/gi) || [];
+        console.log('[parseHtmlForAdData] Pattern 4c - Found', videoSections.length, 'sections containing "video"');
+        if (videoSections.length > 0) {
+          console.log('[parseHtmlForAdData] Pattern 4c - Sample video section (first 500 chars):', videoSections[0].substring(0, 500));
+        }
+      }
       
       if (jsonVideoUrls.length > 0) {
         // Combinar con videos encontrados antes
