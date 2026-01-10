@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Descargar Anuncios de Facebook Ads Library | EcomTools</title>
+    <meta name="description" content="Descarga anuncios de Facebook Ads Library gratis para analizar creativos ganadores. Herramienta 100% gratuita y sin límites.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --facebook-gradient: linear-gradient(135deg, #1877F2 0%, #42A5F5 100%);
+            --secondary: #6366f1;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 60px 24px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero-section h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+            .hero-section h1 .facebook-text {
+            background: var(--facebook-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .subtitle-main {
+            font-size: 20px !important;
+            color: var(--text-medium) !important;
+            max-width: 800px !important;
+            margin: 0 auto 24px !important;
+        }
+
+        /* Download Tool Section */
+        .download-section {
+            padding: 40px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .download-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .url-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .btn-download {
+            padding: 16px 32px;
+            background: var(--facebook-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+        }
+
+        .btn-download:active {
+            transform: translateY(0);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .example-urls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .example-url {
+            padding: 8px 16px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-url:hover {
+            background: var(--border);
+            color: var(--text-dark);
+        }
+
+        /* Result Section */
+        .result-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .video-preview {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .video-preview video {
+            width: 100%;
+            display: block;
+        }
+
+        .video-info {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .video-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .video-info p {
+            font-size: 14px;
+            color: var(--text-medium);
+            margin-bottom: 4px;
+        }
+
+        .download-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-download-option {
+            padding: 12px 24px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);
+        }
+
+        .loading-state {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading-state.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            padding: 16px 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 24px;
+            background: var(--bg-cream);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--facebook-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 24px;
+            background: var(--bg-white);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-medium);
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 20px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .step-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 80px 24px;
+            background: var(--bg-cream);
+        }
+
+        .faq-grid {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .faq-question:hover {
+            background: var(--bg-gray);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-answer.active {
+            max-height: 500px;
+        }
+
+        .faq-answer p {
+            padding: 0 24px 20px;
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 24px 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-content p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                padding: 12px 0;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .back-link {
+                font-size: 12px;
+                gap: 6px;
+                padding: 8px 12px;
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .hero-section {
+                padding: 40px 16px 30px;
+            }
+
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+                margin-bottom: 16px;
+            }
+
+            .hero-section h1 {
+                font-size: 26px;
+                margin-bottom: 12px;
+                line-height: 1.3;
+            }
+
+            .hero-section p {
+                font-size: 15px;
+                margin-bottom: 24px;
+            }
+
+            .subtitle-main {
+                font-size: 16px !important;
+                margin-bottom: 20px !important;
+            }
+
+            .download-section {
+                padding: 30px 16px 50px;
+            }
+
+            .download-card {
+                padding: 24px 18px;
+                border-radius: 20px;
+            }
+
+            .input-group {
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .url-input {
+                padding: 14px 16px;
+                font-size: 16px; /* Evita zoom en iOS al hacer focus */
+                min-height: 44px;
+            }
+
+            .btn-download {
+                width: 100%;
+                padding: 14px 24px;
+                font-size: 15px;
+                min-height: 48px;
+                justify-content: center;
+            }
+
+            .example-urls {
+                margin-top: 16px;
+                gap: 6px;
+            }
+
+            .example-url {
+                padding: 8px 14px;
+                font-size: 11px;
+                min-height: 32px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .x2-tip {
+                padding: 12px 14px;
+                margin-top: 16px;
+            }
+
+            .success-badge-mobile {
+                padding: 12px 16px !important;
+            }
+
+            .success-badge-mobile > div {
+                font-size: 12px !important;
+            }
+
+            .success-badge-mobile > div i {
+                font-size: 16px !important;
+            }
+
+            .x2-tip > div:first-child {
+                font-size: 18px;
+            }
+
+            .x2-tip div:last-child > div:first-child {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            .x2-tip div:last-child > div:last-child {
+                font-size: 12px;
+            }
+
+            .error-message {
+                padding: 12px 16px;
+                font-size: 13px;
+                margin-top: 16px;
+            }
+
+            .loading-state {
+                padding: 30px 16px;
+            }
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 12px;
+            }
+
+            .result-section {
+                margin-top: 24px;
+                padding-top: 24px;
+            }
+
+            .video-preview {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .video-info {
+                margin-bottom: 20px;
+            }
+
+            .video-info h3 {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+
+            .video-info p {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+
+            .download-options {
+                gap: 10px;
+            }
+
+            .btn-download-option {
+                padding: 12px 20px;
+                font-size: 13px;
+                width: 100%;
+                min-height: 44px;
+                justify-content: center;
+            }
+
+            .features-section {
+                padding: 50px 16px;
+            }
+
+            .features-grid {
+                gap: 20px;
+                grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                padding: 24px 20px;
+            }
+
+            .feature-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+
+            .feature-card h3 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .feature-card p {
+                font-size: 13px;
+            }
+
+            .how-it-works {
+                padding: 50px 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+
+            .section-subtitle {
+                font-size: 15px;
+                margin-bottom: 40px;
+            }
+
+            .steps-grid {
+                gap: 24px;
+                grid-template-columns: 1fr;
+            }
+
+            .step-number {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+                margin-bottom: 16px;
+            }
+
+            .step-card h3 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .step-card p {
+                font-size: 13px;
+            }
+
+            .faq-section {
+                padding: 50px 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .faq-question {
+                padding: 16px 18px;
+                font-size: 14px;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+            }
+
+            .faq-answer p {
+                padding: 0 18px 16px;
+                font-size: 13px;
+            }
+
+            footer {
+                padding: 40px 16px 20px;
+            }
+
+            .footer-content p {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .footer-links {
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .footer-links a {
+                font-size: 13px;
+            }
+
+            .footer-bottom {
+                padding-top: 24px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                -webkit-text-size-adjust: 100%;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            * {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            button, a, input {
+                -webkit-tap-highlight-color: rgba(255, 107, 74, 0.2);
+            }
+
+            .container {
+                padding: 0 12px;
+            }
+
+            .hero-section {
+                padding: 30px 12px 20px;
+            }
+
+            .hero-section h1 {
+                font-size: 22px;
+            }
+
+            .hero-section p {
+                font-size: 14px;
+            }
+
+            .subtitle-main {
+                font-size: 14px !important;
+            }
+
+            .download-section {
+                padding: 24px 12px 40px;
+            }
+
+            .download-card {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .url-input {
+                padding: 12px 14px;
+                font-size: 16px; /* Evita zoom en iOS */
+                min-height: 44px;
+            }
+
+            .btn-download {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .x2-tip {
+                padding: 10px 12px;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .success-badge-mobile {
+                padding: 10px 12px !important;
+                margin-top: 16px !important;
+            }
+
+            .success-badge-mobile > div {
+                font-size: 11px !important;
+                gap: 8px !important;
+            }
+
+            .success-badge-mobile > div span {
+                line-height: 1.4;
+            }
+
+            .x2-tip > div:first-child {
+                font-size: 16px;
+                margin-top: 0;
+            }
+
+            .video-preview {
+                margin-bottom: 16px;
+            }
+
+            .video-info h3 {
+                font-size: 15px;
+            }
+
+            .video-info p {
+                font-size: 12px;
+            }
+
+            .btn-download-option {
+                padding: 10px 18px;
+                font-size: 12px;
+            }
+
+            .features-section {
+                padding: 40px 12px;
+            }
+
+            .features-grid {
+                gap: 16px;
+            }
+
+            .feature-card {
+                padding: 20px 16px;
+            }
+
+            .how-it-works {
+                padding: 40px 12px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+                margin-bottom: 30px;
+            }
+
+            .steps-grid {
+                gap: 20px;
+            }
+
+            .faq-section {
+                padding: 40px 12px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .faq-question {
+                padding: 14px 16px;
+                font-size: 13px;
+                min-height: 44px;
+            }
+
+            .faq-answer p {
+                padding: 0 16px 14px;
+                font-size: 12px;
+            }
+
+            footer {
+                padding: 30px 12px 16px;
+            }
+
+            .footer-content p {
+                font-size: 12px;
+            }
+
+            .footer-links {
+                gap: 12px;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .hero-section h1 {
+                font-size: 20px;
+            }
+
+            .download-card {
+                padding: 16px 12px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .feature-card {
+                padding: 18px 14px;
+            }
+
+            .step-number {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a herramientas
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fab fa-facebook"></i>
+                100% Gratuito • Sin límites
+            </div>
+            <h1>Descargador de Anuncios de <span class="facebook-text">Facebook Ads</span></h1>
+            <p class="subtitle-main">Descarga anuncios de <strong style="color: var(--primary); font-weight: 800;">Facebook Ads Library</strong> para analizar creativos ganadores y optimizar tus campañas</p>
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); border: 2px solid #1877F2; border-radius: 12px; padding: 16px 20px; margin-top: 24px; display: inline-block; max-width: 100%;" class="success-badge-mobile">
+                <div style="display: flex; align-items: center; gap: 10px; color: #1877F2; font-weight: 700; font-size: 14px; flex-wrap: wrap; justify-content: center; text-align: center;">
+                    <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+                    <span>DESCARGA DIRECTA • Videos e Imágenes HD • Totalmente Gratis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Tool Section -->
+    <section class="download-section">
+        <div class="container">
+            <div class="download-card">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="facebookAdUrl" 
+                        class="url-input" 
+                        placeholder="Pega aquí la URL del anuncio de Facebook Ads Library..."
+                        autocomplete="off"
+                    >
+                    <button class="btn-download" id="downloadBtn">
+                        <i class="fas fa-download"></i>
+                        Descargar
+                    </button>
+                </div>
+
+                <div class="example-urls">
+                    <span style="font-size: 12px; color: var(--text-light);">Ejemplo:</span>
+                    <span class="example-url" onclick="setExampleUrl('https://www.facebook.com/ads/library/?id=123456789')">
+                        https://www.facebook.com/ads/library/?id=123456789
+                    </span>
+                </div>
+
+                <div class="x2-tip" style="background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); border: 1px solid #1877F2; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px;">
+                    <div style="color: #1877F2; font-size: 20px; margin-top: 2px;">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: var(--text-dark); font-size: 13px; margin-bottom: 6px;">
+                            📚 ¿Cómo obtener la URL del anuncio?
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                            Ve a <strong style="color: #1877F2;">Facebook Ads Library</strong> (facebook.com/ads/library), busca el anuncio que quieres descargar, haz clic en él y copia la URL de la página. Pega esa URL aquí para descargar el video o imagen del anuncio.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText">Por favor, ingresa una URL válida de Facebook Ads Library</span>
+                </div>
+
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-medium); font-weight: 600; font-size: 15px;">
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        Recuperando datos, ¡espere unos segundos!
+                    </p>
+                </div>
+
+                <div class="result-section" id="resultSection">
+                    <div class="video-preview" id="adPreview"></div>
+                    
+                    <div class="video-info" id="adInfo"></div>
+
+                    <div class="download-options">
+                        <button class="btn-download-option" id="downloadVideoBtn">
+                            <i class="fas fa-video"></i>
+                            Descargar Video
+                        </button>
+                        <button class="btn-download-option" id="downloadImageBtn">
+                            <i class="fas fa-image"></i>
+                            Descargar Imagen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>📊 Análisis de Creativos</h3>
+                    <p>Descarga anuncios de <strong>Facebook Ads Library</strong> para analizar los creativos ganadores de tu competencia y mejorar tus propias campañas publicitarias.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-hd-video"></i>
+                    </div>
+                    <h3>Alta Calidad</h3>
+                    <p>Descarga videos e imágenes en la máxima calidad disponible, manteniendo la resolución original de los anuncios.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Descarga Rápida</h3>
+                    <p>Proceso instantáneo, obtén los creativos en segundos para analizarlos sin esperas ni complicaciones.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>Sin Límites</h3>
+                    <p>Descarga tantos anuncios como necesites para tu investigación de mercado, sin restricciones.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Optimiza Campañas</h3>
+                    <p>Analiza qué está funcionando en tu nicho y aplica esos insights para mejorar tus propios anuncios.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>100% Legal</h3>
+                    <p>Usamos únicamente datos públicos de Facebook Ads Library. Todo es legal y respeta los términos de servicio.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">¿Cómo Descargar Anuncios de Facebook Ads Library?</h2>
+            <p class="section-subtitle">Sigue estos simples pasos para descargar cualquier anuncio de Facebook Ads Library:</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Accede a Facebook Ads Library</h3>
+                    <p>Ve a <strong>facebook.com/ads/library</strong> y busca los anuncios que te interesan. Puedes filtrar por país, página, palabra clave o industria para encontrar anuncios relevantes en tu nicho.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Copia la URL del Anuncio</h3>
+                    <p>Haz clic en el anuncio que quieres descargar para verlo en detalle. Copia la URL completa de la página del anuncio desde la barra de direcciones de tu navegador.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Descarga el Creative</h3>
+                    <p>Pega la URL en el cuadro de arriba y presiona <strong>"Descargar"</strong>. Espera unos segundos y obtendrás el video o imagen del anuncio en alta calidad para analizar.</p>
+                </div>
+            </div>
+
+            <div style="max-width: 900px; margin: 60px auto 0; padding: 32px; background: var(--bg-cream); border-radius: 16px; border: 2px solid var(--border);">
+                <h3 style="font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 24px; text-align: center;">
+                    💡 Tips para Analizar Creativos Ganadores
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; text-align: left;">
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-search"></i> Busca Competidores
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            Busca las páginas de tus competidores directos en Facebook Ads Library para ver qué creativos están usando y desde cuándo los están mostrando.
+                        </p>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-clock"></i> Analiza Duración
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            Si un anuncio lleva meses activo, es probable que sea un ganador. Descárgalo y estudia qué elementos tiene que lo hacen efectivo.
+                        </p>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-lightbulb"></i> Aprende y Adapta
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            Descarga los creativos que más te llamen la atención y analiza qué elementos puedes adaptar (no copiar) para tus propias campañas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Preguntas Frecuentes</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Es legal descargar anuncios de Facebook Ads Library?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, es completamente legal. Facebook Ads Library es una herramienta pública de transparencia que permite ver todos los anuncios activos en Facebook e Instagram. Los datos son públicos y puedes descargarlos para análisis de mercado y investigación competitiva.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo descargar anuncios de Facebook Ads Library?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>Paso 1:</strong> Ve a facebook.com/ads/library y busca los anuncios que te interesan. Puedes filtrar por país, página o palabra clave.</p>
+                        <p><strong>Paso 2:</strong> Haz clic en el anuncio que quieres descargar y copia la URL completa de la página.</p>
+                        <p><strong>Paso 3:</strong> Pega la URL en el cuadro de arriba y presiona "Descargar". Obtendrás el video o imagen del anuncio en alta calidad.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Para qué sirve descargar anuncios de Facebook Ads Library?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Descargar anuncios de Facebook Ads Library te permite <strong>analizar creativos ganadores</strong> de tu competencia, ver qué está funcionando en tu nicho, entender las tendencias de diseño y copywriting, y aplicar esos insights para mejorar tus propias campañas publicitarias. Es una herramienta esencial para cualquier marketer o agencia.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Puedo descargar anuncios de cualquier país?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, Facebook Ads Library permite ver anuncios de cualquier país. Simplemente selecciona el país que te interesa en el filtro de Facebook Ads Library y luego copia la URL del anuncio que quieres descargar.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Tengo que pagar por descargar anuncios de Facebook?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>No, es completamente gratis.</strong> EcomTools es una herramienta gratuita para descargar anuncios de Facebook Ads Library. No hay límites ni restricciones. Puedes descargar tantos anuncios como necesites para tu análisis de mercado.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Qué formato tienen los archivos descargados?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Los videos se descargan en formato <strong>MP4</strong> y las imágenes en formato <strong>JPG</strong> o <strong>PNG</strong>, dependiendo del formato original del anuncio. Todos los archivos mantienen su calidad original.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Puedo usar estos creativos para mis propias campañas?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>No recomendamos copiar directamente</strong> los creativos de otros anunciantes. Sin embargo, puedes usarlos como <strong>inspiración y referencia</strong> para entender qué elementos funcionan y crear tus propios creativos únicos basados en esos insights.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Hay límite de descargas?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, puedes descargar tantos anuncios como necesites. No hay límites ni restricciones en el uso de la herramienta.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Funciona en dispositivos móviles?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, la herramienta funciona perfectamente en dispositivos móviles, tablets y computadoras. No necesitas instalar nada, solo usa tu navegador.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Se almacenan mis datos o los anuncios descargados?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, no almacenamos ningún anuncio ni datos personales. Todo el proceso es privado y seguro. Los anuncios se procesan temporalmente y se eliminan inmediatamente después de la descarga.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2026 EcomTools. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="index.html">Inicio</a>
+                <a href="#features">Características</a>
+                <a href="#faq">FAQ</a>
+                <a href="#">Soporte</a>
+            </div>
+            <div class="footer-bottom">
+                <p style="margin-bottom: 12px;">Herramienta gratuita para descargar anuncios de Facebook Ads Library</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 16px;">
+                    <strong>Nota:</strong> EcomTools no es una herramienta oficial de Facebook. No tenemos ninguna relación con Facebook o Meta. Esta herramienta utiliza únicamente datos públicos de Facebook Ads Library para ayudar a los usuarios a descargar y analizar creativos publicitarios. Todos los derechos de los anuncios pertenecen a sus respectivos dueños.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set example URL
+        function setExampleUrl(url) {
+            document.getElementById('facebookAdUrl').value = url;
+            document.getElementById('facebookAdUrl').focus();
+        }
+
+        // Validate Facebook Ads Library URL
+        function isValidFacebookAdUrl(url) {
+            const patterns = [
+                /^https?:\/\/(www\.)?facebook\.com\/ads\/library/i,
+                /facebook\.com\/ads\/library/i,
+                /id=/i
+            ];
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        // Extract Ad ID from URL
+        function extractAdId(url) {
+            const match = url.match(/[?&]id=(\d+)/);
+            return match ? match[1] : null;
+        }
+
+        // Download handler
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+        document.getElementById('facebookAdUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleDownload();
+            }
+        });
+
+        async function handleDownload() {
+            const urlInput = document.getElementById('facebookAdUrl');
+            let url = urlInput.value.trim();
+            
+            // Hide previous results
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('errorMessage').classList.remove('active');
+            
+            // Validate URL
+            if (!url) {
+                showError('Por favor, ingresa una URL de Facebook Ads Library');
+                return;
+            }
+            
+            if (!isValidFacebookAdUrl(url)) {
+                showError('Por favor, ingresa una URL válida de Facebook Ads Library (ej: https://www.facebook.com/ads/library/?id=123456789)');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingState').classList.add('active');
+            document.getElementById('downloadBtn').disabled = true;
+            
+            // Llamar al backend API real
+            const apiUrl = '/api/facebook/download';
+            const requestBody = { 
+                url: url,
+                type: 'ad'
+            };
+            
+            console.log('=== FRONTEND: Calling Facebook Ads API ===');
+            console.log('API URL:', apiUrl);
+            console.log('Request Body:', requestBody);
+            console.log('Facebook Ad URL:', url);
+            
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('Response Status:', response.status);
+                console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response Error Text:', errorText);
+                    document.getElementById('loadingState').classList.remove('active');
+                    document.getElementById('downloadBtn').disabled = false;
+                    showError(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log('Response Data:', data);
+
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = false;
+
+                if (!data.success) {
+                    showError(data.error || 'Error al procesar el anuncio. Por favor, intenta de nuevo.');
+                    return;
+                }
+
+                // Mostrar resultado con datos reales del anuncio
+                showResult(data);
+                
+            } catch (error) {
+                console.error('=== FRONTEND: Fetch Error ===');
+                console.error('Error Type:', error.name);
+                console.error('Error Message:', error.message);
+                console.error('Error Stack:', error.stack);
+                
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = false;
+                showError(`Error de conexión: ${error.message}. Por favor, verifica tu conexión e intenta de nuevo.`);
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('active');
+        }
+
+        function showResult(data) {
+            const resultSection = document.getElementById('resultSection');
+            const adPreview = document.getElementById('adPreview');
+            const adInfo = document.getElementById('adInfo');
+            
+            const adId = data.adId || data.id;
+            const videoUrl = data.videoUrl;
+            const imageUrl = data.imageUrl || data.thumbnail;
+            const pageName = data.pageName || data.author || 'Página de Facebook';
+            const adText = data.adText || data.title || 'Anuncio de Facebook';
+            const startDate = data.startDate || 'N/A';
+            
+            // Mostrar preview del anuncio (video o imagen)
+            if (videoUrl) {
+                adPreview.innerHTML = `
+                    <video 
+                        controls 
+                        preload="metadata" 
+                        poster="${imageUrl || ''}"
+                        style="width: 100%; height: auto; border-radius: 16px;"
+                    >
+                        <source src="${videoUrl}" type="video/mp4">
+                        Tu navegador no soporta el tag de video.
+                    </video>
+                `;
+            } else if (imageUrl) {
+                adPreview.innerHTML = `
+                    <img 
+                        src="${imageUrl}" 
+                        alt="Preview del anuncio"
+                        style="width: 100%; height: auto; border-radius: 16px;"
+                    >
+                `;
+            } else {
+                adPreview.innerHTML = `
+                    <div style="background: var(--facebook-gradient); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; border-radius: 16px;">
+                        <i class="fab fa-facebook"></i>
+                    </div>
+                `;
+            }
+            
+            adInfo.innerHTML = `
+                <h3>${adText}</h3>
+                <p><strong>Página:</strong> ${pageName}</p>
+                <p><strong>ID del Anuncio:</strong> ${adId}</p>
+                <p><strong>Fecha de inicio:</strong> ${startDate}</p>
+                <div style="background: #dbeafe; border: 1px solid #1877F2; border-radius: 8px; padding: 10px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #1877F2; font-weight: 600;">
+                    <i class="fas fa-check-circle"></i>
+                    Anuncio descargado • Listo para analizar
+                </div>
+            `;
+            
+            // Configurar botones de descarga reales
+            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+            const downloadImageBtn = document.getElementById('downloadImageBtn');
+            
+            downloadVideoBtn.onclick = () => {
+                if (!videoUrl) {
+                    showError('Este anuncio no tiene video disponible o solo tiene imagen. Intenta descargar la imagen.');
+                    return;
+                }
+                
+                // Descargar video directamente
+                const downloadLink = document.createElement('a');
+                downloadLink.href = videoUrl;
+                downloadLink.download = `facebook-ad-${adId}.mp4`;
+                downloadLink.target = '_blank';
+                downloadLink.click();
+                
+                // Feedback visual
+                const originalText = downloadVideoBtn.innerHTML;
+                downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                downloadVideoBtn.disabled = true;
+                
+                setTimeout(() => {
+                    downloadVideoBtn.innerHTML = originalText;
+                    downloadVideoBtn.disabled = false;
+                }, 2000);
+            };
+            
+            downloadImageBtn.onclick = () => {
+                if (!imageUrl) {
+                    showError('URL de la imagen no disponible. Por favor, intenta de nuevo.');
+                    return;
+                }
+                
+                // Descargar imagen directamente
+                const downloadLink = document.createElement('a');
+                downloadLink.href = imageUrl;
+                downloadLink.download = `facebook-ad-${adId}.jpg`;
+                downloadLink.target = '_blank';
+                downloadLink.click();
+                
+                // Feedback visual
+                const originalText = downloadImageBtn.innerHTML;
+                downloadImageBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                downloadImageBtn.disabled = true;
+                
+                setTimeout(() => {
+                    downloadImageBtn.innerHTML = originalText;
+                    downloadImageBtn.disabled = false;
+                }, 2000);
+            };
+            
+            resultSection.classList.add('active');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQs
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.faq-answer').classList.remove('active');
+            });
+            
+            // Open clicked FAQ if it wasn't active
+            if (!isActive) {
+                faqItem.classList.add('active');
+                faqItem.querySelector('.faq-answer').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
+

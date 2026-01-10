@@ -18,6 +18,14 @@
       "dest": "/tiktok-downloader.html"
     },
     {
+      "src": "/facebook-ads-downloader",
+      "dest": "/facebook-ads-downloader.html"
+    },
+    {
+      "src": "/facebook-ads-downloader.html",
+      "dest": "/facebook-ads-downloader.html"
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },
