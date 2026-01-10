@@ -33,17 +33,30 @@
             box-sizing: border-box;
         }
 
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+        }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background: var(--bg-white);
             color: var(--text-dark);
             line-height: 1.6;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            position: relative;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 24px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         /* Header */
@@ -174,12 +187,20 @@
             border-radius: 24px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
 
         .input-group {
             display: flex;
             gap: 12px;
             margin-bottom: 24px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         .url-input {
@@ -191,6 +212,12 @@
             font-family: inherit;
             transition: all 0.3s;
             outline: none;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            overflow-x: hidden;
         }
 
         .url-input:focus {
@@ -240,6 +267,11 @@
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 20px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
         }
 
         .example-url {
@@ -250,11 +282,28 @@
             color: var(--text-medium);
             cursor: pointer;
             transition: all 0.2s;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: normal;
+            display: inline-block;
+            line-height: 1.5;
         }
 
         .example-url:hover {
             background: var(--border);
             color: var(--text-dark);
+        }
+
+        .example-urls > span:first-child {
+            font-size: 12px;
+            color: var(--text-light);
+            white-space: nowrap;
+            flex-shrink: 0;
+            align-self: flex-start;
+            margin-top: 4px;
         }
 
         /* Result Section */
@@ -677,15 +726,32 @@
 
             .example-urls {
                 margin-top: 16px;
-                gap: 6px;
+                gap: 8px;
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .example-urls > span:first-child {
+                font-size: 11px;
+                display: block;
+                width: 100%;
+                margin-bottom: 4px;
             }
 
             .example-url {
-                padding: 8px 14px;
+                padding: 10px 12px;
                 font-size: 11px;
-                min-height: 32px;
-                display: inline-flex;
-                align-items: center;
+                min-height: auto;
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+                word-break: break-all;
+                white-space: normal;
+                line-height: 1.5;
+                text-align: left;
             }
 
             .x2-tip {
@@ -883,6 +949,9 @@
             html {
                 -webkit-text-size-adjust: 100%;
                 -webkit-tap-highlight-color: transparent;
+                overflow-x: hidden;
+                width: 100%;
+                max-width: 100%;
             }
 
             * {
@@ -895,6 +964,10 @@
 
             .container {
                 padding: 0 12px;
+                overflow-x: hidden;
+                width: 100%;
+                max-width: 100%;
+                box-sizing: border-box;
             }
 
             .hero-section {
@@ -937,6 +1010,34 @@
                 padding: 10px 12px;
                 flex-direction: column;
                 gap: 8px;
+                width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+            }
+
+            .x2-tip code {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                overflow-wrap: break-word;
+                word-wrap: break-word;
+                word-break: break-all;
+                margin-top: 4px;
+                padding: 4px 8px;
+            }
+
+            .example-urls {
+                width: 100%;
+                margin-top: 12px;
+            }
+
+            .example-url {
+                width: 100%;
+                max-width: 100%;
+                font-size: 10px;
+                padding: 8px 10px;
             }
 
             .success-badge-mobile {
@@ -1038,12 +1139,34 @@
         }
 
         @media (max-width: 360px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+                max-width: 100%;
+            }
+
             .hero-section h1 {
                 font-size: 20px;
             }
 
             .download-card {
                 padding: 16px 12px;
+                width: 100%;
+                box-sizing: border-box;
+                overflow-x: hidden;
+            }
+
+            .example-url {
+                font-size: 9px;
+                padding: 6px 8px;
+            }
+
+            .x2-tip {
+                padding: 8px 10px;
+            }
+
+            .x2-tip code {
+                font-size: 10px;
             }
 
             .section-title {
@@ -1127,17 +1250,17 @@
                     </span>
                 </div>
 
-                <div class="x2-tip" style="background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px;">
-                    <div style="color: #f59e0b; font-size: 20px; margin-top: 2px;">
+                <div class="x2-tip" style="background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px; width: 100%; box-sizing: border-box; overflow-x: hidden; overflow-wrap: break-word; word-wrap: break-word;">
+                    <div style="color: #f59e0b; font-size: 20px; margin-top: 2px; flex-shrink: 0;">
                         <i class="fas fa-lightbulb"></i>
                     </div>
-                    <div style="flex: 1;">
+                    <div style="flex: 1; min-width: 0; overflow-wrap: break-word; word-wrap: break-word;">
                         <div style="font-weight: 700; color: var(--text-dark); font-size: 13px; margin-bottom: 6px;">
                             💡 Truco para descarga más rápida:
                         </div>
-                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                             Agrega <strong style="color: #f59e0b;">"x2"</strong> antes de "tiktok.com" en el enlace. 
-                            <br><strong>Ejemplo:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">https://www.<span style="color: #f59e0b;">x2</span>tiktok.com/@usuario/video/1234567890</code>
+                            <br><strong>Ejemplo:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-all; display: inline-block; max-width: 100%;">https://www.<span style="color: #f59e0b;">x2</span>tiktok.com/@usuario/video/1234567890</code>
                         </div>
                     </div>
                 </div>
@@ -1695,56 +1818,174 @@
                 ` : ''}
             `;
             
+            // Función para descargar archivos usando Fetch + Blob (evita problemas de CORS)
+            async function downloadFile(url, filename, buttonElement) {
+                if (!url) {
+                    showError('URL no disponible. Por favor, intenta de nuevo.');
+                    return;
+                }
+                
+                const originalText = buttonElement.innerHTML;
+                const originalDisabled = buttonElement.disabled;
+                const originalBackground = buttonElement.style.background;
+                
+                try {
+                    // Mostrar estado de descarga
+                    buttonElement.disabled = true;
+                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando descarga...';
+                    
+                    console.log('[DOWNLOAD] Iniciando descarga de:', url);
+                    console.log('[DOWNLOAD] Nombre del archivo:', filename);
+                    
+                    // Usar Fetch API para descargar el archivo como blob
+                    // Usamos mode: 'no-cors' para evitar problemas de CORS iniciales
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache',
+                        headers: {
+                            'Referer': 'https://www.tiktok.com/',
+                            'Origin': 'https://www.tiktok.com/'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    }
+                    
+                    // Obtener el tamaño del archivo para mostrar progreso
+                    const contentLength = response.headers.get('content-length');
+                    const total = contentLength ? parseInt(contentLength, 10) : 0;
+                    const contentType = response.headers.get('content-type') || 'video/mp4';
+                    
+                    console.log('[DOWNLOAD] Tamaño del archivo:', total, 'bytes');
+                    console.log('[DOWNLOAD] Tipo de contenido:', contentType);
+                    
+                    // Actualizar estado
+                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
+                    
+                    // Leer la respuesta como blob con progreso si es posible
+                    let blob;
+                    if (response.body && typeof response.body.getReader === 'function') {
+                        // Método con progreso usando stream
+                        const reader = response.body.getReader();
+                        const chunks = [];
+                        let receivedLength = 0;
+                        
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            
+                            if (done) break;
+                            
+                            chunks.push(value);
+                            receivedLength += value.length;
+                            
+                            // Actualizar progreso si tenemos el tamaño total
+                            if (total > 0) {
+                                const percent = Math.round((receivedLength / total) * 100);
+                                buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando... ${percent}%`;
+                            }
+                        }
+                        
+                        blob = new Blob(chunks, { type: contentType });
+                    } else {
+                        // Método simple si no hay stream
+                        blob = await response.blob();
+                    }
+                    
+                    console.log('[DOWNLOAD] Blob creado, tamaño:', blob.size, 'bytes');
+                    
+                    // Crear URL local del blob
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    console.log('[DOWNLOAD] Blob URL creada:', blobUrl);
+                    
+                    // Crear enlace de descarga temporal
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = filename;
+                    downloadLink.style.display = 'none';
+                    
+                    // Asegurarse de que el enlace esté en el DOM antes de hacer click
+                    document.body.appendChild(downloadLink);
+                    
+                    // Pequeño delay para asegurar que el navegador procese el elemento
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    
+                    // Iniciar descarga
+                    downloadLink.click();
+                    console.log('[DOWNLOAD] Descarga iniciada');
+                    
+                    // Limpiar después de un momento
+                    setTimeout(() => {
+                        document.body.removeChild(downloadLink);
+                        window.URL.revokeObjectURL(blobUrl); // Liberar memoria
+                        console.log('[DOWNLOAD] Blob URL revocada y elemento removido');
+                    }, 500);
+                    
+                    // Restaurar botón con éxito
+                    buttonElement.innerHTML = '<i class="fas fa-check-circle"></i> ¡Descargado!';
+                    buttonElement.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+                    
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.style.background = originalBackground;
+                        buttonElement.disabled = originalDisabled;
+                    }, 2500);
+                    
+                } catch (error) {
+                    console.error('[DOWNLOAD] Error durante la descarga:', error);
+                    console.error('[DOWNLOAD] Error details:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                    
+                    // Restaurar botón en caso de error
+                    buttonElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                    buttonElement.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+                    
+                    // Intentar método alternativo: abrir en nueva pestaña como fallback
+                    try {
+                        const fallbackLink = document.createElement('a');
+                        fallbackLink.href = url;
+                        fallbackLink.target = '_blank';
+                        fallbackLink.rel = 'noopener noreferrer';
+                        fallbackLink.style.display = 'none';
+                        document.body.appendChild(fallbackLink);
+                        fallbackLink.click();
+                        setTimeout(() => document.body.removeChild(fallbackLink), 100);
+                        
+                        showError('Si la descarga no inicia automáticamente, haz clic derecho en el video en la nueva pestaña y selecciona "Guardar video como..."');
+                    } catch (fallbackError) {
+                        showError(`Error al descargar: ${error.message}. Por favor, intenta hacer clic derecho en el video y selecciona "Guardar video como...".`);
+                    }
+                    
+                    setTimeout(() => {
+                        buttonElement.innerHTML = originalText;
+                        buttonElement.style.background = originalBackground;
+                        buttonElement.disabled = originalDisabled;
+                    }, 3000);
+                }
+            }
+            
             // Configurar botones de descarga reales
             const downloadVideoBtn = document.getElementById('downloadVideoBtn');
             const downloadAudioBtn = document.getElementById('downloadAudioBtn');
             
-            downloadVideoBtn.onclick = () => {
+            downloadVideoBtn.onclick = async () => {
                 if (!videoUrl) {
                     showError('URL del video no disponible. Por favor, intenta de nuevo.');
                     return;
                 }
-                
-                // Descargar video directamente
-                const downloadLink = document.createElement('a');
-                downloadLink.href = videoUrl;
-                downloadLink.download = `tiktok-video-${videoId}.mp4`;
-                downloadLink.target = '_blank';
-                downloadLink.click();
-                
-                // Feedback visual
-                const originalText = downloadVideoBtn.innerHTML;
-                downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                downloadVideoBtn.disabled = true;
-                
-                setTimeout(() => {
-                    downloadVideoBtn.innerHTML = originalText;
-                    downloadVideoBtn.disabled = false;
-                }, 2000);
+                await downloadFile(videoUrl, `tiktok-video-${videoId}.mp4`, downloadVideoBtn);
             };
             
-            downloadAudioBtn.onclick = () => {
+            downloadAudioBtn.onclick = async () => {
                 if (!audioUrl) {
                     showError('URL del audio no disponible. Por favor, intenta de nuevo.');
                     return;
                 }
-                
-                // Descargar audio directamente
-                const downloadLink = document.createElement('a');
-                downloadLink.href = audioUrl;
-                downloadLink.download = `tiktok-audio-${videoId}.mp3`;
-                downloadLink.target = '_blank';
-                downloadLink.click();
-                
-                // Feedback visual
-                const originalText = downloadAudioBtn.innerHTML;
-                downloadAudioBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                downloadAudioBtn.disabled = true;
-                
-                setTimeout(() => {
-                    downloadAudioBtn.innerHTML = originalText;
-                    downloadAudioBtn.disabled = false;
-                }, 2000);
+                await downloadFile(audioUrl, `tiktok-audio-${videoId}.mp3`, downloadAudioBtn);
             };
             
             resultSection.classList.add('active');
