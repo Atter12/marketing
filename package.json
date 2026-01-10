@@ -17,12 +17,12 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "puppeteer-core": "^21.0.0",
-    "@sparticuz/chromium": "^119.0.0"
+    "@sparticuz/chromium": "^119.0.0",
+    "playwright-aws-lambda": "^0.11.0",
+    "playwright-core": "^1.57.0",
+    "puppeteer-core": "^21.0.0"
   },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.x"
   }
 }
-

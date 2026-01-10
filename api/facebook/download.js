@@ -26,10 +26,10 @@ export default async function handler(req, res) {
 
   try {
     console.log('Extracting request body...');
-    const { url, type = 'ad', usePuppeteer = false } = req.body; // Puppeteer deshabilitado por falta de dependencias del sistema en Vercel
+    const { url, type = 'ad', usePlaywright = true } = req.body; // Playwright habilitado (funciona en Vercel)
     console.log('Received URL:', url);
     console.log('Received type:', type);
-    console.log('Use Puppeteer:', usePuppeteer);
+    console.log('Use Playwright:', usePlaywright);
 
     if (!url) {
       console.log('ERROR: No URL provided');
@@ -56,31 +56,25 @@ export default async function handler(req, res) {
     const normalizedUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&id=${adId}&search_type=keyword_unordered&media_type=all`;
     console.log('Normalized URL:', normalizedUrl);
 
-    // Intentar primero con Puppeteer si está habilitado
-    // Nota: Puede fallar en Vercel por dependencias del sistema, pero intentamos con mejor configuración
-    if (usePuppeteer) {
+    // Intentar primero con Playwright si está habilitado
+    // Playwright funciona mejor en serverless que Puppeteer
+    if (usePlaywright) {
       try {
-        console.log('Attempting with Puppeteer...');
-        const puppeteerResult = await fetchWithPuppeteer(normalizedUrl, adId);
-        if (puppeteerResult && (puppeteerResult.imageUrl || puppeteerResult.videoUrl || puppeteerResult.imageBase64 || puppeteerResult.videoBase64)) {
-          console.log('Puppeteer method succeeded!');
+        console.log('Attempting with Playwright...');
+        const playwrightResult = await fetchWithPlaywright(normalizedUrl, adId);
+        if (playwrightResult && (playwrightResult.imageUrl || playwrightResult.videoUrl || playwrightResult.imageBase64 || playwrightResult.videoBase64)) {
+          console.log('Playwright method succeeded!');
           return res.status(200).json({
             success: true,
             adId,
             id: adId,
-            ...puppeteerResult,
-            method: 'puppeteer'
+            ...playwrightResult,
+            method: 'playwright'
           });
         }
-      } catch (puppeteerError) {
-        console.log('Puppeteer method failed or not available, falling back to traditional method...');
-        console.log('Puppeteer error:', puppeteerError.message);
-        
-        // Si el error es por dependencias del sistema, documentarlo
-        if (puppeteerError.message.includes('libnss3.so') || puppeteerError.message.includes('shared libraries')) {
-          console.log('NOTA: Puppeteer requiere dependencias del sistema que no están disponibles en este entorno.');
-          console.log('NOTA: Considera usar un servicio externo de scraping o desplegar en un entorno con soporte completo.');
-        }
+      } catch (playwrightError) {
+        console.log('Playwright method failed or not available, falling back to traditional method...');
+        console.log('Playwright error:', playwrightError.message);
         
         // Continuar con el método tradicional mejorado
       }
@@ -1738,60 +1732,56 @@ function decodeUnicode(str) {
             .replace(/\\"/g, '"');
 }
 
-// Función para usar Puppeteer (extraída para reutilización)
-async function fetchWithPuppeteer(url, adId) {
+// Función para usar Playwright (mejor para serverless)
+async function fetchWithPlaywright(url, adId) {
   let browser = null;
   try {
-    // Importación dinámica para evitar errores si Puppeteer no está disponible
-    const puppeteer = (await import('puppeteer-core')).default;
-    const chromium = (await import('@sparticuz/chromium')).default;
+    // Importación dinámica
+    const { chromium } = await import('playwright-core');
+    const playwrightAWSLambda = await import('playwright-aws-lambda');
     
-    console.log('[Puppeteer] Launching browser...');
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
-      ignoreHTTPSErrors: true,
+    console.log('[Playwright] Launching browser...');
+    browser = await playwrightAWSLambda.default.launchChromium({
+      headless: true,
     });
 
     const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-    await page.setViewport({ width: 1920, height: 1080 });
+    
+    await page.setViewportSize({ width: 1920, height: 1080 });
     await page.setExtraHTTPHeaders({
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
     });
     
-    console.log('[Puppeteer] Navigating to page...');
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    console.log('[Playwright] Navigating to page...');
+    await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
     
     // Esperar a que cargue el contenido dinámico
-    // Esperar más tiempo para que JavaScript cargue completamente
     try {
       await page.waitForSelector('img, video, [data-testid="ad-card"]', { timeout: 20000 });
     } catch (e) {
-      console.log('[Puppeteer] Primary selector timeout, trying alternative...');
+      console.log('[Playwright] Primary selector timeout, trying alternative...');
     }
     
-    // Esperar a que las imágenes se carguen completamente
+    // Esperar a que las imágenes se carguen
     try {
       await page.waitForFunction(
         () => document.querySelectorAll('img[src*="fbcdn.net"]').length > 0,
         { timeout: 10000 }
       );
     } catch (e) {
-      console.log('[Puppeteer] Image loading timeout, continuing...');
+      console.log('[Playwright] Image loading timeout, continuing...');
     }
     
     // Esperar un poco más para que todas las URLs con firmas estén listas
     await page.waitForTimeout(3000);
     
-    console.log('[Puppeteer] Extracting data from DOM...');
+    console.log('[Playwright] Extracting data from DOM...');
     const adData = await page.evaluate(() => {
       const result = { imageUrl: null, videoUrl: null, pageName: null, adText: null };
       
-      // Buscar todas las imágenes y seleccionar la mejor (mayor resolución, no thumbnail)
+      // Buscar todas las imágenes y seleccionar la mejor
       const images = Array.from(document.querySelectorAll('img'));
       let bestImage = null;
       let bestImageScore = 0;
@@ -1799,18 +1789,19 @@ async function fetchWithPuppeteer(url, adId) {
       for (const img of images) {
         const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original');
         if (src && src.includes('fbcdn.net')) {
-          // Filtrar thumbnails y avatares
+          // Filtrar thumbnails
           if (src.includes('s50x50') || src.includes('s100x100') || src.includes('profile') || src.includes('avatar')) {
             continue;
           }
           
-          // Calcular "score" basado en si tiene parámetros de tamaño (mejor sin ellos)
+          // Calcular score - PRIORIZAR URLs CON FIRMAS
           let score = 0;
+          if (src.includes('oe=')) score += 100;  // MUY IMPORTANTE: tiene firma
+          if (src.includes('oh=')) score += 100;  // MUY IMPORTANTE: tiene firma
           if (!src.includes('stp=')) score += 10;
           if (src.includes('.jpg') || src.includes('.png') || src.includes('.webp')) score += 5;
           if (src.includes('/v/t')) score += 3;
           
-          // Preferir URLs con más parámetros (más completa, más probable que tenga firma)
           const paramCount = (src.match(/[?&]/g) || []).length;
           score += paramCount;
           
@@ -1823,7 +1814,7 @@ async function fetchWithPuppeteer(url, adId) {
       
       result.imageUrl = bestImage;
       
-      // Buscar videos - buscar en múltiples lugares
+      // Buscar videos
       const videoSelectors = [
         'video source[src*=".mp4"]',
         'video[src*=".mp4"]',
@@ -1851,7 +1842,7 @@ async function fetchWithPuppeteer(url, adId) {
         if (result.videoUrl) break;
       }
       
-      // Buscar nombre de página/advertiser
+      // Buscar nombre de página
       const pageNameSelectors = [
         '[data-testid="advertiser-name"]',
         '[data-testid="page-name"]',
@@ -1885,7 +1876,6 @@ async function fetchWithPuppeteer(url, adId) {
         for (const elem of elems) {
           if (elem && elem.textContent) {
             const text = elem.textContent.trim();
-            // Filtrar textos muy cortos o que parecen UI elements
             if (text.length > 20 && 
                 text.length < 1000 && 
                 !text.includes('Facebook') && 
@@ -1899,9 +1889,8 @@ async function fetchWithPuppeteer(url, adId) {
         if (result.adText) break;
       }
       
-      // Si no encontramos nada, intentar buscar en el HTML completo
+      // Buscar en background-image si no encontramos nada
       if (!result.imageUrl) {
-        // Buscar en atributos style que pueden contener URLs de background-image
         const styleElements = document.querySelectorAll('[style*="background-image"], [style*="url("]');
         for (const elem of styleElements) {
           const style = elem.getAttribute('style') || '';
@@ -1916,10 +1905,11 @@ async function fetchWithPuppeteer(url, adId) {
       return result;
     });
     
-    console.log('[Puppeteer] Extracted data:', {
+    console.log('[Playwright] Extracted data:', {
       hasImage: !!adData.imageUrl,
       imageUrlLength: adData.imageUrl ? adData.imageUrl.length : 0,
-      imageUrlPreview: adData.imageUrl ? adData.imageUrl.substring(0, 200) : null,
+      imageUrlPreview: adData.imageUrl ? adData.imageUrl.substring(0, 250) : null,
+      imageHasSignature: adData.imageUrl ? (adData.imageUrl.includes('oe=') && adData.imageUrl.includes('oh=')) : false,
       hasVideo: !!adData.videoUrl,
       hasPageName: !!adData.pageName,
       hasAdText: !!adData.adText,
@@ -1934,8 +1924,8 @@ async function fetchWithPuppeteer(url, adId) {
     
     if (adData.imageUrl) {
       try {
-        console.log('[Puppeteer] Downloading image with valid signature...');
-        console.log('[Puppeteer] Full image URL:', adData.imageUrl);
+        console.log('[Playwright] Downloading image with valid signature...');
+        console.log('[Playwright] Full image URL:', adData.imageUrl);
         const imgResponse = await fetch(adData.imageUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -1947,18 +1937,18 @@ async function fetchWithPuppeteer(url, adId) {
           const buffer = await imgResponse.arrayBuffer();
           const base64 = Buffer.from(buffer).toString('base64');
           imageBase64 = `data:${imgResponse.headers.get('content-type') || 'image/jpeg'};base64,${base64}`;
-          console.log('[Puppeteer] Image downloaded successfully, size:', base64.length);
+          console.log('[Playwright] Image downloaded successfully, size:', base64.length);
         } else {
-          console.log('[Puppeteer] Image download failed with status:', imgResponse.status);
+          console.log('[Playwright] Image download failed with status:', imgResponse.status);
         }
       } catch (e) {
-        console.log('[Puppeteer] Image download error:', e.message);
+        console.log('[Playwright] Image download error:', e.message);
       }
     }
     
     if (adData.videoUrl) {
       try {
-        console.log('[Puppeteer] Downloading video with valid signature...');
+        console.log('[Playwright] Downloading video with valid signature...');
         const vidResponse = await fetch(adData.videoUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -1970,12 +1960,12 @@ async function fetchWithPuppeteer(url, adId) {
           const buffer = await vidResponse.arrayBuffer();
           const base64 = Buffer.from(buffer).toString('base64');
           videoBase64 = `data:${vidResponse.headers.get('content-type') || 'video/mp4'};base64,${base64}`;
-          console.log('[Puppeteer] Video downloaded successfully, size:', base64.length);
+          console.log('[Playwright] Video downloaded successfully, size:', base64.length);
         } else {
-          console.log('[Puppeteer] Video download failed with status:', vidResponse.status);
+          console.log('[Playwright] Video download failed with status:', vidResponse.status);
         }
       } catch (e) {
-        console.log('[Puppeteer] Video download error:', e.message);
+        console.log('[Playwright] Video download error:', e.message);
       }
     }
     
@@ -1989,13 +1979,12 @@ async function fetchWithPuppeteer(url, adId) {
       startDate: new Date().toLocaleDateString('es-ES'),
     };
   } catch (error) {
-    console.error('[Puppeteer] Error:', error.message);
-    // Asegurar que el navegador se cierra incluso en caso de error
+    console.error('[Playwright] Error:', error.message);
     if (browser) {
       try {
         await browser.close();
       } catch (closeError) {
-        console.error('[Puppeteer] Error closing browser:', closeError.message);
+        console.error('[Playwright] Error closing browser:', closeError.message);
       }
     }
     throw error;
