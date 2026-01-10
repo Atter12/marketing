@@ -42,16 +42,23 @@ export default async function handler(req, res) {
     }
 
     // Extraer Ad ID de la URL
+    // Facebook Ads Library puede tener diferentes formatos:
+    // - ?id=123456789
+    // - ?active_status=all&ad_type=all&country=ALL&id=123456789
     const adIdMatch = url.match(/[?&]id=(\d+)/);
     if (!adIdMatch) {
       console.log('ERROR: Could not extract Ad ID from:', url);
-      return res.status(400).json({ error: 'No se pudo extraer el ID del anuncio', url: url });
+      return res.status(400).json({ error: 'No se pudo extraer el ID del anuncio. Asegúrate de usar una URL válida de Facebook Ads Library con el parámetro id=...', url: url });
     }
     const adId = adIdMatch[1];
     console.log('Extracted Ad ID:', adId);
+    
+    // Normalizar URL a formato estándar de Facebook Ads Library
+    const normalizedUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&id=${adId}&search_type=keyword_unordered&media_type=all`;
+    console.log('Normalized URL:', normalizedUrl);
 
     console.log('Calling fetchFacebookAd...');
-    const apiResponse = await fetchFacebookAd(url, adId, type);
+    const apiResponse = await fetchFacebookAd(normalizedUrl, adId, type);
     console.log('API Response:', JSON.stringify(apiResponse, null, 2));
 
     if (!apiResponse.success) {
@@ -92,17 +99,111 @@ export default async function handler(req, res) {
 async function fetchFacebookAd(url, adId, type) {
   console.log('[fetchFacebookAd] Starting with URL:', url, 'AdID:', adId);
   try {
-    // Opción 1: Intentar obtener datos del anuncio desde Facebook Ads Library directamente
+    // Opción 1: Intentar obtener datos usando el endpoint de búsqueda de Facebook Ads Library
+    // Este endpoint puede ser más accesible que la página HTML
     try {
-      console.log('[fetchFacebookAd] Trying direct fetch from Facebook Ads Library...');
-      const response = await fetch(url, {
+      console.log('[fetchFacebookAd] Trying Facebook Ads Library search endpoint...');
+      
+      // Usar el endpoint de búsqueda que Facebook usa internamente
+      const searchUrl = `https://www.facebook.com/ads/library/async/search_ads/?active_status=all&ad_type=all&country=ALL&search_type=keyword_unordered&q=${adId}&media_type=all`;
+      
+      const searchResponse = await fetch(searchUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+          'Accept': '*/*',
+          'Accept-Language': 'es-ES,es;q=0.9',
           'Referer': 'https://www.facebook.com/ads/library',
-          'Origin': 'https://www.facebook.com',
+          'X-Requested-With': 'XMLHttpRequest',
         },
+        redirect: 'follow'
+      });
+      
+      console.log('[fetchFacebookAd] Search endpoint response status:', searchResponse.status);
+      
+      if (searchResponse.ok) {
+        const searchData = await searchResponse.text();
+        console.log('[fetchFacebookAd] Search endpoint data received, length:', searchData.length);
+        
+        // Intentar parsear como JSON
+        try {
+          const jsonData = JSON.parse(searchData);
+          console.log('[fetchFacebookAd] Parsed JSON from search endpoint');
+          
+          // Buscar URLs de media en el JSON
+          const jsonStr = JSON.stringify(jsonData);
+          const videoMatch = jsonStr.match(/https?:\/\/[^"'\s]+\.mp4[^"'\s]*/);
+          const imageMatch = jsonStr.match(/https?:\/\/[^"'\s]+\.(jpg|jpeg|png|webp)[^"'\s]*/);
+          
+          if (videoMatch || imageMatch) {
+            console.log('[fetchFacebookAd] SUCCESS from search endpoint');
+            return {
+              success: true,
+              videoUrl: videoMatch ? videoMatch[0] : null,
+              imageUrl: imageMatch ? imageMatch[0] : null,
+              thumbnail: imageMatch ? imageMatch[0] : null,
+              pageName: 'Página de Facebook',
+              adText: 'Anuncio de Facebook',
+              startDate: new Date().toLocaleDateString('es-ES')
+            };
+          }
+        } catch (parseError) {
+          console.log('[fetchFacebookAd] Could not parse as JSON, trying as HTML');
+          // Si no es JSON, tratar como HTML
+          const html = searchData;
+          
+          // Buscar URLs de CDN en el HTML
+          const cdnVideoPattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.mp4[^"'\s<>]*/gi;
+          const cdnImagePattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.(jpg|jpeg|png|webp)[^"'\s<>]*/gi;
+          
+          const videoMatches = html.match(cdnVideoPattern);
+          const imageMatches = html.match(cdnImagePattern);
+          
+          if (videoMatches && videoMatches.length > 0) {
+            console.log('[fetchFacebookAd] SUCCESS from search endpoint HTML (video)');
+            return {
+              success: true,
+              videoUrl: videoMatches[0],
+              imageUrl: null,
+              thumbnail: null,
+              pageName: 'Página de Facebook',
+              adText: 'Anuncio de Facebook',
+              startDate: new Date().toLocaleDateString('es-ES')
+            };
+          }
+          
+          if (imageMatches && imageMatches.length > 0) {
+            console.log('[fetchFacebookAd] SUCCESS from search endpoint HTML (image)');
+            return {
+              success: true,
+              videoUrl: null,
+              imageUrl: imageMatches[0],
+              thumbnail: imageMatches[0],
+              pageName: 'Página de Facebook',
+              adText: 'Anuncio de Facebook',
+              startDate: new Date().toLocaleDateString('es-ES')
+            };
+          }
+        }
+      }
+    } catch (searchError) {
+      console.log('[fetchFacebookAd] Search endpoint error:', searchError.message);
+    }
+    
+    // Opción 2: Intentar obtener datos del anuncio desde Facebook Ads Library directamente (HTML)
+    try {
+      console.log('[fetchFacebookAd] Trying direct fetch from Facebook Ads Library HTML...');
+      
+      // Headers más completos para simular un navegador real
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.facebook.com/ads/library',
+        'Origin': 'https://www.facebook.com',
+      };
+      
+      const response = await fetch(url, {
+        headers: headers,
         redirect: 'follow'
       });
 
@@ -280,21 +381,196 @@ async function fetchFacebookAd(url, adId, type) {
         }
       } else {
         console.log('[fetchFacebookAd] Direct fetch: Response not OK:', response.status, response.statusText);
+        
+        // Si es 400, intentar obtener el body del error para más información
+        if (response.status === 400) {
+          try {
+            const errorText = await response.text();
+            console.log('[fetchFacebookAd] Error response body (first 500 chars):', errorText.substring(0, 500));
+          } catch (e) {
+            console.log('[fetchFacebookAd] Could not read error response body');
+          }
+        }
       }
     } catch (directError) {
       console.log('[fetchFacebookAd] Error con método direct fetch:', directError.message);
       console.error('[fetchFacebookAd] Direct fetch error stack:', directError.stack);
+      
+      // Si es error de timeout o red, intentar método alternativo
+      if (directError.name === 'AbortError' || directError.message.includes('timeout')) {
+        console.log('[fetchFacebookAd] Timeout error, trying alternative method...');
+      }
     }
 
-    // Opción 2: Intentar usando Graph API pública (si es posible)
+    // Opción 2: Intentar usando el endpoint de Facebook Ads Library con formato diferente
     try {
-      console.log('[fetchFacebookAd] Trying Graph API approach...');
-      // Facebook Graph API puede requerir token, pero intentemos ver si hay endpoints públicos
-      const graphUrl = `https://graph.facebook.com/v18.0/${adId}`;
-      // Nota: Esto probablemente no funcione sin token, pero intentémoslo
-    } catch (graphError) {
-      console.log('[fetchFacebookAd] Graph API error:', graphError.message);
+      console.log('[fetchFacebookAd] Trying alternative URL format...');
+      // Intentar con formato diferente de URL
+      const altUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=${adId}`;
+      
+      const altResponse = await fetch(altUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Referer': 'https://www.facebook.com/',
+        },
+        redirect: 'follow'
+      });
+      
+      if (altResponse.ok) {
+        const altHtml = await altResponse.text();
+        console.log('[fetchFacebookAd] Alternative URL HTML received, length:', altHtml.length);
+        
+        // Buscar URLs de CDN en el HTML alternativo
+        const cdnVideoPattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.mp4[^"'\s<>]*/gi;
+        const cdnImagePattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.(jpg|jpeg|png|webp)[^"'\s<>]*/gi;
+        
+        const videoMatches = altHtml.match(cdnVideoPattern);
+        const imageMatches = altHtml.match(cdnImagePattern);
+        
+        if (videoMatches && videoMatches.length > 0) {
+          const videoUrl = videoMatches[0];
+          console.log('[fetchFacebookAd] SUCCESS from alternative URL (video)');
+          return {
+            success: true,
+            videoUrl: videoUrl,
+            imageUrl: null,
+            thumbnail: null,
+            pageName: 'Página de Facebook',
+            adText: 'Anuncio de Facebook',
+            startDate: new Date().toLocaleDateString('es-ES')
+          };
+        }
+        
+        if (imageMatches && imageMatches.length > 0) {
+          const imageUrl = imageMatches[0];
+          console.log('[fetchFacebookAd] SUCCESS from alternative URL (image)');
+          return {
+            success: true,
+            videoUrl: null,
+            imageUrl: imageUrl,
+            thumbnail: imageUrl,
+            pageName: 'Página de Facebook',
+            adText: 'Anuncio de Facebook',
+            startDate: new Date().toLocaleDateString('es-ES')
+          };
+        }
+      }
+    } catch (altError) {
+      console.log('[fetchFacebookAd] Alternative URL error:', altError.message);
     }
+    
+    // Opción 3: Intentar usando el endpoint de Facebook Ads Library con parámetros específicos
+    try {
+      console.log('[fetchFacebookAd] Trying Facebook Ads Library API endpoint...');
+      
+      // Facebook Ads Library tiene un endpoint que devuelve JSON
+      // Intentar acceder directamente al endpoint de datos
+      const apiUrl = `https://www.facebook.com/ads/library/async/search_ads/?active_status=all&ad_type=all&country=ALL&search_type=keyword_unordered&media_type=all&q=${adId}`;
+      
+      const apiResponse = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'application/json',
+          'Referer': 'https://www.facebook.com/ads/library',
+        }
+      });
+      
+      if (apiResponse.ok) {
+        const apiData = await apiResponse.json();
+        console.log('[fetchFacebookAd] API response received');
+        
+        // Intentar extraer datos del JSON
+        if (apiData && apiData.payload) {
+          // Buscar en la estructura de datos
+          const jsonStr = JSON.stringify(apiData);
+          const videoMatch = jsonStr.match(/https?:\/\/[^"'\s]+\.mp4[^"'\s]*/);
+          const imageMatch = jsonStr.match(/https?:\/\/[^"'\s]+\.(jpg|jpeg|png|webp)[^"'\s]*/);
+          
+          if (videoMatch || imageMatch) {
+            console.log('[fetchFacebookAd] SUCCESS from API endpoint');
+            return {
+              success: true,
+              videoUrl: videoMatch ? videoMatch[0] : null,
+              imageUrl: imageMatch ? imageMatch[0] : null,
+              thumbnail: imageMatch ? imageMatch[0] : null,
+              pageName: 'Página de Facebook',
+              adText: 'Anuncio de Facebook',
+              startDate: new Date().toLocaleDateString('es-ES')
+            };
+          }
+        }
+      }
+    } catch (apiError) {
+      console.log('[fetchFacebookAd] API endpoint error:', apiError.message);
+    }
+    
+    // Opción 4: Intentar usar un servicio público de scraping (si existe)
+    // Similar a como TikTok usa tikwm.com
+    try {
+      console.log('[fetchFacebookAd] Trying public scraping service...');
+      
+      // Intentar con diferentes servicios públicos que puedan hacer scraping de Facebook
+      // Nota: Estos servicios pueden no existir o requerir pago
+      // Por ahora, intentemos un enfoque diferente
+      
+      // Intentar acceder usando el formato de URL de Facebook Ads Library con view_all
+      const viewAllUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=${adId}&search_type=page&media_type=all`;
+      
+      const viewResponse = await fetch(viewAllUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Referer': 'https://www.facebook.com/',
+        },
+        redirect: 'follow'
+      });
+      
+      if (viewResponse.ok) {
+        const viewHtml = await viewResponse.text();
+        console.log('[fetchFacebookAd] View all URL HTML received, length:', viewHtml.length);
+        
+        // Buscar URLs de CDN
+        const cdnVideoPattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.mp4[^"'\s<>]*/gi;
+        const cdnImagePattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net\/v\/t[^"'\s<>]+\.(jpg|jpeg|png|webp)[^"'\s<>]*/gi;
+        
+        const videoMatches = viewHtml.match(cdnVideoPattern);
+        const imageMatches = viewHtml.match(cdnImagePattern);
+        
+        if (videoMatches && videoMatches.length > 0) {
+          console.log('[fetchFacebookAd] SUCCESS from view all URL (video)');
+          return {
+            success: true,
+            videoUrl: videoMatches[0],
+            imageUrl: null,
+            thumbnail: null,
+            pageName: 'Página de Facebook',
+            adText: 'Anuncio de Facebook',
+            startDate: new Date().toLocaleDateString('es-ES')
+          };
+        }
+        
+        if (imageMatches && imageMatches.length > 0) {
+          console.log('[fetchFacebookAd] SUCCESS from view all URL (image)');
+          return {
+            success: true,
+            videoUrl: null,
+            imageUrl: imageMatches[0],
+            thumbnail: imageMatches[0],
+            pageName: 'Página de Facebook',
+            adText: 'Anuncio de Facebook',
+            startDate: new Date().toLocaleDateString('es-ES')
+          };
+        }
+      }
+    } catch (viewError) {
+      console.log('[fetchFacebookAd] View all URL error:', viewError.message);
+    }
+    
+    // Opción 5: Como último recurso, informar que Facebook requiere autenticación
+    console.log('[fetchFacebookAd] All methods failed - Facebook requires browser session or authentication');
 
     // Si todas las opciones fallan
     console.log('[fetchFacebookAd] All methods failed');
