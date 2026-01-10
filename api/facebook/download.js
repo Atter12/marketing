@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   try {
     console.log('Extracting request body...');
-    const { url, type = 'ad', usePuppeteer = true } = req.body;
+    const { url, type = 'ad', usePuppeteer = false } = req.body; // Puppeteer deshabilitado por falta de dependencias del sistema en Vercel
     console.log('Received URL:', url);
     console.log('Received type:', type);
     console.log('Use Puppeteer:', usePuppeteer);
@@ -694,10 +694,58 @@ function parseHtmlForAdData(html, adId) {
         }
       }
       
-      // Patrón 2: Buscar datos en atributos data-* (Facebook usa mucho esto)
-      console.log('[parseHtmlForAdData] Pattern 2: Searching for data-* attributes and encoded JSON...');
+      // === PATRONES DE LA EXTENSIÓN CHROME === //
+      // Estos patrones son los que USA la extensión que funciona
+      console.log('[parseHtmlForAdData] Pattern 2: USANDO PATRONES DE EXTENSIÓN CHROME...');
       
-      // Buscar URLs completas con firmas en atributos data-* codificados
+      // Patrón 2.0: Buscar patrones EXACTOS de la extensión para videos
+      console.log('[parseHtmlForAdData] Pattern 2.0: Buscando con patrones de extensión...');
+      const extensionVideoPatterns = [
+        /"playable_url":"([^"]+)"/gi,
+        /"playable_url_quality_hd":"([^"]+)"/gi,
+        /"sd_src":"([^"]+)"/gi,
+        /"hd_src":"([^"]+)"/gi,
+      ];
+      
+      let extensionVideoMatches = [];
+      for (const pattern of extensionVideoPatterns) {
+        let match;
+        while ((match = pattern.exec(html)) !== null) {
+          if (match[1]) {
+            // Limpiar escape sequences (EXACTAMENTE como la extensión)
+            let url = match[1].replace(/\\u0025/g, '%').replace(/\\/g, '');
+            url = decodeURIComponent(url);
+            if (url && url.startsWith('http')) {
+              extensionVideoMatches.push(url);
+              console.log('[parseHtmlForAdData] Pattern 2.0 - Found video URL con patrón de extensión!');
+              console.log('[parseHtmlForAdData] Pattern 2.0 - URL (first 250 chars):', url.substring(0, 250));
+            }
+          }
+        }
+      }
+      
+      if (extensionVideoMatches.length > 0) {
+        // Usar el mejor video encontrado
+        extensionVideoMatches = [...new Set(extensionVideoMatches)];
+        const bestVideo = extensionVideoMatches.sort((a, b) => b.length - a.length)[0];
+        
+        console.log('[parseHtmlForAdData] Pattern 2.0: SUCCESS - Video encontrado con patrones de extensión!');
+        
+        const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
+        const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
+        
+        return {
+          success: true,
+          videoUrl: bestVideo,
+          imageUrl: null,
+          thumbnail: null,
+          pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
+          adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
+          startDate: new Date().toLocaleDateString('es-ES')
+        };
+      }
+      
+      // Patrón 2.1: Buscar URLs completas con firmas en atributos data-* codificados
       const encodedUrlPatterns = [
         /data-store="({[^"]+fbcdn[^"]+\.(jpg|jpeg|png|webp)[^"]*(?:oe=|oh=)[^"]+})"/gi,
         /data-a11y-store="({[^"]+fbcdn[^"]+\.(jpg|jpeg|png|webp)[^"]*(?:oe=|oh=)[^"]+})"/gi,
@@ -711,15 +759,30 @@ function parseHtmlForAdData(html, adId) {
         while ((match = pattern.exec(html)) !== null) {
           if (match[1] || match[0]) {
             const potentialUrl = match[1] || match[0];
-            // Intentar decodificar si es JSON
+            // Intentar decodificar si es JSON (MEJORADO: como la extensión)
             try {
-              const decoded = potentialUrl.replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+              // Limpiar escape sequences EXACTAMENTE como la extensión
+              let decoded = potentialUrl
+                .replace(/&quot;/g, '"')
+                .replace(/&amp;/g, '&')
+                .replace(/\\u002F/g, '/')
+                .replace(/\\\//g, '/')
+                .replace(/\\u0025/g, '%')
+                .replace(/\\/g, '');
+              
+              // Intentar decodificar URL encoded
+              try {
+                decoded = decodeURIComponent(decoded);
+              } catch (e) {
+                // Si falla, continuar con la versión limpia
+              }
+              
               const jsonMatch = decoded.match(/"uri":\s*"([^"]+)"/) || decoded.match(/"url":\s*"([^"]+)"/) || decoded.match(/"src":\s*"([^"]+)"/);
               if (jsonMatch && jsonMatch[1]) {
-                const url = jsonMatch[1].replace(/\\u002F/g, '/').replace(/\\\//g, '/');
+                const url = jsonMatch[1];
                 if (url.includes('fbcdn.net') && url.includes('oe=') && url.includes('oh=') && !url.includes('s50x50')) {
-                  console.log('[parseHtmlForAdData] Pattern 2: Found complete URL in data-* attribute!');
-                  console.log('[parseHtmlForAdData] Pattern 2 - URL (first 250 chars):', url.substring(0, 250));
+                  console.log('[parseHtmlForAdData] Pattern 2.1: Found complete URL in data-* attribute!');
+                  console.log('[parseHtmlForAdData] Pattern 2.1 - URL (first 250 chars):', url.substring(0, 250));
                   
                   const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
                   const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
@@ -736,10 +799,22 @@ function parseHtmlForAdData(html, adId) {
                 }
               }
             } catch (e) {
-              // Si no es JSON, puede ser URL directa
+              // Si no es JSON, puede ser URL directa (MEJORADO)
               if (potentialUrl.includes('fbcdn.net') && potentialUrl.includes('oe=') && !potentialUrl.includes('s50x50')) {
-                const url = potentialUrl.replace(/&amp;/g, '&').replace(/&quot;/g, '');
-                console.log('[parseHtmlForAdData] Pattern 2: Found direct URL in data-* attribute!');
+                let url = potentialUrl
+                  .replace(/&amp;/g, '&')
+                  .replace(/&quot;/g, '')
+                  .replace(/\\u002F/g, '/')
+                  .replace(/\\\//g, '/')
+                  .replace(/\\u0025/g, '%')
+                  .replace(/\\/g, '');
+                
+                // Intentar decodificar URL encoded
+                try {
+                  url = decodeURIComponent(url);
+                } catch (e) {}
+                
+                console.log('[parseHtmlForAdData] Pattern 2.1: Found direct URL in data-* attribute!');
                 
                 const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
                 const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
