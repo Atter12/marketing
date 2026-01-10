@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step required for static site'",
+    "build": "echo 'No build required'",
     "deploy": "vercel --prod"
   },
   "keywords": [
