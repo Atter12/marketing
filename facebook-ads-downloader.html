@@ -1113,13 +1113,28 @@
                     <div id="extension-instructions" style="display: none; margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #4caf50;">
                         <h5 style="margin-bottom: 12px; color: var(--text-dark); font-size: 14px;">📋 Cómo instalar la extensión:</h5>
                         <ol style="color: var(--text-medium); font-size: 13px; line-height: 1.8; margin-left: 20px;">
-                            <li>Descarga la extensión desde el enlace de arriba</li>
-                            <li>Ve a <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">chrome://extensions/</code></li>
-                            <li>Activa <strong>"Modo Desarrollador"</strong> (switch superior derecha)</li>
-                            <li>Haz clic en <strong>"Cargar descomprimida"</strong></li>
-                            <li>Selecciona la carpeta descargada</li>
-                            <li>¡Listo! Visita Facebook Ads Library y verás botones de descarga</li>
+                            <li><strong>Descarga el ZIP</strong> haciendo clic en "Descargar Extensión (ZIP)" arriba</li>
+                            <li><strong>Extrae/Descomprime el archivo</strong> descargado:
+                                <ul style="margin: 8px 0 8px 20px; font-size: 12px;">
+                                    <li>Clic derecho en el archivo ZIP → "Extraer todo..." o "Extract here"</li>
+                                    <li>Se creará una carpeta <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">fb-ads-downloader-main</code></li>
+                                </ul>
+                            </li>
+                            <li>Abre Chrome y ve a <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">chrome://extensions/</code></li>
+                            <li>Activa <strong>"Modo Desarrollador"</strong> (switch en la esquina superior derecha)</li>
+                            <li>Haz clic en <strong>"Cargar extensión descomprimida"</strong> (Load unpacked)</li>
+                            <li><strong>MUY IMPORTANTE:</strong> Navega hasta la carpeta INTERNA:
+                                <ul style="margin: 8px 0 8px 20px; font-size: 12px;">
+                                    <li><code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">...\fb-ads-downloader-main\fb-ads-downloader</code></li>
+                                    <li>La que contiene <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">manifest.json</code></li>
+                                </ul>
+                            </li>
+                            <li>Selecciona esa carpeta y dale "Seleccionar carpeta"</li>
+                            <li>¡Listo! Visita <a href="https://www.facebook.com/ads/library" target="_blank" style="color: #4caf50; font-weight: 600;">Facebook Ads Library</a> y verás botones de descarga sobre los videos/imágenes</li>
                         </ol>
+                        <div style="margin-top: 12px; padding: 12px; background: #e8f5e9; border-radius: 6px; font-size: 12px; color: #2e7d32;">
+                            <strong>💡 Tip:</strong> Si no ves botones, recarga la página (F5) o haz clic en el ícono de la extensión y presiona "Escanear Página"
+                        </div>
                     </div>
                 </div>
             </div>
