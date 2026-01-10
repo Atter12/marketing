@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargar Videos de TikTok Sin Marca de Agua | EcomTools</title>
+    <meta name="description" content="Descarga videos de TikTok gratis, sin marca de agua y en alta calidad. Herramienta 100% gratuita y sin límites.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --tiktok-gradient: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+            --secondary: #6366f1;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 60px 24px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero-section h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero-section h1 .tiktok-text {
+            background: var(--tiktok-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.7;
+        }
+
+        .subtitle-main {
+            font-size: 20px !important;
+            color: var(--text-medium) !important;
+            max-width: 800px !important;
+            margin: 0 auto 24px !important;
+        }
+
+        /* Download Tool Section */
+        .download-section {
+            padding: 40px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .download-card {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .url-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .url-input::placeholder {
+            color: var(--text-light);
+        }
+
+        .btn-download {
+            padding: 16px 32px;
+            background: var(--tiktok-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(255, 0, 80, 0.3);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 80, 0.4);
+        }
+
+        .btn-download:active {
+            transform: translateY(0);
+        }
+
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .example-urls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .example-url {
+            padding: 8px 16px;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .example-url:hover {
+            background: var(--border);
+            color: var(--text-dark);
+        }
+
+        /* Result Section */
+        .result-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .video-preview {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto 24px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        .video-preview video {
+            width: 100%;
+            display: block;
+        }
+
+        .video-info {
+            text-align: left;
+            margin-bottom: 24px;
+        }
+
+        .video-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .video-info p {
+            font-size: 14px;
+            color: var(--text-medium);
+            margin-bottom: 4px;
+        }
+
+        .download-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-download-option {
+            padding: 12px 24px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-download-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);
+        }
+
+        .loading-state {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading-state.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            display: none;
+            padding: 16px 20px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 24px;
+            background: var(--bg-cream);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--tiktok-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+
+        .feature-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            padding: 80px 24px;
+            background: var(--bg-white);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 18px;
+            color: var(--text-medium);
+            margin-bottom: 60px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 20px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .step-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            padding: 80px 24px;
+            background: var(--bg-cream);
+        }
+
+        .faq-grid {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .faq-question {
+            padding: 20px 24px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .faq-question:hover {
+            background: var(--bg-gray);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .faq-answer.active {
+            max-height: 500px;
+        }
+
+        .faq-answer p {
+            padding: 0 24px 20px;
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.7;
+        }
+
+        .faq-icon {
+            transition: transform 0.3s;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 24px 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .footer-content p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .footer-links a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .download-card {
+                padding: 24px;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn-download {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .features-grid,
+            .steps-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a herramientas
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fab fa-tiktok"></i>
+                100% Gratuito • Sin límites
+            </div>
+            <h1>Descargador de Videos de <span class="tiktok-text">TikTok</span></h1>
+            <p class="subtitle-main">Descarga videos de TikTok <strong style="color: var(--primary); font-weight: 800;">sin marca de agua</strong> en iPhone, Android y PC</p>
+            <div style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border: 2px solid #16a34a; border-radius: 12px; padding: 16px 20px; margin-top: 24px; display: inline-block;">
+                <div style="display: flex; align-items: center; gap: 10px; color: #16a34a; font-weight: 700; font-size: 14px;">
+                    <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+                    <span>100% SIN MARCA DE AGUA • Calidad HD • Totalmente Gratis</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Download Tool Section -->
+    <section class="download-section">
+        <div class="container">
+            <div class="download-card">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="tiktokUrl" 
+                        class="url-input" 
+                        placeholder="Pega aquí el enlace del video de TikTok..."
+                        autocomplete="off"
+                    >
+                    <button class="btn-download" id="downloadBtn">
+                        <i class="fas fa-download"></i>
+                        Descargar
+                    </button>
+                </div>
+
+                <div class="example-urls">
+                    <span style="font-size: 12px; color: var(--text-light);">Ejemplo:</span>
+                    <span class="example-url" onclick="setExampleUrl('https://www.tiktok.com/@usuario/video/1234567890')">
+                        https://www.tiktok.com/@usuario/video/1234567890
+                    </span>
+                </div>
+
+                <div class="x2-tip" style="background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px;">
+                    <div style="color: #f59e0b; font-size: 20px; margin-top: 2px;">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: var(--text-dark); font-size: 13px; margin-bottom: 6px;">
+                            💡 Truco para descarga más rápida:
+                        </div>
+                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                            Agrega <strong style="color: #f59e0b;">"x2"</strong> antes de "tiktok.com" en el enlace. 
+                            <br><strong>Ejemplo:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; font-size: 12px;">https://www.<span style="color: #f59e0b;">x2</span>tiktok.com/@usuario/video/1234567890</code>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="error-message" id="errorMessage">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span id="errorText">Por favor, ingresa un enlace válido de TikTok</span>
+                </div>
+
+                <div class="loading-state" id="loadingState">
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-medium); font-weight: 600; font-size: 15px;">
+                        <i class="fas fa-spinner fa-spin"></i> 
+                        Recuperando datos, ¡espere unos segundos!
+                    </p>
+                </div>
+
+                <div class="result-section" id="resultSection">
+                    <div class="video-preview" id="videoPreview"></div>
+                    
+                    <div class="video-info" id="videoInfo"></div>
+
+                    <div class="download-options">
+                        <button class="btn-download-option" id="downloadVideoBtn">
+                            <i class="fas fa-download"></i>
+                            Descargar Video HD
+                        </button>
+                        <button class="btn-download-option" id="downloadAudioBtn">
+                            <i class="fas fa-music"></i>
+                            Descargar Audio
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>✅ Sin Marca de Agua</h3>
+                    <p>Videos descargados <strong>100% limpios</strong>, sin marcas de agua, sin logos de TikTok y sin ID de usuario. Igual que TikVid.io pero mejor.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-hd-video"></i>
+                    </div>
+                    <h3>Alta Calidad</h3>
+                    <p>Descarga videos en la máxima calidad disponible, manteniendo la resolución original.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3>Descarga Rápida</h3>
+                    <p>Proceso instantáneo, obtén tu video en segundos sin esperas ni complicaciones.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-infinity"></i>
+                    </div>
+                    <h3>Sin Límites</h3>
+                    <p>Descarga tantos videos como quieras, sin restricciones ni límites diarios.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Multiplataforma</h3>
+                    <p>Funciona en cualquier dispositivo: móvil, tablet o computadora sin instalación.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>100% Seguro</h3>
+                    <p>No almacenamos tus videos ni compartimos tus datos. Todo es privado y seguro.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">¿Cómo Descargar Videos de TikTok con EcomTools?</h2>
+            <p class="section-subtitle">Sigue estos simples pasos para descargar cualquier video de TikTok sin marca de agua:</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Abre TikTok y Copia el Enlace</h3>
+                    <p>Abre la aplicación TikTok en tu teléfono o visita TikTok.com. Selecciona el video que deseas descargar y toca el ícono <strong>Compartir</strong> en la esquina inferior derecha del video. Haz clic en <strong>"Copiar enlace"</strong> para obtener el enlace del video.</p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Pega el Enlace y Descarga</h3>
+                    <p>Ve a esta página (EcomTools), pega el enlace de TikTok copiado en el cuadro de búsqueda arriba y presiona el botón <strong>"Descargar"</strong>. <em>💡 Tip: Agrega "x2" antes de tiktok.com para descarga más rápida.</em></p>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Obtén tu Video Sin Marca de Agua</h3>
+                    <p>Presiona el botón <strong>"Descargar MP4"</strong> o <strong>"Descargar MP3"</strong> y espera unos segundos hasta que el archivo se descargue en tu dispositivo. ¡Listo! Video en HD sin marca de agua.</p>
+                </div>
+            </div>
+
+            <div style="max-width: 900px; margin: 60px auto 0; padding: 32px; background: var(--bg-cream); border-radius: 16px; border: 2px solid var(--border);">
+                <h3 style="font-size: 22px; font-weight: 700; color: var(--text-dark); margin-bottom: 24px; text-align: center;">
+                    📱 Descargar en iPhone, Android y PC
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; text-align: left;">
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fab fa-apple"></i> iPhone (iOS)
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            Para iPhone, debes usar el navegador <strong>Safari</strong> en iOS 13 o superior. También puedes usar la aplicación <strong>"Documents by Readdle"</strong> para descargar videos.
+                        </p>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fab fa-android"></i> Android
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            En Android, simplemente copia el enlace del video de TikTok y péguelo en esta página. Funciona en Chrome, Firefox y cualquier navegador móvil.
+                        </p>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-desktop"></i> PC / Computadora
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            En una computadora, copia el enlace del video de TikTok que deseas descargar y péguelo en el cuadro de arriba. Presiona "Descargar" y listo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2 class="section-title">Preguntas Frecuentes</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Es legal descargar videos de TikTok?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, es legal descargar videos de TikTok para uso personal. Sin embargo, debes respetar los derechos de autor del creador del contenido. No uses los videos descargados para fines comerciales sin permiso.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo descargar videos de TikTok sin marca de agua?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>Paso 1:</strong> Pega el enlace del video de TikTok en el cuadro de entrada arriba y presiona el botón "Descargar".</p>
+                        <p><strong>Paso 2:</strong> Presiona el botón "Descargar MP4" o "Descargar MP3" y espera unos segundos hasta que el archivo se descargue en tu dispositivo.</p>
+                        <p><strong>✅ Resultado:</strong> Video completamente limpio, sin marca de agua, sin logos de TikTok y sin ID de usuario. Igual o mejor que TikVid.io.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Los videos descargados tienen marca de agua?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>No, absolutamente NO.</strong> Todos los videos se descargan 100% sin marca de agua. Obtendrás el video completamente limpio en su calidad original HD, sin logos de TikTok, sin marcas de agua y sin ID de usuario encima o debajo del video.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo descargar videos de TikTok en PC?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>En una computadora, simplemente copia el enlace del video de TikTok que deseas descargar y péguelo en el cuadro de búsqueda en la parte superior de esta página. Presiona el botón "Descargar" y listo. Funciona en Chrome, Firefox, Edge, Opera y cualquier navegador moderno.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo descargar videos de TikTok en Android?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Descargar videos de TikTok en Android es muy simple: copia el enlace del video de TikTok → Ve a esta página (EcomTools) → Pega el enlace en el cuadro de entrada → Descargar. Funciona perfectamente en Chrome, Firefox y cualquier navegador móvil Android.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Cómo descargar videos de TikTok en iPhone (iOS)?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Para iPhone, debes usar el navegador <strong>Safari</strong> en iOS 13 o superior. También puedes obtener la aplicación <strong>"Documents by Readdle"</strong> e ir a esta página. Luego: pegar el enlace del video de TikTok → Descargar. El video se guardará en tu carpeta de descargas.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Tengo que pagar por descargar videos de TikTok?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p><strong>No, es completamente gratis.</strong> EcomTools es un sitio web que te ayuda a descargar videos de TikTok sin marca de agua. Esta herramienta es 100% gratuita y no tiene ninguna limitación. Puedes descargar tantos videos como quieras.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Dónde se guardan mis videos de TikTok después de descargarlos?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Cada navegador tiene una carpeta de "descarga" o "Downloads", donde se guardan los archivos descargados. Los videos de TikTok descargados se encuentran en esta carpeta. Si no puedes encontrarlo, busca el historial de descargas de tu navegador.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Hay límite de descargas?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, puedes descargar tantos videos como quieras. No hay límites ni restricciones en el uso de la herramienta.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Funciona en dispositivos móviles?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>Sí, la herramienta funciona perfectamente en dispositivos móviles, tablets y computadoras. No necesitas instalar nada, solo usa tu navegador.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        <span>¿Se almacenan mis datos o videos?</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>No, no almacenamos ningún video ni datos personales. Todo el proceso es privado y seguro. Los videos se procesan temporalmente y se eliminan inmediatamente.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>© 2026 EcomTools. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="index.html">Inicio</a>
+                <a href="#features">Características</a>
+                <a href="#faq">FAQ</a>
+                <a href="#">Soporte</a>
+            </div>
+            <div class="footer-bottom">
+                <p style="margin-bottom: 12px;">Herramienta gratuita para descargar videos de TikTok sin marca de agua</p>
+                <p style="font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 16px;">
+                    <strong>Nota:</strong> EcomTools no es una herramienta oficial de TikTok. No tenemos ninguna relación con TikTok o ByteDance Ltd. Solo apoyamos a los usuarios para descargar videos de TikTok sin marca de agua de manera fácil y rápida. No alojamos ningún contenido de TikTok. Todos los derechos pertenecen a sus respectivos dueños.
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set example URL
+        function setExampleUrl(url) {
+            document.getElementById('tiktokUrl').value = url;
+            document.getElementById('tiktokUrl').focus();
+        }
+
+        // Apply x2 trick for faster download
+        function applyX2Trick(url) {
+            // Convert www.tiktok.com to www.x2tiktok.com for faster processing
+            if (url.includes('www.tiktok.com') && !url.includes('x2tiktok.com')) {
+                return url.replace('www.tiktok.com', 'www.x2tiktok.com');
+            }
+            // If already has x2, keep it; if it's vm.tiktok.com, convert to x2tiktok.com
+            if (url.includes('vm.tiktok.com')) {
+                return url.replace('vm.tiktok.com', 'www.x2tiktok.com');
+            }
+            return url;
+        }
+
+        // Validate TikTok URL
+        function isValidTikTokUrl(url) {
+            const patterns = [
+                /^https?:\/\/(www\.)?(x2)?tiktok\.com/i,
+                /^https?:\/\/vm\.tiktok\.com/i,
+                /\/video\/\d+/i
+            ];
+            return patterns.some(pattern => pattern.test(url));
+        }
+
+        // Extract video ID from URL
+        function extractVideoId(url) {
+            const match = url.match(/\/video\/(\d+)/);
+            return match ? match[1] : null;
+        }
+
+        // Download handler
+        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+        document.getElementById('tiktokUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                handleDownload();
+            }
+        });
+
+        function handleDownload() {
+            const urlInput = document.getElementById('tiktokUrl');
+            let url = urlInput.value.trim();
+            
+            // Hide previous results
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('errorMessage').classList.remove('active');
+            
+            // Validate URL
+            if (!url) {
+                showError('Por favor, ingresa un enlace de TikTok');
+                return;
+            }
+            
+            if (!isValidTikTokUrl(url)) {
+                showError('Por favor, ingresa un enlace válido de TikTok (ej: https://www.tiktok.com/@usuario/video/1234567890)');
+                return;
+            }
+            
+            // Apply x2 trick for faster download (like TikVid.io does)
+            const optimizedUrl = applyX2Trick(url);
+            
+            // Show loading
+            document.getElementById('loadingState').classList.add('active');
+            document.getElementById('downloadBtn').disabled = true;
+            
+            // In production: Call your backend API with the optimized URL
+            // fetch('/api/tiktok/download', { method: 'POST', body: JSON.stringify({ url: optimizedUrl }) })
+            
+            // Simulate API call (this would process the video server-side)
+            setTimeout(() => {
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = false;
+                
+                const videoId = extractVideoId(url) || extractVideoId(optimizedUrl) || '1234567890';
+                showResult(videoId, optimizedUrl);
+            }, 2000);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('active');
+        }
+
+        function showResult(videoId, url) {
+            // In production, this would fetch real video data from your API
+            const resultSection = document.getElementById('resultSection');
+            const videoPreview = document.getElementById('videoPreview');
+            const videoInfo = document.getElementById('videoInfo');
+            
+            // Mock video data
+            videoPreview.innerHTML = `
+                <div style="background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%); aspect-ratio: 9/16; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">
+                    <i class="fab fa-tiktok"></i>
+                </div>
+            `;
+            
+            videoInfo.innerHTML = `
+                <h3>Video TikTok</h3>
+                <p><strong>ID:</strong> ${videoId}</p>
+                <p><strong>Calidad:</strong> HD (720p) • Sin marca de agua</p>
+                <p><strong>Duración:</strong> ~30 segundos</p>
+                <div style="background: #dcfce7; border: 1px solid #16a34a; border-radius: 8px; padding: 10px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #16a34a; font-weight: 600;">
+                    <i class="fas fa-check-circle"></i>
+                    Listo para descargar sin marca de agua
+                </div>
+            `;
+            
+            // Set download handlers
+            document.getElementById('downloadVideoBtn').onclick = () => {
+                // En producción: Llamar a tu API backend
+                // Ejemplo: window.location.href = `/api/download/video?url=${encodeURIComponent(url)}&id=${videoId}`;
+                
+                // Para desarrollo: Simular descarga
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `#`; // En producción sería la URL del video
+                downloadLink.download = `tiktok-video-${videoId}.mp4`;
+                downloadLink.click();
+                
+                // Mostrar mensaje temporal
+                const btn = document.getElementById('downloadVideoBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    alert('En producción, esto iniciaría la descarga del video MP4 sin marca de agua.\n\nBackend API: POST /api/tiktok/download/video\nBody: { url: "' + url + '", id: "' + videoId + '" }');
+                }, 1000);
+            };
+            
+            document.getElementById('downloadAudioBtn').onclick = () => {
+                // En producción: Llamar a tu API backend para extraer audio
+                // Ejemplo: window.location.href = `/api/download/audio?url=${encodeURIComponent(url)}&id=${videoId}`;
+                
+                // Para desarrollo: Simular descarga
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `#`; // En producción sería la URL del audio MP3
+                downloadLink.download = `tiktok-audio-${videoId}.mp3`;
+                downloadLink.click();
+                
+                // Mostrar mensaje temporal
+                const btn = document.getElementById('downloadAudioBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                btn.disabled = true;
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    alert('En producción, esto iniciaría la descarga del audio MP3.\n\nBackend API: POST /api/tiktok/download/audio\nBody: { url: "' + url + '", id: "' + videoId + '" }');
+                }, 1000);
+            };
+            
+            resultSection.classList.add('active');
+            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // FAQ Toggle
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isActive = faqItem.classList.contains('active');
+            
+            // Close all FAQs
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+                item.querySelector('.faq-answer').classList.remove('active');
+            });
+            
+            // Open clicked FAQ if it wasn't active
+            if (!isActive) {
+                faqItem.classList.add('active');
+                faqItem.querySelector('.faq-answer').classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
+

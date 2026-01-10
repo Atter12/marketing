@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcomTools | Herramientas de E-commerce online gratis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            /* Brand Colors - Gradient Coral/Orange */
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            
+            /* Secondary Colors */
+            --secondary: #6366f1;
+            --accent: #10b981;
+            
+            /* Neutrals */
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            
+            /* Tool Category Colors */
+            --cat-conversion: #ff6b4a;
+            --cat-analysis: #6366f1;
+            --cat-marketing: #8b5cf6;
+            --cat-media: #ec4899;
+            --cat-utils: #10b981;
+            --cat-tracking: #f59e0b;
+            
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 10px 16px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-dark);
+            background: var(--bg-gray);
+        }
+
+        .nav-btn {
+            background: var(--primary-gradient) !important;
+            color: white !important;
+            padding: 10px 22px !important;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4) !important;
+        }
+
+        .mobile-menu {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-dark);
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 70px 24px 50px;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255, 107, 74, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero h1 {
+            font-size: clamp(32px, 5vw, 44px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 17px;
+            color: var(--text-medium);
+            max-width: 650px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Category Filters */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding: 20px 24px 28px;
+            flex-wrap: wrap;
+            background: var(--bg-white);
+        }
+
+        .filter-btn {
+            padding: 10px 18px;
+            background: var(--bg-gray);
+            border: none;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .filter-btn:hover {
+            color: var(--text-dark);
+            background: #eee;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);
+        }
+
+        /* Tools Section */
+        .tools-section {
+            padding: 0 24px 70px;
+            background: var(--bg-white);
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .section-title::before,
+        .section-title::after {
+            content: '';
+            width: 40px;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .tool-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-hover);
+            border-color: transparent;
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tool-icon {
+            width: 58px;
+            height: 58px;
+            margin: 0 auto 18px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: transform 0.3s;
+        }
+
+        .tool-card:hover .tool-icon {
+            transform: scale(1.1);
+        }
+
+        .tool-card h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .tool-card p {
+            font-size: 13px;
+            color: var(--text-medium);
+            line-height: 1.55;
+        }
+
+        .tool-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge-new {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .badge-popular {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .badge-pro {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+
+        /* Icon Color Schemes */
+        .icon-coral { background: #fff0ed; color: #ff6b4a; }
+        .icon-indigo { background: #eef2ff; color: #6366f1; }
+        .icon-purple { background: #f5f3ff; color: #8b5cf6; }
+        .icon-pink { background: #fdf2f8; color: #ec4899; }
+        .icon-emerald { background: #ecfdf5; color: #10b981; }
+        .icon-amber { background: #fffbeb; color: #f59e0b; }
+        .icon-sky { background: #f0f9ff; color: #0ea5e9; }
+        .icon-rose { background: #fff1f2; color: #f43f5e; }
+        .icon-teal { background: #f0fdfa; color: #14b8a6; }
+        .icon-orange { background: #fff7ed; color: #f97316; }
+        .icon-blue { background: #eff6ff; color: #3b82f6; }
+        .icon-lime { background: #f7fee7; color: #84cc16; }
+
+        /* Category Dividers */
+        .category-divider {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 30px 0 10px;
+        }
+
+        .category-divider span {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .category-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Feature Section */
+        .feature-section {
+            padding: 80px 24px;
+            background: var(--bg-cream);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .feature-content h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.25;
+        }
+
+        .feature-content p {
+            font-size: 16px;
+            color: var(--text-medium);
+            margin-bottom: 28px;
+            line-height: 1.7;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 28px;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .feature-list i {
+            color: var(--accent);
+            font-size: 14px;
+        }
+
+        .btn-feature {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--primary-gradient);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-feature:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 74, 0.4);
+        }
+
+        .feature-visual {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+
+        .stats-preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: var(--bg-gray);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            color: var(--text-medium);
+            font-weight: 600;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 24px;
+            background: var(--primary-gradient);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-section h2 {
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 32px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            color: var(--primary);
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 60px 24px 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr repeat(4, 1fr);
+            gap: 40px;
+            max-width: 1200px;
+            margin: 0 auto 50px;
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 14px;
+        }
+
+        .footer-brand .logo-icon {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .footer-brand p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-link {
+            width: 38px;
+            height: 38px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-column h4 {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 18px;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column a {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            font-size: 14px;
+            padding: 7px 0;
+            transition: color 0.2s;
+        }
+
+        .footer-column a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .footer-bottom p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-section h2 {
+                font-size: 28px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* Animations */
+        .tool-card {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        .tool-card.visible {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#tools">Herramientas</a></li>
+                    <li><a href="#pricing">Precios</a></li>
+                    <li><a href="#api">API</a></li>
+                    <li><a href="#" class="nav-btn">Comenzar Gratis</a></li>
+                </ul>
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <i class="fas fa-sparkles"></i>
+                +20 herramientas gratuitas
+            </div>
+            <h1>Herramientas online para <span>E-commerce</span></h1>
+            <p>Suite completa y gratuita para crear pre-landings, analizar competidores, descargar videos, calcular profits y mucho más. Sin instalación, 100% online.</p>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <div class="filters">
+        <button class="filter-btn active">Todos</button>
+        <button class="filter-btn">Conversión</button>
+        <button class="filter-btn">Análisis</button>
+        <button class="filter-btn">Media</button>
+        <button class="filter-btn">Marketing</button>
+        <button class="filter-btn">Utilidades</button>
+    </div>
+
+    <!-- Tools Grid -->
+    <section class="tools-section" id="tools">
+        <p class="section-title">Herramientas de Conversión</p>
+        
+        <div class="tools-grid">
+            <!-- CONVERSIÓN -->
+            <div class="tool-card" style="--card-accent: var(--cat-conversion);">
+                <span class="tool-badge badge-popular">Popular</span>
+                <div class="tool-icon icon-coral">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h3>Pre-Landing Builder</h3>
+                <p>Crea páginas de aterrizaje de alta conversión con templates optimizados para ads.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-conversion);">
+                <div class="tool-icon icon-rose">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3>Landing Pages</h3>
+                <p>Diseña landing pages profesionales con formularios y seguimiento integrado.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-conversion);">
+                <span class="tool-badge badge-new">Nuevo</span>
+                <div class="tool-icon icon-orange">
+                    <i class="fas fa-vials"></i>
+                </div>
+                <h3>A/B Testing</h3>
+                <p>Prueba diferentes versiones de tus páginas y descubre cuál convierte mejor.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-conversion);">
+                <div class="tool-icon icon-amber">
+                    <i class="fas fa-qrcode"></i>
+                </div>
+                <h3>Generador QR</h3>
+                <p>Crea códigos QR personalizados para tus productos, links y promociones.</p>
+            </div>
+
+            <!-- ANÁLISIS -->
+            <div class="category-divider">
+                <span>Análisis & Investigación</span>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
+                <span class="tool-badge badge-popular">Popular</span>
+                <div class="tool-icon icon-indigo">
+                    <i class="fas fa-crosshairs"></i>
+                </div>
+                <h3>Análisis Competidores</h3>
+                <p>Monitorea precios, estrategias y creativos de tu competencia en tiempo real.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
+                <div class="tool-icon icon-blue">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Dashboard</h3>
+                <p>Panel centralizado con métricas en tiempo real y KPIs personalizables.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
+                <div class="tool-icon icon-teal">
+                    <i class="fas fa-search-dollar"></i>
+                </div>
+                <h3>Product Research</h3>
+                <p>Encuentra productos ganadores con datos de ventas y tendencias del mercado.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
+                <div class="tool-icon icon-emerald">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <h3>Calculadora Profit</h3>
+                <p>Calcula márgenes, ROI, ROAS y break-even en segundos para optimizar ganancias.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
+                <span class="tool-badge badge-new">Nuevo</span>
+                <div class="tool-icon icon-sky">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h3>Calculadora Envíos</h3>
+                <p>Compara tarifas de envío entre diferentes carriers y calcula costos totales.</p>
+            </div>
+
+            <!-- MEDIA -->
+            <div class="category-divider">
+                <span>Media & Contenido</span>
+            </div>
+
+            <a href="tiktok-downloader.html" style="text-decoration: none; color: inherit;">
+                <div class="tool-card" style="--card-accent: var(--cat-media);">
+                    <span class="tool-badge badge-popular">Popular</span>
+                    <div class="tool-icon icon-pink">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <h3>Descargar TikTok</h3>
+                    <p>Descarga videos de TikTok sin marca de agua para reutilizar en tu contenido.</p>
+                </div>
+            </a>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-blue">
+                    <i class="fab fa-facebook"></i>
+                </div>
+                <h3>Descargar FB Ads</h3>
+                <p>Descarga anuncios de Facebook Ads Library para analizar creativos ganadores.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-rose">
+                    <i class="fab fa-instagram"></i>
+                </div>
+                <h3>Descargar Instagram</h3>
+                <p>Descarga reels, stories y posts de Instagram en alta calidad.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-purple">
+                    <i class="fas fa-images"></i>
+                </div>
+                <h3>Librería Creativos</h3>
+                <p>+10K ads ganadores organizados por nicho con métricas de performance.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-coral">
+                    <i class="fas fa-compress-alt"></i>
+                </div>
+                <h3>Comprimir Imágenes</h3>
+                <p>Reduce el peso de tus imágenes sin perder calidad para mejorar velocidad.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-teal">
+                    <i class="fas fa-crop-alt"></i>
+                </div>
+                <h3>Redimensionar Ads</h3>
+                <p>Ajusta tus imágenes a los tamaños exactos de cada plataforma publicitaria.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <span class="tool-badge badge-new">Nuevo</span>
+                <div class="tool-icon icon-amber">
+                    <i class="fas fa-photo-video"></i>
+                </div>
+                <h3>Mockup Generator</h3>
+                <p>Crea mockups profesionales de tus productos en diferentes escenarios.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-media);">
+                <div class="tool-icon icon-lime">
+                    <i class="fas fa-eraser"></i>
+                </div>
+                <h3>Quitar Fondo</h3>
+                <p>Elimina el fondo de tus fotos de producto automáticamente con IA.</p>
+            </div>
+
+            <!-- MARKETING -->
+            <div class="category-divider">
+                <span>Marketing & Ads</span>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <span class="tool-badge badge-popular">Popular</span>
+                <div class="tool-icon icon-purple">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3>Spy Ads</h3>
+                <p>Descubre los anuncios más exitosos de Facebook y TikTok en tu nicho.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <div class="tool-icon icon-indigo">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h3>Pixel Manager</h3>
+                <p>Gestiona píxeles de Facebook, TikTok y Google desde un solo lugar.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <div class="tool-icon icon-sky">
+                    <i class="fas fa-link"></i>
+                </div>
+                <h3>Generador UTMs</h3>
+                <p>Crea URLs con parámetros UTM para trackear tus campañas correctamente.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <div class="tool-icon icon-emerald">
+                    <i class="fas fa-hashtag"></i>
+                </div>
+                <h3>Analizador Hashtags</h3>
+                <p>Encuentra los mejores hashtags para tu nicho en TikTok e Instagram.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <span class="tool-badge badge-pro">Pro</span>
+                <div class="tool-icon icon-pink">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h3>Copy con IA</h3>
+                <p>Genera descripciones de productos, ads y emails con inteligencia artificial.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                <div class="tool-icon icon-orange">
+                    <i class="fas fa-text-width"></i>
+                </div>
+                <h3>Contador Caracteres</h3>
+                <p>Verifica que tus textos cumplan los límites de cada plataforma de ads.</p>
+            </div>
+
+            <!-- UTILIDADES -->
+            <div class="category-divider">
+                <span>Utilidades & Tracking</span>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <div class="tool-icon icon-emerald">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h3>COD Tracker</h3>
+                <p>Seguimiento de órdenes COD con estados, confirmaciones y entregas.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <div class="tool-icon icon-teal">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <h3>Validador Emails</h3>
+                <p>Verifica que los emails de tus clientes sean válidos antes de enviar.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <div class="tool-icon icon-blue">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <h3>Generador Facturas</h3>
+                <p>Crea facturas profesionales para tus ventas de forma rápida y sencilla.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <span class="tool-badge badge-new">Nuevo</span>
+                <div class="tool-icon icon-amber">
+                    <i class="fas fa-file-csv"></i>
+                </div>
+                <h3>Conversor CSV/Excel</h3>
+                <p>Convierte archivos entre CSV y Excel para importar/exportar productos.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <div class="tool-icon icon-purple">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>Extractor Colores</h3>
+                <p>Extrae la paleta de colores de cualquier imagen o sitio web.</p>
+            </div>
+
+            <div class="tool-card" style="--card-accent: var(--cat-utils);">
+                <div class="tool-icon icon-rose">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3>Conversor Zonas Horarias</h3>
+                <p>Convierte horarios entre zonas para programar ads y lives internacionales.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Section -->
+    <section class="feature-section">
+        <div class="feature-grid">
+            <div class="feature-content">
+                <h2>Todo lo que necesitas para escalar tu negocio</h2>
+                <p>Deja de pagar por múltiples herramientas. EcomTools te da acceso a todo lo que necesitas para analizar, crear y optimizar tu e-commerce en un solo lugar.</p>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check"></i> Más de 25 herramientas gratuitas</li>
+                    <li><i class="fas fa-check"></i> Sin necesidad de instalación</li>
+                    <li><i class="fas fa-check"></i> Actualizaciones constantes</li>
+                    <li><i class="fas fa-check"></i> Soporte en español</li>
+                </ul>
+                <a href="#" class="btn-feature">
+                    Explorar Herramientas
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+            <div class="feature-visual">
+                <div class="stats-preview">
+                    <div class="stat-card">
+                        <div class="number">25+</div>
+                        <div class="label">Herramientas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">10K+</div>
+                        <div class="label">Usuarios</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">500K</div>
+                        <div class="label">Descargas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number">99%</div>
+                        <div class="label">Satisfacción</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>¿Listo para escalar?</h2>
+            <p>Únete a miles de emprendedores que ya usan EcomTools para hacer crecer su negocio.</p>
+            <a href="#" class="btn-cta">
+                <i class="fas fa-rocket"></i>
+                Comenzar Gratis
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <p>Suite de herramientas gratuitas para emprendedores de e-commerce. Analiza, crea y escala tu negocio online.</p>
+                <div class="social-links">
+                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    <a href="#" class="social-link"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h4>Producto</h4>
+                <ul>
+                    <li><a href="#">Herramientas</a></li>
+                    <li><a href="#">Precios</a></li>
+                    <li><a href="#">API</a></li>
+                    <li><a href="#">Changelog</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Recursos</h4>
+                <ul>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">Tutoriales</a></li>
+                    <li><a href="#">Documentación</a></li>
+                    <li><a href="#">Comunidad</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Empresa</h4>
+                <ul>
+                    <li><a href="#">Sobre nosotros</a></li>
+                    <li><a href="#">Contacto</a></li>
+                    <li><a href="#">Afiliados</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="#">Privacidad</a></li>
+                    <li><a href="#">Términos</a></li>
+                    <li><a href="#">Cookies</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 EcomTools. Todos los derechos reservados.</p>
+            <div class="footer-links">
+                <a href="#">Español</a>
+                <a href="#">Soporte</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 50);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.tool-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
