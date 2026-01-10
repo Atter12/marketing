@@ -3,9 +3,6 @@
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
-// Configurar Chromium para Vercel
-chromium.setGraphicsMode(false);
-
 export default async function handler(req, res) {
   console.log('=== FACEBOOK ADS PUPPETEER API CALLED ===');
   console.log('Method:', req.method);
@@ -92,19 +89,24 @@ export default async function handler(req, res) {
     console.log('Page loaded, waiting for content...');
     
     // Esperar a que cargue el contenido dinámico
-    // Intentar múltiples selectores que Facebook puede usar
     try {
-      await page.waitForSelector('img[src*="fbcdn.net"], video source, [data-testid="ad-card"]', { 
-        timeout: 15000 
-      }).catch(() => {
-        console.log('Primary selector not found, continuing...');
-      });
+      await page.waitForSelector('img, video, [data-testid="ad-card"]', { timeout: 20000 });
     } catch (e) {
-      console.log('Timeout waiting for selectors, continuing anyway...');
+      console.log('Primary selector timeout, trying alternative...');
     }
-
-    // Esperar un poco más para que JavaScript cargue completamente
-    await page.waitForTimeout(2000);
+    
+    // Esperar a que las imágenes se carguen completamente
+    try {
+      await page.waitForFunction(
+        () => document.querySelectorAll('img[src*="fbcdn.net"]').length > 0,
+        { timeout: 10000 }
+      );
+    } catch (e) {
+      console.log('Image loading timeout, continuing...');
+    }
+    
+    // Esperar un poco más para que todas las URLs con firmas estén listas
+    await page.waitForTimeout(3000);
     
     console.log('Extracting ad data from DOM...');
     
@@ -118,40 +120,79 @@ export default async function handler(req, res) {
         startDate: null,
       };
 
-      // Buscar imágenes en el DOM cargado con JavaScript
-      const images = Array.from(document.querySelectorAll('img[src*="fbcdn.net"]'));
+      // Buscar todas las imágenes y seleccionar la mejor (mayor resolución, no thumbnail)
+      const images = Array.from(document.querySelectorAll('img'));
+      let bestImage = null;
+      let bestImageScore = 0;
+      
       for (const img of images) {
-        const src = img.getAttribute('src') || img.getAttribute('data-src');
-        if (src && src.includes('fbcdn.net') && 
-            !src.includes('s50x50') && 
-            !src.includes('s100x100') && 
-            !src.includes('profile') &&
-            !src.includes('avatar') &&
-            (src.includes('.jpg') || src.includes('.png') || src.includes('.webp'))) {
-          result.imageUrl = src;
-          console.log('Found image URL:', src.substring(0, 100));
-          break;
+        const src = img.getAttribute('src') || img.getAttribute('data-src') || img.getAttribute('data-original');
+        if (src && src.includes('fbcdn.net')) {
+          // Filtrar thumbnails y avatares
+          if (src.includes('s50x50') || src.includes('s100x100') || src.includes('profile') || src.includes('avatar')) {
+            continue;
+          }
+          
+          // Calcular "score" basado en si tiene parámetros de tamaño (mejor sin ellos)
+          let score = 0;
+          if (!src.includes('stp=')) score += 10;
+          if (src.includes('.jpg') || src.includes('.png') || src.includes('.webp')) score += 5;
+          if (src.includes('/v/t')) score += 3;
+          
+          // Preferir URLs con más parámetros (más completa, más probable que tenga firma)
+          const paramCount = (src.match(/[?&]/g) || []).length;
+          score += paramCount;
+          
+          if (score > bestImageScore) {
+            bestImageScore = score;
+            bestImage = src;
+          }
         }
       }
-
-      // Buscar videos
-      const videos = Array.from(document.querySelectorAll('video source, video[src*="fbcdn.net"]'));
-      for (const video of videos) {
-        const src = video.getAttribute('src') || video.getAttribute('data-src');
-        if (src && (src.includes('.mp4') || src.includes('fbcdn.net/v/'))) {
-          result.videoUrl = src;
-          console.log('Found video URL:', src.substring(0, 100));
-          break;
-        }
+      
+      result.imageUrl = bestImage;
+      if (bestImage) {
+        console.log('Found best image URL:', bestImage.substring(0, 150));
       }
 
-      // Si no encontramos video en elementos video, buscar en atributos data-*
-      if (!result.videoUrl) {
-        const videoElements = document.querySelectorAll('[data-video-url], [data-video-src]');
-        for (const elem of videoElements) {
-          const videoUrl = elem.getAttribute('data-video-url') || elem.getAttribute('data-video-src');
-          if (videoUrl && (videoUrl.includes('.mp4') || videoUrl.includes('fbcdn.net/v/'))) {
-            result.videoUrl = videoUrl;
+      // Buscar videos - buscar en múltiples lugares
+      const videoSelectors = [
+        'video source[src*=".mp4"]',
+        'video[src*=".mp4"]',
+        'source[src*=".mp4"]',
+        '[data-video-url]',
+        '[data-video-src]',
+        'video',
+      ];
+      
+      for (const selector of videoSelectors) {
+        const elements = document.querySelectorAll(selector);
+        for (const elem of elements) {
+          const src = elem.getAttribute('src') || 
+                     elem.getAttribute('data-src') || 
+                     elem.getAttribute('data-video-url') || 
+                     elem.getAttribute('data-video-src');
+          
+          if (src && (src.includes('.mp4') || src.includes('fbcdn.net/v/'))) {
+            if (!src.includes('thumbnail') && !src.includes('preview')) {
+              result.videoUrl = src;
+              console.log('Found video URL:', src.substring(0, 150));
+              break;
+            }
+          }
+        }
+        if (result.videoUrl) break;
+      }
+      
+      // Si no encontramos imagen, buscar en atributos style (background-image)
+      if (!result.imageUrl) {
+        const styleElements = document.querySelectorAll('[style*="background-image"], [style*="url("]');
+        for (const elem of styleElements) {
+          const style = elem.getAttribute('style') || '';
+          const urlMatch = style.match(/url\(['"]?([^'")]+)['"]?\)/);
+          if (urlMatch && urlMatch[1] && urlMatch[1].includes('fbcdn.net') && !urlMatch[1].includes('s50x50')) {
+            result.imageUrl = urlMatch[1];
+            console.log('Found image in style:', result.imageUrl.substring(0, 150));
             break;
           }
         }
@@ -162,14 +203,19 @@ export default async function handler(req, res) {
         '[data-testid="advertiser-name"]',
         '[data-testid="page-name"]',
         'a[href*="/ads/library/?active_status"]',
-        'span[dir="auto"]',
+        '[aria-label*="Page"]',
+        'h3 a',
+        'strong a',
       ];
       
       for (const selector of pageNameSelectors) {
         const elem = document.querySelector(selector);
         if (elem && elem.textContent && elem.textContent.trim().length > 0) {
-          result.pageName = elem.textContent.trim();
-          break;
+          const text = elem.textContent.trim();
+          if (text.length > 2 && text.length < 100) {
+            result.pageName = text;
+            break;
+          }
         }
       }
 
@@ -177,20 +223,27 @@ export default async function handler(req, res) {
       const adTextSelectors = [
         '[data-testid="ad-text"]',
         '[data-testid="ad-creative-body"]',
-        'div[dir="auto"]',
-        'p',
+        '[aria-label*="ad"]',
+        'div[dir="auto"] p',
       ];
       
       for (const selector of adTextSelectors) {
-        const elem = document.querySelector(selector);
-        if (elem && elem.textContent && elem.textContent.trim().length > 10) {
-          const text = elem.textContent.trim();
-          // Filtrar textos muy cortos o que parecen UI elements
-          if (text.length > 20 && !text.includes('Facebook') && !text.includes('Ads Library')) {
-            result.adText = text.substring(0, 500);
-            break;
+        const elems = document.querySelectorAll(selector);
+        for (const elem of elems) {
+          if (elem && elem.textContent) {
+            const text = elem.textContent.trim();
+            // Filtrar textos muy cortos o que parecen UI elements
+            if (text.length > 20 && 
+                text.length < 1000 && 
+                !text.includes('Facebook') && 
+                !text.includes('Ads Library') &&
+                !text.includes('See more')) {
+              result.adText = text.substring(0, 500);
+              break;
+            }
           }
         }
+        if (result.adText) break;
       }
 
       // Buscar fecha (si está disponible)
@@ -208,7 +261,10 @@ export default async function handler(req, res) {
     
     console.log('Ad data extracted:', {
       hasImage: !!adData.imageUrl,
+      imageUrlLength: adData.imageUrl ? adData.imageUrl.length : 0,
+      imageUrlPreview: adData.imageUrl ? adData.imageUrl.substring(0, 200) : null,
       hasVideo: !!adData.videoUrl,
+      videoUrlLength: adData.videoUrl ? adData.videoUrl.length : 0,
       pageName: adData.pageName,
       adTextLength: adData.adText ? adData.adText.length : 0,
     });
