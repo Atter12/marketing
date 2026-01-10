@@ -56,15 +56,37 @@ export default async function handler(req, res) {
     const normalizedUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&id=${adId}&search_type=keyword_unordered&media_type=all`;
     console.log('Normalized URL:', normalizedUrl);
 
-    // Configurar Puppeteer para Vercel
+    // Configurar Puppeteer para Vercel con argumentos mejorados
     console.log('Launching Puppeteer browser...');
-    browser = await puppeteer.launch({
-      args: chromium.args,
+    
+    // Intentar diferentes configuraciones según el entorno
+    const launchOptions = {
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-gpu',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
+      ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
       ignoreHTTPSErrors: true,
-    });
+    };
+    
+    // En entorno de Vercel, usar configuración específica
+    if (process.env.VERCEL) {
+      launchOptions.args.push('--disable-extensions');
+      launchOptions.args.push('--disable-software-rasterizer');
+    }
+    
+    browser = await puppeteer.launch(launchOptions);
 
     console.log('Browser launched successfully');
     const page = await browser.newPage();
