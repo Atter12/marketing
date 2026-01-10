@@ -66,13 +66,133 @@ export default async function handler(req, res) {
       });
     }
 
+    // Si tenemos URLs de imagen/video, intentar descargarlas inmediatamente para evitar expiración de firma
+    // Convertirlas a base64 y servirlas directamente para evitar el problema de 403
+    let imageBase64 = null;
+    let videoBase64 = null;
+    
+    // Función auxiliar para descargar imagen con múltiples estrategias
+    const downloadImageWithStrategies = async (imageUrl) => {
+      if (!imageUrl) return null;
+      
+      const downloadStrategies = [
+        // Estrategia 1: URL original completa
+        {
+          url: imageUrl,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Accept': 'image/*,*/*;q=0.8',
+            'Origin': 'https://www.facebook.com',
+            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-Mode': 'no-cors',
+            'Sec-Fetch-Dest': 'image',
+          }
+        },
+        // Estrategia 2: URL sin parámetros de firma (oe, oh)
+        {
+          url: imageUrl.split('&oe=')[0].split('&oh=')[0].split('?oe=')[0].split('?oh=')[0],
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Accept': 'image/*',
+            'Origin': 'https://www.facebook.com',
+          }
+        },
+        // Estrategia 3: URL sin parámetro stp (tamaño)
+        {
+          url: (() => {
+            const parts = imageUrl.split('?');
+            if (parts.length > 1) {
+              const params = parts[1].split('&').filter(p => !p.includes('stp='));
+              return parts[0] + '?' + params.join('&');
+            }
+            return imageUrl;
+          })(),
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Referer': 'https://www.facebook.com/',
+          }
+        }
+      ];
+      
+      for (let i = 0; i < downloadStrategies.length; i++) {
+        const strategy = downloadStrategies[i];
+        try {
+          console.log(`[Download Image] Strategy ${i + 1}: Trying to download from ${strategy.url.substring(0, 150)}...`);
+          const response = await fetch(strategy.url, {
+            headers: strategy.headers,
+            redirect: 'follow'
+          });
+          
+          console.log(`[Download Image] Strategy ${i + 1} - Response status:`, response.status);
+          
+          if (response.ok) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString('base64');
+            const contentType = response.headers.get('content-type') || 'image/jpeg';
+            const dataUrl = `data:${contentType};base64,${base64}`;
+            console.log(`[Download Image] Strategy ${i + 1} - SUCCESS! Downloaded ${base64.length} bytes`);
+            return dataUrl;
+          } else {
+            const errorText = await response.text().catch(() => '');
+            console.log(`[Download Image] Strategy ${i + 1} - Failed:`, response.status, errorText.substring(0, 100));
+          }
+        } catch (err) {
+          console.log(`[Download Image] Strategy ${i + 1} - Error:`, err.message);
+        }
+      }
+      
+      return null;
+    };
+    
+    if (apiResponse.imageUrl) {
+      console.log('Attempting to download image immediately to avoid signature expiration...');
+      imageBase64 = await downloadImageWithStrategies(apiResponse.imageUrl);
+      if (imageBase64) {
+        console.log('SUCCESS: Image downloaded and converted to base64');
+      } else {
+        console.log('WARNING: Could not download image with any strategy - will use proxy as fallback');
+      }
+    }
+    
+    if (apiResponse.videoUrl) {
+      console.log('Attempting to download video immediately to avoid signature expiration...');
+      // Similar para video (simplificado por ahora)
+      try {
+        const videoResponse = await fetch(apiResponse.videoUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Accept': 'video/*,*/*;q=0.8',
+            'Origin': 'https://www.facebook.com',
+          },
+          redirect: 'follow'
+        });
+        
+        if (videoResponse.ok) {
+          const videoBuffer = await videoResponse.arrayBuffer();
+          videoBase64 = Buffer.from(videoBuffer).toString('base64');
+          const contentType = videoResponse.headers.get('content-type') || 'video/mp4';
+          videoBase64 = `data:${contentType};base64,${videoBase64}`;
+          console.log('SUCCESS: Video downloaded and converted to base64, size:', videoBase64.length);
+        } else {
+          console.log('Failed to download video directly:', videoResponse.status);
+        }
+      } catch (vidError) {
+        console.log('Error downloading video directly:', vidError.message);
+      }
+    }
+
     console.log('SUCCESS: Returning ad data');
     return res.status(200).json({
       success: true,
       adId,
       id: adId,
       videoUrl: apiResponse.videoUrl,
+      videoBase64: videoBase64, // Agregar base64 como alternativa
       imageUrl: apiResponse.imageUrl,
+      imageBase64: imageBase64, // Agregar base64 como alternativa
       thumbnail: apiResponse.thumbnail || apiResponse.imageUrl,
       pageName: apiResponse.pageName,
       author: apiResponse.pageName,
@@ -133,7 +253,64 @@ async function fetchFacebookAd(url, adId, type) {
         
         const result = parseHtmlForAdData(html, adId);
         if (result) {
-          console.log('[fetchFacebookAd] Strategy 1 - SUCCESS!');
+          console.log('[fetchFacebookAd] Strategy 1 - SUCCESS! Parsed data from HTML');
+          
+          // IMPORTANTE: Si tenemos URLs de imagen/video, intentar descargarlas INMEDIATAMENTE
+          // mientras la firma todavía es válida, y convertir a base64 para evitar expiración
+          if (result.imageUrl) {
+            try {
+              console.log('[fetchFacebookAd] Strategy 1 - Attempting immediate image download while signature is fresh...');
+              const imgResponse = await fetch(result.imageUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://www.facebook.com/ads/library/',
+                  'Accept': 'image/*,*/*;q=0.8',
+                  'Origin': 'https://www.facebook.com',
+                },
+                redirect: 'follow'
+              });
+              
+              if (imgResponse.ok) {
+                const imgBuffer = await imgResponse.arrayBuffer();
+                const imgBase64 = Buffer.from(imgBuffer).toString('base64');
+                const imgContentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+                result.imageBase64 = `data:${imgContentType};base64,${imgBase64}`;
+                console.log('[fetchFacebookAd] Strategy 1 - Image downloaded and converted to base64, size:', imgBase64.length);
+              } else {
+                console.log('[fetchFacebookAd] Strategy 1 - Image download failed:', imgResponse.status);
+              }
+            } catch (imgErr) {
+              console.log('[fetchFacebookAd] Strategy 1 - Image download error:', imgErr.message);
+            }
+          }
+          
+          if (result.videoUrl) {
+            try {
+              console.log('[fetchFacebookAd] Strategy 1 - Attempting immediate video download while signature is fresh...');
+              const vidResponse = await fetch(result.videoUrl, {
+                headers: {
+                  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                  'Referer': 'https://www.facebook.com/ads/library/',
+                  'Accept': 'video/*,*/*;q=0.8',
+                  'Origin': 'https://www.facebook.com',
+                },
+                redirect: 'follow'
+              });
+              
+              if (vidResponse.ok) {
+                const vidBuffer = await vidResponse.arrayBuffer();
+                const vidBase64 = Buffer.from(vidBuffer).toString('base64');
+                const vidContentType = vidResponse.headers.get('content-type') || 'video/mp4';
+                result.videoBase64 = `data:${vidContentType};base64,${vidBase64}`;
+                console.log('[fetchFacebookAd] Strategy 1 - Video downloaded and converted to base64, size:', vidBase64.length);
+              } else {
+                console.log('[fetchFacebookAd] Strategy 1 - Video download failed:', vidResponse.status);
+              }
+            } catch (vidErr) {
+              console.log('[fetchFacebookAd] Strategy 1 - Video download error:', vidErr.message);
+            }
+          }
+          
           return result;
         }
       } else {
@@ -669,47 +846,81 @@ function parseHtmlForAdData(html, adId) {
         // Ordenar por longitud (URLs más largas suelen tener mejor calidad)
         imageUrlsToUse.sort((a, b) => b.length - a.length);
         
-        // Tomar la mejor imagen y limpiar
-        let imageUrl = imageUrlsToUse[0].replace(/&amp;/g, '&').replace(/\\\//g, '/').replace(/\\u002F/g, '/');
+        // IMPORTANTE: Buscar primero imágenes sin parámetros de tamaño (s50x50, etc.)
+        // Las imágenes sin stp= o con menos parámetros suelen ser de mejor calidad y más estables
+        console.log('[parseHtmlForAdData] Pattern 3 - Looking for better quality images without size parameters...');
         
-        console.log('[parseHtmlForAdData] Pattern 3 - Raw image URL before fix:', imageUrl.substring(0, 200));
+        // Buscar todas las URLs de imagen en el HTML sin restricciones de patrón
+        const allImageUrls = html.match(/https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[^"'\s<>]*/gi) || [];
+        console.log('[parseHtmlForAdData] Pattern 3 - Found', allImageUrls.length, 'total image URLs in HTML');
         
-        // CORREGIR CRÍTICO: Si la URL tiene & después de .jpg/.png/.webp, cambiarlo por ?
-        // Este es el bug que causa el 403 Forbidden
-        // Usar múltiples estrategias para asegurar que funcione
+        // Filtrar imágenes que NO sean thumbnails y NO tengan parámetros de tamaño pequeño
+        const highQualityImages = allImageUrls.filter(url => {
+          const cleanUrl = url.replace(/&amp;/g, '&');
+          return !cleanUrl.includes('s50x50') &&
+                 !cleanUrl.includes('s100x100') &&
+                 !cleanUrl.includes('s150x150') &&
+                 !cleanUrl.includes('s200x200') &&
+                 !cleanUrl.includes('stp=c379') &&
+                 !cleanUrl.includes('profile') &&
+                 !cleanUrl.includes('avatar');
+        });
         
-        const imageUrlBefore = imageUrl;
+        console.log('[parseHtmlForAdData] Pattern 3 - High quality images (without size params):', highQualityImages.length);
         
-        // Estrategia más simple y directa: buscar cualquier extensión seguida de &
-        // Esto cubre: .jpg&, .jpeg&, .png&, .webp&
-        imageUrl = imageUrl.replace(/\.(jpg|jpeg|png|webp)&/gi, '.$1?');
+        // Usar imágenes de alta calidad si existen, sino usar las filtradas
+        let finalImageUrls = highQualityImages.length > 0 ? highQualityImages : imageUrlsToUse;
         
-        // Si la estrategia anterior no funcionó, usar split y join
-        if (imageUrl === imageUrlBefore && imageUrl.includes('&_nc_cat')) {
-          // Buscar el índice de la extensión
-          const extMatch = imageUrl.match(/\.(jpg|jpeg|png|webp)/i);
-          if (extMatch) {
-            const extEnd = extMatch.index + extMatch[0].length;
-            // Si el siguiente carácter es &, reemplazarlo con ?
-            if (imageUrl.charAt(extEnd) === '&') {
-              imageUrl = imageUrl.substring(0, extEnd) + '?' + imageUrl.substring(extEnd + 1);
-              console.log('[parseHtmlForAdData] Pattern 3 - Fixed using character index replacement');
+        // Si todavía no hay nada bueno, buscar la URL base sin parámetros de tamaño
+        if (finalImageUrls.length === 0 || (finalImageUrls.length > 0 && finalImageUrls[0].includes('s50x50'))) {
+          console.log('[parseHtmlForAdData] Pattern 3 - Attempting to extract base image URL without size parameters...');
+          
+          // Buscar URLs que tengan el mismo nombre de archivo pero sin parámetros stp=
+          for (const imgUrl of allImageUrls) {
+            const baseUrl = imgUrl.split('?')[0]; // URL base sin parámetros
+            const baseName = baseUrl.match(/\/([^\/]+\.(jpg|jpeg|png|webp))$/i);
+            
+            if (baseName && !baseUrl.includes('s50x50') && !baseUrl.includes('profile')) {
+              // Intentar construir URL sin parámetros de tamaño
+              const cleanBaseUrl = baseUrl + '?';
+              if (!finalImageUrls.includes(cleanBaseUrl)) {
+                finalImageUrls = [cleanBaseUrl];
+                console.log('[parseHtmlForAdData] Pattern 3 - Found base image URL:', cleanBaseUrl.substring(0, 150));
+                break;
+              }
             }
           }
         }
         
-        // Verificar si la corrección funcionó
-        if (imageUrl !== imageUrlBefore) {
-          console.log('[parseHtmlForAdData] Pattern 3 - Fixed malformed image URL');
-          console.log('[parseHtmlForAdData] Pattern 3 - Before fix:', imageUrlBefore.substring(0, 150));
-          console.log('[parseHtmlForAdData] Pattern 3 - After fix:', imageUrl.substring(0, 150));
-        } else if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
-          // Si todavía tiene el problema, usar split manual
-          console.log('[parseHtmlForAdData] Pattern 3 - WARNING: Still has & after extension, using manual split...');
-          const parts = imageUrl.split(/(\.(jpg|jpeg|png|webp))&/i);
-          if (parts.length >= 3) {
-            imageUrl = parts[0] + parts[1] + '?' + parts.slice(2).join('');
-            console.log('[parseHtmlForAdData] Pattern 3 - Fixed using manual split');
+        // Ordenar por longitud (URLs más largas pueden tener mejor calidad)
+        finalImageUrls.sort((a, b) => b.length - a.length);
+        
+        // Tomar la mejor imagen y limpiar
+        let imageUrl = (finalImageUrls[0] || imageUrlsToUse[0]).replace(/&amp;/g, '&').replace(/\\\//g, '/').replace(/\\u002F/g, '/');
+        
+        console.log('[parseHtmlForAdData] Pattern 3 - Selected image URL before fix:', imageUrl.substring(0, 200));
+        
+        // CORREGIR: Si la URL tiene & después de .jpg/.png/.webp, cambiarlo por ?
+        const imageUrlBefore = imageUrl;
+        
+        // Estrategia: buscar el punto donde termina la extensión y el primer &
+        const extMatch = imageUrl.match(/\.(jpg|jpeg|png|webp)([&?])/i);
+        if (extMatch && extMatch[2] === '&') {
+          imageUrl = imageUrl.replace(/\.(jpg|jpeg|png|webp)&/i, '.$1?');
+          console.log('[parseHtmlForAdData] Pattern 3 - Fixed: replaced & with ? after extension');
+        }
+        
+        // Si la URL tiene stp= con tamaño pequeño, intentar removerlo
+        if (imageUrl.includes('stp=') && imageUrl.match(/s\d+x\d+/)) {
+          // Intentar construir URL sin parámetro stp
+          const urlParts = imageUrl.split('?');
+          if (urlParts.length > 1) {
+            const params = urlParts[1].split('&');
+            const cleanParams = params.filter(p => !p.includes('stp='));
+            if (cleanParams.length < params.length) {
+              imageUrl = urlParts[0] + '?' + cleanParams.join('&');
+              console.log('[parseHtmlForAdData] Pattern 3 - Removed stp parameter for better quality');
+            }
           }
         }
         
@@ -747,12 +958,12 @@ function parseHtmlForAdData(html, adId) {
           imageUrl = 'https:' + imageUrl;
         }
         
-        // Asegurar que la URL sea válida y empiece con http
-        if (!imageUrl.startsWith('http')) {
-          imageUrl = 'https:' + imageUrl;
-        }
-        
         // Verificar que la corrección funcionó
+        if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
+          console.log('[parseHtmlForAdData] Pattern 3 - CRITICAL: URL still has & after extension!');
+          // Último intento: reemplazo forzado
+          imageUrl = imageUrl.replace(/(\.(jpg|jpeg|png|webp))&/gi, '$1?');
+        }
         if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
           console.log('[parseHtmlForAdData] Pattern 3 - WARNING: URL still has & after extension, attempting final fix...');
           // Último intento: reemplazo directo

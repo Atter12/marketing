@@ -1527,31 +1527,38 @@
             const adId = data.adId || data.id;
             const videoUrl = data.videoUrl;
             const imageUrl = data.imageUrl || data.thumbnail;
+            const videoBase64 = data.videoBase64;
+            const imageBase64 = data.imageBase64;
             const pageName = data.pageName || data.author || 'Página de Facebook';
             const adText = data.adText || data.title || 'Anuncio de Facebook';
             const startDate = data.startDate || 'N/A';
             
-            // Usar proxy para evitar 403 Forbidden de Facebook CDN
-            const proxyVideoUrl = videoUrl ? `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}` : null;
-            const proxyImageUrl = imageUrl ? `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}` : null;
+            // Guardar las URLs para uso en las funciones de descarga
+            window.currentAdData = { adId, videoUrl, imageUrl, videoBase64, imageBase64 };
+            
+            // Usar base64 si está disponible (sin problemas de firma), sino usar proxy
+            const displayVideoUrl = videoBase64 || (videoUrl ? `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}` : null);
+            const displayImageUrl = imageBase64 || (imageUrl ? `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}` : null);
+            
+            console.log('Display URLs - Video:', displayVideoUrl ? 'base64 or proxy' : 'none', 'Image:', displayImageUrl ? 'base64 or proxy' : 'none');
             
             // Mostrar preview del anuncio (video o imagen)
-            if (videoUrl) {
+            if (videoUrl || videoBase64) {
                 adPreview.innerHTML = `
                     <video 
                         controls 
                         preload="metadata" 
-                        poster="${proxyImageUrl || ''}"
+                        poster="${displayImageUrl || ''}"
                         style="width: 100%; height: auto; border-radius: 16px;"
                     >
-                        <source src="${proxyVideoUrl}" type="video/mp4">
+                        <source src="${displayVideoUrl}" type="video/mp4">
                         Tu navegador no soporta el tag de video.
                     </video>
                 `;
-            } else if (imageUrl) {
+            } else if (imageUrl || imageBase64) {
                 adPreview.innerHTML = `
                     <img 
-                        src="${proxyImageUrl}" 
+                        src="${displayImageUrl}" 
                         alt="Preview del anuncio"
                         style="width: 100%; height: auto; border-radius: 16px;"
                         onerror="console.error('Error loading image:', this.src)"
@@ -1581,13 +1588,12 @@
             const downloadImageBtn = document.getElementById('downloadImageBtn');
             
             downloadVideoBtn.onclick = async () => {
-                if (!videoUrl) {
+                const { videoUrl, videoBase64, adId } = window.currentAdData || {};
+                
+                if (!videoUrl && !videoBase64) {
                     showError('Este anuncio no tiene video disponible o solo tiene imagen. Intenta descargar la imagen.');
                     return;
                 }
-                
-                // Usar proxy para descargar el video
-                const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}`;
                 
                 try {
                     // Feedback visual
@@ -1595,13 +1601,29 @@
                     downloadVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
                     downloadVideoBtn.disabled = true;
                     
-                    // Descargar usando el proxy
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) {
-                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    let blob;
+                    
+                    // Si tenemos base64, usarlo directamente (más rápido y sin problemas de firma)
+                    if (videoBase64) {
+                        console.log('Downloading video from base64...');
+                        const base64Data = videoBase64.split(',')[1]; // Remover data:video/mp4;base64,
+                        const binaryString = atob(base64Data);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        blob = new Blob([bytes], { type: 'video/mp4' });
+                    } else {
+                        // Si no hay base64, usar proxy
+                        console.log('Downloading video from proxy...');
+                        const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}`;
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) {
+                            throw new Error(`Error ${response.status}: ${response.statusText}`);
+                        }
+                        blob = await response.blob();
                     }
                     
-                    const blob = await response.blob();
                     const blobUrl = URL.createObjectURL(blob);
                     
                     // Crear link de descarga
@@ -1627,19 +1649,19 @@
                     console.error('Error downloading video:', error);
                     showError(`Error al descargar el video: ${error.message}`);
                     
+                    const originalText = downloadVideoBtn.innerHTML.replace(/<i[^>]*>.*?<\/i>\s*/, '') || '<i class="fas fa-download"></i> Descargar Video';
                     downloadVideoBtn.innerHTML = originalText;
                     downloadVideoBtn.disabled = false;
                 }
             };
             
             downloadImageBtn.onclick = async () => {
-                if (!imageUrl) {
+                const { imageUrl, imageBase64, adId } = window.currentAdData || {};
+                
+                if (!imageUrl && !imageBase64) {
                     showError('URL de la imagen no disponible. Por favor, intenta de nuevo.');
                     return;
                 }
-                
-                // Usar proxy para descargar la imagen
-                const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}`;
                 
                 try {
                     // Feedback visual
@@ -1647,13 +1669,29 @@
                     downloadImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
                     downloadImageBtn.disabled = true;
                     
-                    // Descargar usando el proxy
-                    const response = await fetch(proxyUrl);
-                    if (!response.ok) {
-                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    let blob;
+                    
+                    // Si tenemos base64, usarlo directamente (más rápido y sin problemas de firma)
+                    if (imageBase64) {
+                        console.log('Downloading image from base64...');
+                        const base64Data = imageBase64.split(',')[1]; // Remover data:image/jpeg;base64,
+                        const binaryString = atob(base64Data);
+                        const bytes = new Uint8Array(binaryString.length);
+                        for (let i = 0; i < binaryString.length; i++) {
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }
+                        blob = new Blob([bytes], { type: 'image/jpeg' });
+                    } else {
+                        // Si no hay base64, usar proxy
+                        console.log('Downloading image from proxy...');
+                        const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}`;
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) {
+                            throw new Error(`Error ${response.status}: ${response.statusText}`);
+                        }
+                        blob = await response.blob();
                     }
                     
-                    const blob = await response.blob();
                     const blobUrl = URL.createObjectURL(blob);
                     
                     // Crear link de descarga
@@ -1679,6 +1717,7 @@
                     console.error('Error downloading image:', error);
                     showError(`Error al descargar la imagen: ${error.message}`);
                     
+                    const originalText = downloadImageBtn.innerHTML.replace(/<i[^>]*>.*?<\/i>\s*/, '') || '<i class="fas fa-download"></i> Descargar Imagen';
                     downloadImageBtn.innerHTML = originalText;
                     downloadImageBtn.disabled = false;
                 }
