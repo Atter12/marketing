@@ -1,0 +1,25 @@
+{
+  "name": "ecomtools-marketing",
+  "version": "1.0.0",
+  "description": "Suite de herramientas gratuitas para e-commerce",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "tiktok",
+    "downloader",
+    "ecommerce",
+    "tools"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+

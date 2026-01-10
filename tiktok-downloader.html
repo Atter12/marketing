@@ -1004,7 +1004,7 @@
             }
         });
 
-        function handleDownload() {
+        async function handleDownload() {
             const urlInput = document.getElementById('tiktokUrl');
             let url = urlInput.value.trim();
             
@@ -1030,17 +1030,38 @@
             document.getElementById('loadingState').classList.add('active');
             document.getElementById('downloadBtn').disabled = true;
             
-            // In production: Call your backend API with the optimized URL
-            // fetch('/api/tiktok/download', { method: 'POST', body: JSON.stringify({ url: optimizedUrl }) })
-            
-            // Simulate API call (this would process the video server-side)
-            setTimeout(() => {
+            // Llamar al backend API real
+            try {
+                const response = await fetch('/api/tiktok/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        url: optimizedUrl,
+                        type: 'video'
+                    })
+                });
+
+                const data = await response.json();
+
                 document.getElementById('loadingState').classList.remove('active');
                 document.getElementById('downloadBtn').disabled = false;
+
+                if (!response.ok || !data.success) {
+                    showError(data.error || 'Error al procesar el video. Por favor, intenta de nuevo.');
+                    return;
+                }
+
+                // Mostrar resultado con datos reales del video
+                showResult(data);
                 
-                const videoId = extractVideoId(url) || extractVideoId(optimizedUrl) || '1234567890';
-                showResult(videoId, optimizedUrl);
-            }, 2000);
+            } catch (error) {
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = false;
+                showError('Error de conexión. Por favor, verifica tu conexión e intenta de nuevo.');
+                console.error('Error:', error);
+            }
         }
 
         function showError(message) {
@@ -1050,75 +1071,111 @@
             errorDiv.classList.add('active');
         }
 
-        function showResult(videoId, url) {
-            // In production, this would fetch real video data from your API
+        function showResult(data) {
             const resultSection = document.getElementById('resultSection');
             const videoPreview = document.getElementById('videoPreview');
             const videoInfo = document.getElementById('videoInfo');
             
-            // Mock video data
-            videoPreview.innerHTML = `
-                <div style="background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%); aspect-ratio: 9/16; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px;">
-                    <i class="fab fa-tiktok"></i>
-                </div>
-            `;
+            const videoId = data.videoId;
+            const videoUrl = data.videoUrl;
+            const audioUrl = data.audioUrl;
+            const thumbnail = data.thumbnail;
+            const duration = data.duration || 'N/A';
+            const author = data.author || '@usuario';
+            const title = data.title || 'Video TikTok';
+            
+            // Mostrar preview del video o thumbnail
+            if (videoUrl) {
+                videoPreview.innerHTML = `
+                    <video 
+                        controls 
+                        preload="metadata" 
+                        poster="${thumbnail || ''}"
+                        style="width: 100%; height: auto; border-radius: 16px;"
+                    >
+                        <source src="${videoUrl}" type="video/mp4">
+                        Tu navegador no soporta el tag de video.
+                    </video>
+                `;
+            } else if (thumbnail) {
+                videoPreview.innerHTML = `
+                    <img 
+                        src="${thumbnail}" 
+                        alt="Preview del video"
+                        style="width: 100%; height: auto; border-radius: 16px;"
+                    >
+                `;
+            } else {
+                videoPreview.innerHTML = `
+                    <div style="background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%); aspect-ratio: 9/16; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; border-radius: 16px;">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                `;
+            }
             
             videoInfo.innerHTML = `
-                <h3>Video TikTok</h3>
+                <h3>${title}</h3>
+                <p><strong>Autor:</strong> ${author}</p>
                 <p><strong>ID:</strong> ${videoId}</p>
-                <p><strong>Calidad:</strong> HD (720p) • Sin marca de agua</p>
-                <p><strong>Duración:</strong> ~30 segundos</p>
+                <p><strong>Duración:</strong> ${duration} segundos</p>
+                ${data.noWatermark ? `
                 <div style="background: #dcfce7; border: 1px solid #16a34a; border-radius: 8px; padding: 10px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #16a34a; font-weight: 600;">
                     <i class="fas fa-check-circle"></i>
-                    Listo para descargar sin marca de agua
+                    100% Sin marca de agua • Listo para descargar
                 </div>
+                ` : ''}
             `;
             
-            // Set download handlers
-            document.getElementById('downloadVideoBtn').onclick = () => {
-                // En producción: Llamar a tu API backend
-                // Ejemplo: window.location.href = `/api/download/video?url=${encodeURIComponent(url)}&id=${videoId}`;
+            // Configurar botones de descarga reales
+            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
+            const downloadAudioBtn = document.getElementById('downloadAudioBtn');
+            
+            downloadVideoBtn.onclick = () => {
+                if (!videoUrl) {
+                    showError('URL del video no disponible. Por favor, intenta de nuevo.');
+                    return;
+                }
                 
-                // Para desarrollo: Simular descarga
+                // Descargar video directamente
                 const downloadLink = document.createElement('a');
-                downloadLink.href = `#`; // En producción sería la URL del video
+                downloadLink.href = videoUrl;
                 downloadLink.download = `tiktok-video-${videoId}.mp4`;
+                downloadLink.target = '_blank';
                 downloadLink.click();
                 
-                // Mostrar mensaje temporal
-                const btn = document.getElementById('downloadVideoBtn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                btn.disabled = true;
+                // Feedback visual
+                const originalText = downloadVideoBtn.innerHTML;
+                downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                downloadVideoBtn.disabled = true;
                 
                 setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    alert('En producción, esto iniciaría la descarga del video MP4 sin marca de agua.\n\nBackend API: POST /api/tiktok/download/video\nBody: { url: "' + url + '", id: "' + videoId + '" }');
-                }, 1000);
+                    downloadVideoBtn.innerHTML = originalText;
+                    downloadVideoBtn.disabled = false;
+                }, 2000);
             };
             
-            document.getElementById('downloadAudioBtn').onclick = () => {
-                // En producción: Llamar a tu API backend para extraer audio
-                // Ejemplo: window.location.href = `/api/download/audio?url=${encodeURIComponent(url)}&id=${videoId}`;
+            downloadAudioBtn.onclick = () => {
+                if (!audioUrl) {
+                    showError('URL del audio no disponible. Por favor, intenta de nuevo.');
+                    return;
+                }
                 
-                // Para desarrollo: Simular descarga
+                // Descargar audio directamente
                 const downloadLink = document.createElement('a');
-                downloadLink.href = `#`; // En producción sería la URL del audio MP3
+                downloadLink.href = audioUrl;
                 downloadLink.download = `tiktok-audio-${videoId}.mp3`;
+                downloadLink.target = '_blank';
                 downloadLink.click();
                 
-                // Mostrar mensaje temporal
-                const btn = document.getElementById('downloadAudioBtn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                btn.disabled = true;
+                // Feedback visual
+                const originalText = downloadAudioBtn.innerHTML;
+                downloadAudioBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
+                downloadAudioBtn.disabled = true;
                 
                 setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.disabled = false;
-                    alert('En producción, esto iniciaría la descarga del audio MP3.\n\nBackend API: POST /api/tiktok/download/audio\nBody: { url: "' + url + '", id: "' + videoId + '" }');
-                }, 1000);
+                    downloadAudioBtn.innerHTML = originalText;
+                    downloadAudioBtn.disabled = false;
+                }, 2000);
             };
             
             resultSection.classList.add('active');
