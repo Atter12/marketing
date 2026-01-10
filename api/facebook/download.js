@@ -98,20 +98,27 @@ async function fetchFacebookAd(url, adId, type) {
   console.log('[fetchFacebookAd] Starting with URL:', url, 'AdID:', adId);
   
   try {
-    // Estrategia 1: Intentar con URL simplificada (sin tantos parámetros)
+    // Estrategia 1: Intentar con headers completos de navegador (incluyendo Sec-Fetch que Facebook requiere)
     const simpleUrl = `https://www.facebook.com/ads/library/?id=${adId}`;
-    console.log('[fetchFacebookAd] Strategy 1: Trying simple URL:', simpleUrl);
+    console.log('[fetchFacebookAd] Strategy 1: Trying with full browser headers (including Sec-Fetch)...');
     
     try {
       const response1 = await fetch(simpleUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
           'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
           'Accept-Encoding': 'gzip, deflate, br',
-          'Referer': 'https://www.facebook.com/',
+          'Referer': 'https://www.facebook.com/ads/library/',
+          'Origin': 'https://www.facebook.com',
           'Connection': 'keep-alive',
           'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Site': 'same-origin',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'DNT': '1',
         },
         redirect: 'follow'
       });
@@ -132,20 +139,39 @@ async function fetchFacebookAd(url, adId, type) {
       } else {
         const errorText = await response1.text().catch(() => '');
         console.log('[fetchFacebookAd] Strategy 1 - Error response (first 1000 chars):', errorText.substring(0, 1000));
+        
+        // Intentar parsear incluso si es un error (a veces el error contiene datos útiles)
+        if (errorText && errorText.length > 100) {
+          console.log('[fetchFacebookAd] Strategy 1 - Trying to parse error response for data...');
+          const result = parseHtmlForAdData(errorText, adId);
+          if (result) {
+            console.log('[fetchFacebookAd] Strategy 1 - SUCCESS from error response parsing!');
+            return result;
+          }
+        }
       }
     } catch (err1) {
       console.log('[fetchFacebookAd] Strategy 1 - Error:', err1.message);
     }
 
-    // Estrategia 2: Intentar con URL original (normalizada)
-    console.log('[fetchFacebookAd] Strategy 2: Trying normalized URL...');
+    // Estrategia 2: Intentar con URL original (normalizada) y headers Sec-Fetch completos
+    console.log('[fetchFacebookAd] Strategy 2: Trying normalized URL with Sec-Fetch headers...');
     try {
       const response2 = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Referer': 'https://www.facebook.com/ads/library',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
           'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://www.facebook.com/ads/library/',
+          'Origin': 'https://www.facebook.com',
+          'Sec-Fetch-Site': 'same-origin',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
         },
         redirect: 'follow'
       });
@@ -165,20 +191,67 @@ async function fetchFacebookAd(url, adId, type) {
       } else {
         const errorText = await response2.text().catch(() => '');
         console.log('[fetchFacebookAd] Strategy 2 - Error response (first 1000 chars):', errorText.substring(0, 1000));
+        
+        // Intentar parsear incluso si es un error
+        if (errorText && errorText.length > 100) {
+          console.log('[fetchFacebookAd] Strategy 2 - Trying to parse error response for data...');
+          const result = parseHtmlForAdData(errorText, adId);
+          if (result) {
+            console.log('[fetchFacebookAd] Strategy 2 - SUCCESS from error response parsing!');
+            return result;
+          }
+        }
       }
     } catch (err2) {
       console.log('[fetchFacebookAd] Strategy 2 - Error:', err2.message);
     }
 
-    // Estrategia 3: Intentar con headers mínimos (como TikTok)
-    console.log('[fetchFacebookAd] Strategy 3: Trying with minimal headers (TikTok style)...');
+    // Estrategia 3: Intentar primero obtener cookies de la página principal y luego usar esas cookies
+    console.log('[fetchFacebookAd] Strategy 3: Trying to get cookies from main page first...');
     try {
-      const response3 = await fetch(simpleUrl, {
+      // Primero hacer una petición a la página principal para obtener cookies
+      const mainPageResponse = await fetch('https://www.facebook.com/ads/library/', {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Referer': 'https://www.facebook.com/',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-User': '?1',
         },
+        redirect: 'follow'
+      });
+      
+      console.log('[fetchFacebookAd] Strategy 3 - Main page response status:', mainPageResponse.status);
+      
+      // Extraer cookies si existen
+      const setCookieHeaders = mainPageResponse.headers.get('set-cookie');
+      let cookies = '';
+      if (setCookieHeaders) {
+        cookies = setCookieHeaders.split(',').map(c => c.split(';')[0].trim()).join('; ');
+        console.log('[fetchFacebookAd] Strategy 3 - Extracted cookies:', cookies.substring(0, 200));
+      }
+      
+      // Ahora intentar con las cookies obtenidas
+      const headers3 = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8',
+        'Referer': 'https://www.facebook.com/ads/library/',
+        'Origin': 'https://www.facebook.com',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-User': '?1',
+      };
+      
+      if (cookies) {
+        headers3['Cookie'] = cookies;
+      }
+      
+      const response3 = await fetch(simpleUrl, {
+        headers: headers3,
         redirect: 'follow'
       });
 
@@ -211,20 +284,69 @@ async function fetchFacebookAd(url, adId, type) {
       console.error('[fetchFacebookAd] Strategy 3 - Error stack:', err3.stack);
     }
 
-    // Estrategia 4: Intentar acceder sin el id en la URL, usando search
-    console.log('[fetchFacebookAd] Strategy 4: Trying search endpoint approach...');
+    // Estrategia 4: Intentar con Graph API público de Facebook (si existe endpoint para Ads Library)
+    console.log('[fetchFacebookAd] Strategy 4: Trying Facebook Graph API approach...');
     try {
-      const searchUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&q=${adId}&search_type=keyword_unordered&media_type=all`;
-      console.log('[fetchFacebookAd] Strategy 4 - Search URL:', searchUrl);
+      // Facebook Graph API puede tener un endpoint público para Ads Library
+      // Intentar diferentes variantes
+      const graphApiUrls = [
+        `https://graph.facebook.com/v18.0/${adId}`,
+        `https://graph.facebook.com/v18.0/ads_library/${adId}`,
+        `https://www.facebook.com/ads/library/async/get_ad/?id=${adId}`,
+      ];
       
-      const response4 = await fetch(searchUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html',
-          'Referer': 'https://www.facebook.com/ads/library',
-        },
-        redirect: 'follow'
-      });
+      for (let i = 0; i < graphApiUrls.length; i++) {
+        const apiUrl = graphApiUrls[i];
+        console.log(`[fetchFacebookAd] Strategy 4.${i+1} - Trying Graph API URL:`, apiUrl);
+        
+        try {
+          const response4 = await fetch(apiUrl, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'application/json, text/html, */*',
+              'Referer': 'https://www.facebook.com/ads/library/',
+              'Origin': 'https://www.facebook.com',
+            },
+            redirect: 'follow'
+          });
+          
+          console.log(`[fetchFacebookAd] Strategy 4.${i+1} - Response status:`, response4.status);
+          
+          if (response4.ok) {
+            const contentType = response4.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+              const jsonData = await response4.json();
+              console.log(`[fetchFacebookAd] Strategy 4.${i+1} - JSON received:`, JSON.stringify(jsonData, null, 2).substring(0, 500));
+              
+              const adData = extractAdData(jsonData, adId);
+              if (adData.videoUrl || adData.imageUrl) {
+                console.log(`[fetchFacebookAd] Strategy 4.${i+1} - SUCCESS from Graph API!`);
+                return {
+                  success: true,
+                  videoUrl: adData.videoUrl || null,
+                  imageUrl: adData.imageUrl || null,
+                  thumbnail: adData.thumbnail || adData.imageUrl || null,
+                  pageName: adData.pageName || 'Página de Facebook',
+                  adText: adData.adText || 'Anuncio de Facebook',
+                  startDate: adData.startDate || new Date().toLocaleDateString('es-ES')
+                };
+              }
+            } else {
+              const html = await response4.text();
+              console.log(`[fetchFacebookAd] Strategy 4.${i+1} - HTML received, length:`, html.length);
+              
+              const result = parseHtmlForAdData(html, adId);
+              if (result) {
+                console.log(`[fetchFacebookAd] Strategy 4.${i+1} - SUCCESS from HTML parsing!`);
+                return result;
+              }
+            }
+          }
+        } catch (err4) {
+          console.log(`[fetchFacebookAd] Strategy 4.${i+1} - Error:`, err4.message);
+          continue;
+        }
+      }
 
       console.log('[fetchFacebookAd] Strategy 4 - Response status:', response4.status);
       
