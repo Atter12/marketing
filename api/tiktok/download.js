@@ -1,60 +1,72 @@
 // Vercel Serverless Function para descargar videos de TikTok sin marca de agua
 export default async function handler(req, res) {
+  console.log('=== TIKTOK API CALLED ===');
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Body:', JSON.stringify(req.body));
+  
   // Permitir CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
+    console.log('OPTIONS request - returning CORS headers');
     res.status(200).end();
     return;
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' });
+    console.log('Method not allowed:', req.method);
+    return res.status(405).json({ error: 'Método no permitido', method: req.method });
   }
+  
+  console.log('Processing POST request...');
 
   try {
+    console.log('Extracting request body...');
     const { url, type = 'video' } = req.body;
+    console.log('Received URL:', url);
+    console.log('Received type:', type);
 
     if (!url) {
+      console.log('ERROR: No URL provided');
       return res.status(400).json({ error: 'URL de TikTok requerida' });
     }
 
     // Validar URL de TikTok
     const tiktokUrlPattern = /^https?:\/\/(www\.)?(x2)?tiktok\.com|vm\.tiktok\.com/i;
     if (!tiktokUrlPattern.test(url)) {
-      return res.status(400).json({ error: 'URL de TikTok inválida' });
+      console.log('ERROR: Invalid TikTok URL:', url);
+      return res.status(400).json({ error: 'URL de TikTok inválida', receivedUrl: url });
     }
 
     // Normalizar URL (quitar x2 si existe, usar formato estándar)
     let normalizedUrl = url.replace(/x2tiktok\.com/gi, 'tiktok.com');
+    console.log('Normalized URL:', normalizedUrl);
 
     // Extraer video ID
     const videoIdMatch = normalizedUrl.match(/\/video\/(\d+)/);
     if (!videoIdMatch) {
-      return res.status(400).json({ error: 'No se pudo extraer el ID del video' });
+      console.log('ERROR: Could not extract video ID from:', normalizedUrl);
+      return res.status(400).json({ error: 'No se pudo extraer el ID del video', url: normalizedUrl });
     }
     const videoId = videoIdMatch[1];
+    console.log('Extracted Video ID:', videoId);
 
-    // IMPORTANTE: Aquí necesitas implementar la extracción real del video
-    // Opciones:
-    // 1. Usar un servicio API de terceros (rapidapi, etc.)
-    // 2. Usar librerías de Node.js para scraping
-    // 3. Implementar tu propio scraper
-
-    // Por ahora, devolvemos una estructura que el frontend puede usar
-    // En producción, aquí harías la llamada real a un servicio o scraping
-    
-    // EJEMPLO usando API pública (debes reemplazar con tu solución real)
+    console.log('Calling fetchTikTokVideo...');
     const apiResponse = await fetchTikTokVideo(normalizedUrl, videoId, type);
+    console.log('API Response:', JSON.stringify(apiResponse, null, 2));
 
     if (!apiResponse.success) {
+      console.log('ERROR: fetchTikTokVideo failed:', apiResponse.error);
       return res.status(500).json({ 
-        error: apiResponse.error || 'Error al procesar el video' 
+        error: apiResponse.error || 'Error al procesar el video',
+        details: apiResponse
       });
     }
 
+    console.log('SUCCESS: Returning video data');
     return res.status(200).json({
       success: true,
       videoId,
@@ -64,20 +76,23 @@ export default async function handler(req, res) {
       duration: apiResponse.duration,
       author: apiResponse.author,
       title: apiResponse.title,
-      noWatermark: true // Confirmamos que es sin marca de agua
+      noWatermark: true
     });
 
   } catch (error) {
-    console.error('Error en API TikTok:', error);
+    console.error('ERROR en API TikTok:', error);
+    console.error('Error stack:', error.stack);
     return res.status(500).json({ 
       error: 'Error interno del servidor',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
 
 // Función para obtener el video de TikTok usando librería gratuita
 async function fetchTikTokVideo(url, videoId, type) {
+  console.log('[fetchTikTokVideo] Starting with URL:', url, 'VideoID:', videoId);
   try {
     // Usar API pública gratuita de TikTok Downloader
     // Opción 1: TikTok Downloader API gratuita (no requiere API key)
@@ -123,7 +138,9 @@ async function fetchTikTokVideo(url, videoId, type) {
     // Opción 2: Usar servicio público de descarga (alternativa)
     // Este es un servicio público que no requiere API key
     try {
+      console.log('[fetchTikTokVideo] Trying tikwm.com API...');
       const downloaderApiUrl = `https://tikwm.com/api/?url=${encodeURIComponent(url)}&hd=1`;
+      console.log('[fetchTikTokVideo] API URL:', downloaderApiUrl);
       
       const downloadResponse = await fetch(downloaderApiUrl, {
         headers: {
@@ -132,10 +149,14 @@ async function fetchTikTokVideo(url, videoId, type) {
         }
       });
 
+      console.log('[fetchTikTokVideo] tikwm.com response status:', downloadResponse.status);
+
       if (downloadResponse.ok) {
         const downloadData = await downloadResponse.json();
+        console.log('[fetchTikTokVideo] tikwm.com data received:', JSON.stringify(downloadData, null, 2));
         
         if (downloadData.data && downloadData.data.play) {
+          console.log('[fetchTikTokVideo] SUCCESS from tikwm.com');
           return {
             success: true,
             videoUrl: downloadData.data.play, // URL sin marca de agua
@@ -145,25 +166,36 @@ async function fetchTikTokVideo(url, videoId, type) {
             author: downloadData.data.author?.nickname || downloadData.data.author?.unique_id || '@usuario',
             title: downloadData.data.title || downloadData.data.desc || 'Video de TikTok'
           };
+        } else {
+          console.log('[fetchTikTokVideo] tikwm.com: No video URL found in response');
         }
+      } else {
+        console.log('[fetchTikTokVideo] tikwm.com: Response not OK:', downloadResponse.status);
       }
     } catch (apiError) {
-      console.log('Error con API pública:', apiError.message);
+      console.log('[fetchTikTokVideo] Error con API pública tikwm.com:', apiError.message);
+      console.error('[fetchTikTokVideo] API Error stack:', apiError.stack);
     }
 
     // Opción 3: Usar otra API pública gratuita
     try {
+      console.log('[fetchTikTokVideo] Trying douyin.wtf API...');
       const api2Url = `https://api.douyin.wtf/api?url=${encodeURIComponent(url)}`;
+      console.log('[fetchTikTokVideo] API2 URL:', api2Url);
       const api2Response = await fetch(api2Url, {
         headers: {
           'Accept': 'application/json',
         }
       });
 
+      console.log('[fetchTikTokVideo] douyin.wtf response status:', api2Response.status);
+
       if (api2Response.ok) {
         const api2Data = await api2Response.json();
+        console.log('[fetchTikTokVideo] douyin.wtf data received:', JSON.stringify(api2Data, null, 2));
         
         if (api2Data.nwm_video_url || api2Data.video_url) {
+          console.log('[fetchTikTokVideo] SUCCESS from douyin.wtf');
           return {
             success: true,
             videoUrl: api2Data.nwm_video_url || api2Data.video_url, // Sin marca de agua
@@ -173,20 +205,27 @@ async function fetchTikTokVideo(url, videoId, type) {
             author: api2Data.author || '@usuario',
             title: api2Data.title || api2Data.desc || 'Video de TikTok'
           };
+        } else {
+          console.log('[fetchTikTokVideo] douyin.wtf: No video URL found in response');
         }
+      } else {
+        console.log('[fetchTikTokVideo] douyin.wtf: Response not OK:', api2Response.status);
       }
     } catch (api2Error) {
-      console.log('Error con API alternativa:', api2Error.message);
+      console.log('[fetchTikTokVideo] Error con API alternativa douyin.wtf:', api2Error.message);
+      console.error('[fetchTikTokVideo] API2 Error stack:', api2Error.stack);
     }
 
     // Si todas las opciones fallan
+    console.log('[fetchTikTokVideo] All methods failed');
     return {
       success: false,
       error: 'No se pudo obtener el video. Por favor, verifica que la URL sea válida e intenta de nuevo.'
     };
 
   } catch (error) {
-    console.error('Error fetching TikTok video:', error);
+    console.error('[fetchTikTokVideo] ERROR:', error);
+    console.error('[fetchTikTokVideo] Error stack:', error.stack);
     return {
       success: false,
       error: error.message || 'Error al procesar el video'

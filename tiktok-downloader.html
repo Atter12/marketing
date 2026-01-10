@@ -1031,24 +1031,45 @@
             document.getElementById('downloadBtn').disabled = true;
             
             // Llamar al backend API real
+            const apiUrl = '/api/tiktok/download';
+            const requestBody = { 
+                url: optimizedUrl,
+                type: 'video'
+            };
+            
+            console.log('=== FRONTEND: Calling API ===');
+            console.log('API URL:', apiUrl);
+            console.log('Request Body:', requestBody);
+            console.log('Optimized URL:', optimizedUrl);
+            
             try {
-                const response = await fetch('/api/tiktok/download', {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ 
-                        url: optimizedUrl,
-                        type: 'video'
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
+                console.log('Response Status:', response.status);
+                console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response Error Text:', errorText);
+                    document.getElementById('loadingState').classList.remove('active');
+                    document.getElementById('downloadBtn').disabled = false;
+                    showError(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+                    return;
+                }
+
                 const data = await response.json();
+                console.log('Response Data:', data);
 
                 document.getElementById('loadingState').classList.remove('active');
                 document.getElementById('downloadBtn').disabled = false;
 
-                if (!response.ok || !data.success) {
+                if (!data.success) {
                     showError(data.error || 'Error al procesar el video. Por favor, intenta de nuevo.');
                     return;
                 }
@@ -1057,10 +1078,14 @@
                 showResult(data);
                 
             } catch (error) {
+                console.error('=== FRONTEND: Fetch Error ===');
+                console.error('Error Type:', error.name);
+                console.error('Error Message:', error.message);
+                console.error('Error Stack:', error.stack);
+                
                 document.getElementById('loadingState').classList.remove('active');
                 document.getElementById('downloadBtn').disabled = false;
-                showError('Error de conexión. Por favor, verifica tu conexión e intenta de nuevo.');
-                console.error('Error:', error);
+                showError(`Error de conexión: ${error.message}. Por favor, verifica tu conexión e intenta de nuevo.`);
             }
         }
 
