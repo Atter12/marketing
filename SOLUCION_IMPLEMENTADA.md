@@ -194,3 +194,4 @@ Interceptar las peticiones XHR/Fetch que Facebook hace internamente para obtener
 **Última actualización**: 10 Enero 2026  
 **Estado**: ✅ Implementado - Pendiente pruebas en producción
 
+

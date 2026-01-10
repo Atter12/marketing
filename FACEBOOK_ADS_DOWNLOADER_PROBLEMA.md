@@ -404,3 +404,4 @@ export default async function handler(req, res) {
 **Última actualización:** 10 de Enero, 2026
 **Estado:** En espera de implementación de Puppeteer/Playwright
 
+

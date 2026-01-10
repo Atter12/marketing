@@ -25,8 +25,8 @@ export default async function handler(req, res) {
 
   try {
     console.log('Extracting request body...');
-    const { url, type = 'video' } = req.body;
-    console.log('Received URL:', url);
+    let { url, type = 'video' } = req.body;
+    console.log('Received URL (raw):', url);
     console.log('Received type:', type);
 
     if (!url) {
@@ -34,25 +34,106 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'URL de TikTok requerida' });
     }
 
-    // Validar URL de TikTok
-    const tiktokUrlPattern = /^https?:\/\/(www\.)?(x2)?tiktok\.com|vm\.tiktok\.com/i;
-    if (!tiktokUrlPattern.test(url)) {
-      console.log('ERROR: Invalid TikTok URL:', url);
-      return res.status(400).json({ error: 'URL de TikTok inválida', receivedUrl: url });
+    // Normalizar URL inicial: limpiar espacios y caracteres especiales
+    if (typeof url === 'string') {
+      url = url.trim().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '');
+      
+      // Agregar https:// si falta (común en móvil)
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+        console.log('URL normalizada (https agregado):', url);
+      }
     }
+    
+    console.log('Received URL (normalized):', url);
+
+    // Validar URL de TikTok - Patrón mejorado y más flexible
+    // Acepta: www.tiktok.com, vm.tiktok.com, x2tiktok.com, con o sin https
+    const tiktokUrlPattern = /^https?:\/\/((www\.)?(x2)?tiktok\.com|vm\.tiktok\.com)/i;
+    if (!tiktokUrlPattern.test(url)) {
+      console.log('ERROR: Invalid TikTok URL pattern:', url);
+      console.log('URL recibida completa:', JSON.stringify(url));
+      
+      // Intentar agregar https:// si falta (común en móvil)
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+        console.log('Intentando con https:// agregado:', url);
+        if (!tiktokUrlPattern.test(url)) {
+          return res.status(400).json({ 
+            error: 'URL de TikTok inválida', 
+            receivedUrl: url,
+            hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890'
+          });
+        }
+      } else {
+        return res.status(400).json({ 
+          error: 'URL de TikTok inválida', 
+          receivedUrl: url,
+          hint: 'Asegúrate de usar un enlace válido como: https://www.tiktok.com/@usuario/video/1234567890'
+        });
+      }
+    }
+    
+    console.log('URL validada correctamente:', url);
 
     // Normalizar URL (quitar x2 si existe, usar formato estándar)
     let normalizedUrl = url.replace(/x2tiktok\.com/gi, 'tiktok.com');
     console.log('Normalized URL:', normalizedUrl);
 
-    // Extraer video ID
+    // Extraer video ID - Intentar múltiples métodos
+    let videoId = null;
+    
+    // Método 1: Formato estándar /video/1234567890
     const videoIdMatch = normalizedUrl.match(/\/video\/(\d+)/);
-    if (!videoIdMatch) {
-      console.log('ERROR: Could not extract video ID from:', normalizedUrl);
-      return res.status(400).json({ error: 'No se pudo extraer el ID del video', url: normalizedUrl });
+    if (videoIdMatch) {
+      videoId = videoIdMatch[1];
+      console.log('Extracted Video ID (método 1):', videoId);
+    } else {
+      // Método 2: Para URLs vm.tiktok.com, necesitamos seguir el redirect
+      if (normalizedUrl.includes('vm.tiktok.com')) {
+        console.log('URL es vm.tiktok.com, intentando obtener video ID del redirect...');
+        // Intentar obtener el video ID desde la respuesta del redirect
+        try {
+          const redirectResponse = await fetch(normalizedUrl, {
+            method: 'HEAD',
+            redirect: 'follow',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+          });
+          const finalUrl = redirectResponse.url;
+          console.log('URL final después de redirect:', finalUrl);
+          const redirectVideoMatch = finalUrl.match(/\/video\/(\d+)/);
+          if (redirectVideoMatch) {
+            videoId = redirectVideoMatch[1];
+            normalizedUrl = finalUrl; // Usar la URL final
+            console.log('Extracted Video ID (método 2 - redirect):', videoId);
+          }
+        } catch (redirectError) {
+          console.log('Error obteniendo redirect:', redirectError.message);
+        }
+      }
     }
-    const videoId = videoIdMatch[1];
-    console.log('Extracted Video ID:', videoId);
+    
+    if (!videoId) {
+      console.log('ERROR: Could not extract video ID from:', normalizedUrl);
+      console.log('Intentando extraer desde cualquier posición en la URL...');
+      
+      // Último intento: buscar cualquier número largo que pueda ser el video ID
+      const anyIdMatch = normalizedUrl.match(/(\d{15,})/);
+      if (anyIdMatch) {
+        videoId = anyIdMatch[1];
+        console.log('Extracted Video ID (método 3 - número largo):', videoId);
+      } else {
+        return res.status(400).json({ 
+          error: 'No se pudo extraer el ID del video', 
+          url: normalizedUrl,
+          hint: 'Asegúrate de usar un enlace completo como: https://www.tiktok.com/@usuario/video/1234567890'
+        });
+      }
+    }
+    
+    console.log('Video ID final extraído:', videoId);
 
     console.log('Calling fetchTikTokVideo...');
     const apiResponse = await fetchTikTokVideo(normalizedUrl, videoId, type);

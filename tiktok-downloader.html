@@ -1429,14 +1429,44 @@
             return url;
         }
 
-        // Validate TikTok URL
+        // Validate TikTok URL - Mejorado para móvil
         function isValidTikTokUrl(url) {
+            if (!url || typeof url !== 'string') return false;
+            
+            // Limpiar URL: remover espacios, caracteres invisibles, etc.
+            url = url.trim().replace(/[\u200B-\u200D\uFEFF]/g, '');
+            
+            // Patrones más flexibles para móvil
             const patterns = [
-                /^https?:\/\/(www\.)?(x2)?tiktok\.com/i,
-                /^https?:\/\/vm\.tiktok\.com/i,
-                /\/video\/\d+/i
+                // Formato estándar: https://www.tiktok.com/@usuario/video/1234567890
+                /^https?:\/\/(www\.)?(x2)?tiktok\.com\/@[^\/]+\/video\/\d+/i,
+                // Formato con vm: https://vm.tiktok.com/xxxxx
+                /^https?:\/\/vm\.tiktok\.com\/[A-Za-z0-9]+/i,
+                // Formato móvil sin https: vm.tiktok.com/xxxxx o www.tiktok.com/@usuario/video/123
+                /^(vm\.tiktok\.com|www\.(x2)?tiktok\.com)\//i,
+                // Solo verificar que contiene tiktok.com y video o vm
+                /tiktok\.com.*\/video\/\d+/i,
+                /vm\.tiktok\.com/i
             ];
-            return patterns.some(pattern => pattern.test(url));
+            
+            // Verificar que al menos un patrón coincida Y que tenga estructura válida
+            const hasValidPattern = patterns.some(pattern => pattern.test(url));
+            
+            if (!hasValidPattern) {
+                console.log('[VALIDATION] URL no coincide con ningún patrón:', url);
+                return false;
+            }
+            
+            // Validación adicional: debe contener tiktok.com o vm.tiktok.com
+            const hasTikTokDomain = /tiktok\.com/i.test(url);
+            
+            if (!hasTikTokDomain) {
+                console.log('[VALIDATION] URL no contiene dominio de TikTok:', url);
+                return false;
+            }
+            
+            console.log('[VALIDATION] URL válida:', url);
+            return true;
         }
 
         // Extract video ID from URL
@@ -1455,22 +1485,43 @@
 
         async function handleDownload() {
             const urlInput = document.getElementById('tiktokUrl');
-            let url = urlInput.value.trim();
+            let url = urlInput.value;
+            
+            console.log('=== INICIO handleDownload ===');
+            console.log('URL original del input:', url);
+            console.log('Tipo de URL:', typeof url);
+            console.log('Longitud URL:', url ? url.length : 0);
             
             // Hide previous results
             document.getElementById('resultSection').classList.remove('active');
             document.getElementById('errorMessage').classList.remove('active');
             
-            // Validate URL
-            if (!url) {
+            // Validar y limpiar URL
+            if (!url || typeof url !== 'string') {
+                console.error('[ERROR] URL vacía o inválida');
                 showError('Por favor, ingresa un enlace de TikTok');
                 return;
             }
             
+            // Limpiar URL: remover espacios y caracteres invisibles
+            url = url.trim().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '');
+            
+            // Agregar https:// si falta (para móvil que a veces copia sin protocolo)
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+                console.log('[FIX] URL sin protocolo, agregado https://:', url);
+            }
+            
+            console.log('URL después de limpieza:', url);
+            console.log('Validando URL...');
+            
             if (!isValidTikTokUrl(url)) {
-                showError('Por favor, ingresa un enlace válido de TikTok (ej: https://www.tiktok.com/@usuario/video/1234567890)');
+                console.error('[ERROR] URL no válida después de validación');
+                showError('Por favor, ingresa un enlace válido de TikTok. Ejemplo: https://www.tiktok.com/@usuario/video/1234567890 o https://vm.tiktok.com/xxxxx');
                 return;
             }
+            
+            console.log('[SUCCESS] URL validada correctamente');
             
             // Apply x2 trick for faster download (like TikVid.io does)
             const optimizedUrl = applyX2Trick(url);
@@ -1488,32 +1539,68 @@
             
             console.log('=== FRONTEND: Calling API ===');
             console.log('API URL:', apiUrl);
+            console.log('URL original:', url);
+            console.log('URL optimizada:', optimizedUrl);
             console.log('Request Body:', requestBody);
-            console.log('Optimized URL:', optimizedUrl);
+            console.log('Request Body JSON:', JSON.stringify(requestBody));
             
             try {
+                console.log('[FETCH] Iniciando fetch a:', apiUrl);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(requestBody)
                 });
 
+                console.log('[FETCH] Response recibida');
                 console.log('Response Status:', response.status);
+                console.log('Response Status Text:', response.statusText);
                 console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
+                console.log('Response OK?:', response.ok);
                 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response Error Text:', errorText);
+                    let errorText = '';
+                    let errorData = null;
+                    
+                    try {
+                        errorText = await response.text();
+                        console.error('[ERROR] Response Error Text:', errorText);
+                        
+                        // Intentar parsear como JSON
+                        try {
+                            errorData = JSON.parse(errorText);
+                            console.error('[ERROR] Response Error JSON:', errorData);
+                        } catch (e) {
+                            console.error('[ERROR] No se pudo parsear error como JSON');
+                        }
+                    } catch (e) {
+                        console.error('[ERROR] No se pudo leer error response:', e);
+                    }
+                    
                     document.getElementById('loadingState').classList.remove('active');
                     document.getElementById('downloadBtn').disabled = false;
-                    showError(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+                    
+                    const errorMessage = errorData?.error || errorData?.message || errorText || `Error ${response.status}`;
+                    showError(`Error ${response.status}: ${errorMessage.substring(0, 150)}`);
                     return;
                 }
 
-                const data = await response.json();
-                console.log('Response Data:', data);
+                let data = null;
+                try {
+                    const responseText = await response.text();
+                    console.log('[SUCCESS] Response Text recibido:', responseText.substring(0, 500));
+                    data = JSON.parse(responseText);
+                    console.log('[SUCCESS] Response Data parseado:', data);
+                } catch (parseError) {
+                    console.error('[ERROR] Error parseando JSON:', parseError);
+                    document.getElementById('loadingState').classList.remove('active');
+                    document.getElementById('downloadBtn').disabled = false;
+                    showError('Error al procesar la respuesta del servidor. Por favor, intenta de nuevo.');
+                    return;
+                }
 
                 document.getElementById('loadingState').classList.remove('active');
                 document.getElementById('downloadBtn').disabled = false;

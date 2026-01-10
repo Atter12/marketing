@@ -61,3 +61,4 @@ El archivo `vercel.json` está configurado para:
 - Compatible con Vercel Static Sites
 - Optimizado para SEO y rendimiento
 
+
