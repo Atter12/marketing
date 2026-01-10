@@ -1531,25 +1531,30 @@
             const adText = data.adText || data.title || 'Anuncio de Facebook';
             const startDate = data.startDate || 'N/A';
             
+            // Usar proxy para evitar 403 Forbidden de Facebook CDN
+            const proxyVideoUrl = videoUrl ? `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}` : null;
+            const proxyImageUrl = imageUrl ? `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}` : null;
+            
             // Mostrar preview del anuncio (video o imagen)
             if (videoUrl) {
                 adPreview.innerHTML = `
                     <video 
                         controls 
                         preload="metadata" 
-                        poster="${imageUrl || ''}"
+                        poster="${proxyImageUrl || ''}"
                         style="width: 100%; height: auto; border-radius: 16px;"
                     >
-                        <source src="${videoUrl}" type="video/mp4">
+                        <source src="${proxyVideoUrl}" type="video/mp4">
                         Tu navegador no soporta el tag de video.
                     </video>
                 `;
             } else if (imageUrl) {
                 adPreview.innerHTML = `
                     <img 
-                        src="${imageUrl}" 
+                        src="${proxyImageUrl}" 
                         alt="Preview del anuncio"
                         style="width: 100%; height: auto; border-radius: 16px;"
+                        onerror="console.error('Error loading image:', this.src)"
                     >
                 `;
             } else {
@@ -1575,52 +1580,108 @@
             const downloadVideoBtn = document.getElementById('downloadVideoBtn');
             const downloadImageBtn = document.getElementById('downloadImageBtn');
             
-            downloadVideoBtn.onclick = () => {
+            downloadVideoBtn.onclick = async () => {
                 if (!videoUrl) {
                     showError('Este anuncio no tiene video disponible o solo tiene imagen. Intenta descargar la imagen.');
                     return;
                 }
                 
-                // Descargar video directamente
-                const downloadLink = document.createElement('a');
-                downloadLink.href = videoUrl;
-                downloadLink.download = `facebook-ad-${adId}.mp4`;
-                downloadLink.target = '_blank';
-                downloadLink.click();
+                // Usar proxy para descargar el video
+                const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}`;
                 
-                // Feedback visual
-                const originalText = downloadVideoBtn.innerHTML;
-                downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                downloadVideoBtn.disabled = true;
-                
-                setTimeout(() => {
+                try {
+                    // Feedback visual
+                    const originalText = downloadVideoBtn.innerHTML;
+                    downloadVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
+                    downloadVideoBtn.disabled = true;
+                    
+                    // Descargar usando el proxy
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Crear link de descarga
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = `facebook-ad-${adId}.mp4`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Limpiar blob URL después de un tiempo
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                    
+                    // Feedback de éxito
+                    downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargado!';
+                    
+                    setTimeout(() => {
+                        downloadVideoBtn.innerHTML = originalText;
+                        downloadVideoBtn.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error downloading video:', error);
+                    showError(`Error al descargar el video: ${error.message}`);
+                    
                     downloadVideoBtn.innerHTML = originalText;
                     downloadVideoBtn.disabled = false;
-                }, 2000);
+                }
             };
             
-            downloadImageBtn.onclick = () => {
+            downloadImageBtn.onclick = async () => {
                 if (!imageUrl) {
                     showError('URL de la imagen no disponible. Por favor, intenta de nuevo.');
                     return;
                 }
                 
-                // Descargar imagen directamente
-                const downloadLink = document.createElement('a');
-                downloadLink.href = imageUrl;
-                downloadLink.download = `facebook-ad-${adId}.jpg`;
-                downloadLink.target = '_blank';
-                downloadLink.click();
+                // Usar proxy para descargar la imagen
+                const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}`;
                 
-                // Feedback visual
-                const originalText = downloadImageBtn.innerHTML;
-                downloadImageBtn.innerHTML = '<i class="fas fa-check"></i> Descargando...';
-                downloadImageBtn.disabled = true;
-                
-                setTimeout(() => {
+                try {
+                    // Feedback visual
+                    const originalText = downloadImageBtn.innerHTML;
+                    downloadImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
+                    downloadImageBtn.disabled = true;
+                    
+                    // Descargar usando el proxy
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                        throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const blobUrl = URL.createObjectURL(blob);
+                    
+                    // Crear link de descarga
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = `facebook-ad-${adId}.jpg`;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    // Limpiar blob URL después de un tiempo
+                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                    
+                    // Feedback de éxito
+                    downloadImageBtn.innerHTML = '<i class="fas fa-check"></i> Descargado!';
+                    
+                    setTimeout(() => {
+                        downloadImageBtn.innerHTML = originalText;
+                        downloadImageBtn.disabled = false;
+                    }, 2000);
+                    
+                } catch (error) {
+                    console.error('Error downloading image:', error);
+                    showError(`Error al descargar la imagen: ${error.message}`);
+                    
                     downloadImageBtn.innerHTML = originalText;
                     downloadImageBtn.disabled = false;
-                }, 2000);
+                }
             };
             
             resultSection.classList.add('active');
