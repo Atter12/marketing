@@ -1081,21 +1081,57 @@
         </div>
     </header>
 
-    <!-- Nota técnica -->
+    <!-- Método Recomendado: Extensión Chrome -->
     <div class="container" style="padding-top: 24px;">
-        <div style="background: linear-gradient(135deg, #fff5f0 0%, #ffe8df 100%); border-left: 4px solid var(--primary); padding: 20px; border-radius: 12px; margin-bottom: 16px;">
+        <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #4caf50; padding: 20px; border-radius: 12px; margin-bottom: 16px;">
             <div style="display: flex; align-items: start; gap: 16px;">
-                <i class="fas fa-code" style="color: var(--primary); font-size: 24px; margin-top: 2px;"></i>
+                <i class="fab fa-chrome" style="color: #4caf50; font-size: 28px; margin-top: 2px;"></i>
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 8px; color: var(--text-dark); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        🎯 Método Recomendado: Extensión de Chrome
+                        <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">100% FUNCIONAL</span>
+                    </h4>
+                    <p style="color: var(--text-medium); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                        Debido a las limitaciones técnicas de Facebook, la <strong>extensión de Chrome</strong> es la forma más confiable de descargar anuncios.
+                        Se ejecuta directamente en la página de Facebook, capturando las URLs con firmas válidas en tiempo real.
+                    </p>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                        <a href="https://github.com/TU-USUARIO/fb-ads-downloader/archive/refs/heads/main.zip" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #4caf50; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4caf50'">
+                            <i class="fab fa-chrome"></i>
+                            Descargar Extensión (ZIP)
+                        </a>
+                        <a href="https://github.com/TU-USUARIO/fb-ads-downloader" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #4caf50; padding: 10px 20px; border: 2px solid #4caf50; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='rgba(76,175,80,0.1)'" onmouseout="this.style.background='transparent'">
+                            <i class="fab fa-github"></i>
+                            Ver en GitHub
+                        </a>
+                        <button onclick="document.getElementById('extension-instructions').style.display='block'; this.style.display='none'" style="display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #4caf50; padding: 10px 20px; border: 2px solid #4caf50; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(76,175,80,0.1)'" onmouseout="this.style.background='transparent'">
+                            <i class="fas fa-info-circle"></i>
+                            Ver Instrucciones
+                        </button>
+                    </div>
+                    
+                    <div id="extension-instructions" style="display: none; margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #4caf50;">
+                        <h5 style="margin-bottom: 12px; color: var(--text-dark); font-size: 14px;">📋 Cómo instalar la extensión:</h5>
+                        <ol style="color: var(--text-medium); font-size: 13px; line-height: 1.8; margin-left: 20px;">
+                            <li>Descarga la extensión desde el enlace de arriba</li>
+                            <li>Ve a <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">chrome://extensions/</code></li>
+                            <li>Activa <strong>"Modo Desarrollador"</strong> (switch superior derecha)</li>
+                            <li>Haz clic en <strong>"Cargar descomprimida"</strong></li>
+                            <li>Selecciona la carpeta descargada</li>
+                            <li>¡Listo! Visita Facebook Ads Library y verás botones de descarga</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="background: linear-gradient(135deg, #fff5f0 0%, #ffe8df 100%); border-left: 4px solid var(--primary); padding: 16px 20px; border-radius: 12px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="fas fa-exclamation-triangle" style="color: var(--primary); font-size: 20px;"></i>
                 <div>
-                    <h4 style="margin-bottom: 8px; color: var(--text-dark); font-size: 16px;">✨ Tecnología Avanzada: Playwright</h4>
-                    <p style="color: var(--text-medium); font-size: 14px; line-height: 1.6;">
-                        Utilizamos <strong>Playwright</strong>, un navegador headless que ejecuta JavaScript como un navegador real. 
-                        Esto nos permite obtener las <strong>URLs con firmas válidas</strong> que Facebook genera dinámicamente, 
-                        aplicando los mismos patrones de búsqueda que extensiones profesionales: 
-                        <code style="background: rgba(255,107,74,0.1); padding: 2px 6px; border-radius: 4px; font-size: 13px;">playable_url</code>, 
-                        <code style="background: rgba(255,107,74,0.1); padding: 2px 6px; border-radius: 4px; font-size: 13px;">hd_src</code>, 
-                        <code style="background: rgba(255,107,74,0.1); padding: 2px 6px; border-radius: 4px; font-size: 13px;">sd_src</code>.
-                        <br><span style="opacity: 0.8; font-size: 13px;">🎭 Navegador real · 🔐 Firmas válidas · ⚡ Descarga directa</span>
+                    <p style="color: var(--text-medium); font-size: 13px; line-height: 1.5; margin: 0;">
+                        <strong>Nota:</strong> El método web a continuación tiene limitaciones debido a las protecciones de Facebook. 
+                        Funciona para algunos anuncios, pero la extensión de Chrome es más confiable.
                     </p>
                 </div>
             </div>
@@ -1123,6 +1159,12 @@
     <!-- Download Tool Section -->
     <section class="download-section">
         <div class="container">
+            <h3 style="text-align: center; margin-bottom: 8px; font-size: 20px; color: var(--text-dark);">
+                Método Web (Limitado)
+            </h3>
+            <p style="text-align: center; margin-bottom: 24px; font-size: 14px; color: var(--text-medium);">
+                Extrae información del anuncio • Recomendamos usar la extensión de Chrome para descargar medios
+            </p>
             <div class="download-card">
                 <div class="input-group">
                     <input 

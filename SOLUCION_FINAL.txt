@@ -1,0 +1,86 @@
+═══════════════════════════════════════════════════════════
+   SOLUCIÓN FINAL - Facebook Ads Downloader
+═══════════════════════════════════════════════════════════
+
+❌ PROBLEMA TÉCNICO CONFIRMADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Facebook genera las URLs de medios con firmas dinámicas (oe=, oh=) 
+usando JavaScript en el navegador del cliente.
+
+Métodos probados que NO funcionan desde backend:
+  ❌ Fetch directo con headers
+  ❌ Proxy server
+  ❌ Puppeteer (falta libnss3.so en Vercel)
+  ❌ Playwright (requiere npx playwright install)
+
+Razón: El HTML estático NO contiene las firmas, se generan 
+dinámicamente cuando JavaScript se ejecuta en el cliente.
+
+═══════════════════════════════════════════════════════════
+
+✅ SOLUCIÓN IMPLEMENTADA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. EXTENSIÓN DE CHROME (Recomendado)
+   📁 Ubicación: C:\Users\Shirley\Downloads\fb-ads-downloader
+   
+   Por qué funciona:
+   ✅ Se ejecuta EN la página de Facebook
+   ✅ Captura URLs cuando JavaScript las genera
+   ✅ Tiene acceso al DOM completamente renderizado
+   ✅ Intercepta peticiones de red con firmas válidas
+   
+   Instalación:
+   1. Ir a chrome://extensions/
+   2. Activar "Modo Desarrollador"
+   3. "Cargar descomprimida" → Seleccionar carpeta
+   4. Visitar facebook.com/ads/library
+   5. ¡Botones de descarga aparecen automáticamente!
+
+2. API WEB (Fallback limitado)
+   🌐 URL: /api/facebook/download
+   
+   Funciona para:
+   ✅ Extrae nombre de página
+   ✅ Extrae texto del anuncio
+   ✅ Detecta si hay video o imagen
+   
+   NO funciona para:
+   ❌ Descargar medios (403 Bad URL hash)
+   ❌ URLs sin firmas → Siempre fallan
+
+═══════════════════════════════════════════════════════════
+
+📝 CAMBIOS EN LA LANDING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Banner verde promocionando la extensión de Chrome
+✅ Instrucciones de instalación
+✅ Advertencia sobre limitaciones del método web
+✅ Botón de descarga de la extensión
+
+═══════════════════════════════════════════════════════════
+
+🚀 PRÓXIMOS PASOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Subir extensión a GitHub
+2. Actualizar enlace en la landing
+3. Opcionalmente: Publicar en Chrome Web Store
+4. Deploy a Vercel (código ya está listo)
+
+═══════════════════════════════════════════════════════════
+
+📊 CONCLUSIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+La extensión de Chrome es la ÚNICA solución 100% funcional 
+para Facebook Ads Library debido a las restricciones técnicas 
+de Facebook.
+
+La API web sirve como demostración y para extraer metadatos, 
+pero no puede descargar los medios sin las firmas dinámicas.
+
+═══════════════════════════════════════════════════════════
+

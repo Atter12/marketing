@@ -26,7 +26,7 @@ export default async function handler(req, res) {
 
   try {
     console.log('Extracting request body...');
-    const { url, type = 'ad', usePlaywright = true } = req.body; // Playwright habilitado (funciona en Vercel)
+    const { url, type = 'ad', usePlaywright = false } = req.body; // Playwright deshabilitado: requiere binarios no disponibles en Vercel
     console.log('Received URL:', url);
     console.log('Received type:', type);
     console.log('Use Playwright:', usePlaywright);
