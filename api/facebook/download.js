@@ -490,13 +490,30 @@ function parseHtmlForAdData(html, adId) {
       console.log('[parseHtmlForAdData] Pattern 3 - Image matches found:', imageMatches ? imageMatches.length : 0);
 
       if (videoMatches && videoMatches.length > 0) {
-        const videoUrl = videoMatches[0].replace(/&amp;/g, '&');
+        // Buscar el video de mejor calidad (el más largo suele ser el de mejor calidad)
+        const videoUrl = videoMatches.sort((a, b) => b.length - a.length)[0].replace(/&amp;/g, '&');
         console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found video URL directly from HTML');
         console.log('[parseHtmlForAdData] Pattern 3 - Video URL (first 100 chars):', videoUrl.substring(0, 100));
         
-        // Buscar datos adicionales en el HTML
-        const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/) || html.match(/"advertiser_name":\s*"([^"]+)"/);
-        const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]+)"/) || html.match(/"body":\s*"([^"]+)"/);
+        // Buscar datos adicionales en el HTML con patrones mejorados
+        const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || 
+                              html.match(/"advertiser_name":\s*"([^"]+)"/i) ||
+                              html.match(/page_name["']?\s*:\s*["']([^"']+)["']/i) ||
+                              html.match(/<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i);
+        
+        const adTextPatterns = [
+          /"ad_creative_body":\s*"([^"]{10,500})"/i,
+          /"body":\s*"([^"]{10,500})"/i,
+          /"message":\s*"([^"]{10,500})"/i,
+          /"text":\s*"([^"]{10,500})"/i,
+          /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']{10,500})["']/i
+        ];
+        
+        let adTextMatch = null;
+        for (const pattern of adTextPatterns) {
+          adTextMatch = html.match(pattern);
+          if (adTextMatch && adTextMatch[1]) break;
+        }
         
         return {
           success: true,
@@ -504,26 +521,113 @@ function parseHtmlForAdData(html, adId) {
           imageUrl: null,
           thumbnail: null,
           pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
-          adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 200) : 'Anuncio de Facebook',
+          adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
           startDate: new Date().toLocaleDateString('es-ES')
         };
       }
       
       if (imageMatches && imageMatches.length > 0) {
-        const imageUrl = imageMatches[0].replace(/&amp;/g, '&');
-        console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL directly from HTML');
-        console.log('[parseHtmlForAdData] Pattern 3 - Image URL (first 100 chars):', imageUrl.substring(0, 100));
+        // Filtrar imágenes pequeñas (thumbnails) y buscar la mejor calidad
+        // Las URLs con s50x50, s100x100, etc. son thumbnails
+        // Buscar imágenes más grandes primero
+        const largeImages = imageMatches.filter(url => 
+          !url.match(/[?&]stp=.*s\d+x\d+/i) &&  // No tiene parámetro de tamaño pequeño
+          !url.includes('s50x50') &&
+          !url.includes('s100x100') &&
+          !url.includes('s150x150') &&
+          !url.includes('profile_pic') &&
+          !url.includes('avatar') &&
+          !url.includes('profile') &&
+          (url.includes('/v/t') || url.includes('/v/t1.'))  // URLs de CDN de Facebook para contenido
+        );
         
-        const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/) || html.match(/"advertiser_name":\s*"([^"]+)"/);
-        const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]+)"/) || html.match(/"body":\s*"([^"]+)"/);
+        console.log('[parseHtmlForAdData] Pattern 3 - Filtered large images:', largeImages.length, 'out of', imageMatches.length);
+        
+        // Usar imágenes grandes si existen, sino usar todas pero filtrar las peores
+        let imageUrlsToUse = largeImages.length > 0 ? largeImages : imageMatches.filter(url => 
+          !url.includes('s50x50') && 
+          !url.includes('s100x100') &&
+          !url.includes('profile_pic') &&
+          !url.includes('avatar')
+        );
+        
+        // Si aún no tenemos nada, usar todas pero ordenar por calidad (las URLs más largas suelen ser mejores)
+        if (imageUrlsToUse.length === 0) {
+          imageUrlsToUse = imageMatches;
+        }
+        
+        // Ordenar por longitud (URLs más largas suelen tener mejor calidad)
+        imageUrlsToUse.sort((a, b) => b.length - a.length);
+        
+        // Tomar la mejor imagen
+        let imageUrl = imageUrlsToUse[0].replace(/&amp;/g, '&');
+        
+        // Intentar mejorar la URL removiendo parámetros de tamaño si es necesario
+        if (imageUrl.match(/[?&]stp=.*s\d+x\d+/i)) {
+          // Buscar una versión sin parámetros de tamaño en todas las imágenes
+          const betterImage = imageMatches.find(url => 
+            !url.includes('s50x50') && 
+            !url.includes('s100x100') &&
+            !url.includes('s150x150') &&
+            (url.includes('.jpg') || url.includes('.png') || url.includes('.webp'))
+          );
+          if (betterImage) {
+            imageUrl = betterImage.replace(/&amp;/g, '&');
+            console.log('[parseHtmlForAdData] Pattern 3 - Found better quality image');
+          } else {
+            // Intentar remover parámetros de tamaño de la URL actual
+            const originalUrl = imageUrl;
+            imageUrl = imageUrl.replace(/[?&]stp=[^&]*s\d+x\d+[^&]*/gi, '');
+            if (imageUrl === originalUrl) {
+              // Si no funcionó, intentar de otra forma
+              imageUrl = imageUrl.replace(/[?&]_nc_cat[^&]*/gi, '');
+            }
+            console.log('[parseHtmlForAdData] Pattern 3 - Attempted to improve image URL quality');
+          }
+        }
+        
+        console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL directly from HTML');
+        console.log('[parseHtmlForAdData] Pattern 3 - Image URL (first 150 chars):', imageUrl.substring(0, 150));
+        console.log('[parseHtmlForAdData] Pattern 3 - Total images found:', imageMatches.length, 'Large images:', largeImages.length);
+        
+        // Buscar datos adicionales con patrones mejorados
+        const pageNamePatterns = [
+          /"page_name":\s*"([^"]+)"/i,
+          /"advertiser_name":\s*"([^"]+)"/i,
+          /page_name["']?\s*:\s*["']([^"']+)["']/i,
+          /<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i,
+          /<title[^>]*>([^<]+)<\/title>/i
+        ];
+        
+        let pageNameMatch = null;
+        for (const pattern of pageNamePatterns) {
+          pageNameMatch = html.match(pattern);
+          if (pageNameMatch && pageNameMatch[1]) break;
+        }
+        
+        const adTextPatterns = [
+          /"ad_creative_body":\s*"([^"]{10,500})"/i,
+          /"body":\s*"([^"]{10,500})"/i,
+          /"message":\s*"([^"]{10,500})"/i,
+          /"text":\s*"([^"]{10,500})"/i,
+          /"caption":\s*"([^"]{10,500})"/i,
+          /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']{10,500})["']/i,
+          /<p[^>]*class=["'][^"']*ad[^"']*["'][^>]*>([^<]{10,500})<\/p>/i
+        ];
+        
+        let adTextMatch = null;
+        for (const pattern of adTextPatterns) {
+          adTextMatch = html.match(pattern);
+          if (adTextMatch && adTextMatch[1] && adTextMatch[1].length > 10) break;
+        }
         
         return {
           success: true,
           videoUrl: null,
           imageUrl: imageUrl,
           thumbnail: imageUrl,
-          pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
-          adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 200) : 'Anuncio de Facebook',
+          pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1].trim()) : 'Página de Facebook',
+          adText: adTextMatch ? decodeUnicode(adTextMatch[1].trim()).substring(0, 300) : 'Anuncio de Facebook',
           startDate: new Date().toLocaleDateString('es-ES')
         };
       }
