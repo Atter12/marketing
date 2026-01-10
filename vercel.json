@@ -4,6 +4,12 @@
   "outputDirectory": ".",
   "installCommand": "npm install",
   "framework": null,
+  "functions": {
+    "api/facebook/download-puppeteer.js": {
+      "maxDuration": 30,
+      "memory": 1024
+    }
+  },
   "routes": [
     {
       "src": "/api/(.*)",

@@ -1,4 +1,5 @@
 // Vercel Serverless Function para descargar anuncios de Facebook Ads Library
+// Intenta primero con Puppeteer (más confiable), luego usa método tradicional como fallback
 export default async function handler(req, res) {
   console.log('=== FACEBOOK ADS API CALLED ===');
   console.log('Method:', req.method);
@@ -25,9 +26,10 @@ export default async function handler(req, res) {
 
   try {
     console.log('Extracting request body...');
-    const { url, type = 'ad' } = req.body;
+    const { url, type = 'ad', usePuppeteer = true } = req.body;
     console.log('Received URL:', url);
     console.log('Received type:', type);
+    console.log('Use Puppeteer:', usePuppeteer);
 
     if (!url) {
       console.log('ERROR: No URL provided');
@@ -54,6 +56,29 @@ export default async function handler(req, res) {
     const normalizedUrl = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&id=${adId}&search_type=keyword_unordered&media_type=all`;
     console.log('Normalized URL:', normalizedUrl);
 
+    // Intentar primero con Puppeteer si está habilitado
+    if (usePuppeteer) {
+      try {
+        console.log('Attempting with Puppeteer...');
+        const puppeteerResult = await fetchWithPuppeteer(normalizedUrl, adId);
+        if (puppeteerResult && (puppeteerResult.imageUrl || puppeteerResult.videoUrl || puppeteerResult.imageBase64 || puppeteerResult.videoBase64)) {
+          console.log('Puppeteer method succeeded!');
+          return res.status(200).json({
+            success: true,
+            adId,
+            id: adId,
+            ...puppeteerResult,
+            method: 'puppeteer'
+          });
+        }
+      } catch (puppeteerError) {
+        console.log('Puppeteer method failed or not available, falling back to traditional method...');
+        console.log('Puppeteer error:', puppeteerError.message);
+        // Continuar con el método tradicional
+      }
+    }
+
+    console.log('Using traditional fetch method...');
     console.log('Calling fetchFacebookAd...');
     const apiResponse = await fetchFacebookAd(normalizedUrl, adId, type);
     console.log('API Response:', JSON.stringify(apiResponse, null, 2));
@@ -1365,4 +1390,149 @@ function decodeUnicode(str) {
             .replace(/\\\//g, '/')
             .replace(/\\n/g, ' ')
             .replace(/\\"/g, '"');
+}
+
+// Función para usar Puppeteer (extraída para reutilización)
+async function fetchWithPuppeteer(url, adId) {
+  let browser = null;
+  try {
+    // Importación dinámica para evitar errores si Puppeteer no está disponible
+    const puppeteer = (await import('puppeteer-core')).default;
+    const chromium = (await import('@sparticuz/chromium')).default;
+    
+    chromium.setGraphicsMode(false);
+    
+    console.log('[Puppeteer] Launching browser...');
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
+    });
+
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+    });
+    
+    console.log('[Puppeteer] Navigating to page...');
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+    
+    // Esperar a que cargue el contenido
+    try {
+      await page.waitForSelector('img[src*="fbcdn.net"], video source, [data-testid="ad-card"]', { timeout: 15000 });
+    } catch (e) {
+      console.log('[Puppeteer] Selector timeout, continuing...');
+    }
+    await page.waitForTimeout(2000);
+    
+    console.log('[Puppeteer] Extracting data from DOM...');
+    const adData = await page.evaluate(() => {
+      const result = { imageUrl: null, videoUrl: null, pageName: null, adText: null };
+      
+      const images = Array.from(document.querySelectorAll('img[src*="fbcdn.net"]'));
+      for (const img of images) {
+        const src = img.getAttribute('src') || img.getAttribute('data-src');
+        if (src && src.includes('fbcdn.net') && !src.includes('s50x50') && !src.includes('profile') && !src.includes('avatar')) {
+          result.imageUrl = src;
+          break;
+        }
+      }
+      
+      const videos = Array.from(document.querySelectorAll('video source, video[src*="fbcdn.net"]'));
+      for (const video of videos) {
+        const src = video.getAttribute('src') || video.getAttribute('data-src');
+        if (src && (src.includes('.mp4') || src.includes('fbcdn.net/v/'))) {
+          result.videoUrl = src;
+          break;
+        }
+      }
+      
+      const pageNameElem = document.querySelector('[data-testid="advertiser-name"], [data-testid="page-name"]');
+      if (pageNameElem) result.pageName = pageNameElem.textContent.trim();
+      
+      const adTextElem = document.querySelector('[data-testid="ad-text"], [data-testid="ad-creative-body"]');
+      if (adTextElem) result.adText = adTextElem.textContent.trim().substring(0, 500);
+      
+      return result;
+    });
+    
+    await browser.close();
+    browser = null;
+    
+    // Descargar contenido inmediatamente con firmas válidas
+    let imageBase64 = null;
+    let videoBase64 = null;
+    
+    if (adData.imageUrl) {
+      try {
+        console.log('[Puppeteer] Downloading image with valid signature...');
+        const imgResponse = await fetch(adData.imageUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Accept': 'image/*,*/*;q=0.8',
+          }
+        });
+        if (imgResponse.ok) {
+          const buffer = await imgResponse.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString('base64');
+          imageBase64 = `data:${imgResponse.headers.get('content-type') || 'image/jpeg'};base64,${base64}`;
+          console.log('[Puppeteer] Image downloaded successfully, size:', base64.length);
+        } else {
+          console.log('[Puppeteer] Image download failed with status:', imgResponse.status);
+        }
+      } catch (e) {
+        console.log('[Puppeteer] Image download error:', e.message);
+      }
+    }
+    
+    if (adData.videoUrl) {
+      try {
+        console.log('[Puppeteer] Downloading video with valid signature...');
+        const vidResponse = await fetch(adData.videoUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Accept': 'video/*,*/*;q=0.8',
+          }
+        });
+        if (vidResponse.ok) {
+          const buffer = await vidResponse.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString('base64');
+          videoBase64 = `data:${vidResponse.headers.get('content-type') || 'video/mp4'};base64,${base64}`;
+          console.log('[Puppeteer] Video downloaded successfully, size:', base64.length);
+        } else {
+          console.log('[Puppeteer] Video download failed with status:', vidResponse.status);
+        }
+      } catch (e) {
+        console.log('[Puppeteer] Video download error:', e.message);
+      }
+    }
+    
+    return {
+      videoUrl: adData.videoUrl,
+      imageUrl: adData.imageUrl,
+      videoBase64,
+      imageBase64,
+      pageName: adData.pageName || 'Página de Facebook',
+      adText: adData.adText || 'Anuncio de Facebook',
+      startDate: new Date().toLocaleDateString('es-ES'),
+    };
+  } catch (error) {
+    console.error('[Puppeteer] Error:', error.message);
+    // Asegurar que el navegador se cierra incluso en caso de error
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('[Puppeteer] Error closing browser:', closeError.message);
+      }
+    }
+    throw error;
+  }
 }
