@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>EcomTools | Herramientas de E-commerce online gratis</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -73,6 +73,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 0;
+            position: relative;
         }
 
         .logo {
@@ -208,6 +209,7 @@
         .hero h1 span {
             background: var(--primary-gradient);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -706,38 +708,310 @@
         }
 
         @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                padding: 12px 0;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
             .nav-links {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-white);
+                border-bottom: 1px solid var(--border);
+                flex-direction: column;
+                padding: 16px;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            }
+
+            .nav-links.mobile-active {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 12px 16px;
+                border-radius: 8px;
             }
 
             .mobile-menu {
-                display: block;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 40px;
+                height: 40px;
+                z-index: 101;
+                border-radius: 8px;
+                transition: background 0.2s;
+            }
+
+            .mobile-menu:active {
+                background: var(--bg-gray);
+            }
+
+            .hero {
+                padding: 40px 16px 30px;
+            }
+
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+                margin-bottom: 16px;
             }
 
             .hero h1 {
-                font-size: 28px;
+                font-size: 26px;
+                margin-bottom: 12px;
+                line-height: 1.3;
+            }
+
+            .hero p {
+                font-size: 15px;
+                padding: 0 8px;
+            }
+
+            .filters {
+                padding: 16px 16px 20px;
+                gap: 6px;
+            }
+
+            .filter-btn {
+                padding: 10px 16px;
+                font-size: 12px;
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+                touch-action: manipulation;
+            }
+
+            .tools-section {
+                padding: 0 16px 50px;
+            }
+
+            .section-title {
+                font-size: 11px;
+                margin-bottom: 20px;
             }
 
             .tools-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .tool-card {
+                padding: 20px 16px;
+            }
+
+            .tool-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                margin-bottom: 14px;
+            }
+
+            .tool-card h3 {
+                font-size: 14px;
+                margin-bottom: 6px;
+            }
+
+            .tool-card p {
+                font-size: 12px;
+            }
+
+            .tool-badge {
+                top: 10px;
+                right: 10px;
+                padding: 4px 8px;
+                font-size: 9px;
+                min-width: 40px;
+                text-align: center;
+            }
+
+            .feature-section {
+                padding: 50px 16px;
+            }
+
+            .feature-content h2 {
+                font-size: 26px;
+                margin-bottom: 12px;
+            }
+
+            .feature-content p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .feature-list li {
+                font-size: 14px;
+                padding: 8px 0;
+            }
+
+            .btn-feature {
+                padding: 12px 24px;
+                font-size: 14px;
+            }
+
+            .feature-visual {
+                padding: 24px;
+            }
+
+            .stats-preview {
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-card .number {
+                font-size: 24px;
+            }
+
+            .stat-card .label {
+                font-size: 11px;
+            }
+
+            .cta-section {
+                padding: 50px 16px;
             }
 
             .cta-section h2 {
-                font-size: 28px;
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+
+            .cta-section p {
+                font-size: 16px;
+                margin-bottom: 24px;
+            }
+
+            .btn-cta {
+                padding: 14px 28px;
+                font-size: 15px;
+            }
+
+            footer {
+                padding: 40px 16px 20px;
             }
 
             .footer-grid {
                 grid-template-columns: 1fr;
+                gap: 30px;
                 text-align: center;
+                margin-bottom: 40px;
             }
 
             .social-links {
                 justify-content: center;
+                margin-top: 16px;
             }
 
             .footer-bottom {
                 flex-direction: column;
                 text-align: center;
+                gap: 12px;
+                padding-top: 20px;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                -webkit-text-size-adjust: 100%;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            * {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            .container {
+                padding: 0 12px;
+            }
+
+            .hero {
+                padding: 30px 12px 20px;
+            }
+
+            .hero h1 {
+                font-size: 22px;
+            }
+
+            .hero p {
+                font-size: 14px;
+            }
+
+            .filters {
+                padding: 12px 12px 16px;
+                gap: 4px;
+            }
+
+            .filter-btn {
+                padding: 7px 12px;
+                font-size: 11px;
+            }
+
+            .tools-section {
+                padding: 0 12px 40px;
+            }
+
+            .tools-grid {
+                gap: 12px;
+            }
+
+            .tool-card {
+                padding: 18px 14px;
+            }
+
+            .category-divider {
+                padding: 20px 0 8px;
+            }
+
+            .category-divider span {
+                font-size: 11px;
+            }
+
+            .feature-section {
+                padding: 40px 12px;
+            }
+
+            .feature-content h2 {
+                font-size: 22px;
+            }
+
+            .cta-section {
+                padding: 40px 12px;
+            }
+
+            .cta-section h2 {
+                font-size: 20px;
+            }
+
+            .cta-section p {
+                font-size: 14px;
+            }
+
+            footer {
+                padding: 30px 12px 16px;
             }
         }
 
@@ -1191,6 +1465,33 @@
     </footer>
 
     <script>
+        // Mobile menu toggle
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const navLinks = document.querySelector('.nav-links');
+        
+        if (mobileMenu) {
+            mobileMenu.addEventListener('click', function() {
+                navLinks.classList.toggle('mobile-active');
+                const icon = this.querySelector('i');
+                if (icon) {
+                    icon.classList.toggle('fa-bars');
+                    icon.classList.toggle('fa-times');
+                }
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!mobileMenu.contains(e.target) && !navLinks.contains(e.target)) {
+                    navLinks.classList.remove('mobile-active');
+                    const icon = mobileMenu.querySelector('i');
+                    if (icon) {
+                        icon.classList.add('fa-bars');
+                        icon.classList.remove('fa-times');
+                    }
+                }
+            });
+        }
+
         // Filter buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', function() {

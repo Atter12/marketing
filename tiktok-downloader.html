@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Descargar Videos de TikTok Sin Marca de Agua | EcomTools</title>
     <meta name="description" content="Descarga videos de TikTok gratis, sin marca de agua y en alta calidad. Herramienta 100% gratuita y sin límites.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -138,11 +138,11 @@
             line-height: 1.2;
         }
 
-        .hero-section h1 .tiktok-text {
+            .hero-section h1 .tiktok-text {
             background: var(--tiktok-gradient);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hero-section p {
@@ -593,22 +593,471 @@
 
         /* Responsive */
         @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                padding: 12px 0;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 16px;
+            }
+
+            .back-link {
+                font-size: 12px;
+                gap: 6px;
+                padding: 8px 12px;
+                min-height: 40px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .hero-section {
+                padding: 40px 16px 30px;
+            }
+
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 12px;
+                margin-bottom: 16px;
+            }
+
+            .hero-section h1 {
+                font-size: 26px;
+                margin-bottom: 12px;
+                line-height: 1.3;
+            }
+
+            .hero-section p {
+                font-size: 15px;
+                margin-bottom: 24px;
+            }
+
+            .subtitle-main {
+                font-size: 16px !important;
+                margin-bottom: 20px !important;
+            }
+
+            .download-section {
+                padding: 30px 16px 50px;
+            }
+
             .download-card {
-                padding: 24px;
+                padding: 24px 18px;
+                border-radius: 20px;
             }
 
             .input-group {
                 flex-direction: column;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+
+            .url-input {
+                padding: 14px 16px;
+                font-size: 16px; /* Evita zoom en iOS al hacer focus */
+                min-height: 44px;
             }
 
             .btn-download {
                 width: 100%;
+                padding: 14px 24px;
+                font-size: 15px;
+                min-height: 48px;
                 justify-content: center;
             }
 
-            .features-grid,
-            .steps-grid {
+            .example-urls {
+                margin-top: 16px;
+                gap: 6px;
+            }
+
+            .example-url {
+                padding: 8px 14px;
+                font-size: 11px;
+                min-height: 32px;
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .x2-tip {
+                padding: 12px 14px;
+                margin-top: 16px;
+            }
+
+            .success-badge-mobile {
+                padding: 12px 16px !important;
+            }
+
+            .success-badge-mobile > div {
+                font-size: 12px !important;
+            }
+
+            .success-badge-mobile > div i {
+                font-size: 16px !important;
+            }
+
+            .x2-tip > div:first-child {
+                font-size: 18px;
+            }
+
+            .x2-tip div:last-child > div:first-child {
+                font-size: 12px;
+                margin-bottom: 4px;
+            }
+
+            .x2-tip div:last-child > div:last-child {
+                font-size: 12px;
+            }
+
+            .error-message {
+                padding: 12px 16px;
+                font-size: 13px;
+                margin-top: 16px;
+            }
+
+            .loading-state {
+                padding: 30px 16px;
+            }
+
+            .spinner {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 12px;
+            }
+
+            .result-section {
+                margin-top: 24px;
+                padding-top: 24px;
+            }
+
+            .video-preview {
+                max-width: 100%;
+                margin-bottom: 20px;
+            }
+
+            .video-info {
+                margin-bottom: 20px;
+            }
+
+            .video-info h3 {
+                font-size: 16px;
+                margin-bottom: 6px;
+            }
+
+            .video-info p {
+                font-size: 13px;
+                margin-bottom: 3px;
+            }
+
+            .download-options {
+                gap: 10px;
+            }
+
+            .btn-download-option {
+                padding: 12px 20px;
+                font-size: 13px;
+                width: 100%;
+                min-height: 44px;
+                justify-content: center;
+            }
+
+            .features-section {
+                padding: 50px 16px;
+            }
+
+            .features-grid {
+                gap: 20px;
                 grid-template-columns: 1fr;
+            }
+
+            .feature-card {
+                padding: 24px 20px;
+            }
+
+            .feature-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 24px;
+                margin-bottom: 16px;
+            }
+
+            .feature-card h3 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .feature-card p {
+                font-size: 13px;
+            }
+
+            .how-it-works {
+                padding: 50px 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+
+            .section-subtitle {
+                font-size: 15px;
+                margin-bottom: 40px;
+            }
+
+            .steps-grid {
+                gap: 24px;
+                grid-template-columns: 1fr;
+            }
+
+            .step-number {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+                margin-bottom: 16px;
+            }
+
+            .step-card h3 {
+                font-size: 16px;
+                margin-bottom: 10px;
+            }
+
+            .step-card p {
+                font-size: 13px;
+            }
+
+            .faq-section {
+                padding: 50px 16px;
+            }
+
+            .section-title {
+                font-size: 24px;
+            }
+
+            .faq-question {
+                padding: 16px 18px;
+                font-size: 14px;
+                min-height: 48px;
+                display: flex;
+                align-items: center;
+            }
+
+            .faq-answer p {
+                padding: 0 18px 16px;
+                font-size: 13px;
+            }
+
+            footer {
+                padding: 40px 16px 20px;
+            }
+
+            .footer-content p {
+                font-size: 13px;
+                margin-bottom: 16px;
+            }
+
+            .footer-links {
+                gap: 16px;
+                margin-bottom: 24px;
+            }
+
+            .footer-links a {
+                font-size: 13px;
+            }
+
+            .footer-bottom {
+                padding-top: 24px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                -webkit-text-size-adjust: 100%;
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            * {
+                -webkit-tap-highlight-color: transparent;
+            }
+
+            button, a, input {
+                -webkit-tap-highlight-color: rgba(255, 107, 74, 0.2);
+            }
+
+            .container {
+                padding: 0 12px;
+            }
+
+            .hero-section {
+                padding: 30px 12px 20px;
+            }
+
+            .hero-section h1 {
+                font-size: 22px;
+            }
+
+            .hero-section p {
+                font-size: 14px;
+            }
+
+            .subtitle-main {
+                font-size: 14px !important;
+            }
+
+            .download-section {
+                padding: 24px 12px 40px;
+            }
+
+            .download-card {
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+
+            .url-input {
+                padding: 12px 14px;
+                font-size: 16px; /* Evita zoom en iOS */
+                min-height: 44px;
+            }
+
+            .btn-download {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .x2-tip {
+                padding: 10px 12px;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .success-badge-mobile {
+                padding: 10px 12px !important;
+                margin-top: 16px !important;
+            }
+
+            .success-badge-mobile > div {
+                font-size: 11px !important;
+                gap: 8px !important;
+            }
+
+            .success-badge-mobile > div span {
+                line-height: 1.4;
+            }
+
+            .x2-tip > div:first-child {
+                font-size: 16px;
+                margin-top: 0;
+            }
+
+            .video-preview {
+                margin-bottom: 16px;
+            }
+
+            .video-info h3 {
+                font-size: 15px;
+            }
+
+            .video-info p {
+                font-size: 12px;
+            }
+
+            .btn-download-option {
+                padding: 10px 18px;
+                font-size: 12px;
+            }
+
+            .features-section {
+                padding: 40px 12px;
+            }
+
+            .features-grid {
+                gap: 16px;
+            }
+
+            .feature-card {
+                padding: 20px 16px;
+            }
+
+            .how-it-works {
+                padding: 40px 12px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+                margin-bottom: 30px;
+            }
+
+            .steps-grid {
+                gap: 20px;
+            }
+
+            .faq-section {
+                padding: 40px 12px;
+            }
+
+            .section-title {
+                font-size: 20px;
+            }
+
+            .faq-question {
+                padding: 14px 16px;
+                font-size: 13px;
+                min-height: 44px;
+            }
+
+            .faq-answer p {
+                padding: 0 16px 14px;
+                font-size: 12px;
+            }
+
+            footer {
+                padding: 30px 12px 16px;
+            }
+
+            .footer-content p {
+                font-size: 12px;
+            }
+
+            .footer-links {
+                gap: 12px;
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .hero-section h1 {
+                font-size: 20px;
+            }
+
+            .download-card {
+                padding: 16px 12px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .feature-card {
+                padding: 18px 14px;
+            }
+
+            .step-number {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
             }
         }
     </style>
@@ -641,8 +1090,8 @@
             </div>
             <h1>Descargador de Videos de <span class="tiktok-text">TikTok</span></h1>
             <p class="subtitle-main">Descarga videos de TikTok <strong style="color: var(--primary); font-weight: 800;">sin marca de agua</strong> en iPhone, Android y PC</p>
-            <div style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border: 2px solid #16a34a; border-radius: 12px; padding: 16px 20px; margin-top: 24px; display: inline-block;">
-                <div style="display: flex; align-items: center; gap: 10px; color: #16a34a; font-weight: 700; font-size: 14px;">
+            <div style="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%); border: 2px solid #16a34a; border-radius: 12px; padding: 16px 20px; margin-top: 24px; display: inline-block; max-width: 100%;" class="success-badge-mobile">
+                <div style="display: flex; align-items: center; gap: 10px; color: #16a34a; font-weight: 700; font-size: 14px; flex-wrap: wrap; justify-content: center; text-align: center;">
                     <i class="fas fa-check-circle" style="font-size: 18px;"></i>
                     <span>100% SIN MARCA DE AGUA • Calidad HD • Totalmente Gratis</span>
                 </div>
