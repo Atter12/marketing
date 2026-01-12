@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>EcomTools | Herramientas de E-commerce online gratis</title>
+    <title>Holistic Ecom Tools | Herramientas de E-commerce online gratis</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -1031,6 +1031,161 @@
                 transform: translateY(0);
             }
         }
+
+        /* Registration Section */
+        .registro-section {
+            padding: 80px 24px;
+            background: linear-gradient(180deg, var(--bg-white) 0%, var(--bg-cream) 100%);
+        }
+
+        .registro-container {
+            max-width: 520px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            border: 1px solid var(--border);
+        }
+
+        .registro-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .registro-header h2 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .registro-header p {
+            font-size: 15px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+            margin-top: 8px;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-register:active {
+            transform: translateY(0);
+        }
+
+        .registro-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .registro-footer p {
+            font-size: 14px;
+            color: var(--text-medium);
+        }
+
+        .registro-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .registro-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .registro-section {
+                padding: 50px 16px;
+            }
+
+            .registro-container {
+                padding: 32px 24px;
+            }
+
+            .registro-header h2 {
+                font-size: 24px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .registro-section {
+                padding: 40px 12px;
+            }
+
+            .registro-container {
+                padding: 28px 20px;
+            }
+
+            .registro-header h2 {
+                font-size: 22px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1042,13 +1197,11 @@
                     <div class="logo-icon">
                         <i class="fas fa-bolt"></i>
                     </div>
-                    Ecom<span>Tools</span>
+                    Holistic Ecom<span>Tools</span>
                 </a>
                 <ul class="nav-links">
                     <li><a href="#tools">Herramientas</a></li>
-                    <li><a href="#pricing">Precios</a></li>
-                    <li><a href="#api">API</a></li>
-                    <li><a href="#" class="nav-btn">Comenzar Gratis</a></li>
+                    <li><a href="#registro" class="nav-btn">Comenzar Gratis</a></li>
                 </ul>
                 <div class="mobile-menu">
                     <i class="fas fa-bars"></i>
@@ -1081,7 +1234,7 @@
 
     <!-- Tools Grid -->
     <section class="tools-section" id="tools">
-        <p class="section-title">Herramientas de Conversión</p>
+        <p class="section-title" id="seccion-conversion">Herramientas de Conversión</p>
         
         <div class="tools-grid">
             <!-- CONVERSIÓN -->
@@ -1105,10 +1258,10 @@
             <div class="tool-card" style="--card-accent: var(--cat-conversion);">
                 <span class="tool-badge badge-new">Nuevo</span>
                 <div class="tool-icon icon-orange">
-                    <i class="fas fa-vials"></i>
+                    <i class="fas fa-link"></i>
                 </div>
-                <h3>A/B Testing</h3>
-                <p>Prueba diferentes versiones de tus páginas y descubre cuál convierte mejor.</p>
+                <h3>Acortador de Links</h3>
+                <p>Acorta y personaliza tus URLs para redes sociales con seguimiento integrado.</p>
             </div>
 
             <div class="tool-card" style="--card-accent: var(--cat-conversion);">
@@ -1120,7 +1273,7 @@
             </div>
 
             <!-- ANÁLISIS -->
-            <div class="category-divider">
+            <div class="category-divider" id="seccion-analisis">
                 <span>Análisis & Investigación</span>
             </div>
 
@@ -1157,17 +1310,8 @@
                 <p>Calcula márgenes, ROI, ROAS y break-even en segundos para optimizar ganancias.</p>
             </div>
 
-            <div class="tool-card" style="--card-accent: var(--cat-analysis);">
-                <span class="tool-badge badge-new">Nuevo</span>
-                <div class="tool-icon icon-sky">
-                    <i class="fas fa-shipping-fast"></i>
-                </div>
-                <h3>Calculadora Envíos</h3>
-                <p>Compara tarifas de envío entre diferentes carriers y calcula costos totales.</p>
-            </div>
-
             <!-- MEDIA -->
-            <div class="category-divider">
+            <div class="category-divider" id="seccion-media">
                 <span>Media & Contenido</span>
             </div>
 
@@ -1242,7 +1386,7 @@
             </div>
 
             <!-- MARKETING -->
-            <div class="category-divider">
+            <div class="category-divider" id="seccion-marketing">
                 <span>Marketing & Ads</span>
             </div>
 
@@ -1259,24 +1403,8 @@
                 <div class="tool-icon icon-indigo">
                     <i class="fas fa-code"></i>
                 </div>
-                <h3>Pixel Manager</h3>
-                <p>Gestiona píxeles de Facebook, TikTok y Google desde un solo lugar.</p>
-            </div>
-
-            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
-                <div class="tool-icon icon-sky">
-                    <i class="fas fa-link"></i>
-                </div>
-                <h3>Generador UTMs</h3>
-                <p>Crea URLs con parámetros UTM para trackear tus campañas correctamente.</p>
-            </div>
-
-            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
-                <div class="tool-icon icon-emerald">
-                    <i class="fas fa-hashtag"></i>
-                </div>
-                <h3>Analizador Hashtags</h3>
-                <p>Encuentra los mejores hashtags para tu nicho en TikTok e Instagram.</p>
+                <h3>Activación de Pixel</h3>
+                <p>Activa y configura píxeles de Facebook, TikTok y Google en tus páginas.</p>
             </div>
 
             <div class="tool-card" style="--card-accent: var(--cat-marketing);">
@@ -1288,25 +1416,9 @@
                 <p>Genera descripciones de productos, ads y emails con inteligencia artificial.</p>
             </div>
 
-            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
-                <div class="tool-icon icon-orange">
-                    <i class="fas fa-text-width"></i>
-                </div>
-                <h3>Contador Caracteres</h3>
-                <p>Verifica que tus textos cumplan los límites de cada plataforma de ads.</p>
-            </div>
-
             <!-- UTILIDADES -->
-            <div class="category-divider">
+            <div class="category-divider" id="seccion-utilidades">
                 <span>Utilidades & Tracking</span>
-            </div>
-
-            <div class="tool-card" style="--card-accent: var(--cat-utils);">
-                <div class="tool-icon icon-emerald">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <h3>COD Tracker</h3>
-                <p>Seguimiento de órdenes COD con estados, confirmaciones y entregas.</p>
             </div>
 
             <div class="tool-card" style="--card-accent: var(--cat-utils);">
@@ -1315,14 +1427,6 @@
                 </div>
                 <h3>Validador Emails</h3>
                 <p>Verifica que los emails de tus clientes sean válidos antes de enviar.</p>
-            </div>
-
-            <div class="tool-card" style="--card-accent: var(--cat-utils);">
-                <div class="tool-icon icon-blue">
-                    <i class="fas fa-file-invoice-dollar"></i>
-                </div>
-                <h3>Generador Facturas</h3>
-                <p>Crea facturas profesionales para tus ventas de forma rápida y sencilla.</p>
             </div>
 
             <div class="tool-card" style="--card-accent: var(--cat-utils);">
@@ -1392,12 +1496,102 @@
         </div>
     </section>
 
+    <!-- Registration Section -->
+    <section class="registro-section" id="registro">
+        <div class="registro-container">
+            <div class="registro-header">
+                <h2>Crea tu cuenta gratis</h2>
+                <p>Accede a todas las herramientas y empieza a escalar tu negocio hoy mismo.</p>
+            </div>
+
+            <form id="registroForm">
+                <div class="form-group">
+                    <label for="storeName">Nombre de tu tienda</label>
+                    <input 
+                        type="text" 
+                        id="storeName" 
+                        name="storeName" 
+                        placeholder="Ej: Mi Tienda Online"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">Nombre</label>
+                        <input 
+                            type="text" 
+                            id="firstName" 
+                            name="firstName" 
+                            placeholder="Tu nombre"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName">Apellido</label>
+                        <input 
+                            type="text" 
+                            id="lastName" 
+                            name="lastName" 
+                            placeholder="Tu apellido"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="tu@email.com"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Número de teléfono</label>
+                    <input 
+                        type="tel" 
+                        id="phone" 
+                        name="phone" 
+                        placeholder="+1 (555) 000-0000"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Mínimo 8 caracteres"
+                        required
+                        minlength="8"
+                    >
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="fas fa-rocket"></i>
+                    Crear Cuenta Gratis
+                </button>
+            </form>
+
+            <div class="registro-footer">
+                <p>¿Ya tienes cuenta? <a href="#login">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-content">
             <h2>¿Listo para escalar?</h2>
-            <p>Únete a miles de emprendedores que ya usan EcomTools para hacer crecer su negocio.</p>
-            <a href="#" class="btn-cta">
+            <p>Únete a miles de emprendedores que ya usan Holistic Ecom Tools para hacer crecer su negocio.</p>
+            <a href="#registro" class="btn-cta">
                 <i class="fas fa-rocket"></i>
                 Comenzar Gratis
             </a>
@@ -1412,7 +1606,7 @@
                     <div class="logo-icon">
                         <i class="fas fa-bolt"></i>
                     </div>
-                    Ecom<span>Tools</span>
+                    Holistic Ecom<span>Tools</span>
                 </a>
                 <p>Suite de herramientas gratuitas para emprendedores de e-commerce. Analiza, crea y escala tu negocio online.</p>
                 <div class="social-links">
@@ -1458,7 +1652,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2026 EcomTools. Todos los derechos reservados.</p>
+            <p>© 2026 Holistic Ecom Tools. Todos los derechos reservados.</p>
             <div class="footer-links">
                 <a href="#">Español</a>
                 <a href="#">Soporte</a>
@@ -1494,13 +1688,64 @@
             });
         }
 
-        // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        // Filter buttons with scroll to section
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const filterMap = {
+            'Todos': 'tools',
+            'Conversión': 'seccion-conversion',
+            'Análisis': 'seccion-analisis',
+            'Media': 'seccion-media',
+            'Marketing': 'seccion-marketing',
+            'Utilidades': 'seccion-utilidades'
+        };
+
+        filterButtons.forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                // Update active state
+                filterButtons.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
+
+                // Scroll to corresponding section
+                const filterText = this.textContent.trim();
+                const targetId = filterMap[filterText];
+                
+                if (targetId) {
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        const offsetTop = targetElement.offsetTop - 100; // 100px offset for header
+                        window.scrollTo({
+                            top: offsetTop,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
             });
         });
+
+        // Registration form
+        const registroForm = document.getElementById('registroForm');
+        if (registroForm) {
+            registroForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    storeName: document.getElementById('storeName').value,
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    password: document.getElementById('password').value
+                };
+
+                console.log('Datos de registro:', formData);
+                
+                // TODO: Enviar datos al backend
+                alert('¡Registro exitoso! (Funcionalidad de backend pendiente)');
+                
+                // Reset form
+                registroForm.reset();
+            });
+        }
 
         // Scroll animation
         const observerOptions = {
