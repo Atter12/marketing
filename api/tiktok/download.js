@@ -48,9 +48,9 @@ export default async function handler(req, res) {
     console.log('Received URL (normalized):', url);
 
     // Validar URL de TikTok - Patrón mejorado y más flexible
-    // Acepta: www.tiktok.com, vm.tiktok.com, vt.tiktok.com, x2tiktok.com, con o sin https
+    // Acepta: www.tiktok.com, vm.tiktok.com, vt.tiktok.com, con o sin https
     // TikTok usa tanto vm.tiktok.com como vt.tiktok.com para URLs cortas
-    const tiktokUrlPattern = /^https?:\/\/((www\.)?(x2)?tiktok\.com|(vm|vt)\.tiktok\.com)/i;
+    const tiktokUrlPattern = /^https?:\/\/((www\.)?tiktok\.com|(vm|vt)\.tiktok\.com)/i;
     if (!tiktokUrlPattern.test(url)) {
       console.log('ERROR: Invalid TikTok URL pattern:', url);
       console.log('URL recibida completa:', JSON.stringify(url));
@@ -77,8 +77,8 @@ export default async function handler(req, res) {
     
     console.log('URL validada correctamente:', url);
 
-    // Normalizar URL (quitar x2 si existe, usar formato estándar)
-    let normalizedUrl = url.replace(/x2tiktok\.com/gi, 'tiktok.com');
+    // Normalizar URL (formato estándar)
+    let normalizedUrl = url;
     console.log('Normalized URL:', normalizedUrl);
 
     // Extraer video ID - Intentar múltiples métodos

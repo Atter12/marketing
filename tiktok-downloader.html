@@ -263,38 +263,7 @@
         }
 
         .example-urls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 20px;
-            width: 100%;
-            box-sizing: border-box;
-            overflow-x: hidden;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-        }
-
-        .example-url {
-            padding: 8px 16px;
-            background: var(--bg-gray);
-            border-radius: 8px;
-            font-size: 13px;
-            color: var(--text-medium);
-            cursor: pointer;
-            transition: all 0.2s;
-            max-width: 100%;
-            box-sizing: border-box;
-            overflow-wrap: break-word;
-            word-wrap: break-word;
-            word-break: break-all;
-            white-space: normal;
-            display: inline-block;
-            line-height: 1.5;
-        }
-
-        .example-url:hover {
-            background: var(--border);
-            color: var(--text-dark);
+            display: none;
         }
 
         .example-urls > span:first-child {
@@ -960,38 +929,7 @@
             }
 
             .example-urls {
-                margin-top: 16px;
-                gap: 8px;
-                width: 100%;
-                overflow-x: hidden;
-            }
-
-            .example-urls > span:first-child {
-                font-size: 11px;
-                display: block;
-                width: 100%;
-                margin-bottom: 4px;
-            }
-
-            .example-url {
-                padding: 10px 12px;
-                font-size: 11px;
-                min-height: auto;
-                display: block;
-                width: 100%;
-                max-width: 100%;
-                box-sizing: border-box;
-                overflow-wrap: break-word;
-                word-wrap: break-word;
-                word-break: break-all;
-                white-space: normal;
-                line-height: 1.5;
-                text-align: left;
-            }
-
-            .x2-tip {
-                padding: 12px 14px;
-                margin-top: 16px;
+                display: none;
             }
 
             .success-badge-mobile {
@@ -1004,19 +942,6 @@
 
             .success-badge-mobile > div i {
                 font-size: 16px !important;
-            }
-
-            .x2-tip > div:first-child {
-                font-size: 18px;
-            }
-
-            .x2-tip div:last-child > div:first-child {
-                font-size: 12px;
-                margin-bottom: 4px;
-            }
-
-            .x2-tip div:last-child > div:last-child {
-                font-size: 12px;
             }
 
             .error-message {
@@ -1241,38 +1166,8 @@
                 font-size: 14px;
             }
 
-            .x2-tip {
-                padding: 10px 12px;
-                flex-direction: column;
-                gap: 8px;
-                width: 100%;
-                box-sizing: border-box;
-                overflow-x: hidden;
-                overflow-wrap: break-word;
-                word-wrap: break-word;
-            }
-
-            .x2-tip code {
-                display: block;
-                width: 100%;
-                max-width: 100%;
-                overflow-wrap: break-word;
-                word-wrap: break-word;
-                word-break: break-all;
-                margin-top: 4px;
-                padding: 4px 8px;
-            }
-
             .example-urls {
-                width: 100%;
-                margin-top: 12px;
-            }
-
-            .example-url {
-                width: 100%;
-                max-width: 100%;
-                font-size: 10px;
-                padding: 8px 10px;
+                display: none;
             }
 
             .success-badge-mobile {
@@ -1287,11 +1182,6 @@
 
             .success-badge-mobile > div span {
                 line-height: 1.4;
-            }
-
-            .x2-tip > div:first-child {
-                font-size: 16px;
-                margin-top: 0;
             }
 
             .video-preview {
@@ -1391,19 +1281,6 @@
                 overflow-x: hidden;
             }
 
-            .example-url {
-                font-size: 9px;
-                padding: 6px 8px;
-            }
-
-            .x2-tip {
-                padding: 8px 10px;
-            }
-
-            .x2-tip code {
-                font-size: 10px;
-            }
-
             .section-title {
                 font-size: 18px;
             }
@@ -1475,27 +1352,19 @@
                     </button>
                 </div>
 
-                <div class="example-urls">
-                    <span style="font-size: 12px; color: var(--text-light);">💡 Ejemplos (clic para agregar):</span>
-                    <span class="example-url" onclick="addExampleToQueue('https://www.tiktok.com/@zachking/video/7307838502817410350')">
-                        @zachking/video/7307838502817410350
-                    </span>
-                    <span class="example-url" onclick="addExampleToQueue('https://www.tiktok.com/@khaby.lame/video/7124527783891299589')">
-                        @khaby.lame/video/7124527783891299589
-                    </span>
-                </div>
-
-                <div class="x2-tip" style="background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%); border: 1px solid #f59e0b; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px; width: 100%; box-sizing: border-box; overflow-x: hidden; overflow-wrap: break-word; word-wrap: break-word;">
-                    <div style="color: #f59e0b; font-size: 20px; margin-top: 2px; flex-shrink: 0;">
-                        <i class="fas fa-lightbulb"></i>
+                <div style="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%); border: 1px solid #0ea5e9; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px; width: 100%; box-sizing: border-box;">
+                    <div style="color: #0ea5e9; font-size: 20px; margin-top: 2px; flex-shrink: 0;">
+                        <i class="fas fa-info-circle"></i>
                     </div>
-                    <div style="flex: 1; min-width: 0; overflow-wrap: break-word; word-wrap: break-word;">
+                    <div style="flex: 1; min-width: 0;">
                         <div style="font-weight: 700; color: var(--text-dark); font-size: 13px; margin-bottom: 6px;">
-                            💡 Truco para descarga más rápida:
+                            💡 ¿Cómo conseguir el enlace?
                         </div>
-                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
-                            Agrega <strong style="color: #f59e0b;">"x2"</strong> antes de "tiktok.com" en el enlace. 
-                            <br><strong>Ejemplo:</strong> <code style="background: white; padding: 2px 6px; border-radius: 4px; font-size: 12px; overflow-wrap: break-word; word-wrap: break-word; word-break: break-all; display: inline-block; max-width: 100%;">https://www.<span style="color: #f59e0b;">x2</span>tiktok.com/@usuario/video/1234567890</code>
+                        <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                            1. Abre TikTok y encuentra el video<br>
+                            2. Toca el botón <strong>"Compartir"</strong><br>
+                            3. Selecciona <strong>"Copiar enlace"</strong><br>
+                            4. Pégalo aquí y haz clic en <strong>"Agregar Video"</strong>
                         </div>
                     </div>
                 </div>
@@ -1793,14 +1662,6 @@
         const videoQueue = [];
         let queueIdCounter = 0;
 
-        // Set example URL and add to queue automatically
-        function addExampleToQueue(url) {
-            document.getElementById('tiktokUrl').value = url;
-            setTimeout(() => {
-                handleAddToQueue();
-            }, 300);
-        }
-
         // Update queue count
         function updateQueueCount() {
             const count = videoQueue.length;
@@ -1845,10 +1706,9 @@
 
         // Fetch video data from API
         async function fetchVideoData(url) {
-            const optimizedUrl = applyX2Trick(url);
             const apiUrl = '/api/tiktok/download';
             const requestBody = { 
-                url: optimizedUrl,
+                url: url,
                 type: 'video'
             };
             
@@ -2003,17 +1863,32 @@
                 return;
             }
             
-            for (const video of readyVideos) {
+            const downloadBtn = document.getElementById('downloadAllBtn');
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.disabled = true;
+            
+            for (let i = 0; i < readyVideos.length; i++) {
+                const video = readyVideos[i];
                 if (video.data && video.data.videoUrl) {
-                    await downloadFile(
-                        video.data.videoUrl, 
-                        `tiktok-${video.data.videoId || Date.now()}.mp4`,
-                        null,
-                        true
-                    );
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+                    downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${readyVideos.length}...`;
+                    
+                    try {
+                        await downloadFileDirect(
+                            video.data.videoUrl, 
+                            `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
+                        );
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                    } catch (error) {
+                        console.error('Error descargando video:', error);
+                    }
                 }
             }
+            
+            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Todos descargados!';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
         }
 
         // Download selected videos
@@ -2025,17 +1900,74 @@
                 return;
             }
             
-            for (const video of selectedVideos) {
+            const downloadBtn = document.getElementById('downloadSelectedBtn');
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.disabled = true;
+            
+            for (let i = 0; i < selectedVideos.length; i++) {
+                const video = selectedVideos[i];
                 if (video.data && video.data.videoUrl) {
-                    await downloadFile(
-                        video.data.videoUrl, 
-                        `tiktok-${video.data.videoId || Date.now()}.mp4`,
-                        null,
-                        true
-                    );
-                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+                    downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${selectedVideos.length}...`;
+                    
+                    try {
+                        await downloadFileDirect(
+                            video.data.videoUrl, 
+                            `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
+                        );
+                        await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                    } catch (error) {
+                        console.error('Error descargando video:', error);
+                    }
                 }
             }
+            
+            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Seleccionados descargados!';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Download file directly (simplified version for batch downloads)
+        async function downloadFileDirect(url, filename) {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log('[DOWNLOAD DIRECT] Iniciando:', filename);
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        mode: 'cors',
+                        cache: 'no-cache'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Error HTTP: ${response.status}`);
+                    }
+                    
+                    const blob = await response.blob();
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = blobUrl;
+                    downloadLink.download = filename;
+                    downloadLink.style.display = 'none';
+                    document.body.appendChild(downloadLink);
+                    
+                    await new Promise(r => setTimeout(r, 50));
+                    downloadLink.click();
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(downloadLink);
+                        window.URL.revokeObjectURL(blobUrl);
+                    }, 100);
+                    
+                    console.log('[DOWNLOAD DIRECT] Completado:', filename);
+                    resolve();
+                } catch (error) {
+                    console.error('[DOWNLOAD DIRECT] Error:', error);
+                    reject(error);
+                }
+            });
         }
 
         // Event listeners for queue actions
@@ -2047,22 +1979,7 @@
             }
         });
 
-        // Apply x2 trick for faster download
-        function applyX2Trick(url) {
-            // Convert www.tiktok.com to www.x2tiktok.com for faster processing
-            if (url.includes('www.tiktok.com') && !url.includes('x2tiktok.com')) {
-                return url.replace('www.tiktok.com', 'www.x2tiktok.com');
-            }
-            // If already has x2, keep it; if it's vm.tiktok.com or vt.tiktok.com, keep original (short URLs need redirect)
-            // No aplicar x2 a URLs cortas porque necesitan seguir el redirect primero
-            if (url.includes('vm.tiktok.com') || url.includes('vt.tiktok.com')) {
-                // Para URLs cortas, mantenerlas como están - el backend manejará el redirect
-                return url;
-            }
-            return url;
-        }
-
-        // Validate TikTok URL - Mejorado para móvil
+        // Validate TikTok URL
         function isValidTikTokUrl(url) {
             if (!url || typeof url !== 'string') return false;
             
