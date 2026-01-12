@@ -1859,10 +1859,22 @@
             
             // Add ads to queue
             if (data.ads && Array.isArray(data.ads) && data.ads.length > 0) {
+                const adsWithMedia = data.ads.filter(ad => !ad._minimal).length;
+                const adsWithoutMedia = data.ads.filter(ad => ad._minimal).length;
+                
+                console.log('[fetchAdsFromPage] Ads with media:', adsWithMedia);
+                console.log('[fetchAdsFromPage] Ads without media (will fetch details):', adsWithoutMedia);
+                
+                // Agregar todos los anuncios a la cola (algunos se cargarán async)
                 for (const ad of data.ads) {
-                    addAdToQueue(ad);
+                    await addAdToQueue(ad); // Esperar para no sobrecargar el servidor
                 }
-                showError(`Se encontraron ${data.ads.length} anuncios. Revisa la cola abajo para descargarlos.`, 'success');
+                
+                if (adsWithoutMedia > 0) {
+                    showError(`Se encontraron ${data.ads.length} anuncios. Obteniendo detalles completos de ${adsWithoutMedia} anuncios...`, 'success');
+                } else {
+                    showError(`Se encontraron ${data.ads.length} anuncios listos para descargar.`, 'success');
+                }
             } else {
                 showError('No se encontraron anuncios en esta página o la página no es pública.', 'warning');
             }
@@ -1906,12 +1918,12 @@
         }
 
         // Add ad to queue
-        function addAdToQueue(adData) {
+        async function addAdToQueue(adData) {
             const queueId = `queue-${queueIdCounter++}`;
             const ad = {
                 id: queueId,
                 adId: adData.adId || adData.id,
-                status: 'ready',
+                status: adData._minimal ? 'loading' : 'ready',
                 data: adData,
                 selected: true
             };
@@ -1919,6 +1931,129 @@
             adsQueue.push(ad);
             renderQueueItem(ad);
             updateQueueCount();
+            
+            // Si el anuncio es "minimal" (sin URLs de media), obtener detalles completos
+            if (adData._minimal && adData._detailsUrl) {
+                console.log('[addAdToQueue] Ad is minimal, fetching full details for:', adData.adId);
+                try {
+                    const fullData = await fetchAdDetails(adData._detailsUrl, adData.adId);
+                    if (fullData && fullData.success) {
+                        // Actualizar datos del anuncio en la cola
+                        ad.data = { ...adData, ...fullData, _minimal: false };
+                        ad.status = 'ready';
+                        updateQueueItem(ad);
+                        console.log('[addAdToQueue] Successfully fetched full details for:', adData.adId);
+                    } else {
+                        ad.status = 'error';
+                        ad.error = 'No se pudo obtener detalles completos';
+                        updateQueueItem(ad);
+                    }
+                } catch (error) {
+                    console.error('[addAdToQueue] Error fetching details:', error);
+                    ad.status = 'error';
+                    ad.error = error.message;
+                    updateQueueItem(ad);
+                }
+            }
+        }
+        
+        // Fetch full details for a single ad
+        async function fetchAdDetails(url, adId) {
+            console.log('[fetchAdDetails] Fetching details for ad:', adId);
+            
+            const apiUrl = '/api/facebook/download';
+            const requestBody = { 
+                url: url,
+                type: 'ad'
+            };
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                console.error('[fetchAdDetails] Error response:', response.status);
+                return null;
+            }
+            
+            const data = await response.json();
+            console.log('[fetchAdDetails] Got details for ad:', adId, '- has video?', !!data.videoUrl, 'has image?', !!data.imageUrl);
+            return data;
+        }
+        
+        // Update queue item
+        function updateQueueItem(ad) {
+            const item = document.getElementById(ad.id);
+            if (!item) {
+                console.log('[updateQueueItem] Item not found in DOM:', ad.id);
+                return;
+            }
+            
+            // Re-render the item with updated data
+            const oldItem = item;
+            const newItem = document.createElement('div');
+            newItem.className = 'video-queue-item';
+            newItem.id = ad.id;
+            
+            // Determine thumbnail
+            let thumbnailContent = '';
+            if (ad.data.videoUrl || ad.data.videoBase64) {
+                if (ad.data.imageUrl || ad.data.imageBase64 || ad.data.thumbnail) {
+                    const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl || ad.data.thumbnail;
+                    thumbnailContent = `
+                        <div class="queue-item-thumbnail">
+                            <img src="${thumbSrc}" alt="Thumbnail">
+                        </div>
+                    `;
+                } else {
+                    thumbnailContent = `<div class="queue-item-thumbnail"><i class="fas fa-video"></i></div>`;
+                }
+            } else if (ad.data.imageUrl || ad.data.imageBase64) {
+                const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl;
+                thumbnailContent = `
+                    <div class="queue-item-thumbnail">
+                        <img src="${thumbSrc}" alt="Thumbnail">
+                    </div>
+                `;
+            } else {
+                thumbnailContent = `<div class="queue-item-thumbnail"><i class="fab fa-facebook"></i></div>`;
+            }
+            
+            const title = ad.data.adText || ad.data.title || 'Anuncio de Facebook';
+            const pageName = ad.data.pageName || ad.data.author || 'Página de Facebook';
+            const adId = ad.data.adId || ad.data.id || '--';
+            const mediaType = ad.data.videoUrl || ad.data.videoBase64 ? 'Video' : (ad.data.imageUrl || ad.data.imageBase64 ? 'Imagen' : '--');
+            
+            let statusBadge = '';
+            if (ad.status === 'loading') {
+                statusBadge = '<span class="queue-item-status loading"><i class="fas fa-spinner fa-spin"></i> Cargando detalles...</span>';
+            } else if (ad.status === 'ready') {
+                statusBadge = '<span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>';
+            } else if (ad.status === 'error') {
+                statusBadge = `<span class="queue-item-status error"><i class="fas fa-exclamation-triangle"></i> ${ad.error || 'Error'}</span>`;
+            }
+            
+            newItem.innerHTML = `
+                <input type="checkbox" class="queue-item-checkbox" ${ad.selected ? 'checked' : ''} 
+                       ${ad.status !== 'ready' ? 'disabled' : ''}
+                       onchange="toggleAdSelection('${ad.id}', this.checked)">
+                ${thumbnailContent}
+                <div class="queue-item-info">
+                    <h4>${title.substring(0, 100)}</h4>
+                    <p><strong>Página:</strong> ${pageName}</p>
+                    <p><strong>ID:</strong> ${adId} • <strong>Tipo:</strong> ${mediaType}</p>
+                    ${statusBadge}
+                </div>
+                <button class="queue-item-remove" onclick="removeFromQueue('${ad.id}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            oldItem.parentNode.replaceChild(newItem, oldItem);
         }
 
         // Render queue item
@@ -2075,13 +2210,23 @@
         async function downloadAd(ad) {
             const adData = ad.data;
             
+            console.log('[downloadAd] Starting download for ad:', adData.adId);
+            console.log('[downloadAd] Has videoUrl?', !!adData.videoUrl, 'Has videoBase64?', !!adData.videoBase64);
+            console.log('[downloadAd] Has imageUrl?', !!adData.imageUrl, 'Has imageBase64?', !!adData.imageBase64);
+            
+            // Validar que tengamos algo para descargar
+            if (!adData.videoUrl && !adData.videoBase64 && !adData.imageUrl && !adData.imageBase64) {
+                console.error('[downloadAd] ERROR: No media URLs available for ad:', adData.adId);
+                throw new Error('Este anuncio no tiene medios disponibles para descargar');
+            }
+            
             // Determine what to download (video or image)
             if (adData.videoUrl || adData.videoBase64) {
                 // Download video
-                let url = adData.videoBase64 || adData.videoUrl;
                 let blob;
                 
                 if (adData.videoBase64) {
+                    console.log('[downloadAd] Using video base64');
                     // Convert base64 to blob
                     const base64Data = adData.videoBase64.split(',')[1];
                     const binaryString = atob(base64Data);
@@ -2091,9 +2236,23 @@
                     }
                     blob = new Blob([bytes], { type: 'video/mp4' });
                 } else {
+                    console.log('[downloadAd] Fetching video from URL via proxy');
+                    console.log('[downloadAd] Video URL (first 200 chars):', adData.videoUrl.substring(0, 200));
+                    
+                    // Validar que la URL tenga parámetros (no termine en ? sin nada)
+                    if (adData.videoUrl.endsWith('?') || adData.videoUrl.endsWith('&')) {
+                        console.error('[downloadAd] ERROR: Video URL is incomplete (ends with ? or &)');
+                        throw new Error('URL de video incompleta - sin parámetros de firma');
+                    }
+                    
                     // Fetch from URL
                     const response = await fetch(`/api/facebook/proxy?url=${encodeURIComponent(adData.videoUrl)}`);
-                    if (!response.ok) throw new Error(`Error ${response.status}`);
+                    console.log('[downloadAd] Proxy response status:', response.status);
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => '');
+                        console.error('[downloadAd] Proxy error:', errorText);
+                        throw new Error(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+                    }
                     blob = await response.blob();
                 }
                 
@@ -2108,10 +2267,10 @@
                 
             } else if (adData.imageUrl || adData.imageBase64) {
                 // Download image
-                let url = adData.imageBase64 || adData.imageUrl;
                 let blob;
                 
                 if (adData.imageBase64) {
+                    console.log('[downloadAd] Using image base64');
                     // Convert base64 to blob
                     const base64Data = adData.imageBase64.split(',')[1];
                     const binaryString = atob(base64Data);
@@ -2121,10 +2280,31 @@
                     }
                     blob = new Blob([bytes], { type: 'image/jpeg' });
                 } else {
+                    console.log('[downloadAd] Fetching image from URL via proxy');
+                    console.log('[downloadAd] Image URL (first 200 chars):', adData.imageUrl.substring(0, 200));
+                    console.log('[downloadAd] Image URL has oh=?', adData.imageUrl.includes('oh='), 'has oe=?', adData.imageUrl.includes('oe='));
+                    
+                    // Validar que la URL tenga parámetros de firma
+                    if (adData.imageUrl.endsWith('?') || adData.imageUrl.endsWith('&')) {
+                        console.error('[downloadAd] ERROR: Image URL is incomplete (ends with ? or &)');
+                        throw new Error('URL de imagen incompleta - sin parámetros de firma');
+                    }
+                    
+                    // Advertir si no tiene firmas (oh= o oe=)
+                    if (!adData.imageUrl.includes('oh=') && !adData.imageUrl.includes('oe=')) {
+                        console.warn('[downloadAd] WARNING: Image URL missing signature parameters (oh= or oe=), might fail');
+                    }
+                    
                     // Fetch from URL
                     const response = await fetch(`/api/facebook/proxy?url=${encodeURIComponent(adData.imageUrl)}`);
-                    if (!response.ok) throw new Error(`Error ${response.status}`);
+                    console.log('[downloadAd] Proxy response status:', response.status);
+                    if (!response.ok) {
+                        const errorText = await response.text().catch(() => '');
+                        console.error('[downloadAd] Proxy error:', errorText);
+                        throw new Error(`Error ${response.status}: ${errorText.substring(0, 100)}`);
+                    }
                     blob = await response.blob();
+                    console.log('[downloadAd] Image blob size:', blob.size);
                 }
                 
                 const blobUrl = URL.createObjectURL(blob);

@@ -271,9 +271,19 @@ function parseHtmlForAds(html, pageId) {
       console.log('[parseHtmlForAds] Will fetch details for', idsArray.length, 'ads');
       
       // Buscar info de anuncios en el HTML (más rápido que hacer peticiones individuales)
+      let adsWithMedia = 0;
+      let adsWithoutMedia = 0;
+      
       for (const adId of idsArray) {
         // Buscar info del anuncio en el HTML actual
         const adInfo = extractAdInfoFromHtml(html, adId);
+        
+        const hasMedia = !!(adInfo.imageUrl || adInfo.videoUrl);
+        if (hasMedia) {
+          adsWithMedia++;
+        } else {
+          adsWithoutMedia++;
+        }
         
         ads.push({
           success: true,
@@ -285,9 +295,22 @@ function parseHtmlForAds(html, pageId) {
           videoUrl: adInfo.videoUrl || null,
           thumbnail: adInfo.imageUrl || null,
           startDate: adInfo.startDate || new Date().toLocaleDateString('es-ES'),
-          // Si tiene media URLs, está completo
-          _minimal: !adInfo.imageUrl && !adInfo.videoUrl
+          // Marcar como minimal si NO tiene media con firmas válidas
+          _minimal: !hasMedia,
+          // Agregar URL para que el frontend pueda obtener detalles completos después
+          _detailsUrl: `https://www.facebook.com/ads/library/?id=${adId}`
         });
+      }
+      
+      console.log('[parseHtmlForAds] === SUMMARY ===');
+      console.log('[parseHtmlForAds] Ads with media (ready to download):', adsWithMedia);
+      console.log('[parseHtmlForAds] Ads without media (need details fetch):', adsWithoutMedia);
+      
+      // Si NINGÚN anuncio tiene media, mostrar advertencia
+      if (adsWithMedia === 0 && ads.length > 0) {
+        console.log('[parseHtmlForAds] ⚠️ WARNING: No ads have valid media URLs with signatures!');
+        console.log('[parseHtmlForAds] This usually means Facebook changed their HTML structure.');
+        console.log('[parseHtmlForAds] Frontend will need to fetch individual ad details.');
       }
     }
     
@@ -353,11 +376,44 @@ function extractAdInfoFromHtml(html, adId) {
         adText = decodeUnicode(textMatch[1]).substring(0, 200);
       }
       
-      // Buscar URLs de imagen/video con firmas
-      const imageUrlMatch = section.match(/https?:\/\/scontent[^"'\s<>()]+\.fbcdn\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>()]*(oe=|oh=)[^"'\s<>()]*/i);
-      if (imageUrlMatch && imageUrlMatch[0]) {
-        imageUrl = imageUrlMatch[0].replace(/&amp;/g, '&');
-        console.log('[extractAdInfoFromHtml] Found image URL (first 150 chars):', imageUrl.substring(0, 150));
+      // Buscar URLs de imagen/video con firmas (MEJORADO)
+      // Necesitamos capturar TODO incluyendo oh= y oe= que son CRÍTICOS
+      const imageUrlPatterns = [
+        // Patrón 1: Buscar URLs completas en atributos JSON con escape
+        /"(?:image_url|src|url)":\s*"(https?:\/\/scontent[^"]+\.fbcdn\.net[^"]+\.(jpg|jpeg|png|webp)[^"]+)"/i,
+        // Patrón 2: Buscar URLs en HTML sin escape
+        /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\.(jpg|jpeg|png|webp)\?[^"'\s<>]+(?:oe=|oh=)[^"'\s<>]+/i,
+        // Patrón 3: Más flexible, captura todo hasta encontrar comillas o espacios
+        /https?:\/\/scontent[^"']+\.fbcdn\.net[^"']*\.(jpg|jpeg|png|webp)\?[^"']+/i,
+      ];
+      
+      for (const pattern of imageUrlPatterns) {
+        const match = section.match(pattern);
+        if (match) {
+          // El match[1] existe si usamos grupos de captura, sino match[0]
+          let url = match[1] || match[0];
+          
+          // Limpiar escapes
+          url = url
+            .replace(/\\u002F/g, '/')
+            .replace(/\\\//g, '/')
+            .replace(/&amp;/g, '&')
+            .replace(/\\"/g, '');
+          
+          // VALIDAR que la URL tenga firmas (oh= o oe=)
+          if (url.includes('oh=') || url.includes('oe=')) {
+            imageUrl = url;
+            console.log('[extractAdInfoFromHtml] Found image URL with signature (first 200 chars):', imageUrl.substring(0, 200));
+            console.log('[extractAdInfoFromHtml] Image URL has oh=?', url.includes('oh='), 'has oe=?', url.includes('oe='));
+            break;
+          } else {
+            console.log('[extractAdInfoFromHtml] WARNING: Found image URL but WITHOUT signature, skipping:', url.substring(0, 150));
+          }
+        }
+      }
+      
+      if (!imageUrl) {
+        console.log('[extractAdInfoFromHtml] No valid image URL found with signature in section');
       }
       
       // Buscar URLs de video
@@ -404,14 +460,56 @@ function extractAdInfoFromHtml(html, adId) {
     
     // Si no encontramos nada en la sección específica, buscar en todo el HTML cerca del ID
     if (!imageUrl && !videoUrl) {
-      console.log('[extractAdInfoFromHtml] No media found in section, searching entire HTML...');
+      console.log('[extractAdInfoFromHtml] No media found in section, searching surrounding HTML...');
       
-      // Buscar cualquier imagen con firma cerca del ad ID
-      const htmlAroundId = html.substring(Math.max(0, html.indexOf(adId) - 3000), html.indexOf(adId) + 3000);
-      const imageMatch = htmlAroundId.match(/https?:\/\/scontent[^"'\s<>()]+\.fbcdn\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>()]*(oe=|oh=)[^"'\s<>()]*/i);
-      if (imageMatch && imageMatch[0]) {
-        imageUrl = imageMatch[0].replace(/&amp;/g, '&');
-        console.log('[extractAdInfoFromHtml] Found image URL in surrounding HTML');
+      // Buscar en un rango más amplio alrededor del ID
+      const idPos = html.indexOf(adId);
+      if (idPos !== -1) {
+        const start = Math.max(0, idPos - 5000);
+        const end = Math.min(html.length, idPos + 5000);
+        const htmlAroundId = html.substring(start, end);
+        
+        console.log('[extractAdInfoFromHtml] Searching in range:', start, 'to', end, 'length:', htmlAroundId.length);
+        
+        // Intentar múltiples patrones para encontrar URLs completas
+        const searchPatterns = [
+          // Patrón 1: URL con todos los parámetros incluyendo oh= y oe=
+          /https?:\/\/scontent[^"'\s]+\.fbcdn\.net[^"'\s]*\.(jpg|jpeg|png|webp)\?[^"'\s]*(?:oh=|oe=)[^"'\s]*/gi,
+          // Patrón 2: Buscar en atributos JSON
+          /"(?:image_url|src|url|uri)":\s*"(https?:\/\/[^"]+\.fbcdn\.net[^"]+\.(jpg|jpeg|png|webp)[^"]+)"/gi,
+        ];
+        
+        for (const pattern of searchPatterns) {
+          let matches = [];
+          let match;
+          pattern.lastIndex = 0;
+          
+          while ((match = pattern.exec(htmlAroundId)) !== null && matches.length < 5) {
+            const url = (match[1] || match[0])
+              .replace(/\\u002F/g, '/')
+              .replace(/\\\//g, '/')
+              .replace(/&amp;/g, '&')
+              .replace(/\\"/g, '');
+            
+            if ((url.includes('oh=') || url.includes('oe=')) && !url.includes('s50x50')) {
+              matches.push(url);
+            }
+          }
+          
+          if (matches.length > 0) {
+            console.log('[extractAdInfoFromHtml] Found', matches.length, 'URLs with signatures in surrounding HTML');
+            // Usar la URL más larga (usualmente es la de mejor calidad)
+            imageUrl = matches.sort((a, b) => b.length - a.length)[0];
+            console.log('[extractAdInfoFromHtml] Selected best URL (first 200 chars):', imageUrl.substring(0, 200));
+            break;
+          }
+        }
+        
+        if (!imageUrl) {
+          console.log('[extractAdInfoFromHtml] WARNING: No URLs with valid signatures found near ad ID');
+        }
+      } else {
+        console.log('[extractAdInfoFromHtml] WARNING: Ad ID not found in HTML');
       }
     }
     
