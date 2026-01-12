@@ -1873,21 +1873,19 @@
             for (let i = 0; i < readyVideos.length; i++) {
                 const video = readyVideos[i];
                 if (video.data && video.data.videoUrl) {
+                    const filename = `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`;
                     downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${readyVideos.length}...`;
                     
                     try {
-                        await downloadFileDirect(
-                            video.data.videoUrl, 
-                            `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
-                        );
+                        await downloadFileDirect(video.data.videoUrl, filename);
                         successCount++;
-                        console.log(`[BATCH] Video ${i + 1}/${readyVideos.length} descargado exitosamente`);
+                        console.log(`[BATCH] ✅ Video ${i + 1}/${readyVideos.length} descargado: ${filename}`);
                         
                         // Delay más largo entre descargas para evitar bloqueos del navegador
                         await new Promise(resolve => setTimeout(resolve, 2000));
                     } catch (error) {
                         failCount++;
-                        console.error(`[BATCH] Error descargando video ${i + 1}:`, error);
+                        console.error(`[BATCH] ❌ Error descargando video ${i + 1} (${filename}):`, error.message);
                     }
                 }
             }
@@ -1923,21 +1921,19 @@
             for (let i = 0; i < selectedVideos.length; i++) {
                 const video = selectedVideos[i];
                 if (video.data && video.data.videoUrl) {
+                    const filename = `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`;
                     downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${selectedVideos.length}...`;
                     
                     try {
-                        await downloadFileDirect(
-                            video.data.videoUrl, 
-                            `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
-                        );
+                        await downloadFileDirect(video.data.videoUrl, filename);
                         successCount++;
-                        console.log(`[BATCH] Video ${i + 1}/${selectedVideos.length} descargado exitosamente`);
+                        console.log(`[BATCH] ✅ Video ${i + 1}/${selectedVideos.length} descargado: ${filename}`);
                         
                         // Delay más largo entre descargas para evitar bloqueos del navegador
                         await new Promise(resolve => setTimeout(resolve, 2000));
                     } catch (error) {
                         failCount++;
-                        console.error(`[BATCH] Error descargando video ${i + 1}:`, error);
+                        console.error(`[BATCH] ❌ Error descargando video ${i + 1} (${filename}):`, error.message);
                     }
                 }
             }
@@ -1954,28 +1950,56 @@
             }, 3000);
         }
 
-        // Download file directly (improved version for batch downloads)
+        // Download file directly (improved version with CORS fallback)
         async function downloadFileDirect(url, filename) {
             return new Promise(async (resolve, reject) => {
                 try {
                     console.log('[DOWNLOAD DIRECT] Iniciando:', filename);
                     
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        mode: 'cors',
-                        cache: 'no-cache',
-                        headers: {
-                            'Referer': 'https://www.tiktok.com/',
-                            'Origin': 'https://www.tiktok.com/'
-                        }
-                    });
+                    // Intento 1: Descarga directa
+                    let response;
+                    let usedProxy = false;
                     
-                    if (!response.ok) {
-                        throw new Error(`Error HTTP: ${response.status}`);
+                    try {
+                        response = await fetch(url, {
+                            method: 'GET',
+                            mode: 'cors',
+                            cache: 'no-cache',
+                            headers: {
+                                'Referer': 'https://www.tiktok.com/',
+                                'Origin': 'https://www.tiktok.com/'
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Error HTTP: ${response.status}`);
+                        }
+                    } catch (directError) {
+                        // Si falla por CORS o cualquier error, intentar con proxy
+                        console.log('[DOWNLOAD DIRECT] Descarga directa falló, intentando con proxy...');
+                        console.log('[DOWNLOAD DIRECT] Error original:', directError.message);
+                        
+                        try {
+                            const proxyUrl = `/api/tiktok/proxy?url=${encodeURIComponent(url)}`;
+                            response = await fetch(proxyUrl, {
+                                method: 'GET',
+                                cache: 'no-cache'
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error(`Error HTTP del proxy: ${response.status}`);
+                            }
+                            
+                            usedProxy = true;
+                            console.log('[DOWNLOAD DIRECT] ✅ Proxy funcionó correctamente');
+                        } catch (proxyError) {
+                            console.error('[DOWNLOAD DIRECT] ❌ Proxy también falló:', proxyError);
+                            throw new Error(`Descarga directa y proxy fallaron: ${proxyError.message}`);
+                        }
                     }
                     
                     const blob = await response.blob();
-                    console.log('[DOWNLOAD DIRECT] Blob creado, tamaño:', blob.size, 'bytes');
+                    console.log('[DOWNLOAD DIRECT] Blob creado, tamaño:', blob.size, 'bytes', usedProxy ? '(via proxy)' : '(directo)');
                     
                     const blobUrl = window.URL.createObjectURL(blob);
                     console.log('[DOWNLOAD DIRECT] Blob URL creada');
@@ -2005,7 +2029,7 @@
                     await new Promise(r => setTimeout(r, 300));
                     resolve();
                 } catch (error) {
-                    console.error('[DOWNLOAD DIRECT] Error:', error);
+                    console.error('[DOWNLOAD DIRECT] Error final:', error);
                     reject(error);
                 }
             });
