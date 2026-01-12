@@ -405,3 +405,4 @@ export default async function handler(req, res) {
 **Estado:** En espera de implementación de Puppeteer/Playwright
 
 
+

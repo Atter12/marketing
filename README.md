@@ -62,3 +62,4 @@ El archivo `vercel.json` está configurado para:
 - Optimizado para SEO y rendimiento
 
 
+

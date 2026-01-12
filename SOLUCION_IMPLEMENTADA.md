@@ -195,3 +195,4 @@ Interceptar las peticiones XHR/Fetch que Facebook hace internamente para obtener
 **Estado**: ✅ Implementado - Pendiente pruebas en producción
 
 
+

@@ -306,6 +306,217 @@
             margin-top: 4px;
         }
 
+        /* Video Queue Section */
+        .video-queue-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .video-queue-section.active {
+            display: block;
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .queue-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .queue-header .queue-count {
+            background: var(--tiktok-gradient);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .video-queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .video-queue-item {
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .video-queue-item:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .video-queue-item.loading {
+            opacity: 0.6;
+        }
+
+        .queue-item-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .queue-item-thumbnail {
+            width: 80px;
+            height: 106px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .queue-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-item-info h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .queue-item-info p {
+            font-size: 12px;
+            color: var(--text-medium);
+            margin-bottom: 4px;
+        }
+
+        .queue-item-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .queue-item-status.ready {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .queue-item-status.loading {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .queue-item-status.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .queue-item-remove {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .queue-item-remove:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-queue-action {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-download-all {
+            background: var(--tiktok-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 0, 80, 0.3);
+        }
+
+        .btn-download-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 80, 0.4);
+        }
+
+        .btn-download-selected {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-download-selected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-queue-action:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-clear-queue {
+            background: white;
+            color: var(--text-medium);
+            border: 2px solid var(--border);
+        }
+
+        .btn-clear-queue:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #dc2626;
+        }
+
         /* Result Section */
         .result-section {
             display: none;
@@ -722,6 +933,30 @@
                 font-size: 15px;
                 min-height: 48px;
                 justify-content: center;
+            }
+
+            .queue-item-thumbnail {
+                width: 60px;
+                height: 80px;
+                font-size: 24px;
+            }
+
+            .queue-item-info h4 {
+                font-size: 13px;
+            }
+
+            .queue-item-info p {
+                font-size: 11px;
+            }
+
+            .btn-queue-action {
+                width: 100%;
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .queue-actions {
+                flex-direction: column;
             }
 
             .example-urls {
@@ -1234,19 +1469,19 @@
                         placeholder="Pega aquí el enlace del video de TikTok..."
                         autocomplete="off"
                     >
-                    <button class="btn-download" id="downloadBtn">
-                        <i class="fas fa-download"></i>
-                        Descargar
+                    <button class="btn-download" id="addToQueueBtn">
+                        <i class="fas fa-plus-circle"></i>
+                        Agregar Video
                     </button>
                 </div>
 
                 <div class="example-urls">
-                    <span style="font-size: 12px; color: var(--text-light);">Ejemplos:</span>
-                    <span class="example-url" onclick="setExampleUrl('https://www.tiktok.com/@usuario/video/1234567890')">
-                        https://www.tiktok.com/@usuario/video/1234567890
+                    <span style="font-size: 12px; color: var(--text-light);">💡 Ejemplos (clic para agregar):</span>
+                    <span class="example-url" onclick="addExampleToQueue('https://www.tiktok.com/@zachking/video/7307838502817410350')">
+                        @zachking/video/7307838502817410350
                     </span>
-                    <span class="example-url" onclick="setExampleUrl('https://vt.tiktok.com/ZS5bVHxhG')">
-                        https://vt.tiktok.com/xxxxx
+                    <span class="example-url" onclick="addExampleToQueue('https://www.tiktok.com/@khaby.lame/video/7124527783891299589')">
+                        @khaby.lame/video/7124527783891299589
                     </span>
                 </div>
 
@@ -1278,19 +1513,29 @@
                     </p>
                 </div>
 
-                <div class="result-section" id="resultSection">
-                    <div class="video-preview" id="videoPreview"></div>
+                <!-- Video Queue Section -->
+                <div class="video-queue-section" id="videoQueueSection">
+                    <div class="queue-header">
+                        <h3><i class="fas fa-list"></i> Cola de Descargas</h3>
+                        <span class="queue-count" id="queueCount">0 videos</span>
+                    </div>
                     
-                    <div class="video-info" id="videoInfo"></div>
+                    <div class="video-queue-list" id="videoQueueList">
+                        <!-- Queue items will be added here dynamically -->
+                    </div>
 
-                    <div class="download-options">
-                        <button class="btn-download-option" id="downloadVideoBtn">
+                    <div class="queue-actions">
+                        <button class="btn-queue-action btn-download-all" id="downloadAllBtn">
                             <i class="fas fa-download"></i>
-                            Descargar Video HD
+                            Descargar Todo
                         </button>
-                        <button class="btn-download-option" id="downloadAudioBtn">
-                            <i class="fas fa-music"></i>
-                            Descargar Audio
+                        <button class="btn-queue-action btn-download-selected" id="downloadSelectedBtn">
+                            <i class="fas fa-check-square"></i>
+                            Descargar Seleccionados
+                        </button>
+                        <button class="btn-queue-action btn-clear-queue" id="clearQueueBtn">
+                            <i class="fas fa-trash-alt"></i>
+                            Limpiar Cola
                         </button>
                     </div>
                 </div>
@@ -1352,23 +1597,23 @@
     <section class="how-it-works">
         <div class="container">
             <h2 class="section-title">¿Cómo Descargar Videos de TikTok con EcomTools?</h2>
-            <p class="section-subtitle">Sigue estos simples pasos para descargar cualquier video de TikTok sin marca de agua:</p>
+            <p class="section-subtitle">Sistema de descarga múltiple: Agrega varios videos a la vez y descárgalos todos juntos</p>
             
             <div class="steps-grid">
                 <div class="step-card">
                     <div class="step-number">1</div>
-                    <h3>Abre TikTok y Copia el Enlace</h3>
-                    <p>Abre la aplicación TikTok en tu teléfono o visita TikTok.com. Selecciona el video que deseas descargar y toca el ícono <strong>Compartir</strong> en la esquina inferior derecha del video. Haz clic en <strong>"Copiar enlace"</strong> para obtener el enlace del video.</p>
+                    <h3>Copia los Enlaces</h3>
+                    <p>Abre TikTok y copia los enlaces de los videos que deseas descargar. Puedes hacerlo desde la app móvil o desde TikTok.com tocando el botón <strong>Compartir → Copiar enlace</strong>.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">2</div>
-                    <h3>Pega el Enlace y Descarga</h3>
-                    <p>Ve a esta página (EcomTools), pega el enlace de TikTok copiado en el cuadro de búsqueda arriba y presiona el botón <strong>"Descargar"</strong>. <em>💡 Tip: Agrega "x2" antes de tiktok.com para descarga más rápida.</em></p>
+                    <h3>Agrega Videos a la Cola</h3>
+                    <p>Pega cada enlace en el cuadro de arriba y haz clic en <strong>"Agregar Video"</strong>. Repite para agregar múltiples videos. Puedes usar los ejemplos haciendo clic en ellos.</p>
                 </div>
                 <div class="step-card">
                     <div class="step-number">3</div>
-                    <h3>Obtén tu Video Sin Marca de Agua</h3>
-                    <p>Presiona el botón <strong>"Descargar MP4"</strong> o <strong>"Descargar MP3"</strong> y espera unos segundos hasta que el archivo se descargue en tu dispositivo. ¡Listo! Video en HD sin marca de agua.</p>
+                    <h3>Descarga Todo o Selecciona</h3>
+                    <p>Una vez agregados, presiona <strong>"Descargar Todo"</strong> para descargar todos los videos, o desmarca algunos y presiona <strong>"Descargar Seleccionados"</strong>. ¡Listo! Videos HD sin marca de agua.</p>
                 </div>
             </div>
 
@@ -1399,6 +1644,14 @@
                         </div>
                         <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
                             En una computadora, copia el enlace del video de TikTok que deseas descargar y péguelo en el cuadro de arriba. Presiona "Descargar" y listo.
+                        </p>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: var(--primary); margin-bottom: 8px; font-size: 15px;">
+                            <i class="fas fa-layer-group"></i> Descarga Múltiple
+                        </div>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.7;">
+                            <strong>¡Novedad!</strong> Ahora puedes agregar múltiples videos a la cola y descargarlos todos juntos. Simplemente pega varios enlaces uno por uno y haz clic en "Descargar Todo".
                         </p>
                     </div>
                 </div>
@@ -1536,11 +1789,263 @@
     </footer>
 
     <script>
-        // Set example URL
-        function setExampleUrl(url) {
+        // Video Queue Manager
+        const videoQueue = [];
+        let queueIdCounter = 0;
+
+        // Set example URL and add to queue automatically
+        function addExampleToQueue(url) {
             document.getElementById('tiktokUrl').value = url;
-            document.getElementById('tiktokUrl').focus();
+            setTimeout(() => {
+                handleAddToQueue();
+            }, 300);
         }
+
+        // Update queue count
+        function updateQueueCount() {
+            const count = videoQueue.length;
+            document.getElementById('queueCount').textContent = `${count} video${count !== 1 ? 's' : ''}`;
+            
+            const queueSection = document.getElementById('videoQueueSection');
+            if (count > 0) {
+                queueSection.classList.add('active');
+            } else {
+                queueSection.classList.remove('active');
+            }
+        }
+
+        // Add video to queue
+        async function addVideoToQueue(url) {
+            const queueId = `queue-${queueIdCounter++}`;
+            const videoData = {
+                id: queueId,
+                url: url,
+                status: 'loading',
+                data: null,
+                selected: true
+            };
+            
+            videoQueue.push(videoData);
+            renderQueueItem(videoData);
+            updateQueueCount();
+            
+            // Fetch video data
+            try {
+                const data = await fetchVideoData(url);
+                videoData.status = 'ready';
+                videoData.data = data;
+                updateQueueItem(videoData);
+            } catch (error) {
+                console.error('Error fetching video data:', error);
+                videoData.status = 'error';
+                videoData.error = error.message;
+                updateQueueItem(videoData);
+            }
+        }
+
+        // Fetch video data from API
+        async function fetchVideoData(url) {
+            const optimizedUrl = applyX2Trick(url);
+            const apiUrl = '/api/tiktok/download';
+            const requestBody = { 
+                url: optimizedUrl,
+                type: 'video'
+            };
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                let errorText = '';
+                try {
+                    errorText = await response.text();
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.error || errorData.message || `Error ${response.status}`);
+                } catch (e) {
+                    throw new Error(errorText || `Error ${response.status}`);
+                }
+            }
+
+            const responseText = await response.text();
+            const data = JSON.parse(responseText);
+
+            if (!data.success) {
+                throw new Error(data.error || 'Error al procesar el video');
+            }
+
+            return data;
+        }
+
+        // Render queue item
+        function renderQueueItem(videoData) {
+            const queueList = document.getElementById('videoQueueList');
+            const item = document.createElement('div');
+            item.className = 'video-queue-item';
+            item.id = videoData.id;
+            item.dataset.queueId = videoData.id;
+            
+            const thumbnailContent = videoData.data?.thumbnail 
+                ? `<img src="${videoData.data.thumbnail}" class="queue-item-thumbnail" alt="Thumbnail">`
+                : `<div class="queue-item-thumbnail"><i class="fab fa-tiktok"></i></div>`;
+            
+            const title = videoData.data?.title || 'Cargando...';
+            const author = videoData.data?.author || '@usuario';
+            const duration = videoData.data?.duration ? `${videoData.data.duration}s` : '--';
+            
+            let statusBadge = '';
+            if (videoData.status === 'loading') {
+                statusBadge = '<span class="queue-item-status loading"><i class="fas fa-spinner fa-spin"></i> Cargando...</span>';
+            } else if (videoData.status === 'ready') {
+                statusBadge = '<span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>';
+            } else if (videoData.status === 'error') {
+                statusBadge = '<span class="queue-item-status error"><i class="fas fa-exclamation-triangle"></i> Error</span>';
+            }
+            
+            item.innerHTML = `
+                <input type="checkbox" class="queue-item-checkbox" ${videoData.selected ? 'checked' : ''} 
+                       onchange="toggleQueueItemSelection('${videoData.id}', this.checked)">
+                ${thumbnailContent}
+                <div class="queue-item-info">
+                    <h4>${title}</h4>
+                    <p><strong>Autor:</strong> ${author}</p>
+                    <p><strong>Duración:</strong> ${duration}</p>
+                    ${statusBadge}
+                </div>
+                <button class="queue-item-remove" onclick="removeFromQueue('${videoData.id}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            queueList.appendChild(item);
+        }
+
+        // Update queue item
+        function updateQueueItem(videoData) {
+            const item = document.getElementById(videoData.id);
+            if (!item) return;
+            
+            const thumbnailContent = videoData.data?.thumbnail 
+                ? `<img src="${videoData.data.thumbnail}" class="queue-item-thumbnail" alt="Thumbnail">`
+                : `<div class="queue-item-thumbnail"><i class="fab fa-tiktok"></i></div>`;
+            
+            const title = videoData.data?.title || (videoData.status === 'error' ? 'Error al cargar' : 'Video TikTok');
+            const author = videoData.data?.author || '@usuario';
+            const duration = videoData.data?.duration ? `${videoData.data.duration}s` : '--';
+            
+            let statusBadge = '';
+            if (videoData.status === 'loading') {
+                statusBadge = '<span class="queue-item-status loading"><i class="fas fa-spinner fa-spin"></i> Cargando...</span>';
+            } else if (videoData.status === 'ready') {
+                statusBadge = '<span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>';
+            } else if (videoData.status === 'error') {
+                statusBadge = `<span class="queue-item-status error"><i class="fas fa-exclamation-triangle"></i> ${videoData.error || 'Error'}</span>`;
+            }
+            
+            item.innerHTML = `
+                <input type="checkbox" class="queue-item-checkbox" ${videoData.selected ? 'checked' : ''} 
+                       ${videoData.status !== 'ready' ? 'disabled' : ''}
+                       onchange="toggleQueueItemSelection('${videoData.id}', this.checked)">
+                ${thumbnailContent}
+                <div class="queue-item-info">
+                    <h4>${title}</h4>
+                    <p><strong>Autor:</strong> ${author}</p>
+                    <p><strong>Duración:</strong> ${duration}</p>
+                    ${statusBadge}
+                </div>
+                <button class="queue-item-remove" onclick="removeFromQueue('${videoData.id}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+        }
+
+        // Toggle queue item selection
+        function toggleQueueItemSelection(queueId, selected) {
+            const video = videoQueue.find(v => v.id === queueId);
+            if (video) {
+                video.selected = selected;
+            }
+        }
+
+        // Remove from queue
+        function removeFromQueue(queueId) {
+            const index = videoQueue.findIndex(v => v.id === queueId);
+            if (index !== -1) {
+                videoQueue.splice(index, 1);
+            }
+            
+            const item = document.getElementById(queueId);
+            if (item) {
+                item.remove();
+            }
+            
+            updateQueueCount();
+        }
+
+        // Clear queue
+        function clearQueue() {
+            videoQueue.length = 0;
+            document.getElementById('videoQueueList').innerHTML = '';
+            updateQueueCount();
+        }
+
+        // Download all videos
+        async function downloadAllVideos() {
+            const readyVideos = videoQueue.filter(v => v.status === 'ready');
+            
+            if (readyVideos.length === 0) {
+                showError('No hay videos listos para descargar');
+                return;
+            }
+            
+            for (const video of readyVideos) {
+                if (video.data && video.data.videoUrl) {
+                    await downloadFile(
+                        video.data.videoUrl, 
+                        `tiktok-${video.data.videoId || Date.now()}.mp4`,
+                        null,
+                        true
+                    );
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+                }
+            }
+        }
+
+        // Download selected videos
+        async function downloadSelectedVideos() {
+            const selectedVideos = videoQueue.filter(v => v.status === 'ready' && v.selected);
+            
+            if (selectedVideos.length === 0) {
+                showError('No hay videos seleccionados para descargar');
+                return;
+            }
+            
+            for (const video of selectedVideos) {
+                if (video.data && video.data.videoUrl) {
+                    await downloadFile(
+                        video.data.videoUrl, 
+                        `tiktok-${video.data.videoId || Date.now()}.mp4`,
+                        null,
+                        true
+                    );
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Delay between downloads
+                }
+            }
+        }
+
+        // Event listeners for queue actions
+        document.getElementById('downloadAllBtn').addEventListener('click', downloadAllVideos);
+        document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedVideos);
+        document.getElementById('clearQueueBtn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que deseas limpiar toda la cola?')) {
+                clearQueue();
+            }
+        });
 
         // Apply x2 trick for faster download
         function applyX2Trick(url) {
@@ -1606,25 +2111,22 @@
             return match ? match[1] : null;
         }
 
-        // Download handler
-        document.getElementById('downloadBtn').addEventListener('click', handleDownload);
+        // Add to queue handler
+        document.getElementById('addToQueueBtn').addEventListener('click', handleAddToQueue);
         document.getElementById('tiktokUrl').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                handleDownload();
+                handleAddToQueue();
             }
         });
 
-        async function handleDownload() {
+        async function handleAddToQueue() {
             const urlInput = document.getElementById('tiktokUrl');
             let url = urlInput.value;
             
-            console.log('=== INICIO handleDownload ===');
+            console.log('=== INICIO handleAddToQueue ===');
             console.log('URL original del input:', url);
-            console.log('Tipo de URL:', typeof url);
-            console.log('Longitud URL:', url ? url.length : 0);
             
-            // Hide previous results
-            document.getElementById('resultSection').classList.remove('active');
+            // Hide previous errors
             document.getElementById('errorMessage').classList.remove('active');
             
             // Validar y limpiar URL
@@ -1634,205 +2136,61 @@
                 return;
             }
             
-            // Limpiar URL: remover espacios y caracteres invisibles
+            // Limpiar URL
             url = url.trim().replace(/[\u200B-\u200D\uFEFF]/g, '').replace(/\s+/g, '');
             
-            // Agregar https:// si falta (para móvil que a veces copia sin protocolo)
+            // Agregar https:// si falta
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 url = 'https://' + url;
                 console.log('[FIX] URL sin protocolo, agregado https://:', url);
             }
             
             console.log('URL después de limpieza:', url);
-            console.log('Validando URL...');
             
             if (!isValidTikTokUrl(url)) {
-                console.error('[ERROR] URL no válida después de validación');
-                showError('Por favor, ingresa un enlace válido de TikTok. Ejemplo: https://www.tiktok.com/@usuario/video/1234567890 o https://vt.tiktok.com/xxxxx o https://vm.tiktok.com/xxxxx');
+                console.error('[ERROR] URL no válida');
+                showError('Por favor, ingresa un enlace válido de TikTok');
                 return;
             }
             
-            console.log('[SUCCESS] URL validada correctamente');
-            
-            // Apply x2 trick for faster download (like TikVid.io does)
-            const optimizedUrl = applyX2Trick(url);
-            
-            // Show loading
-            document.getElementById('loadingState').classList.add('active');
-            document.getElementById('downloadBtn').disabled = true;
-            
-            // Llamar al backend API real
-            const apiUrl = '/api/tiktok/download';
-            const requestBody = { 
-                url: optimizedUrl,
-                type: 'video'
-            };
-            
-            console.log('=== FRONTEND: Calling API ===');
-            console.log('API URL:', apiUrl);
-            console.log('URL original:', url);
-            console.log('URL optimizada:', optimizedUrl);
-            console.log('Request Body:', requestBody);
-            console.log('Request Body JSON:', JSON.stringify(requestBody));
-            
-            try {
-                console.log('[FETCH] Iniciando fetch a:', apiUrl);
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                console.log('[FETCH] Response recibida');
-                console.log('Response Status:', response.status);
-                console.log('Response Status Text:', response.statusText);
-                console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
-                console.log('Response OK?:', response.ok);
-                
-                if (!response.ok) {
-                    let errorText = '';
-                    let errorData = null;
-                    
-                    try {
-                        errorText = await response.text();
-                        console.error('[ERROR] Response Error Text:', errorText);
-                        
-                        // Intentar parsear como JSON
-                        try {
-                            errorData = JSON.parse(errorText);
-                            console.error('[ERROR] Response Error JSON:', errorData);
-                        } catch (e) {
-                            console.error('[ERROR] No se pudo parsear error como JSON');
-                        }
-                    } catch (e) {
-                        console.error('[ERROR] No se pudo leer error response:', e);
-                    }
-                    
-                    document.getElementById('loadingState').classList.remove('active');
-                    document.getElementById('downloadBtn').disabled = false;
-                    
-                    const errorMessage = errorData?.error || errorData?.message || errorText || `Error ${response.status}`;
-                    showError(`Error ${response.status}: ${errorMessage.substring(0, 150)}`);
-                    return;
-                }
-
-                let data = null;
-                try {
-                    const responseText = await response.text();
-                    console.log('[SUCCESS] Response Text recibido:', responseText.substring(0, 500));
-                    data = JSON.parse(responseText);
-                    console.log('[SUCCESS] Response Data parseado:', data);
-                } catch (parseError) {
-                    console.error('[ERROR] Error parseando JSON:', parseError);
-                    document.getElementById('loadingState').classList.remove('active');
-                    document.getElementById('downloadBtn').disabled = false;
-                    showError('Error al procesar la respuesta del servidor. Por favor, intenta de nuevo.');
-                    return;
-                }
-
-                document.getElementById('loadingState').classList.remove('active');
-                document.getElementById('downloadBtn').disabled = false;
-
-                if (!data.success) {
-                    showError(data.error || 'Error al procesar el video. Por favor, intenta de nuevo.');
-                    return;
-                }
-
-                // Mostrar resultado con datos reales del video
-                showResult(data);
-                
-            } catch (error) {
-                console.error('=== FRONTEND: Fetch Error ===');
-                console.error('Error Type:', error.name);
-                console.error('Error Message:', error.message);
-                console.error('Error Stack:', error.stack);
-                
-                document.getElementById('loadingState').classList.remove('active');
-                document.getElementById('downloadBtn').disabled = false;
-                showError(`Error de conexión: ${error.message}. Por favor, verifica tu conexión e intenta de nuevo.`);
+            // Check if URL already in queue
+            if (videoQueue.some(v => v.url === url)) {
+                showError('Este video ya está en la cola');
+                return;
             }
+            
+            console.log('[SUCCESS] URL validada, agregando a cola');
+            
+            // Add to queue
+            await addVideoToQueue(url);
+            
+            // Clear input
+            urlInput.value = '';
+            urlInput.focus();
         }
-
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
             errorText.textContent = message;
             errorDiv.classList.add('active');
         }
-
-        function showResult(data) {
-            const resultSection = document.getElementById('resultSection');
-            const videoPreview = document.getElementById('videoPreview');
-            const videoInfo = document.getElementById('videoInfo');
-            
-            const videoId = data.videoId;
-            const videoUrl = data.videoUrl;
-            const audioUrl = data.audioUrl;
-            const thumbnail = data.thumbnail;
-            const duration = data.duration || 'N/A';
-            const author = data.author || '@usuario';
-            const title = data.title || 'Video TikTok';
-            
-            // Mostrar preview del video o thumbnail
-            if (videoUrl) {
-                videoPreview.innerHTML = `
-                    <video 
-                        controls 
-                        preload="metadata" 
-                        poster="${thumbnail || ''}"
-                        style="width: 100%; height: auto; border-radius: 16px;"
-                    >
-                        <source src="${videoUrl}" type="video/mp4">
-                        Tu navegador no soporta el tag de video.
-                    </video>
-                `;
-            } else if (thumbnail) {
-                videoPreview.innerHTML = `
-                    <img 
-                        src="${thumbnail}" 
-                        alt="Preview del video"
-                        style="width: 100%; height: auto; border-radius: 16px;"
-                    >
-                `;
-            } else {
-                videoPreview.innerHTML = `
-                    <div style="background: linear-gradient(135deg, #ff0050 0%, #00f2ea 100%); aspect-ratio: 9/16; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; border-radius: 16px;">
-                        <i class="fab fa-tiktok"></i>
-                    </div>
-                `;
-            }
-            
-            videoInfo.innerHTML = `
-                <h3>${title}</h3>
-                <p><strong>Autor:</strong> ${author}</p>
-                <p><strong>ID:</strong> ${videoId}</p>
-                <p><strong>Duración:</strong> ${duration} segundos</p>
-                ${data.noWatermark ? `
-                <div style="background: #dcfce7; border: 1px solid #16a34a; border-radius: 8px; padding: 10px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #16a34a; font-weight: 600;">
-                    <i class="fas fa-check-circle"></i>
-                    100% Sin marca de agua • Listo para descargar
-                </div>
-                ` : ''}
-            `;
-            
             // Función para descargar archivos usando Fetch + Blob (evita problemas de CORS)
-            async function downloadFile(url, filename, buttonElement) {
+            async function downloadFile(url, filename, buttonElement, silentMode = false) {
                 if (!url) {
-                    showError('URL no disponible. Por favor, intenta de nuevo.');
+                    if (!silentMode) showError('URL no disponible. Por favor, intenta de nuevo.');
                     return;
                 }
                 
-                const originalText = buttonElement.innerHTML;
-                const originalDisabled = buttonElement.disabled;
-                const originalBackground = buttonElement.style.background;
+                const originalText = buttonElement ? buttonElement.innerHTML : '';
+                const originalDisabled = buttonElement ? buttonElement.disabled : false;
+                const originalBackground = buttonElement ? buttonElement.style.background : '';
                 
                 try {
                     // Mostrar estado de descarga
-                    buttonElement.disabled = true;
-                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando descarga...';
+                    if (buttonElement) {
+                        buttonElement.disabled = true;
+                        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparando descarga...';
+                    }
                     
                     console.log('[DOWNLOAD] Iniciando descarga de:', url);
                     console.log('[DOWNLOAD] Nombre del archivo:', filename);
@@ -1862,7 +2220,9 @@
                     console.log('[DOWNLOAD] Tipo de contenido:', contentType);
                     
                     // Actualizar estado
-                    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
+                    if (buttonElement) {
+                        buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
+                    }
                     
                     // Leer la respuesta como blob con progreso si es posible
                     let blob;
@@ -1881,7 +2241,7 @@
                             receivedLength += value.length;
                             
                             // Actualizar progreso si tenemos el tamaño total
-                            if (total > 0) {
+                            if (total > 0 && buttonElement) {
                                 const percent = Math.round((receivedLength / total) * 100);
                                 buttonElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando... ${percent}%`;
                             }
@@ -1923,14 +2283,16 @@
                     }, 500);
                     
                     // Restaurar botón con éxito
-                    buttonElement.innerHTML = '<i class="fas fa-check-circle"></i> ¡Descargado!';
-                    buttonElement.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
-                    
-                    setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
-                        buttonElement.style.background = originalBackground;
-                        buttonElement.disabled = originalDisabled;
-                    }, 2500);
+                    if (buttonElement) {
+                        buttonElement.innerHTML = '<i class="fas fa-check-circle"></i> ¡Descargado!';
+                        buttonElement.style.background = 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)';
+                        
+                        setTimeout(() => {
+                            buttonElement.innerHTML = originalText;
+                            buttonElement.style.background = originalBackground;
+                            buttonElement.disabled = originalDisabled;
+                        }, 2500);
+                    }
                     
                 } catch (error) {
                     console.error('[DOWNLOAD] Error durante la descarga:', error);
@@ -1941,11 +2303,14 @@
                     });
                     
                     // Restaurar botón en caso de error
-                    buttonElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
-                    buttonElement.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+                    if (buttonElement) {
+                        buttonElement.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error';
+                        buttonElement.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+                    }
                     
                     // Intentar método alternativo: abrir en nueva pestaña como fallback
-                    try {
+                    if (!silentMode) {
+                        try {
                         const fallbackLink = document.createElement('a');
                         fallbackLink.href = url;
                         fallbackLink.target = '_blank';
@@ -1956,41 +2321,20 @@
                         setTimeout(() => document.body.removeChild(fallbackLink), 100);
                         
                         showError('Si la descarga no inicia automáticamente, haz clic derecho en el video en la nueva pestaña y selecciona "Guardar video como..."');
-                    } catch (fallbackError) {
-                        showError(`Error al descargar: ${error.message}. Por favor, intenta hacer clic derecho en el video y selecciona "Guardar video como...".`);
+                        } catch (fallbackError) {
+                            showError(`Error al descargar: ${error.message}. Por favor, intenta hacer clic derecho en el video y selecciona "Guardar video como...".`);
+                        }
                     }
                     
-                    setTimeout(() => {
-                        buttonElement.innerHTML = originalText;
-                        buttonElement.style.background = originalBackground;
-                        buttonElement.disabled = originalDisabled;
-                    }, 3000);
+                    if (buttonElement) {
+                        setTimeout(() => {
+                            buttonElement.innerHTML = originalText;
+                            buttonElement.style.background = originalBackground;
+                            buttonElement.disabled = originalDisabled;
+                        }, 3000);
+                    }
                 }
             }
-            
-            // Configurar botones de descarga reales
-            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
-            const downloadAudioBtn = document.getElementById('downloadAudioBtn');
-            
-            downloadVideoBtn.onclick = async () => {
-                if (!videoUrl) {
-                    showError('URL del video no disponible. Por favor, intenta de nuevo.');
-                    return;
-                }
-                await downloadFile(videoUrl, `tiktok-video-${videoId}.mp4`, downloadVideoBtn);
-            };
-            
-            downloadAudioBtn.onclick = async () => {
-                if (!audioUrl) {
-                    showError('URL del audio no disponible. Por favor, intenta de nuevo.');
-                    return;
-                }
-                await downloadFile(audioUrl, `tiktok-audio-${videoId}.mp3`, downloadAudioBtn);
-            };
-            
-            resultSection.classList.add('active');
-            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
 
         // FAQ Toggle
         function toggleFaq(element) {
