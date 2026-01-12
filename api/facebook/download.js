@@ -992,46 +992,63 @@ function parseHtmlForAdData(html, adId) {
       
       console.log('[parseHtmlForAdData] Pattern 3 - Total unique video URLs found:', videoMatches.length);
       
-      // Buscar imágenes - primero buscar URLs con parámetros de firma completos
-      const cdnImagePatternWithParams = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>]*(oe=|oh=)[^"'\s<>]*/gi;
-      const imageMatchesWithParams = html.match(cdnImagePatternWithParams) || [];
-      
-      console.log('[parseHtmlForAdData] Pattern 3 - Image matches with signature params found:', imageMatchesWithParams.length);
-      
-      // Si encontramos imágenes con parámetros de firma, usar esas primero
-      if (imageMatchesWithParams.length > 0) {
-        const validImages = imageMatchesWithParams.filter(url => {
-          const cleanUrl = url.replace(/&amp;/g, '&');
-          return !cleanUrl.includes('s50x50') && 
-                 !cleanUrl.includes('profile') && 
-                 !cleanUrl.includes('avatar') &&
-                 (cleanUrl.includes('oe=') || cleanUrl.includes('&oe=')) &&
-                 (cleanUrl.includes('oh=') || cleanUrl.includes('&oh='));
-        });
+        // Buscar imágenes - primero buscar URLs con parámetros de firma completos
+        const cdnImagePatternWithParams = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>]+(oe=|oh=)[^"'\s<>]+/gi;
+        const imageMatchesWithParams = html.match(cdnImagePatternWithParams) || [];
         
-        if (validImages.length > 0) {
-          validImages.sort((a, b) => b.length - a.length);
-          let imageUrl = validImages[0].replace(/&amp;/g, '&').replace(/\\\//g, '/');
+        console.log('[parseHtmlForAdData] Pattern 3 - Image matches with signature params found:', imageMatchesWithParams.length);
+        
+        // CRÍTICO: Validar que las URLs tengan AMBOS parámetros oh= Y oe=
+        if (imageMatchesWithParams.length > 0) {
+          const validImages = imageMatchesWithParams.filter(url => {
+            const cleanUrl = url.replace(/&amp;/g, '&');
+            const hasOh = cleanUrl.includes('oh=') || cleanUrl.includes('&oh=');
+            const hasOe = cleanUrl.includes('oe=') || cleanUrl.includes('&oe=');
+            const isNotThumbnail = !cleanUrl.includes('s50x50') && 
+                                   !cleanUrl.includes('profile') && 
+                                   !cleanUrl.includes('avatar');
+            
+            console.log('[parseHtmlForAdData] Validating URL:', {
+              hasOh,
+              hasOe,
+              isNotThumbnail,
+              url: cleanUrl.substring(0, 150)
+            });
+            
+            return hasOh && hasOe && isNotThumbnail;
+          });
           
-          console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL with complete signature!');
-          console.log('[parseHtmlForAdData] Pattern 3 - Complete URL (first 250 chars):', imageUrl.substring(0, 250));
+          console.log('[parseHtmlForAdData] Pattern 3 - Valid images with BOTH oh= and oe=:', validImages.length);
           
-          const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
-          const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
-          
-          return {
-            success: true,
-            videoUrl: null,
-            imageUrl: imageUrl,
-            thumbnail: imageUrl,
-            pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
-            adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
-            startDate: new Date().toLocaleDateString('es-ES')
-          };
+          if (validImages.length > 0) {
+            validImages.sort((a, b) => b.length - a.length);
+            let imageUrl = validImages[0].replace(/&amp;/g, '&').replace(/\\\//g, '/');
+            
+            console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL with complete signature!');
+            console.log('[parseHtmlForAdData] Pattern 3 - Complete URL (first 300 chars):', imageUrl.substring(0, 300));
+            console.log('[parseHtmlForAdData] Pattern 3 - URL has oh=?', imageUrl.includes('oh='));
+            console.log('[parseHtmlForAdData] Pattern 3 - URL has oe=?', imageUrl.includes('oe='));
+            
+            const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
+            const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
+            
+            return {
+              success: true,
+              videoUrl: null,
+              imageUrl: imageUrl,
+              thumbnail: imageUrl,
+              pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
+              adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
+              startDate: new Date().toLocaleDateString('es-ES')
+            };
+          } else {
+            console.log('[parseHtmlForAdData] Pattern 3 - WARNING: Found URLs but none have BOTH oh= and oe= parameters');
+          }
         }
-      }
       
-      // Si no encontramos con parámetros, buscar todas las imágenes
+      // Si no encontramos con parámetros completos, buscar todas las imágenes
+      // PERO SOLO aquellas que tengan oh= Y oe=
+      console.log('[parseHtmlForAdData] Pattern 3.1 - Searching for all CDN image URLs...');
       const cdnImagePattern = /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[^"'\s<>]*/gi;
       const imageMatches = html.match(cdnImagePattern);
       
@@ -1106,280 +1123,85 @@ function parseHtmlForAdData(html, adId) {
       }
       
       if (imageMatches && imageMatches.length > 0) {
-        // Filtrar imágenes pequeñas (thumbnails) y buscar la mejor calidad
-        // Las URLs con s50x50, s100x100, etc. son thumbnails
-        // Buscar imágenes más grandes primero
-        const largeImages = imageMatches.filter(url => 
-          !url.match(/[?&]stp=.*s\d+x\d+/i) &&  // No tiene parámetro de tamaño pequeño
-          !url.includes('s50x50') &&
-          !url.includes('s100x100') &&
-          !url.includes('s150x150') &&
-          !url.includes('profile_pic') &&
-          !url.includes('avatar') &&
-          !url.includes('profile') &&
-          (url.includes('/v/t') || url.includes('/v/t1.'))  // URLs de CDN de Facebook para contenido
-        );
+        console.log('[parseHtmlForAdData] Pattern 3.2 - Processing image matches...');
         
-        console.log('[parseHtmlForAdData] Pattern 3 - Filtered large images:', largeImages.length, 'out of', imageMatches.length);
-        
-        // Usar imágenes grandes si existen, sino usar todas pero filtrar las peores
-        let imageUrlsToUse = largeImages.length > 0 ? largeImages : imageMatches.filter(url => 
-          !url.includes('s50x50') && 
-          !url.includes('s100x100') &&
-          !url.includes('profile_pic') &&
-          !url.includes('avatar')
-        );
-        
-        // Si aún no tenemos nada, usar todas pero ordenar por calidad (las URLs más largas suelen ser mejores)
-        if (imageUrlsToUse.length === 0) {
-          imageUrlsToUse = imageMatches;
-        }
-        
-        // Ordenar por longitud (URLs más largas suelen tener mejor calidad)
-        imageUrlsToUse.sort((a, b) => b.length - a.length);
-        
-        // IMPORTANTE: Buscar primero imágenes sin parámetros de tamaño (s50x50, etc.)
-        // Las imágenes sin stp= o con menos parámetros suelen ser de mejor calidad y más estables
-        console.log('[parseHtmlForAdData] Pattern 3 - Looking for better quality images without size parameters...');
-        
-        // Buscar todas las URLs de imagen en el HTML sin restricciones de patrón
-        // MEJORADO: Buscar URLs con diferentes patrones más flexibles y en diferentes formatos
-        const urlPatterns = [
-          // URLs normales
-          /https?:\/\/scontent[^"'\s<>()]+\.fbcdn\.net[^"'\s<>()]*\/v\/t[^"'\s<>()]*\.(jpg|jpeg|png|webp)[^"'\s<>()]*/gi,
-          /https?:\/\/[^"'\s<>()]+fbcdn[^"'\s<>()]*\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>()]*/gi,
-          // URLs codificadas en JSON (URL encoded)
-          /https?%3A%2F%2F[^"'\s<>()]+fbcdn[^"'\s<>()]*\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[^"'\s<>()]*/gi,
-          // URLs con escape Unicode
-          /https?\\u002F\\u002F[^"'\s<>()]+fbcdn[^"'\s<>()]*\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[^"'\s<>()]*/gi,
-          // URLs en atributos HTML codificados
-          /&quot;https?:\/\/[^"'\s<>()]+fbcdn[^"'\s<>()]*\.net[^"'\s<>()]*\.(jpg|jpeg|png|webp)[^"'\s<>()]*&quot;/gi,
-        ];
-        
-        let allImageUrls = [];
-        for (const pattern of urlPatterns) {
-          const matches = html.match(pattern) || [];
-          for (const match of matches) {
-            let decoded = match
-              .replace(/&quot;/g, '')
-              .replace(/&amp;/g, '&')
-              .replace(/\\u002F/g, '/')
-              .replace(/\\\//g, '/');
-            
-            // Si está URL encoded, decodificar
-            try {
-              if (decoded.includes('%')) {
-                decoded = decodeURIComponent(decoded);
-              }
-            } catch (e) {
-              // Si falla, usar la original
-            }
-            
-            if (decoded.includes('fbcdn.net') && decoded.match(/\.(jpg|jpeg|png|webp)/i)) {
-              allImageUrls.push(decoded);
-            }
-          }
-        }
-        
-        // Remover duplicados
-        allImageUrls = [...new Set(allImageUrls)];
-        console.log('[parseHtmlForAdData] Pattern 3 - Found', allImageUrls.length, 'total image URLs in HTML');
-        
-        // Buscar específicamente URLs con parámetros de firma (oe=, oh=)
-        const urlsWithSignatures = allImageUrls.filter(url => {
-          const decoded = url.replace(/&amp;/g, '&').replace(/\\u002F/g, '/');
-          return decoded.includes('oe=') || decoded.includes('&oe=') || decoded.includes('oh=') || decoded.includes('&oh=');
-        });
-        
-        if (urlsWithSignatures.length > 0) {
-          console.log('[parseHtmlForAdData] Pattern 3 - Found', urlsWithSignatures.length, 'URLs with signature parameters!');
-          // Filtrar thumbnails y ordenar
-          const validUrls = urlsWithSignatures
-            .map(url => url.replace(/&amp;/g, '&').replace(/\\u002F/g, '/').replace(/\\\//g, '/'))
-            .filter(url => !url.includes('s50x50') && !url.includes('profile') && !url.includes('avatar'))
-            .sort((a, b) => b.length - a.length);
-          
-          if (validUrls.length > 0) {
-            const bestUrl = validUrls[0];
-            console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found URL with signature parameters!');
-            console.log('[parseHtmlForAdData] Pattern 3 - Complete URL (first 250 chars):', bestUrl.substring(0, 250));
-            
-            const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
-            const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
-            
-            return {
-              success: true,
-              videoUrl: null,
-              imageUrl: bestUrl,
-              thumbnail: bestUrl,
-              pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
-              adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
-              startDate: new Date().toLocaleDateString('es-ES')
-            };
-          }
-        }
-        
-        // Filtrar imágenes que NO sean thumbnails y NO tengan parámetros de tamaño pequeño
-        const highQualityImages = allImageUrls.filter(url => {
+        // PRIMERO: Filtrar solo imágenes que tengan parámetros de firma (oh= o oe=)
+        const imagesWithSignatures = imageMatches.filter(url => {
           const cleanUrl = url.replace(/&amp;/g, '&');
-          return !cleanUrl.includes('s50x50') &&
+          return (cleanUrl.includes('oh=') || cleanUrl.includes('oe=')) && 
+                 !cleanUrl.includes('s50x50') &&
                  !cleanUrl.includes('s100x100') &&
-                 !cleanUrl.includes('s150x150') &&
-                 !cleanUrl.includes('s200x200') &&
-                 !cleanUrl.includes('stp=c379') &&
-                 !cleanUrl.includes('profile') &&
-                 !cleanUrl.includes('avatar');
+                 !cleanUrl.includes('profile');
         });
         
-        console.log('[parseHtmlForAdData] Pattern 3 - High quality images (without size params):', highQualityImages.length);
+        console.log('[parseHtmlForAdData] Pattern 3.2 - Images with signatures (oh= or oe=):', imagesWithSignatures.length, 'out of', imageMatches.length);
         
-        // Usar imágenes de alta calidad si existen, sino usar las filtradas
-        let finalImageUrls = highQualityImages.length > 0 ? highQualityImages : imageUrlsToUse;
-        
-        // Si todavía no hay nada bueno, buscar la URL base sin parámetros de tamaño
-        if (finalImageUrls.length === 0 || (finalImageUrls.length > 0 && finalImageUrls[0].includes('s50x50'))) {
-          console.log('[parseHtmlForAdData] Pattern 3 - Attempting to extract base image URL without size parameters...');
+        if (imagesWithSignatures.length > 0) {
+          // Priorizar imágenes que tengan AMBOS oh= Y oe=
+          const imagesWithBothSignatures = imagesWithSignatures.filter(url => {
+            const cleanUrl = url.replace(/&amp;/g, '&');
+            return cleanUrl.includes('oh=') && cleanUrl.includes('oe=');
+          });
           
-          // Buscar URLs que tengan el mismo nombre de archivo pero sin parámetros stp=
-          for (const imgUrl of allImageUrls) {
-            const baseUrl = imgUrl.split('?')[0]; // URL base sin parámetros
-            const baseName = baseUrl.match(/\/([^\/]+\.(jpg|jpeg|png|webp))$/i);
-            
-            if (baseName && !baseUrl.includes('s50x50') && !baseUrl.includes('profile')) {
-              // Intentar construir URL sin parámetros de tamaño
-              const cleanBaseUrl = baseUrl + '?';
-              if (!finalImageUrls.includes(cleanBaseUrl)) {
-                finalImageUrls = [cleanBaseUrl];
-                console.log('[parseHtmlForAdData] Pattern 3 - Found base image URL:', cleanBaseUrl.substring(0, 150));
-                break;
-              }
-            }
+          console.log('[parseHtmlForAdData] Pattern 3.2 - Images with BOTH oh= and oe=:', imagesWithBothSignatures.length);
+          
+          // Usar imágenes con ambas firmas si existen, sino usar las que tengan al menos una
+          const imagesToUse = imagesWithBothSignatures.length > 0 ? imagesWithBothSignatures : imagesWithSignatures;
+          
+          // Ordenar por longitud (URLs más largas = mejor calidad)
+          imagesToUse.sort((a, b) => b.length - a.length);
+          let imageUrl = imagesToUse[0].replace(/&amp;/g, '&').replace(/\\\//g, '/').replace(/\\u002F/g, '/');
+          
+          console.log('[parseHtmlForAdData] Pattern 3.2: SUCCESS - Found image URL with signature(s)');
+          console.log('[parseHtmlForAdData] Pattern 3.2 - Image URL (first 300 chars):', imageUrl.substring(0, 300));
+          console.log('[parseHtmlForAdData] Pattern 3.2 - URL has oh=?', imageUrl.includes('oh='));
+          console.log('[parseHtmlForAdData] Pattern 3.2 - URL has oe=?', imageUrl.includes('oe='));
+          console.log('[parseHtmlForAdData] Pattern 3.2 - URL validation (not ending with ? or &):', !imageUrl.endsWith('?') && !imageUrl.endsWith('&'));
+          
+          // Buscar datos adicionales con patrones mejorados
+          const pageNamePatterns = [
+            /"page_name":\s*"([^"]+)"/i,
+            /"advertiser_name":\s*"([^"]+)"/i,
+            /page_name["']?\s*:\s*["']([^"']+)["']/i,
+            /<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i,
+            /<title[^>]*>([^<]+)<\/title>/i
+          ];
+          
+          let pageNameMatch = null;
+          for (const pattern of pageNamePatterns) {
+            pageNameMatch = html.match(pattern);
+            if (pageNameMatch && pageNameMatch[1]) break;
           }
-        }
-        
-        // Ordenar por longitud (URLs más largas pueden tener mejor calidad)
-        finalImageUrls.sort((a, b) => b.length - a.length);
-        
-        // Tomar la mejor imagen y limpiar
-        let imageUrl = (finalImageUrls[0] || imageUrlsToUse[0]).replace(/&amp;/g, '&').replace(/\\\//g, '/').replace(/\\u002F/g, '/');
-        
-        console.log('[parseHtmlForAdData] Pattern 3 - Selected image URL before fix:', imageUrl.substring(0, 200));
-        
-        // CORREGIR: Si la URL tiene & después de .jpg/.png/.webp, cambiarlo por ?
-        const imageUrlBefore = imageUrl;
-        
-        // Estrategia: buscar el punto donde termina la extensión y el primer &
-        const extMatch = imageUrl.match(/\.(jpg|jpeg|png|webp)([&?])/i);
-        if (extMatch && extMatch[2] === '&') {
-          imageUrl = imageUrl.replace(/\.(jpg|jpeg|png|webp)&/i, '.$1?');
-          console.log('[parseHtmlForAdData] Pattern 3 - Fixed: replaced & with ? after extension');
-        }
-        
-        // Si la URL tiene stp= con tamaño pequeño, intentar removerlo
-        if (imageUrl.includes('stp=') && imageUrl.match(/s\d+x\d+/)) {
-          // Intentar construir URL sin parámetro stp
-          const urlParts = imageUrl.split('?');
-          if (urlParts.length > 1) {
-            const params = urlParts[1].split('&');
-            const cleanParams = params.filter(p => !p.includes('stp='));
-            if (cleanParams.length < params.length) {
-              imageUrl = urlParts[0] + '?' + cleanParams.join('&');
-              console.log('[parseHtmlForAdData] Pattern 3 - Removed stp parameter for better quality');
-            }
+          
+          const adTextPatterns = [
+            /"ad_creative_body":\s*"([^"]{10,500})"/i,
+            /"body":\s*"([^"]{10,500})"/i,
+            /"message":\s*"([^"]{10,500})"/i,
+            /"text":\s*"([^"]{10,500})"/i,
+            /"caption":\s*"([^"]{10,500})"/i,
+            /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']{10,500})["']/i,
+            /<p[^>]*class=["'][^"']*ad[^"']*["'][^>]*>([^<]{10,500})<\/p>/i
+          ];
+          
+          let adTextMatch = null;
+          for (const pattern of adTextPatterns) {
+            adTextMatch = html.match(pattern);
+            if (adTextMatch && adTextMatch[1] && adTextMatch[1].length > 10) break;
           }
+          
+          return {
+            success: true,
+            videoUrl: null,
+            imageUrl: imageUrl,
+            thumbnail: imageUrl,
+            pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1].trim()) : 'Página de Facebook',
+            adText: adTextMatch ? decodeUnicode(adTextMatch[1].trim()).substring(0, 300) : 'Anuncio de Facebook',
+            startDate: new Date().toLocaleDateString('es-ES')
+          };
+        } else {
+          console.log('[parseHtmlForAdData] Pattern 3.2 - WARNING: No images with signature parameters found');
+          console.log('[parseHtmlForAdData] Pattern 3.2 - Sample URLs (first 3):', imageMatches.slice(0, 3));
         }
-        
-        // Intentar mejorar la URL removiendo parámetros de tamaño si es necesario
-        if (imageUrl.match(/[?&]stp=.*s\d+x\d+/i)) {
-          // Buscar una versión sin parámetros de tamaño en todas las imágenes
-          const betterImage = imageMatches.find(url => 
-            !url.includes('s50x50') && 
-            !url.includes('s100x100') &&
-            !url.includes('s150x150') &&
-            (url.includes('.jpg') || url.includes('.png') || url.includes('.webp'))
-          );
-          if (betterImage) {
-            let fixedBetterImage = betterImage.replace(/&amp;/g, '&').replace(/\\\//g, '/');
-            // Corregir también la imagen mejor
-            if (fixedBetterImage.match(/\.(jpg|jpeg|png|webp)(&|%26)/i)) {
-              fixedBetterImage = fixedBetterImage.replace(/\.(jpg|jpeg|png|webp)(&|%26)/i, '.$1?');
-            }
-            imageUrl = fixedBetterImage;
-            console.log('[parseHtmlForAdData] Pattern 3 - Found better quality image');
-          } else {
-            // Intentar remover parámetros de tamaño de la URL actual
-            const originalUrl = imageUrl;
-            imageUrl = imageUrl.replace(/[?&]stp=[^&?]*s\d+x\d+[^&?]*/gi, '');
-            if (imageUrl === originalUrl) {
-              // Si no funcionó, intentar de otra forma
-              imageUrl = imageUrl.replace(/[?&]_nc_cat=[^&?]*/gi, '');
-            }
-            console.log('[parseHtmlForAdData] Pattern 3 - Attempted to improve image URL quality');
-          }
-        }
-        
-        // Asegurar que la URL sea válida y empiece con http
-        if (!imageUrl.startsWith('http')) {
-          imageUrl = 'https:' + imageUrl;
-        }
-        
-        // Verificar que la corrección funcionó
-        if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
-          console.log('[parseHtmlForAdData] Pattern 3 - CRITICAL: URL still has & after extension!');
-          // Último intento: reemplazo forzado
-          imageUrl = imageUrl.replace(/(\.(jpg|jpeg|png|webp))&/gi, '$1?');
-        }
-        if (imageUrl.includes('.jpg&') || imageUrl.includes('.png&') || imageUrl.includes('.webp&')) {
-          console.log('[parseHtmlForAdData] Pattern 3 - WARNING: URL still has & after extension, attempting final fix...');
-          // Último intento: reemplazo directo
-          imageUrl = imageUrl.replace(/(\.(jpg|jpeg|png|webp))&/gi, '$1?');
-        }
-        
-        console.log('[parseHtmlForAdData] Pattern 3: SUCCESS - Found image URL directly from HTML');
-        console.log('[parseHtmlForAdData] Pattern 3 - Final image URL (first 200 chars):', imageUrl.substring(0, 200));
-        console.log('[parseHtmlForAdData] Pattern 3 - URL validation (has ? after extension):', /\.(jpg|jpeg|png|webp)\?/.test(imageUrl));
-        console.log('[parseHtmlForAdData] Pattern 3 - Total images found:', imageMatches.length, 'Large images:', largeImages.length);
-        
-        // Buscar datos adicionales con patrones mejorados
-        const pageNamePatterns = [
-          /"page_name":\s*"([^"]+)"/i,
-          /"advertiser_name":\s*"([^"]+)"/i,
-          /page_name["']?\s*:\s*["']([^"']+)["']/i,
-          /<meta[^>]*property=["']og:site_name["'][^>]*content=["']([^"']+)["']/i,
-          /<title[^>]*>([^<]+)<\/title>/i
-        ];
-        
-        let pageNameMatch = null;
-        for (const pattern of pageNamePatterns) {
-          pageNameMatch = html.match(pattern);
-          if (pageNameMatch && pageNameMatch[1]) break;
-        }
-        
-        const adTextPatterns = [
-          /"ad_creative_body":\s*"([^"]{10,500})"/i,
-          /"body":\s*"([^"]{10,500})"/i,
-          /"message":\s*"([^"]{10,500})"/i,
-          /"text":\s*"([^"]{10,500})"/i,
-          /"caption":\s*"([^"]{10,500})"/i,
-          /<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']{10,500})["']/i,
-          /<p[^>]*class=["'][^"']*ad[^"']*["'][^>]*>([^<]{10,500})<\/p>/i
-        ];
-        
-        let adTextMatch = null;
-        for (const pattern of adTextPatterns) {
-          adTextMatch = html.match(pattern);
-          if (adTextMatch && adTextMatch[1] && adTextMatch[1].length > 10) break;
-        }
-        
-        return {
-          success: true,
-          videoUrl: null,
-          imageUrl: imageUrl,
-          thumbnail: imageUrl,
-          pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1].trim()) : 'Página de Facebook',
-          adText: adTextMatch ? decodeUnicode(adTextMatch[1].trim()).substring(0, 300) : 'Anuncio de Facebook',
-          startDate: new Date().toLocaleDateString('es-ES')
-        };
       }
       
       // Verificar si el anuncio tiene video buscando indicadores en el HTML
