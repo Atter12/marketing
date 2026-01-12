@@ -1867,6 +1867,9 @@
             const originalText = downloadBtn.innerHTML;
             downloadBtn.disabled = true;
             
+            let successCount = 0;
+            let failCount = 0;
+            
             for (let i = 0; i < readyVideos.length; i++) {
                 const video = readyVideos[i];
                 if (video.data && video.data.videoUrl) {
@@ -1877,18 +1880,28 @@
                             video.data.videoUrl, 
                             `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
                         );
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                        successCount++;
+                        console.log(`[BATCH] Video ${i + 1}/${readyVideos.length} descargado exitosamente`);
+                        
+                        // Delay más largo entre descargas para evitar bloqueos del navegador
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     } catch (error) {
-                        console.error('Error descargando video:', error);
+                        failCount++;
+                        console.error(`[BATCH] Error descargando video ${i + 1}:`, error);
                     }
                 }
             }
             
-            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Todos descargados!';
+            if (failCount > 0) {
+                downloadBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${successCount} descargados (${failCount} fallaron)`;
+            } else {
+                downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Todos descargados!';
+            }
+            
             setTimeout(() => {
                 downloadBtn.innerHTML = originalText;
                 downloadBtn.disabled = false;
-            }, 2000);
+            }, 3000);
         }
 
         // Download selected videos
@@ -1904,6 +1917,9 @@
             const originalText = downloadBtn.innerHTML;
             downloadBtn.disabled = true;
             
+            let successCount = 0;
+            let failCount = 0;
+            
             for (let i = 0; i < selectedVideos.length; i++) {
                 const video = selectedVideos[i];
                 if (video.data && video.data.videoUrl) {
@@ -1914,21 +1930,31 @@
                             video.data.videoUrl, 
                             `tiktok-${video.data.author || 'video'}-${video.data.videoId || Date.now()}.mp4`
                         );
-                        await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                        successCount++;
+                        console.log(`[BATCH] Video ${i + 1}/${selectedVideos.length} descargado exitosamente`);
+                        
+                        // Delay más largo entre descargas para evitar bloqueos del navegador
+                        await new Promise(resolve => setTimeout(resolve, 2000));
                     } catch (error) {
-                        console.error('Error descargando video:', error);
+                        failCount++;
+                        console.error(`[BATCH] Error descargando video ${i + 1}:`, error);
                     }
                 }
             }
             
-            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Seleccionados descargados!';
+            if (failCount > 0) {
+                downloadBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${successCount} descargados (${failCount} fallaron)`;
+            } else {
+                downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Seleccionados descargados!';
+            }
+            
             setTimeout(() => {
                 downloadBtn.innerHTML = originalText;
                 downloadBtn.disabled = false;
-            }, 2000);
+            }, 3000);
         }
 
-        // Download file directly (simplified version for batch downloads)
+        // Download file directly (improved version for batch downloads)
         async function downloadFileDirect(url, filename) {
             return new Promise(async (resolve, reject) => {
                 try {
@@ -1937,7 +1963,11 @@
                     const response = await fetch(url, {
                         method: 'GET',
                         mode: 'cors',
-                        cache: 'no-cache'
+                        cache: 'no-cache',
+                        headers: {
+                            'Referer': 'https://www.tiktok.com/',
+                            'Origin': 'https://www.tiktok.com/'
+                        }
                     });
                     
                     if (!response.ok) {
@@ -1945,7 +1975,10 @@
                     }
                     
                     const blob = await response.blob();
+                    console.log('[DOWNLOAD DIRECT] Blob creado, tamaño:', blob.size, 'bytes');
+                    
                     const blobUrl = window.URL.createObjectURL(blob);
+                    console.log('[DOWNLOAD DIRECT] Blob URL creada');
                     
                     const downloadLink = document.createElement('a');
                     downloadLink.href = blobUrl;
@@ -1953,15 +1986,23 @@
                     downloadLink.style.display = 'none';
                     document.body.appendChild(downloadLink);
                     
-                    await new Promise(r => setTimeout(r, 50));
+                    // Esperar a que el elemento esté en el DOM
+                    await new Promise(r => setTimeout(r, 100));
+                    
+                    // Iniciar descarga
                     downloadLink.click();
+                    console.log('[DOWNLOAD DIRECT] Click ejecutado para:', filename);
                     
-                    setTimeout(() => {
-                        document.body.removeChild(downloadLink);
-                        window.URL.revokeObjectURL(blobUrl);
-                    }, 100);
+                    // Esperar más tiempo antes de limpiar para asegurar que la descarga inicie
+                    await new Promise(r => setTimeout(r, 500));
                     
-                    console.log('[DOWNLOAD DIRECT] Completado:', filename);
+                    // Limpiar
+                    document.body.removeChild(downloadLink);
+                    window.URL.revokeObjectURL(blobUrl);
+                    console.log('[DOWNLOAD DIRECT] Completado y limpiado:', filename);
+                    
+                    // Delay adicional antes de resolver para dar tiempo al navegador
+                    await new Promise(r => setTimeout(r, 300));
                     resolve();
                 } catch (error) {
                     console.error('[DOWNLOAD DIRECT] Error:', error);
