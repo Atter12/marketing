@@ -352,6 +352,17 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+            }
+        }
 
         .error-message {
             display: none;
@@ -448,6 +459,8 @@
             justify-content: center;
             color: white;
             font-size: 32px;
+            position: relative;
+            overflow: hidden;
         }
 
         .queue-item-thumbnail img {
@@ -1917,11 +1930,65 @@
                 throw new Error(data.error || 'Error al procesar el anuncio');
             }
             
-            // Add to queue
-            addAdToQueue(data);
-            showError('Anuncio agregado a la cola. Revisa abajo para descargarlo.', 'success');
+            // NUEVO: Descarga automática para IDs individuales
+            console.log('[fetchSingleAd] Single ad detected - Auto-downloading...');
+            showError('🎯 Anuncio encontrado. Descargando automáticamente...', 'success');
+            
+            // Descargar directamente
+            try {
+                await downloadAdDirect(data);
+                showError('✅ Descarga completada exitosamente!', 'success');
+            } catch (downloadError) {
+                console.error('[fetchSingleAd] Download error:', downloadError);
+                // Si falla la descarga directa, agregar a cola como fallback
+                showError('⚠️ Error en descarga automática. Agregando a cola...', 'warning');
+                addAdToQueue(data);
+                showError('Anuncio agregado a la cola. Puedes descargarlo manualmente.', 'info');
+            }
         }
 
+        // Download ad directly without queue (for single ad IDs)
+        async function downloadAdDirect(adData) {
+            console.log('[downloadAdDirect] Starting direct download for:', adData.adId || adData.id);
+            
+            const adId = adData.adId || adData.id;
+            const title = adData.adText || adData.title || 'Anuncio de Facebook';
+            const pageName = adData.pageName || adData.author || 'Facebook';
+            
+            // Determinar qué descargar (video o imagen)
+            if (adData.videoUrl || adData.videoBase64) {
+                console.log('[downloadAdDirect] Downloading video...');
+                
+                if (adData.videoBase64) {
+                    // Descargar desde base64
+                    const blob = base64ToBlob(adData.videoBase64);
+                    const fileName = `${sanitizeFileName(pageName)}_${adId}_video.mp4`;
+                    downloadBlob(blob, fileName);
+                    console.log('[downloadAdDirect] Video downloaded from base64');
+                } else if (adData.videoUrl) {
+                    // Descargar desde URL via proxy
+                    await downloadViaProxy(adData.videoUrl, `${sanitizeFileName(pageName)}_${adId}_video.mp4`, 'video/mp4');
+                    console.log('[downloadAdDirect] Video downloaded from URL');
+                }
+            } else if (adData.imageUrl || adData.imageBase64) {
+                console.log('[downloadAdDirect] Downloading image...');
+                
+                if (adData.imageBase64) {
+                    // Descargar desde base64
+                    const blob = base64ToBlob(adData.imageBase64);
+                    const fileName = `${sanitizeFileName(pageName)}_${adId}_image.jpg`;
+                    downloadBlob(blob, fileName);
+                    console.log('[downloadAdDirect] Image downloaded from base64');
+                } else if (adData.imageUrl) {
+                    // Descargar desde URL via proxy
+                    await downloadViaProxy(adData.imageUrl, `${sanitizeFileName(pageName)}_${adId}_image.jpg`, 'image/jpeg');
+                    console.log('[downloadAdDirect] Image downloaded from URL');
+                }
+            } else {
+                throw new Error('No se encontró contenido para descargar (ni video ni imagen)');
+            }
+        }
+        
         // Add ad to queue
         async function addAdToQueue(adData) {
             const queueId = `queue-${queueIdCounter++}`;
@@ -2006,26 +2073,40 @@
             
             // Determine thumbnail
             let thumbnailContent = '';
-            if (ad.data.videoUrl || ad.data.videoBase64) {
+            
+            // Si está cargando, mostrar icono de loading animado más chevere
+            if (ad.status === 'loading') {
+                thumbnailContent = `
+                    <div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-cloud-download-alt fa-2x" style="animation: pulse 2s infinite;"></i>
+                    </div>
+                `;
+            } else if (ad.data.videoUrl || ad.data.videoBase64) {
                 if (ad.data.imageUrl || ad.data.imageBase64 || ad.data.thumbnail) {
                     const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl || ad.data.thumbnail;
                     thumbnailContent = `
                         <div class="queue-item-thumbnail">
                             <img src="${thumbSrc}" alt="Thumbnail">
+                            <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+                                <i class="fas fa-play"></i> VIDEO
+                            </div>
                         </div>
                     `;
                 } else {
-                    thumbnailContent = `<div class="queue-item-thumbnail"><i class="fas fa-video"></i></div>`;
+                    thumbnailContent = `<div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="fas fa-video fa-2x"></i></div>`;
                 }
             } else if (ad.data.imageUrl || ad.data.imageBase64) {
                 const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl;
                 thumbnailContent = `
                     <div class="queue-item-thumbnail">
                         <img src="${thumbSrc}" alt="Thumbnail">
+                        <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+                            <i class="fas fa-image"></i> FOTO
+                        </div>
                     </div>
                 `;
             } else {
-                thumbnailContent = `<div class="queue-item-thumbnail"><i class="fab fa-facebook"></i></div>`;
+                thumbnailContent = `<div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fab fa-facebook fa-2x"></i></div>`;
             }
             
             const title = ad.data.adText || ad.data.title || 'Anuncio de Facebook';
@@ -2070,44 +2151,67 @@
             
             // Determine thumbnail
             let thumbnailContent = '';
-            if (ad.data.videoUrl || ad.data.videoBase64) {
-                // Video thumbnail or icon
+            
+            // Si está cargando, mostrar icono de loading animado más chevere
+            if (ad.status === 'loading') {
+                thumbnailContent = `
+                    <div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <i class="fas fa-cloud-download-alt fa-2x" style="animation: pulse 2s infinite;"></i>
+                    </div>
+                `;
+            } else if (ad.data.videoUrl || ad.data.videoBase64) {
                 if (ad.data.imageUrl || ad.data.imageBase64 || ad.data.thumbnail) {
                     const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl || ad.data.thumbnail;
                     thumbnailContent = `
                         <div class="queue-item-thumbnail">
                             <img src="${thumbSrc}" alt="Thumbnail">
+                            <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+                                <i class="fas fa-play"></i> VIDEO
+                            </div>
                         </div>
                     `;
                 } else {
-                    thumbnailContent = `<div class="queue-item-thumbnail"><i class="fas fa-video"></i></div>`;
+                    thumbnailContent = `<div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"><i class="fas fa-video fa-2x"></i></div>`;
                 }
             } else if (ad.data.imageUrl || ad.data.imageBase64) {
-                // Image thumbnail
                 const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl;
                 thumbnailContent = `
                     <div class="queue-item-thumbnail">
                         <img src="${thumbSrc}" alt="Thumbnail">
+                        <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">
+                            <i class="fas fa-image"></i> FOTO
+                        </div>
                     </div>
                 `;
             } else {
-                thumbnailContent = `<div class="queue-item-thumbnail"><i class="fab fa-facebook"></i></div>`;
+                thumbnailContent = `<div class="queue-item-thumbnail" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"><i class="fab fa-facebook fa-2x"></i></div>`;
             }
             
             const title = ad.data.adText || ad.data.title || 'Anuncio de Facebook';
             const pageName = ad.data.pageName || ad.data.author || 'Página de Facebook';
             const adId = ad.data.adId || ad.data.id || '--';
-            const mediaType = ad.data.videoUrl || ad.data.videoBase64 ? 'Video' : 'Imagen';
+            const mediaType = ad.data.videoUrl || ad.data.videoBase64 ? 'Video' : (ad.data.imageUrl || ad.data.imageBase64 ? 'Imagen' : 'Cargando...');
+            
+            // Determinar status badge
+            let statusBadge = '';
+            if (ad.status === 'loading') {
+                statusBadge = '<span class="queue-item-status loading"><i class="fas fa-spinner fa-spin"></i> Obteniendo detalles...</span>';
+            } else if (ad.status === 'ready') {
+                statusBadge = '<span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>';
+            } else if (ad.status === 'error') {
+                statusBadge = `<span class="queue-item-status error"><i class="fas fa-exclamation-triangle"></i> ${ad.error || 'Error'}</span>`;
+            }
             
             item.innerHTML = `
                 <input type="checkbox" class="queue-item-checkbox" ${ad.selected ? 'checked' : ''} 
+                       ${ad.status !== 'ready' ? 'disabled' : ''}
                        onchange="toggleAdSelection('${ad.id}', this.checked)">
                 ${thumbnailContent}
                 <div class="queue-item-info">
                     <h4>${title.substring(0, 100)}</h4>
                     <p><strong>Página:</strong> ${pageName}</p>
                     <p><strong>ID:</strong> ${adId} • <strong>Tipo:</strong> ${mediaType}</p>
-                    <span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>
+                    ${statusBadge}
                 </div>
                 <button class="queue-item-remove" onclick="removeFromQueue('${ad.id}')">
                     <i class="fas fa-times"></i>
@@ -2323,6 +2427,60 @@
             }
         }
 
+        // Helper: Convert base64 to Blob
+        function base64ToBlob(base64Data) {
+            const parts = base64Data.split(';base64,');
+            const contentType = parts[0].split(':')[1] || 'application/octet-stream';
+            const byteCharacters = atob(parts[1]);
+            const byteArrays = [];
+            
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                byteArrays.push(new Uint8Array(byteNumbers));
+            }
+            
+            return new Blob(byteArrays, { type: contentType });
+        }
+        
+        // Helper: Download blob as file
+        function downloadBlob(blob, fileName) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+        
+        // Helper: Download via proxy
+        async function downloadViaProxy(mediaUrl, fileName, mimeType) {
+            console.log('[downloadViaProxy] Fetching:', mediaUrl.substring(0, 100));
+            
+            const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(mediaUrl)}`;
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) {
+                throw new Error(`Proxy returned ${response.status}: ${await response.text()}`);
+            }
+            
+            const blob = await response.blob();
+            downloadBlob(blob, fileName);
+        }
+        
+        // Helper: Sanitize file name
+        function sanitizeFileName(name) {
+            return name
+                .replace(/[^a-zA-Z0-9_\-\.áéíóúñÁÉÍÓÚÑ\s]/g, '')
+                .replace(/\s+/g, '_')
+                .substring(0, 50);
+        }
+        
         // Show error or success message
         function showError(message, type = 'error') {
             const errorDiv = document.getElementById('errorMessage');
@@ -2338,6 +2496,10 @@
                 errorDiv.style.background = '#fef3c7';
                 errorDiv.style.borderColor = '#fde68a';
                 errorDiv.style.color = '#f59e0b';
+            } else if (type === 'info') {
+                errorDiv.style.background = '#dbeafe';
+                errorDiv.style.borderColor = '#bfdbfe';
+                errorDiv.style.color = '#2563eb';
             } else {
                 errorDiv.style.background = '#fef2f2';
                 errorDiv.style.borderColor = '#fecaca';
@@ -2346,8 +2508,8 @@
             
             errorDiv.classList.add('active');
             
-            // Auto-hide success messages after 5 seconds
-            if (type === 'success' || type === 'warning') {
+            // Auto-hide success, warning, and info messages after 5 seconds
+            if (type === 'success' || type === 'warning' || type === 'info') {
                 setTimeout(() => {
                     errorDiv.classList.remove('active');
                 }, 5000);
