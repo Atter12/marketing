@@ -368,6 +368,226 @@
             display: block;
         }
 
+        /* Ads Queue Section (similar a TikTok) */
+        .video-queue-section {
+            display: none;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+
+        .video-queue-section.active {
+            display: block;
+        }
+
+        .queue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .queue-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .queue-header h3 i {
+            color: #1877F2;
+        }
+
+        .video-queue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .video-queue-item {
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .video-queue-item:hover {
+            border-color: #1877F2;
+            background: white;
+        }
+
+        .video-queue-item.loading {
+            opacity: 0.6;
+        }
+
+        .queue-item-checkbox {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            accent-color: #1877F2;
+            flex-shrink: 0;
+        }
+
+        .queue-item-thumbnail {
+            width: 120px;
+            height: 90px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--facebook-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .queue-item-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .queue-item-thumbnail video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .queue-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-item-info h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .queue-item-info p {
+            font-size: 12px;
+            color: var(--text-medium);
+            margin-bottom: 4px;
+        }
+
+        .queue-item-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .queue-item-status.ready {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .queue-item-status.loading {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+
+        .queue-item-status.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .queue-item-remove {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .queue-item-remove:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .queue-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-queue-action {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--facebook-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(24, 119, 242, 0.3);
+        }
+
+        .btn-queue-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(24, 119, 242, 0.4);
+        }
+
+        .btn-queue-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-queue-clear {
+            padding: 12px 24px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            color: var(--text-medium);
+        }
+
+        .btn-queue-clear:hover {
+            border-color: #dc2626;
+            color: #dc2626;
+            background: #fee2e2;
+        }
+
         /* Features Section */
         .features-section {
             padding: 80px 24px;
@@ -595,6 +815,47 @@
         @media (max-width: 768px) {
             .container {
                 padding: 0 16px;
+            }
+
+            .queue-header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
+            .queue-header h3 {
+                text-align: center;
+                font-size: 16px;
+            }
+
+            .queue-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-queue-action,
+            .btn-queue-clear {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .video-queue-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .queue-item-checkbox {
+                align-self: flex-start;
+            }
+
+            .queue-item-thumbnail {
+                width: 100%;
+                height: 180px;
+            }
+
+            .queue-item-remove {
+                align-self: flex-end;
             }
 
             nav {
@@ -1081,77 +1342,6 @@
         </div>
     </header>
 
-    <!-- Método Recomendado: Extensión Chrome -->
-    <div class="container" style="padding-top: 24px;">
-        <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border-left: 4px solid #4caf50; padding: 20px; border-radius: 12px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: start; gap: 16px;">
-                <i class="fab fa-chrome" style="color: #4caf50; font-size: 28px; margin-top: 2px;"></i>
-                <div style="flex: 1;">
-                    <h4 style="margin-bottom: 8px; color: var(--text-dark); font-size: 16px; display: flex; align-items: center; gap: 8px;">
-                        🎯 Método Recomendado: Extensión de Chrome
-                        <span style="background: #4caf50; color: white; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;">100% FUNCIONAL</span>
-                    </h4>
-                    <p style="color: var(--text-medium); font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
-                        Debido a las limitaciones técnicas de Facebook, la <strong>extensión de Chrome</strong> es la forma más confiable de descargar anuncios.
-                        Se ejecuta directamente en la página de Facebook, capturando las URLs con firmas válidas en tiempo real.
-                    </p>
-                    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                        <a href="https://github.com/Atter12xd/fb-ads-downloader/archive/refs/heads/main.zip" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: #4caf50; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='#45a049'" onmouseout="this.style.background='#4caf50'">
-                            <i class="fab fa-chrome"></i>
-                            Descargar Extensión (ZIP)
-                        </a>
-                        <a href="https://github.com/Atter12xd/fb-ads-downloader" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #4caf50; padding: 10px 20px; border: 2px solid #4caf50; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px; transition: all 0.2s;" onmouseover="this.style.background='rgba(76,175,80,0.1)'" onmouseout="this.style.background='transparent'">
-                            <i class="fab fa-github"></i>
-                            Ver en GitHub
-                        </a>
-                        <button onclick="document.getElementById('extension-instructions').style.display='block'; this.style.display='none'" style="display: inline-flex; align-items: center; gap: 8px; background: transparent; color: #4caf50; padding: 10px 20px; border: 2px solid #4caf50; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(76,175,80,0.1)'" onmouseout="this.style.background='transparent'">
-                            <i class="fas fa-info-circle"></i>
-                            Ver Instrucciones
-                        </button>
-                    </div>
-                    
-                    <div id="extension-instructions" style="display: none; margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #4caf50;">
-                        <h5 style="margin-bottom: 12px; color: var(--text-dark); font-size: 14px;">📋 Cómo instalar la extensión:</h5>
-                        <ol style="color: var(--text-medium); font-size: 13px; line-height: 1.8; margin-left: 20px;">
-                            <li><strong>Descarga el ZIP</strong> haciendo clic en "Descargar Extensión (ZIP)" arriba</li>
-                            <li><strong>Extrae/Descomprime el archivo</strong> descargado:
-                                <ul style="margin: 8px 0 8px 20px; font-size: 12px;">
-                                    <li>Clic derecho en el archivo ZIP → "Extraer todo..." o "Extract here"</li>
-                                    <li>Se creará una carpeta <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">fb-ads-downloader-main</code></li>
-                                </ul>
-                            </li>
-                            <li>Abre Chrome y ve a <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">chrome://extensions/</code></li>
-                            <li>Activa <strong>"Modo Desarrollador"</strong> (switch en la esquina superior derecha)</li>
-                            <li>Haz clic en <strong>"Cargar extensión descomprimida"</strong> (Load unpacked)</li>
-                            <li><strong>MUY IMPORTANTE:</strong> Navega hasta la carpeta INTERNA:
-                                <ul style="margin: 8px 0 8px 20px; font-size: 12px;">
-                                    <li><code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">...\fb-ads-downloader-main\fb-ads-downloader</code></li>
-                                    <li>La que contiene <code style="background: #f5f5f5; padding: 2px 6px; border-radius: 4px;">manifest.json</code></li>
-                                </ul>
-                            </li>
-                            <li>Selecciona esa carpeta y dale "Seleccionar carpeta"</li>
-                            <li>¡Listo! Visita <a href="https://www.facebook.com/ads/library" target="_blank" style="color: #4caf50; font-weight: 600;">Facebook Ads Library</a> y verás botones de descarga sobre los videos/imágenes</li>
-                        </ol>
-                        <div style="margin-top: 12px; padding: 12px; background: #e8f5e9; border-radius: 6px; font-size: 12px; color: #2e7d32;">
-                            <strong>💡 Tip:</strong> Si no ves botones, recarga la página (F5) o haz clic en el ícono de la extensión y presiona "Escanear Página"
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div style="background: linear-gradient(135deg, #fff5f0 0%, #ffe8df 100%); border-left: 4px solid var(--primary); padding: 16px 20px; border-radius: 12px; margin-bottom: 16px;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <i class="fas fa-exclamation-triangle" style="color: var(--primary); font-size: 20px;"></i>
-                <div>
-                    <p style="color: var(--text-medium); font-size: 13px; line-height: 1.5; margin: 0;">
-                        <strong>Nota:</strong> El método web a continuación tiene limitaciones debido a las protecciones de Facebook. 
-                        Funciona para algunos anuncios, pero la extensión de Chrome es más confiable.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Hero Section -->
     <section class="hero-section">
@@ -1174,32 +1364,19 @@
     <!-- Download Tool Section -->
     <section class="download-section">
         <div class="container">
-            <h3 style="text-align: center; margin-bottom: 8px; font-size: 20px; color: var(--text-dark);">
-                Método Web (Limitado)
-            </h3>
-            <p style="text-align: center; margin-bottom: 24px; font-size: 14px; color: var(--text-medium);">
-                Extrae información del anuncio • Recomendamos usar la extensión de Chrome para descargar medios
-            </p>
             <div class="download-card">
                 <div class="input-group">
                     <input 
                         type="text" 
                         id="facebookAdUrl" 
                         class="url-input" 
-                        placeholder="Pega aquí la URL del anuncio de Facebook Ads Library..."
+                        placeholder="Pega la URL de una página de Facebook Ads Library o un anuncio individual..."
                         autocomplete="off"
                     >
                     <button class="btn-download" id="downloadBtn">
-                        <i class="fas fa-download"></i>
-                        Descargar
+                        <i class="fas fa-search"></i>
+                        Buscar
                     </button>
-                </div>
-
-                <div class="example-urls">
-                    <span style="font-size: 12px; color: var(--text-light);">Ejemplo:</span>
-                    <span class="example-url" onclick="setExampleUrl('https://www.facebook.com/ads/library/?id=123456789')">
-                        https://www.facebook.com/ads/library/?id=123456789
-                    </span>
                 </div>
 
                 <div class="x2-tip" style="background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%); border: 1px solid #1877F2; border-radius: 10px; padding: 14px 18px; margin-top: 20px; display: flex; align-items: start; gap: 12px;">
@@ -1208,10 +1385,11 @@
                     </div>
                     <div style="flex: 1;">
                         <div style="font-weight: 700; color: var(--text-dark); font-size: 13px; margin-bottom: 6px;">
-                            📚 ¿Cómo obtener la URL del anuncio?
+                            📚 ¿Cómo usar esta herramienta?
                         </div>
                         <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
-                            Ve a <strong style="color: #1877F2;">Facebook Ads Library</strong> (facebook.com/ads/library), busca el anuncio que quieres descargar, haz clic en él y copia la URL de la página. Pega esa URL aquí para descargar el video o imagen del anuncio.
+                            <strong>Opción 1:</strong> Pega la URL de una <strong>página completa</strong> de Facebook Ads Library (ej: facebook.com/ads/library/?view_all_page_id=123456) para ver TODOS los anuncios de esa página.<br>
+                            <strong>Opción 2:</strong> Pega la URL de un <strong>anuncio individual</strong> (ej: facebook.com/ads/library/?id=123456) para ver solo ese anuncio.
                         </div>
                     </div>
                 </div>
@@ -1225,25 +1403,33 @@
                     <div class="spinner"></div>
                     <p style="color: var(--text-medium); font-weight: 600; font-size: 15px;">
                         <i class="fas fa-spinner fa-spin"></i> 
-                        Recuperando datos, ¡espere unos segundos!
+                        Recuperando anuncios, ¡espere unos segundos!
                     </p>
                 </div>
 
-                <div class="result-section" id="resultSection">
-                    <div class="video-preview" id="adPreview"></div>
-                    
-                    <div class="video-info" id="adInfo"></div>
-
-                    <div class="download-options">
-                        <button class="btn-download-option" id="downloadVideoBtn">
-                            <i class="fas fa-video"></i>
-                            Descargar Video
-                        </button>
-                        <button class="btn-download-option" id="downloadImageBtn">
-                            <i class="fas fa-image"></i>
-                            Descargar Imagen
-                        </button>
+                <!-- Ads Queue Section (similar a TikTok) -->
+                <div class="video-queue-section" id="adsQueueSection">
+                    <div class="queue-header">
+                        <h3>
+                            <i class="fab fa-facebook"></i>
+                            Cola de Anuncios: <span id="queueCount">0 anuncios</span>
+                        </h3>
+                        <div class="queue-actions">
+                            <button class="btn-queue-action" id="downloadAllBtn">
+                                <i class="fas fa-download"></i>
+                                Descargar Todo
+                            </button>
+                            <button class="btn-queue-action" id="downloadSelectedBtn">
+                                <i class="fas fa-check-square"></i>
+                                Descargar Seleccionados
+                            </button>
+                            <button class="btn-queue-clear" id="clearQueueBtn">
+                                <i class="fas fa-trash"></i>
+                                Limpiar
+                            </button>
+                        </div>
                     </div>
+                    <div class="video-queue-list" id="adsQueueList"></div>
                 </div>
             </div>
         </div>
@@ -1478,10 +1664,21 @@
     </footer>
 
     <script>
-        // Set example URL
-        function setExampleUrl(url) {
-            document.getElementById('facebookAdUrl').value = url;
-            document.getElementById('facebookAdUrl').focus();
+        // Ads Queue Manager
+        const adsQueue = [];
+        let queueIdCounter = 0;
+
+        // Update queue count
+        function updateQueueCount() {
+            const count = adsQueue.length;
+            document.getElementById('queueCount').textContent = `${count} anuncio${count !== 1 ? 's' : ''}`;
+            
+            const queueSection = document.getElementById('adsQueueSection');
+            if (count > 0) {
+                queueSection.classList.add('active');
+            } else {
+                queueSection.classList.remove('active');
+            }
         }
 
         // Validate Facebook Ads Library URL
@@ -1489,9 +1686,14 @@
             const patterns = [
                 /^https?:\/\/(www\.)?facebook\.com\/ads\/library/i,
                 /facebook\.com\/ads\/library/i,
-                /id=/i
             ];
             return patterns.some(pattern => pattern.test(url));
+        }
+
+        // Extract Page ID from URL
+        function extractPageId(url) {
+            const match = url.match(/[?&](?:view_all_page_id|page_id)=(\d+)/);
+            return match ? match[1] : null;
         }
 
         // Extract Ad ID from URL
@@ -1500,7 +1702,17 @@
             return match ? match[1] : null;
         }
 
-        // Download handler
+        // Detect URL type (page or individual ad)
+        function detectUrlType(url) {
+            if (extractPageId(url)) {
+                return { type: 'page', id: extractPageId(url) };
+            } else if (extractAdId(url)) {
+                return { type: 'ad', id: extractAdId(url) };
+            }
+            return { type: 'unknown', id: null };
+        }
+
+        // Download handler (now called "Search")
         document.getElementById('downloadBtn').addEventListener('click', handleDownload);
         document.getElementById('facebookAdUrl').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
@@ -1512,8 +1724,7 @@
             const urlInput = document.getElementById('facebookAdUrl');
             let url = urlInput.value.trim();
             
-            // Hide previous results
-            document.getElementById('resultSection').classList.remove('active');
+            // Hide previous errors
             document.getElementById('errorMessage').classList.remove('active');
             
             // Validate URL
@@ -1523,7 +1734,16 @@
             }
             
             if (!isValidFacebookAdUrl(url)) {
-                showError('Por favor, ingresa una URL válida de Facebook Ads Library (ej: https://www.facebook.com/ads/library/?id=123456789)');
+                showError('Por favor, ingresa una URL válida de Facebook Ads Library');
+                return;
+            }
+            
+            // Detect URL type
+            const urlType = detectUrlType(url);
+            console.log('URL Type detected:', urlType);
+            
+            if (urlType.type === 'unknown') {
+                showError('No se pudo detectar el tipo de URL. Asegúrate de usar una URL válida de Facebook Ads Library.');
                 return;
             }
             
@@ -1531,279 +1751,377 @@
             document.getElementById('loadingState').classList.add('active');
             document.getElementById('downloadBtn').disabled = true;
             
-            // Llamar al backend API real
+            try {
+                if (urlType.type === 'page') {
+                    // Fetch multiple ads from page
+                    await fetchAdsFromPage(url, urlType.id);
+                } else if (urlType.type === 'ad') {
+                    // Fetch single ad
+                    await fetchSingleAd(url, urlType.id);
+                }
+            } catch (error) {
+                console.error('Error in handleDownload:', error);
+                showError(`Error: ${error.message}`);
+            } finally {
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('downloadBtn').disabled = false;
+            }
+        }
+
+        // Fetch multiple ads from a page
+        async function fetchAdsFromPage(url, pageId) {
+            console.log('=== Fetching ads from page:', pageId);
+            
+            const apiUrl = '/api/facebook/list';
+            const requestBody = { 
+                url: url,
+                pageId: pageId,
+                type: 'page'
+            };
+            
+            console.log('API Request:', requestBody);
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error ${response.status}: ${errorText.substring(0, 200)}`);
+            }
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Error al obtener anuncios de la página');
+            }
+            
+            // Add ads to queue
+            if (data.ads && Array.isArray(data.ads) && data.ads.length > 0) {
+                for (const ad of data.ads) {
+                    addAdToQueue(ad);
+                }
+                showError(`Se encontraron ${data.ads.length} anuncios. Revisa la cola abajo para descargarlos.`, 'success');
+            } else {
+                showError('No se encontraron anuncios en esta página o la página no es pública.', 'warning');
+            }
+        }
+
+        // Fetch single ad
+        async function fetchSingleAd(url, adId) {
+            console.log('=== Fetching single ad:', adId);
+            
             const apiUrl = '/api/facebook/download';
             const requestBody = { 
                 url: url,
                 type: 'ad'
             };
             
-            console.log('=== FRONTEND: Calling Facebook Ads API ===');
-            console.log('API URL:', apiUrl);
-            console.log('Request Body:', requestBody);
-            console.log('Facebook Ad URL:', url);
+            console.log('API Request:', requestBody);
             
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error ${response.status}: ${errorText.substring(0, 200)}`);
+            }
+            
+            const data = await response.json();
+            console.log('API Response:', data);
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Error al procesar el anuncio');
+            }
+            
+            // Add to queue
+            addAdToQueue(data);
+            showError('Anuncio agregado a la cola. Revisa abajo para descargarlo.', 'success');
+        }
 
-                console.log('Response Status:', response.status);
-                console.log('Response Headers:', Object.fromEntries(response.headers.entries()));
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('Response Error Text:', errorText);
-                    document.getElementById('loadingState').classList.remove('active');
-                    document.getElementById('downloadBtn').disabled = false;
-                    showError(`Error ${response.status}: ${errorText.substring(0, 100)}`);
-                    return;
+        // Add ad to queue
+        function addAdToQueue(adData) {
+            const queueId = `queue-${queueIdCounter++}`;
+            const ad = {
+                id: queueId,
+                adId: adData.adId || adData.id,
+                status: 'ready',
+                data: adData,
+                selected: true
+            };
+            
+            adsQueue.push(ad);
+            renderQueueItem(ad);
+            updateQueueCount();
+        }
+
+        // Render queue item
+        function renderQueueItem(ad) {
+            const queueList = document.getElementById('adsQueueList');
+            const item = document.createElement('div');
+            item.className = 'video-queue-item';
+            item.id = ad.id;
+            
+            // Determine thumbnail
+            let thumbnailContent = '';
+            if (ad.data.videoUrl || ad.data.videoBase64) {
+                // Video thumbnail or icon
+                if (ad.data.imageUrl || ad.data.imageBase64 || ad.data.thumbnail) {
+                    const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl || ad.data.thumbnail;
+                    thumbnailContent = `
+                        <div class="queue-item-thumbnail">
+                            <img src="${thumbSrc}" alt="Thumbnail">
+                        </div>
+                    `;
+                } else {
+                    thumbnailContent = `<div class="queue-item-thumbnail"><i class="fas fa-video"></i></div>`;
                 }
+            } else if (ad.data.imageUrl || ad.data.imageBase64) {
+                // Image thumbnail
+                const thumbSrc = ad.data.imageBase64 || ad.data.imageUrl;
+                thumbnailContent = `
+                    <div class="queue-item-thumbnail">
+                        <img src="${thumbSrc}" alt="Thumbnail">
+                    </div>
+                `;
+            } else {
+                thumbnailContent = `<div class="queue-item-thumbnail"><i class="fab fa-facebook"></i></div>`;
+            }
+            
+            const title = ad.data.adText || ad.data.title || 'Anuncio de Facebook';
+            const pageName = ad.data.pageName || ad.data.author || 'Página de Facebook';
+            const adId = ad.data.adId || ad.data.id || '--';
+            const mediaType = ad.data.videoUrl || ad.data.videoBase64 ? 'Video' : 'Imagen';
+            
+            item.innerHTML = `
+                <input type="checkbox" class="queue-item-checkbox" ${ad.selected ? 'checked' : ''} 
+                       onchange="toggleAdSelection('${ad.id}', this.checked)">
+                ${thumbnailContent}
+                <div class="queue-item-info">
+                    <h4>${title.substring(0, 100)}</h4>
+                    <p><strong>Página:</strong> ${pageName}</p>
+                    <p><strong>ID:</strong> ${adId} • <strong>Tipo:</strong> ${mediaType}</p>
+                    <span class="queue-item-status ready"><i class="fas fa-check-circle"></i> Listo</span>
+                </div>
+                <button class="queue-item-remove" onclick="removeFromQueue('${ad.id}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            queueList.appendChild(item);
+        }
 
-                const data = await response.json();
-                console.log('Response Data:', data);
-
-                document.getElementById('loadingState').classList.remove('active');
-                document.getElementById('downloadBtn').disabled = false;
-
-                if (!data.success) {
-                    showError(data.error || 'Error al procesar el anuncio. Por favor, intenta de nuevo.');
-                    return;
-                }
-
-                // Mostrar resultado con datos reales del anuncio
-                showResult(data);
-                
-            } catch (error) {
-                console.error('=== FRONTEND: Fetch Error ===');
-                console.error('Error Type:', error.name);
-                console.error('Error Message:', error.message);
-                console.error('Error Stack:', error.stack);
-                
-                document.getElementById('loadingState').classList.remove('active');
-                document.getElementById('downloadBtn').disabled = false;
-                showError(`Error de conexión: ${error.message}. Por favor, verifica tu conexión e intenta de nuevo.`);
+        // Toggle ad selection
+        function toggleAdSelection(queueId, selected) {
+            const ad = adsQueue.find(a => a.id === queueId);
+            if (ad) {
+                ad.selected = selected;
             }
         }
 
-        function showError(message) {
+        // Remove from queue
+        function removeFromQueue(queueId) {
+            const index = adsQueue.findIndex(a => a.id === queueId);
+            if (index !== -1) {
+                adsQueue.splice(index, 1);
+            }
+            
+            const item = document.getElementById(queueId);
+            if (item) {
+                item.remove();
+            }
+            
+            updateQueueCount();
+        }
+
+        // Clear queue
+        function clearQueue() {
+            adsQueue.length = 0;
+            document.getElementById('adsQueueList').innerHTML = '';
+            updateQueueCount();
+        }
+
+        // Download all ads
+        async function downloadAllAds() {
+            const readyAds = adsQueue.filter(a => a.status === 'ready');
+            
+            if (readyAds.length === 0) {
+                showError('No hay anuncios listos para descargar');
+                return;
+            }
+            
+            const downloadBtn = document.getElementById('downloadAllBtn');
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.disabled = true;
+            
+            for (let i = 0; i < readyAds.length; i++) {
+                const ad = readyAds[i];
+                downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${readyAds.length}...`;
+                
+                try {
+                    await downloadAd(ad);
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                } catch (error) {
+                    console.error('Error descargando anuncio:', error);
+                }
+            }
+            
+            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Todos descargados!';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Download selected ads
+        async function downloadSelectedAds() {
+            const selectedAds = adsQueue.filter(a => a.status === 'ready' && a.selected);
+            
+            if (selectedAds.length === 0) {
+                showError('No hay anuncios seleccionados para descargar');
+                return;
+            }
+            
+            const downloadBtn = document.getElementById('downloadSelectedBtn');
+            const originalText = downloadBtn.innerHTML;
+            downloadBtn.disabled = true;
+            
+            for (let i = 0; i < selectedAds.length; i++) {
+                const ad = selectedAds[i];
+                downloadBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Descargando ${i + 1}/${selectedAds.length}...`;
+                
+                try {
+                    await downloadAd(ad);
+                    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay between downloads
+                } catch (error) {
+                    console.error('Error descargando anuncio:', error);
+                }
+            }
+            
+            downloadBtn.innerHTML = '<i class="fas fa-check-circle"></i> ¡Seleccionados descargados!';
+            setTimeout(() => {
+                downloadBtn.innerHTML = originalText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        }
+
+        // Download individual ad
+        async function downloadAd(ad) {
+            const adData = ad.data;
+            
+            // Determine what to download (video or image)
+            if (adData.videoUrl || adData.videoBase64) {
+                // Download video
+                let url = adData.videoBase64 || adData.videoUrl;
+                let blob;
+                
+                if (adData.videoBase64) {
+                    // Convert base64 to blob
+                    const base64Data = adData.videoBase64.split(',')[1];
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    blob = new Blob([bytes], { type: 'video/mp4' });
+                } else {
+                    // Fetch from URL
+                    const response = await fetch(`/api/facebook/proxy?url=${encodeURIComponent(adData.videoUrl)}`);
+                    if (!response.ok) throw new Error(`Error ${response.status}`);
+                    blob = await response.blob();
+                }
+                
+                const blobUrl = URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = blobUrl;
+                downloadLink.download = `facebook-ad-${adData.adId || Date.now()}.mp4`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+                
+            } else if (adData.imageUrl || adData.imageBase64) {
+                // Download image
+                let url = adData.imageBase64 || adData.imageUrl;
+                let blob;
+                
+                if (adData.imageBase64) {
+                    // Convert base64 to blob
+                    const base64Data = adData.imageBase64.split(',')[1];
+                    const binaryString = atob(base64Data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    blob = new Blob([bytes], { type: 'image/jpeg' });
+                } else {
+                    // Fetch from URL
+                    const response = await fetch(`/api/facebook/proxy?url=${encodeURIComponent(adData.imageUrl)}`);
+                    if (!response.ok) throw new Error(`Error ${response.status}`);
+                    blob = await response.blob();
+                }
+                
+                const blobUrl = URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = blobUrl;
+                downloadLink.download = `facebook-ad-${adData.adId || Date.now()}.jpg`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+            }
+        }
+
+        // Show error or success message
+        function showError(message, type = 'error') {
             const errorDiv = document.getElementById('errorMessage');
             const errorText = document.getElementById('errorText');
             errorText.textContent = message;
-            errorDiv.classList.add('active');
-        }
-
-        function showResult(data) {
-            const resultSection = document.getElementById('resultSection');
-            const adPreview = document.getElementById('adPreview');
-            const adInfo = document.getElementById('adInfo');
             
-            const adId = data.adId || data.id;
-            const videoUrl = data.videoUrl;
-            const imageUrl = data.imageUrl || data.thumbnail;
-            const videoBase64 = data.videoBase64;
-            const imageBase64 = data.imageBase64;
-            const pageName = data.pageName || data.author || 'Página de Facebook';
-            const adText = data.adText || data.title || 'Anuncio de Facebook';
-            const startDate = data.startDate || 'N/A';
-            
-            // Guardar las URLs para uso en las funciones de descarga
-            window.currentAdData = { adId, videoUrl, imageUrl, videoBase64, imageBase64 };
-            
-            // Usar base64 si está disponible (sin problemas de firma), sino usar proxy
-            const displayVideoUrl = videoBase64 || (videoUrl ? `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}` : null);
-            const displayImageUrl = imageBase64 || (imageUrl ? `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}` : null);
-            
-            console.log('Display URLs - Video:', displayVideoUrl ? 'base64 or proxy' : 'none', 'Image:', displayImageUrl ? 'base64 or proxy' : 'none');
-            
-            // Mostrar preview del anuncio (video o imagen)
-            if (videoUrl || videoBase64) {
-                adPreview.innerHTML = `
-                    <video 
-                        controls 
-                        preload="metadata" 
-                        poster="${displayImageUrl || ''}"
-                        style="width: 100%; height: auto; border-radius: 16px;"
-                    >
-                        <source src="${displayVideoUrl}" type="video/mp4">
-                        Tu navegador no soporta el tag de video.
-                    </video>
-                `;
-            } else if (imageUrl || imageBase64) {
-                adPreview.innerHTML = `
-                    <img 
-                        src="${displayImageUrl}" 
-                        alt="Preview del anuncio"
-                        style="width: 100%; height: auto; border-radius: 16px;"
-                        onerror="console.error('Error loading image:', this.src)"
-                    >
-                `;
+            // Change style based on type
+            if (type === 'success') {
+                errorDiv.style.background = '#dcfce7';
+                errorDiv.style.borderColor = '#bbf7d0';
+                errorDiv.style.color = '#16a34a';
+            } else if (type === 'warning') {
+                errorDiv.style.background = '#fef3c7';
+                errorDiv.style.borderColor = '#fde68a';
+                errorDiv.style.color = '#f59e0b';
             } else {
-                adPreview.innerHTML = `
-                    <div style="background: var(--facebook-gradient); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: white; font-size: 48px; border-radius: 16px;">
-                        <i class="fab fa-facebook"></i>
-                    </div>
-                `;
+                errorDiv.style.background = '#fef2f2';
+                errorDiv.style.borderColor = '#fecaca';
+                errorDiv.style.color = '#dc2626';
             }
             
-            adInfo.innerHTML = `
-                <h3>${adText}</h3>
-                <p><strong>Página:</strong> ${pageName}</p>
-                <p><strong>ID del Anuncio:</strong> ${adId}</p>
-                <p><strong>Fecha de inicio:</strong> ${startDate}</p>
-                <div style="background: #dbeafe; border: 1px solid #1877F2; border-radius: 8px; padding: 10px; margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #1877F2; font-weight: 600;">
-                    <i class="fas fa-check-circle"></i>
-                    Anuncio descargado • Listo para analizar
-                </div>
-            `;
+            errorDiv.classList.add('active');
             
-            // Configurar botones de descarga reales
-            const downloadVideoBtn = document.getElementById('downloadVideoBtn');
-            const downloadImageBtn = document.getElementById('downloadImageBtn');
-            
-            downloadVideoBtn.onclick = async () => {
-                const { videoUrl, videoBase64, adId } = window.currentAdData || {};
-                
-                if (!videoUrl && !videoBase64) {
-                    showError('Este anuncio no tiene video disponible o solo tiene imagen. Intenta descargar la imagen.');
-                    return;
-                }
-                
-                try {
-                    // Feedback visual
-                    const originalText = downloadVideoBtn.innerHTML;
-                    downloadVideoBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
-                    downloadVideoBtn.disabled = true;
-                    
-                    let blob;
-                    
-                    // Si tenemos base64, usarlo directamente (más rápido y sin problemas de firma)
-                    if (videoBase64) {
-                        console.log('Downloading video from base64...');
-                        const base64Data = videoBase64.split(',')[1]; // Remover data:video/mp4;base64,
-                        const binaryString = atob(base64Data);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        blob = new Blob([bytes], { type: 'video/mp4' });
-                    } else {
-                        // Si no hay base64, usar proxy
-                        console.log('Downloading video from proxy...');
-                        const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(videoUrl)}`;
-                        const response = await fetch(proxyUrl);
-                        if (!response.ok) {
-                            throw new Error(`Error ${response.status}: ${response.statusText}`);
-                        }
-                        blob = await response.blob();
-                    }
-                    
-                    const blobUrl = URL.createObjectURL(blob);
-                    
-                    // Crear link de descarga
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = blobUrl;
-                    downloadLink.download = `facebook-ad-${adId}.mp4`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                    
-                    // Limpiar blob URL después de un tiempo
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-                    
-                    // Feedback de éxito
-                    downloadVideoBtn.innerHTML = '<i class="fas fa-check"></i> Descargado!';
-                    
-                    setTimeout(() => {
-                        downloadVideoBtn.innerHTML = originalText;
-                        downloadVideoBtn.disabled = false;
-                    }, 2000);
-                    
-                } catch (error) {
-                    console.error('Error downloading video:', error);
-                    showError(`Error al descargar el video: ${error.message}`);
-                    
-                    const originalText = downloadVideoBtn.innerHTML.replace(/<i[^>]*>.*?<\/i>\s*/, '') || '<i class="fas fa-download"></i> Descargar Video';
-                    downloadVideoBtn.innerHTML = originalText;
-                    downloadVideoBtn.disabled = false;
-                }
-            };
-            
-            downloadImageBtn.onclick = async () => {
-                const { imageUrl, imageBase64, adId } = window.currentAdData || {};
-                
-                if (!imageUrl && !imageBase64) {
-                    showError('URL de la imagen no disponible. Por favor, intenta de nuevo.');
-                    return;
-                }
-                
-                try {
-                    // Feedback visual
-                    const originalText = downloadImageBtn.innerHTML;
-                    downloadImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Descargando...';
-                    downloadImageBtn.disabled = true;
-                    
-                    let blob;
-                    
-                    // Si tenemos base64, usarlo directamente (más rápido y sin problemas de firma)
-                    if (imageBase64) {
-                        console.log('Downloading image from base64...');
-                        const base64Data = imageBase64.split(',')[1]; // Remover data:image/jpeg;base64,
-                        const binaryString = atob(base64Data);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let i = 0; i < binaryString.length; i++) {
-                            bytes[i] = binaryString.charCodeAt(i);
-                        }
-                        blob = new Blob([bytes], { type: 'image/jpeg' });
-                    } else {
-                        // Si no hay base64, usar proxy
-                        console.log('Downloading image from proxy...');
-                        const proxyUrl = `/api/facebook/proxy?url=${encodeURIComponent(imageUrl)}`;
-                        const response = await fetch(proxyUrl);
-                        if (!response.ok) {
-                            throw new Error(`Error ${response.status}: ${response.statusText}`);
-                        }
-                        blob = await response.blob();
-                    }
-                    
-                    const blobUrl = URL.createObjectURL(blob);
-                    
-                    // Crear link de descarga
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = blobUrl;
-                    downloadLink.download = `facebook-ad-${adId}.jpg`;
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                    
-                    // Limpiar blob URL después de un tiempo
-                    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-                    
-                    // Feedback de éxito
-                    downloadImageBtn.innerHTML = '<i class="fas fa-check"></i> Descargado!';
-                    
-                    setTimeout(() => {
-                        downloadImageBtn.innerHTML = originalText;
-                        downloadImageBtn.disabled = false;
-                    }, 2000);
-                    
-                } catch (error) {
-                    console.error('Error downloading image:', error);
-                    showError(`Error al descargar la imagen: ${error.message}`);
-                    
-                    const originalText = downloadImageBtn.innerHTML.replace(/<i[^>]*>.*?<\/i>\s*/, '') || '<i class="fas fa-download"></i> Descargar Imagen';
-                    downloadImageBtn.innerHTML = originalText;
-                    downloadImageBtn.disabled = false;
-                }
-            };
-            
-            resultSection.classList.add('active');
-            resultSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success' || type === 'warning') {
+                setTimeout(() => {
+                    errorDiv.classList.remove('active');
+                }, 5000);
+            }
         }
+
+        // Event listeners for queue actions
+        document.getElementById('downloadAllBtn').addEventListener('click', downloadAllAds);
+        document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedAds);
+        document.getElementById('clearQueueBtn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que deseas limpiar toda la cola?')) {
+                clearQueue();
+            }
+        });
+
 
         // FAQ Toggle
         function toggleFaq(element) {
