@@ -1857,6 +1857,13 @@
                 throw new Error(data.error || 'Error al obtener anuncios de la página');
             }
             
+            // Manejar caso de 0 anuncios (exitoso pero sin resultados)
+            if (!data.ads || data.ads.length === 0) {
+                const message = data.message || 'No se encontraron anuncios en esta página. La página puede no tener anuncios activos o requerir estar logueado.';
+                showError(message, 'warning');
+                return;
+            }
+            
             // Add ads to queue
             if (data.ads && Array.isArray(data.ads) && data.ads.length > 0) {
                 const adsWithMedia = data.ads.filter(ad => !ad._minimal).length;
@@ -1875,8 +1882,6 @@
                 } else {
                     showError(`Se encontraron ${data.ads.length} anuncios listos para descargar.`, 'success');
                 }
-            } else {
-                showError('No se encontraron anuncios en esta página o la página no es pública.', 'warning');
             }
         }
 

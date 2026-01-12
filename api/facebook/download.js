@@ -975,6 +975,32 @@ function parseHtmlForAdData(html, adId) {
         console.log('[parseHtmlForAdData] Pattern 3pre: SUCCESS - Found video in script tags!');
         console.log('[parseHtmlForAdData] Pattern 3pre - Best video URL:', bestVideoUrl.substring(0, 200));
         
+        // NUEVO: Buscar thumbnail del video
+        console.log('[parseHtmlForAdData] Pattern 3pre - Searching for video thumbnail...');
+        let videoThumbnail = null;
+        const thumbnailPatterns = [
+          /"preferred_thumbnail":\s*\{[^}]*"uri":\s*"([^"]+)"/gi,
+          /"thumbnail_url":\s*"([^"]+)"/gi,
+          /"video_preview_image_url":\s*"([^"]+)"/gi,
+          /"resized_image_url":\s*"([^"]+)"/gi,
+          /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>()]*(oe=|oh=)[^"'\s<>()]*/gi,
+        ];
+        
+        for (const pattern of thumbnailPatterns) {
+          const match = html.match(pattern);
+          if (match) {
+            let thumbUrl = match[1] || match[0];
+            if (thumbUrl) {
+              thumbUrl = thumbUrl.replace(/\\\//g, '/').replace(/\\u002F/g, '/').replace(/&amp;/g, '&');
+              if (thumbUrl.startsWith('http') && (thumbUrl.includes('oe=') || thumbUrl.includes('oh='))) {
+                videoThumbnail = thumbUrl;
+                console.log('[parseHtmlForAdData] Pattern 3pre - Found video thumbnail:', videoThumbnail.substring(0, 150));
+                break;
+              }
+            }
+          }
+        }
+        
         const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
         const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
         
@@ -982,7 +1008,7 @@ function parseHtmlForAdData(html, adId) {
           success: true,
           videoUrl: bestVideoUrl,
           imageUrl: null,
-          thumbnail: null,
+          thumbnail: videoThumbnail, // Usar el thumbnail encontrado
           pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
           adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
           startDate: new Date().toLocaleDateString('es-ES')
@@ -1230,6 +1256,45 @@ function parseHtmlForAdData(html, adId) {
         console.log('[parseHtmlForAdData] Pattern 3 - Total videos found:', videoMatches.length, 'Filtered:', adVideos.length);
         console.log('[parseHtmlForAdData] Pattern 3 - Video URL (first 150 chars):', videoUrl.substring(0, 150));
         
+        // NUEVO: Buscar thumbnail/preview del video
+        console.log('[parseHtmlForAdData] Pattern 3 - Searching for video thumbnail...');
+        let videoThumbnail = null;
+        
+        // Patrones para encontrar thumbnails de video
+        const thumbnailPatterns = [
+          /"preferred_thumbnail":\s*\{[^}]*"uri":\s*"([^"]+)"/gi,
+          /"thumbnail_url":\s*"([^"]+)"/gi,
+          /"video_preview_image_url":\s*"([^"]+)"/gi,
+          /"resized_image_url":\s*"([^"]+)"/gi,
+          // Buscar imágenes que puedan ser thumbnails (cerca del video)
+          /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.(jpg|jpeg|png|webp)[?&][^"'\s<>()]*(oe=|oh=)[^"'\s<>()]*/gi,
+        ];
+        
+        for (const pattern of thumbnailPatterns) {
+          const match = html.match(pattern);
+          if (match) {
+            let thumbUrl = match[1] || match[0];
+            if (thumbUrl) {
+              // Limpiar y validar
+              thumbUrl = thumbUrl
+                .replace(/\\\//g, '/')
+                .replace(/\\u002F/g, '/')
+                .replace(/&amp;/g, '&');
+              
+              // Verificar que sea una URL válida y tenga firmas
+              if (thumbUrl.startsWith('http') && (thumbUrl.includes('oe=') || thumbUrl.includes('oh='))) {
+                videoThumbnail = thumbUrl;
+                console.log('[parseHtmlForAdData] Pattern 3 - Found video thumbnail:', videoThumbnail.substring(0, 150));
+                break;
+              }
+            }
+          }
+        }
+        
+        if (!videoThumbnail) {
+          console.log('[parseHtmlForAdData] Pattern 3 - No video thumbnail found');
+        }
+        
         // Buscar datos adicionales en el HTML con patrones mejorados
         const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || 
                               html.match(/"advertiser_name":\s*"([^"]+)"/i) ||
@@ -1254,7 +1319,7 @@ function parseHtmlForAdData(html, adId) {
           success: true,
           videoUrl: videoUrl,
           imageUrl: null,
-          thumbnail: null,
+          thumbnail: videoThumbnail, // Usar el thumbnail encontrado
           pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
           adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
           startDate: new Date().toLocaleDateString('es-ES')

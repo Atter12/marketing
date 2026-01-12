@@ -111,9 +111,13 @@ async function fetchAdsFromPage(url, pageId) {
     
     if (!adsData || !adsData.ads || adsData.ads.length === 0) {
       console.log('[fetchAdsFromPage] No ads found in HTML');
+      // CAMBIO: En lugar de retornar error, retornar éxito con array vacío
+      // Esto permite que el frontend muestre un mensaje más amigable
       return {
-        success: false,
-        error: 'No se encontraron anuncios en esta página. La página puede no tener anuncios activos o no ser pública.'
+        success: true,
+        ads: [],
+        pageName: 'Página de Facebook',
+        message: 'No se encontraron anuncios en esta página. La página puede no tener anuncios activos o requerir estar logueado.'
       };
     }
 
