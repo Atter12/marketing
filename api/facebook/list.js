@@ -142,47 +142,127 @@ function parseHtmlForAds(html, pageId) {
     // ESTRATEGIA 1: Buscar IDs de anuncios en el HTML
     // Facebook típicamente tiene los IDs en estructuras JSON o en atributos data-*
     console.log('[parseHtmlForAds] Strategy 1: Looking for ad IDs in HTML...');
+    console.log('[parseHtmlForAds] HTML length:', html.length);
+    console.log('[parseHtmlForAds] HTML preview (first 500 chars):', html.substring(0, 500));
+    console.log('[parseHtmlForAds] HTML preview (chars 10000-10500):', html.substring(10000, 10500));
     
-    // Patrón para encontrar IDs de anuncios (más flexible)
-    const adIdPatterns = [
-      /"ad_id":\s*"(\d+)"/gi,
-      /"id":\s*"(\d+)"/gi,
-      /\?id=(\d+)/gi,
-      /ad_id=(\d+)/gi,
-      /"adid":\s*"(\d+)"/gi,
-    ];
-    
-    let foundIds = new Set();
-    for (const pattern of adIdPatterns) {
-      let match;
-      while ((match = pattern.exec(html)) !== null) {
-        if (match[1] && match[1].length >= 10) { // IDs de Facebook son largos
-          foundIds.add(match[1]);
-        }
+    // NUEVO: Buscar bloques de datos de anuncios específicos
+    // Facebook usa estructuras como: "edges":[{"node":{"ad_archive_id":"..."}},...]
+    console.log('[parseHtmlForAds] Strategy 1.0: Looking for edges/node structures...');
+    const edgesPattern = /"edges":\s*\[([^\]]+)\]/gi;
+    let edgesMatches = 0;
+    let match;
+    while ((match = edgesPattern.exec(html)) !== null) {
+      edgesMatches++;
+      console.log(`[parseHtmlForAds] Found edges structure ${edgesMatches}, length:`, match[1].length);
+      // Mostrar una muestra
+      if (edgesMatches === 1) {
+        console.log('[parseHtmlForAds] First edges content (first 500 chars):', match[1].substring(0, 500));
       }
     }
     
-    console.log('[parseHtmlForAds] Found', foundIds.size, 'potential ad IDs');
+    // Patrón para encontrar IDs de anuncios (MÁS PATRONES)
+    const adIdPatterns = [
+      // Patrones específicos de Facebook Ads Library
+      /"ad_archive_id":\s*"(\d+)"/gi,
+      /"adArchiveID":\s*"(\d+)"/gi,
+      /"archiveID":\s*"(\d+)"/gi,
+      /"snapshot_id":\s*"(\d+)"/gi,
+      /"ad_id":\s*"(\d+)"/gi,
+      /"adID":\s*"(\d+)"/gi,
+      
+      // Patrones en URLs
+      /ad_archive_id=(\d{15,})/gi,
+      /\?id=(\d{15,})/gi,
+      /ad_id=(\d{15,})/gi,
+      
+      // Patrones generales (más restrictivos para evitar falsos positivos)
+      /"id":\s*"(\d{15,})"/gi,
+    ];
+    
+    let foundIds = new Set();
+    let patternResults = {};
+    
+    for (let i = 0; i < adIdPatterns.length; i++) {
+      const pattern = adIdPatterns[i];
+      let count = 0;
+      let tempIds = [];
+      
+      // Reset regex lastIndex
+      pattern.lastIndex = 0;
+      
+      let match;
+      while ((match = pattern.exec(html)) !== null) {
+        if (match[1] && match[1].length >= 15) { // IDs de Facebook son muy largos (15+ dígitos)
+          foundIds.add(match[1]);
+          tempIds.push(match[1]);
+          count++;
+          
+          // Log first few matches
+          if (count <= 3) {
+            console.log(`[parseHtmlForAds] Pattern ${i} - Found ID:`, match[1], '- Context:', match[0].substring(0, 100));
+          }
+        }
+      }
+      
+      patternResults[`Pattern ${i} (${pattern.toString().substring(0, 50)}...)`] = { count, sampleIds: tempIds.slice(0, 3) };
+    }
+    
+    console.log('[parseHtmlForAds] Pattern results:', JSON.stringify(patternResults, null, 2));
+    console.log('[parseHtmlForAds] Total unique IDs found after Strategy 1:', foundIds.size);
+    
+    // Log todos los IDs encontrados
+    if (foundIds.size > 0) {
+      console.log('[parseHtmlForAds] All found IDs:', Array.from(foundIds));
+    }
     
     // ESTRATEGIA 2: Buscar datos completos de anuncios en estructuras JSON
     console.log('[parseHtmlForAds] Strategy 2: Looking for complete ad data in JSON structures...');
     
     // Buscar estructuras JSON que contengan información de anuncios
     const jsonAdPatterns = [
-      /"ad_snapshot_url":\s*"[^"]*id=(\d+)[^"]*"/gi,
-      /"snapshot_url":\s*"[^"]*id=(\d+)[^"]*"/gi,
+      /"ad_snapshot_url":\s*"[^"]*id=(\d{15,})[^"]*"/gi,
+      /"snapshot_url":\s*"[^"]*id=(\d{15,})[^"]*"/gi,
+      /"ad_archive_id":\s*"(\d{15,})"/gi,
+      /ad_library.*?id=(\d{15,})/gi,
     ];
     
-    for (const pattern of jsonAdPatterns) {
+    let jsonPatternResults = {};
+    for (let i = 0; i < jsonAdPatterns.length; i++) {
+      const pattern = jsonAdPatterns[i];
+      let count = 0;
+      pattern.lastIndex = 0;
+      
       let match;
       while ((match = pattern.exec(html)) !== null) {
         if (match[1]) {
           foundIds.add(match[1]);
+          count++;
+          
+          if (count <= 2) {
+            console.log(`[parseHtmlForAds] JSON Pattern ${i} - Found ID:`, match[1]);
+          }
         }
       }
+      jsonPatternResults[`JSON Pattern ${i}`] = count;
     }
     
-    console.log('[parseHtmlForAds] Total ad IDs found:', foundIds.size);
+    console.log('[parseHtmlForAds] JSON pattern results:', jsonPatternResults);
+    console.log('[parseHtmlForAds] Total ad IDs found after Strategy 2:', foundIds.size);
+    
+    // Log final de todos los IDs únicos
+    if (foundIds.size > 0) {
+      console.log('[parseHtmlForAds] === FINAL UNIQUE IDs ===');
+      console.log('[parseHtmlForAds] Count:', foundIds.size);
+      console.log('[parseHtmlForAds] IDs:', Array.from(foundIds));
+    } else {
+      console.log('[parseHtmlForAds] ⚠️ NO IDs FOUND - This is unusual for an active page');
+      console.log('[parseHtmlForAds] Checking if HTML contains "ad" or "archive" keywords...');
+      const adKeywordCount = (html.match(/\bad\b/gi) || []).length;
+      const archiveKeywordCount = (html.match(/archive/gi) || []).length;
+      console.log('[parseHtmlForAds] "ad" keyword count:', adKeywordCount);
+      console.log('[parseHtmlForAds] "archive" keyword count:', archiveKeywordCount);
+    }
     
     // Si encontramos IDs, intentar obtener detalles de cada anuncio
     // Limitamos a los primeros 10 anuncios para no sobrecargar

@@ -1370,7 +1370,7 @@
                         type="text" 
                         id="facebookAdUrl" 
                         class="url-input" 
-                        placeholder="Pega la URL de una página de Facebook Ads Library o un anuncio individual..."
+                        placeholder="Pega la URL completa o solo el ID de página/anuncio (ej: 26002873002629986)..."
                         autocomplete="off"
                     >
                     <button class="btn-download" id="downloadBtn">
@@ -1388,8 +1388,10 @@
                             📚 ¿Cómo usar esta herramienta?
                         </div>
                         <div style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
-                            <strong>Opción 1:</strong> Pega la URL de una <strong>página completa</strong> de Facebook Ads Library (ej: facebook.com/ads/library/?view_all_page_id=123456) para ver TODOS los anuncios de esa página.<br>
-                            <strong>Opción 2:</strong> Pega la URL de un <strong>anuncio individual</strong> (ej: facebook.com/ads/library/?id=123456) para ver solo ese anuncio.
+                            <strong>Opción 1:</strong> Pega la URL completa de Facebook Ads Library (página o anuncio individual).<br>
+                            <strong>Opción 2:</strong> Pega <strong>solo el identificador numérico</strong> (ej: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 4px;">26002873002629986</code>) y se convertirá automáticamente.<br>
+                            <strong>•</strong> IDs largos (16+ dígitos) = anuncio individual<br>
+                            <strong>•</strong> IDs cortos (12-15 dígitos) = página completa con todos los anuncios
                         </div>
                     </div>
                 </div>
@@ -1681,6 +1683,45 @@
             }
         }
 
+        // Validate and normalize input (URL or just ID)
+        function normalizeInput(input) {
+            input = input.trim();
+            
+            console.log('[normalizeInput] Original input:', input);
+            
+            // Si ya es una URL válida de Facebook, retornarla
+            if (input.includes('facebook.com/ads/library')) {
+                console.log('[normalizeInput] Input is already a valid URL');
+                return { isValid: true, url: input, originalInput: input };
+            }
+            
+            // Si es solo un número (ID), convertirlo a URL
+            // IDs de Facebook son números largos (usualmente 15+ dígitos)
+            const pureNumberPattern = /^\d{10,}$/;
+            if (pureNumberPattern.test(input)) {
+                console.log('[normalizeInput] Input is a pure number (ID), length:', input.length);
+                
+                // Determinar si es page_id o ad_id basándonos en la longitud
+                // Page IDs tienden a ser más cortos (12-15 dígitos)
+                // Ad IDs tienden a ser más largos (16-20 dígitos)
+                let url;
+                if (input.length >= 16) {
+                    // Probablemente es un ad_id
+                    url = `https://www.facebook.com/ads/library/?id=${input}`;
+                    console.log('[normalizeInput] Detected as Ad ID (length >= 16), created URL:', url);
+                } else {
+                    // Probablemente es un page_id
+                    url = `https://www.facebook.com/ads/library/?active_status=all&ad_type=all&country=ALL&view_all_page_id=${input}&search_type=page&media_type=all`;
+                    console.log('[normalizeInput] Detected as Page ID (length < 16), created URL:', url);
+                }
+                
+                return { isValid: true, url: url, originalInput: input, wasId: true };
+            }
+            
+            console.log('[normalizeInput] Input is neither valid URL nor ID');
+            return { isValid: false, url: null, originalInput: input };
+        }
+
         // Validate Facebook Ads Library URL
         function isValidFacebookAdUrl(url) {
             const patterns = [
@@ -1722,20 +1763,35 @@
 
         async function handleDownload() {
             const urlInput = document.getElementById('facebookAdUrl');
-            let url = urlInput.value.trim();
+            let input = urlInput.value.trim();
             
             // Hide previous errors
             document.getElementById('errorMessage').classList.remove('active');
             
-            // Validate URL
-            if (!url) {
-                showError('Por favor, ingresa una URL de Facebook Ads Library');
+            // Validate input
+            if (!input) {
+                showError('Por favor, ingresa una URL de Facebook Ads Library o un ID de anuncio/página');
                 return;
             }
             
-            if (!isValidFacebookAdUrl(url)) {
-                showError('Por favor, ingresa una URL válida de Facebook Ads Library');
+            console.log('=== PROCESSING INPUT ===');
+            console.log('Raw input:', input);
+            
+            // Normalizar input (puede ser URL o solo ID)
+            const normalized = normalizeInput(input);
+            console.log('Normalized result:', normalized);
+            
+            if (!normalized.isValid) {
+                showError('Por favor, ingresa una URL válida de Facebook Ads Library o un ID de anuncio/página (solo números)');
                 return;
+            }
+            
+            const url = normalized.url;
+            
+            // Mostrar feedback si se convirtió un ID
+            if (normalized.wasId) {
+                console.log('✅ ID convertido automáticamente a URL:', url);
+                showError(`✅ ID detectado y convertido: ${normalized.originalInput}`, 'success');
             }
             
             // Detect URL type
