@@ -909,31 +909,161 @@ function parseHtmlForAdData(html, adId) {
         }
       }
       
+      // === BÚSQUEDA PROFUNDA EN SCRIPTS ===
+      // Buscar específicamente en tags <script> para encontrar datos de video
+      console.log('[parseHtmlForAdData] Pattern 3pre: Deep search in script tags for video data...');
+      const scriptTagPattern = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+      let scriptMatch;
+      let scriptVideoUrls = [];
+      let scriptCount = 0;
+      
+      while ((scriptMatch = scriptTagPattern.exec(html)) !== null && scriptCount < 100) {
+        scriptCount++;
+        const scriptContent = scriptMatch[1];
+        
+        // Buscar URLs de video en el contenido del script
+        const videoInScriptPatterns = [
+          /"playable_url":\s*"([^"]+)"/gi,
+          /"playable_url_quality_hd":\s*"([^"]+)"/gi,
+          /"browser_native_hd_url":\s*"([^"]+)"/gi,
+          /"browser_native_sd_url":\s*"([^"]+)"/gi,
+          /"download_url":\s*"([^"]+\.mp4[^"]*)"/gi,
+          /"video_url":\s*"([^"]+)"/gi,
+          /https?:\\\/\\\/[^"'\s<>()]+\.mp4[^"'\s<>()]*/gi,
+          /https?:\/\/[^"'\s<>()]+\.fbcdn\.net[^"'\s<>()]*\.mp4[^"'\s<>()]*/gi,
+        ];
+        
+        for (const pattern of videoInScriptPatterns) {
+          let vidMatch;
+          while ((vidMatch = pattern.exec(scriptContent)) !== null) {
+            let url = vidMatch[1] || vidMatch[0];
+            if (url) {
+              // Limpiar escapes
+              url = url
+                .replace(/\\\//g, '/')
+                .replace(/\\u002F/g, '/')
+                .replace(/\\u0025/g, '%')
+                .replace(/&amp;/g, '&')
+                .replace(/\\/g, '');
+              
+              // Decodificar si es necesario
+              try {
+                if (url.includes('%')) {
+                  url = decodeURIComponent(url);
+                }
+              } catch (e) {}
+              
+              if (url && url.startsWith('http') && (url.includes('.mp4') || url.includes('fbcdn.net/v/'))) {
+                scriptVideoUrls.push(url);
+                console.log('[parseHtmlForAdData] Pattern 3pre - Found video URL in script:', url.substring(0, 150));
+              }
+            }
+          }
+        }
+      }
+      
+      console.log('[parseHtmlForAdData] Pattern 3pre - Searched', scriptCount, 'script tags');
+      console.log('[parseHtmlForAdData] Pattern 3pre - Found', scriptVideoUrls.length, 'video URLs in scripts');
+      
+      if (scriptVideoUrls.length > 0) {
+        // Remover duplicados
+        scriptVideoUrls = [...new Set(scriptVideoUrls)];
+        // Ordenar por longitud (más largo = mejor calidad)
+        scriptVideoUrls.sort((a, b) => b.length - a.length);
+        const bestVideoUrl = scriptVideoUrls[0];
+        
+        console.log('[parseHtmlForAdData] Pattern 3pre: SUCCESS - Found video in script tags!');
+        console.log('[parseHtmlForAdData] Pattern 3pre - Best video URL:', bestVideoUrl.substring(0, 200));
+        
+        const pageNameMatch = html.match(/"page_name":\s*"([^"]+)"/i) || html.match(/"advertiser_name":\s*"([^"]+)"/i);
+        const adTextMatch = html.match(/"ad_creative_body":\s*"([^"]{10,500})"/i) || html.match(/"body":\s*"([^"]{10,500})"/i);
+        
+        return {
+          success: true,
+          videoUrl: bestVideoUrl,
+          imageUrl: null,
+          thumbnail: null,
+          pageName: pageNameMatch ? decodeUnicode(pageNameMatch[1]) : 'Página de Facebook',
+          adText: adTextMatch ? decodeUnicode(adTextMatch[1]).substring(0, 300) : 'Anuncio de Facebook',
+          startDate: new Date().toLocaleDateString('es-ES')
+        };
+      }
+      
       // ESTRATEGIA MEJORADA: Buscar videos de múltiples formas
-      // 1. Buscar directamente URLs .mp4 en todo el HTML
+      // 1. Buscar directamente URLs .mp4 en todo el HTML (SUPER AGRESIVO)
       console.log('[parseHtmlForAdData] Pattern 3a: Searching for .mp4 URLs anywhere in HTML...');
-      const allMp4Pattern = /https?:\/\/[^"'\s<>()]+\.mp4[^"'\s<>()]*/gi;
-      const allMp4Matches = html.match(allMp4Pattern) || [];
+      const allMp4Patterns = [
+        // URLs .mp4 simples
+        /https?:\/\/[^"'\s<>()]+\.mp4[^"'\s<>()]*/gi,
+        // URLs .mp4 con escapes
+        /https?:\\\/\\\/[^"'\s<>()]+\.mp4[^"'\s<>()]*/gi,
+        // URLs .mp4 URL-encoded
+        /https?%3A%2F%2F[^"'\s<>()]+\.mp4[^"'\s<>()]*/gi,
+      ];
+      
+      let allMp4Matches = [];
+      for (const pattern of allMp4Patterns) {
+        const matches = html.match(pattern) || [];
+        allMp4Matches.push(...matches);
+      }
       console.log('[parseHtmlForAdData] Pattern 3a - Found', allMp4Matches.length, 'potential .mp4 URLs');
       
-      // 2. Buscar en estructuras JSON específicas
+      // 2. Buscar en estructuras JSON específicas (PATRONES EXPANDIDOS)
       console.log('[parseHtmlForAdData] Pattern 3b: Searching for videos in JSON structures...');
       const jsonVideoPatterns = [
+        // Patrones comunes
         /"video_url":\s*"([^"]+)"/gi,
         /"video":\s*\{[^}]*"uri":\s*"([^"]+)"/gi,
         /"source":\s*"([^"]+)"/gi,
         /"playback_url":\s*"([^"]+)"/gi,
-        /"hd":\s*"([^"]+)"/gi,
-        /"sd":\s*"([^"]+)"/gi,
+        /"hd":\s*"([^"]+\.mp4[^"]*)"/gi,
+        /"sd":\s*"([^"]+\.mp4[^"]*)"/gi,
         /"url_list":\s*\["([^"]+)"/gi,
+        // Patrones de la extensión Chrome (LOS QUE FUNCIONAN)
+        /"playable_url":\s*"([^"]+)"/gi,
+        /"playable_url_quality_hd":\s*"([^"]+)"/gi,
+        /"sd_src":\s*"([^"]+)"/gi,
+        /"hd_src":\s*"([^"]+)"/gi,
+        /"browser_native_hd_url":\s*"([^"]+)"/gi,
+        /"browser_native_sd_url":\s*"([^"]+)"/gi,
+        /"download_url":\s*"([^"]+)"/gi,
+        // Patrones adicionales
+        /"video_url_quality_hd":\s*"([^"]+)"/gi,
+        /"video_url_quality_sd":\s*"([^"]+)"/gi,
+        /"src":\s*"([^"]+\.mp4[^"]*)"/gi,
+        /"video_source":\s*"([^"]+)"/gi,
+        // Patrones de representaciones de video
+        /"representation":\s*\{[^}]*"base_url":\s*"([^"]+\.mp4[^"]*)"/gi,
+        /"base_url":\s*"([^"]+\.mp4[^"]*)"/gi,
+        // Patrones de dash manifest
+        /"dash_manifest":[^}]*"base_url":\s*"([^"]+)"/gi,
       ];
       
       let jsonVideoMatches = [];
       for (const pattern of jsonVideoPatterns) {
         let match;
         while ((match = pattern.exec(html)) !== null) {
-          if (match[1] && (match[1].includes('.mp4') || match[1].includes('fbcdn.net/v/') || match[1].includes('video'))) {
-            jsonVideoMatches.push(match[1].replace(/\\\//g, '/').replace(/\\u002F/g, '/'));
+          if (match[1]) {
+            // Limpiar escapes y decodificar
+            let url = match[1]
+              .replace(/\\\//g, '/')
+              .replace(/\\u002F/g, '/')
+              .replace(/\\u0025/g, '%')
+              .replace(/&amp;/g, '&');
+            
+            // Intentar decodificar URL-encoded
+            try {
+              if (url.includes('%')) {
+                url = decodeURIComponent(url);
+              }
+            } catch (e) {
+              // Si falla, continuar con URL original
+            }
+            
+            if (url && url.startsWith('http') && (url.includes('.mp4') || url.includes('fbcdn.net/v/'))) {
+              jsonVideoMatches.push(url);
+              console.log('[parseHtmlForAdData] Pattern 3b - Found video URL:', url.substring(0, 150));
+            }
           }
         }
       }
@@ -946,6 +1076,8 @@ function parseHtmlForAdData(html, adId) {
         /data-src=["']([^"']+\.mp4[^"']*)["']/gi,
         /src=["']([^"']+\.mp4[^"']*)["']/gi,
         /href=["']([^"']+\.mp4[^"']*)["']/gi,
+        /data-video-hd=["']([^"']+)["']/gi,
+        /data-video-sd=["']([^"']+)["']/gi,
       ];
       
       let attrVideoMatches = [];
@@ -959,11 +1091,18 @@ function parseHtmlForAdData(html, adId) {
       }
       console.log('[parseHtmlForAdData] Pattern 3c - Found', attrVideoMatches.length, 'video URLs in attributes');
       
-      // 4. Buscar patrones específicos de CDN de Facebook
+      // 4. Buscar patrones específicos de CDN de Facebook (EXPANDIDOS)
       const cdnVideoPatterns = [
+        // scontent con .mp4
         /https?:\/\/scontent[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.mp4[^"'\s<>]*/gi,
+        // video subdomain
         /https?:\/\/video[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/t[^"'\s<>]*\.mp4[^"'\s<>]*/gi,
+        // Cualquier .fbcdn.net con .mp4
         /https?:\/\/[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\/v\/[^"'\s<>]*\.mp4[^"'\s<>]*/gi,
+        // Con escapes
+        /https?:\\\/\\\/[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\.mp4[^"'\s<>]*/gi,
+        // Sin /v/
+        /https?:\/\/[^"'\s<>]+\.fbcdn\.net[^"'\s<>]*\.mp4[^"'\s<>]*/gi,
       ];
       
       let cdnVideoMatches = [];
@@ -1204,27 +1343,41 @@ function parseHtmlForAdData(html, adId) {
         }
       }
       
-      // Verificar si el anuncio tiene video buscando indicadores en el HTML
-      console.log('[parseHtmlForAdData] Checking if ad has video (looking for video indicators)...');
+      // Verificar si el anuncio tiene video buscando indicadores ESPECÍFICOS en el HTML
+      console.log('[parseHtmlForAdData] Checking if ad has video (looking for SPECIFIC video indicators)...');
       const videoIndicators = [
         /"media_type":\s*"VIDEO"/i,
         /"type":\s*"video"/i,
         /"has_video":\s*true/i,
-        /video/i,
         /<video/i,
         /video-player/i,
-        /"video_id"/i
+        /"video_id":\s*"[^"]+"/i,
+        /"playable_url"/i,
+        /"browser_native_hd_url"/i,
+        /"video_url"/i,
+        /\.mp4/i
       ];
       
       let hasVideoIndicator = false;
+      let foundIndicators = [];
       for (const indicator of videoIndicators) {
-        if (indicator.test(html)) {
+        const match = html.match(indicator);
+        if (match) {
           hasVideoIndicator = true;
-          console.log('[parseHtmlForAdData] Found video indicator:', indicator.toString());
-          break;
+          foundIndicators.push(match[0]);
         }
       }
-      console.log('[parseHtmlForAdData] Video indicators found:', hasVideoIndicator);
+      
+      console.log('[parseHtmlForAdData] Found video indicator:', hasVideoIndicator);
+      if (hasVideoIndicator) {
+        console.log('[parseHtmlForAdData] Indicators found:', foundIndicators);
+        console.log('[parseHtmlForAdData] WARNING: Ad appears to have video but no video URL was extracted!');
+        console.log('[parseHtmlForAdData] HTML sample around "video" (500 chars):');
+        const videoIndex = html.indexOf('video');
+        if (videoIndex !== -1) {
+          console.log(html.substring(Math.max(0, videoIndex - 250), videoIndex + 250));
+        }
+      }
       
       // Si hay indicadores de video, buscar más agresivamente
       if (hasVideoIndicator || videoMatches.length === 0) {
