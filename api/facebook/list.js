@@ -266,6 +266,75 @@ function parseHtmlForAds(html, pageId) {
       const archiveKeywordCount = (html.match(/archive/gi) || []).length;
       console.log('[parseHtmlForAds] "ad" keyword count:', adKeywordCount);
       console.log('[parseHtmlForAds] "archive" keyword count:', archiveKeywordCount);
+      
+      // ESTRATEGIA AGRESIVA: Buscar CUALQUIER número largo (15+ dígitos)
+      console.log('[parseHtmlForAds] === AGGRESSIVE STRATEGY: Looking for ANY long numbers ===');
+      const longNumberPattern = /\b(\d{15,})\b/g;
+      let longNumbers = new Set();
+      let match;
+      let countChecked = 0;
+      
+      while ((match = longNumberPattern.exec(html)) !== null && countChecked < 100) {
+        countChecked++;
+        longNumbers.add(match[1]);
+      }
+      
+      console.log('[parseHtmlForAds] Found', longNumbers.size, 'unique long numbers (15+ digits)');
+      if (longNumbers.size > 0) {
+        const numbersArray = Array.from(longNumbers).slice(0, 20);
+        console.log('[parseHtmlForAds] First 20 long numbers:', numbersArray);
+        
+        // Agregar estos números como posibles IDs
+        numbersArray.slice(0, 10).forEach(num => foundIds.add(num));
+        console.log('[parseHtmlForAds] Added first 10 as potential ad IDs');
+      }
+      
+      // Buscar en el HTML samples específicos que puedan contener IDs
+      console.log('[parseHtmlForAds] === HTML STRUCTURE ANALYSIS ===');
+      
+      // Buscar scripts
+      const scriptMatches = html.match(/<script[^>]*>([\s\S]{0,500})/gi);
+      if (scriptMatches && scriptMatches.length > 0) {
+        console.log('[parseHtmlForAds] Found', scriptMatches.length, 'script tags');
+        console.log('[parseHtmlForAds] First script preview:', scriptMatches[0].substring(0, 300));
+      }
+      
+      // Buscar data attributes
+      const dataAttrs = html.match(/data-[a-z-]+="[^"]{50,200}"/gi);
+      if (dataAttrs && dataAttrs.length > 0) {
+        console.log('[parseHtmlForAds] Found', dataAttrs.length, 'long data attributes');
+        console.log('[parseHtmlForAds] Sample data attributes:', dataAttrs.slice(0, 3));
+      }
+      
+      // Buscar objetos JSON grandes
+      const jsonObjectMatches = html.match(/\{[^{}]{200,500}\}/g);
+      if (jsonObjectMatches && jsonObjectMatches.length > 0) {
+        console.log('[parseHtmlForAds] Found', jsonObjectMatches.length, 'large JSON objects');
+        console.log('[parseHtmlForAds] First JSON object:', jsonObjectMatches[0].substring(0, 300));
+      }
+      
+      // Buscar URLs de anuncios
+      const adUrlMatches = html.match(/facebook\.com\/ads\/library\/\?[^"'\s<>]{10,}/gi);
+      if (adUrlMatches && adUrlMatches.length > 0) {
+        console.log('[parseHtmlForAds] Found', adUrlMatches.length, 'ad library URLs');
+        console.log('[parseHtmlForAds] Sample URLs:', adUrlMatches.slice(0, 3));
+        
+        // Extraer IDs de estas URLs
+        adUrlMatches.forEach(url => {
+          const idMatch = url.match(/[?&]id=(\d{15,})/);
+          if (idMatch && idMatch[1]) {
+            foundIds.add(idMatch[1]);
+            console.log('[parseHtmlForAds] Extracted ID from URL:', idMatch[1]);
+          }
+        });
+      }
+    }
+    
+    // Log después de todas las estrategias
+    console.log('[parseHtmlForAds] === FINAL COUNT after all strategies ===');
+    console.log('[parseHtmlForAds] Total unique IDs found:', foundIds.size);
+    if (foundIds.size > 0) {
+      console.log('[parseHtmlForAds] IDs:', Array.from(foundIds).slice(0, 15));
     }
     
     // Si encontramos IDs, intentar obtener detalles de cada anuncio
@@ -297,7 +366,7 @@ function parseHtmlForAds(html, pageId) {
           pageName: adInfo.pageName || 'Página de Facebook',
           imageUrl: adInfo.imageUrl || null,
           videoUrl: adInfo.videoUrl || null,
-          thumbnail: adInfo.imageUrl || null,
+          thumbnail: adInfo.thumbnail || adInfo.imageUrl || null, // Usar thumbnail específico o imageUrl
           startDate: adInfo.startDate || new Date().toLocaleDateString('es-ES'),
           // Marcar como minimal si NO tiene media con firmas válidas
           _minimal: !hasMedia,
@@ -366,6 +435,7 @@ function extractAdInfoFromHtml(html, adId) {
     let adText = null;
     let imageUrl = null;
     let videoUrl = null;
+    let thumbnail = null;
     let startDate = null;
     
     if (adSection && adSection[0]) {
@@ -460,6 +530,38 @@ function extractAdInfoFromHtml(html, adId) {
           // Ignorar errores de fecha
         }
       }
+      
+      // NUEVO: Si encontramos video, buscar thumbnail
+      if (videoUrl) {
+        console.log('[extractAdInfoFromHtml] Video found, searching for thumbnail...');
+        const thumbnailPatterns = [
+          /"preferred_thumbnail":\s*\{[^}]*"uri":\s*"([^"]+)"/i,
+          /"thumbnail_url":\s*"([^"]+)"/i,
+          /"video_preview_image_url":\s*"([^"]+)"/i,
+          /"resized_image_url":\s*"([^"]+)"/i,
+        ];
+        
+        for (const pattern of thumbnailPatterns) {
+          const thumbMatch = section.match(pattern);
+          if (thumbMatch && thumbMatch[1]) {
+            thumbnail = thumbMatch[1]
+              .replace(/\\u002F/g, '/')
+              .replace(/\\\//g, '/')
+              .replace(/&amp;/g, '&');
+            
+            if (thumbnail.startsWith('http')) {
+              console.log('[extractAdInfoFromHtml] Found video thumbnail:', thumbnail.substring(0, 150));
+              break;
+            }
+          }
+        }
+        
+        // Si no encontramos thumbnail específico, usar imageUrl si existe
+        if (!thumbnail && imageUrl) {
+          console.log('[extractAdInfoFromHtml] Using imageUrl as video thumbnail');
+          thumbnail = imageUrl;
+        }
+      }
     }
     
     // Si no encontramos nada en la sección específica, buscar en todo el HTML cerca del ID
@@ -521,6 +623,7 @@ function extractAdInfoFromHtml(html, adId) {
       adText: adText,
       imageUrl: imageUrl,
       videoUrl: videoUrl,
+      thumbnail: thumbnail || imageUrl, // Thumbnail de video o imagen
       startDate: startDate,
       pageName: null // Se actualizará después
     };
@@ -531,6 +634,7 @@ function extractAdInfoFromHtml(html, adId) {
       adText: null,
       imageUrl: null,
       videoUrl: null,
+      thumbnail: null,
       startDate: null,
       pageName: null
     };
