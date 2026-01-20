@@ -1203,7 +1203,13 @@
 
         // Render Preview
         function renderPreview() {
+            console.log('[Pre-Landing Builder] Renderizando preview, componentes:', components.length);
             const previewContent = document.getElementById('previewContent');
+            
+            if (!previewContent) {
+                console.error('[Pre-Landing Builder] previewContent no encontrado');
+                return;
+            }
             
             if (components.length === 0) {
                 previewContent.innerHTML = `
@@ -1215,16 +1221,19 @@
                         </div>
                     </div>
                 `;
+                console.log('[Pre-Landing Builder] Mostrando estado vacío');
                 return;
             }
 
             let html = '<div class="preview-content-wrapper">';
-            components.forEach(comp => {
+            components.forEach((comp, index) => {
+                console.log('[Pre-Landing Builder] Renderizando componente', index + 1, ':', comp.type);
                 html += renderComponent(comp);
             });
             html += '</div>';
             
             previewContent.innerHTML = html;
+            console.log('[Pre-Landing Builder] Preview renderizado correctamente');
             
             // Add click handlers
             document.querySelectorAll('.landing-component').forEach(comp => {
@@ -1442,7 +1451,11 @@
         }
 
         function updateComponentData(key, value) {
-            if (!selectedComponent) return;
+            console.log('[Pre-Landing Builder] Actualizando componente:', key, '=', value);
+            if (!selectedComponent) {
+                console.warn('[Pre-Landing Builder] No hay componente seleccionado');
+                return;
+            }
             selectedComponent.data[key] = value;
             renderPreview();
             selectComponent(selectedComponent.id); // Re-select to update properties
@@ -1547,7 +1560,7 @@
         }
 
         function generateHTML() {
-            console.log('[Pre-Landing Builder] Generando HTML...');
+            console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
             const facebookPixel = document.getElementById('facebookPixel') ? document.getElementById('facebookPixel').value.trim() : '';
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
@@ -1558,100 +1571,158 @@
                 google: googleAnalytics ? 'Sí' : 'No'
             });
             
-            // Build head section
-            let headSection = '<!DOCTYPE html>\n<html lang="es">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Landing Page</title>\n    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">\n    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">\n';
+            // Usar array para construir el HTML de forma segura
+            const html = [];
             
-            // Add Facebook Pixel
+            // HTML base
+            html.push('<!DOCTYPE html>');
+            html.push('<html lang="es">');
+            html.push('<head>');
+            html.push('    <meta charset="UTF-8">');
+            html.push('    <meta name="viewport" content="width=device-width, initial-scale=1.0">');
+            html.push('    <title>Landing Page</title>');
+            html.push('    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">');
+            html.push('    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">');
+            
+            // Facebook Pixel
             if (facebookPixel) {
-                const fbPixelId = escapeHtml(facebookPixel);
-                headSection += '    <!-- Facebook Pixel Code -->\n    <script>\n        !function(f,b,e,v,n,t,s)\n        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?\n        n.callMethod.apply(n,arguments):n.queue.push(arguments)};\n        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";\n        n.queue=[];t=b.createElement(e);t.async=!0;\n        t.src=v;s=b.getElementsByTagName(e)[0];\n        s.parentNode.insertBefore(t,s)}(window, document,"script",\n        "https://connect.facebook.net/en_US/fbevents.js");\n        fbq("init", "' + fbPixelId + '");\n        fbq("track", "PageView");\n    </script>\n    <noscript><img height="1" width="1" style="display:none"\n        src="https://www.facebook.com/tr?id=' + fbPixelId + '&ev=PageView&noscript=1"\n    /></noscript>\n    <!-- End Facebook Pixel Code -->\n';
+                const fbId = escapeHtml(facebookPixel);
+                html.push('    <!-- Facebook Pixel Code -->');
+                html.push('    <script>');
+                html.push('        !function(f,b,e,v,n,t,s)');
+                html.push('        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?');
+                html.push('        n.callMethod.apply(n,arguments):n.queue.push(arguments)};');
+                html.push('        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";');
+                html.push('        n.queue=[];t=b.createElement(e);t.async=!0;');
+                html.push('        t.src=v;s=b.getElementsByTagName(e)[0];');
+                html.push('        s.parentNode.insertBefore(t,s)}(window, document,"script",');
+                html.push('        "https://connect.facebook.net/en_US/fbevents.js");');
+                html.push('        fbq("init", "' + fbId + '");');
+                html.push('        fbq("track", "PageView");');
+                html.push('    </' + 'script>');
+                html.push('    <noscript><img height="1" width="1" style="display:none"');
+                html.push('        src="https://www.facebook.com/tr?id=' + fbId + '&ev=PageView&noscript=1"');
+                html.push('    /></noscript>');
+                html.push('    <!-- End Facebook Pixel Code -->');
             }
             
-            // Add TikTok Pixel (validate format: should start with C and be alphanumeric)
+            // TikTok Pixel
             if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
-                const ttPixelId = escapeHtml(tiktokPixel);
-                headSection += '    <!-- TikTok Pixel Code -->\n    <script>\n        !function (w, d, t) {\n            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};\n            ttq.load("' + ttPixelId + '");\n            ttq.page();\n        }(window, document, "ttq");\n    </script>\n    <!-- End TikTok Pixel Code -->\n';
-            } else if (tiktokPixel) {
-                console.warn('TikTok Pixel ID inválido. Debe comenzar con "C" seguido de caracteres alfanuméricos.');
+                const ttId = escapeHtml(tiktokPixel);
+                html.push('    <!-- TikTok Pixel Code -->');
+                html.push('    <script>');
+                html.push('        !function (w, d, t) {');
+                html.push('            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};');
+                html.push('            ttq.load("' + ttId + '");');
+                html.push('            ttq.page();');
+                html.push('        }(window, document, "ttq");');
+                html.push('    </' + 'script>');
+                html.push('    <!-- End TikTok Pixel Code -->');
             }
             
-            // Add Google Analytics
+            // Google Analytics
             if (googleAnalytics) {
                 const gaId = escapeHtml(googleAnalytics);
-                headSection += '    <!-- Google Analytics -->\n    <script async src="https://www.googletagmanager.com/gtag/js?id=' + gaId + '"></script>\n    <script>\n        window.dataLayer = window.dataLayer || [];\n        function gtag(){dataLayer.push(arguments);}\n        gtag("js", new Date());\n        gtag("config", "' + gaId + '");\n    </script>\n    <!-- End Google Analytics -->\n';
+                html.push('    <!-- Google Analytics -->');
+                html.push('    <script async src="https://www.googletagmanager.com/gtag/js?id=' + gaId + '"></' + 'script>');
+                html.push('    <script>');
+                html.push('        window.dataLayer = window.dataLayer || [];');
+                html.push('        function gtag(){dataLayer.push(arguments);}');
+                html.push('        gtag("js", new Date());');
+                html.push('        gtag("config", "' + gaId + '");');
+                html.push('    </' + 'script>');
+                html.push('    <!-- End Google Analytics -->');
             }
             
-            headSection += '    <style>\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        body { font-family: "Plus Jakarta Sans", sans-serif; line-height: 1.6; }\n        .hero-component { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; color: white; }\n        .hero-component h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }\n        .hero-component p { font-size: 20px; margin-bottom: 32px; opacity: 0.95; }\n        .btn-cta { display: inline-block; padding: 16px 32px; background: white; color: #ff6b4a; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }\n        .features-component { padding: 60px 20px; }\n        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto; }\n        .feature-item { text-align: center; }\n        .feature-icon { width: 64px; height: 64px; margin: 0 auto 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; }\n        .form-component { background: #f8f9fa; padding: 40px; border-radius: 16px; max-width: 500px; margin: 0 auto; }\n        .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; margin-bottom: 20px; }\n        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }\n    </style>\n</head>\n<body>\n';
+            // Styles
+            html.push('    <style>');
+            html.push('        * { margin: 0; padding: 0; box-sizing: border-box; }');
+            html.push('        body { font-family: "Plus Jakarta Sans", sans-serif; line-height: 1.6; }');
+            html.push('        .hero-component { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; color: white; }');
+            html.push('        .hero-component h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }');
+            html.push('        .hero-component p { font-size: 20px; margin-bottom: 32px; opacity: 0.95; }');
+            html.push('        .btn-cta { display: inline-block; padding: 16px 32px; background: white; color: #ff6b4a; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }');
+            html.push('        .features-component { padding: 60px 20px; }');
+            html.push('        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto; }');
+            html.push('        .feature-item { text-align: center; }');
+            html.push('        .feature-icon { width: 64px; height: 64px; margin: 0 auto 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; }');
+            html.push('        .form-component { background: #f8f9fa; padding: 40px; border-radius: 16px; max-width: 500px; margin: 0 auto; }');
+            html.push('        .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; margin-bottom: 20px; }');
+            html.push('        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }');
+            html.push('    </style>');
+            html.push('</head>');
+            html.push('<body>');
             
-            let html = headSection;
-
-            // Build body content
-            components.forEach(comp => {
+            // Componentes
+            console.log('[Pre-Landing Builder] Generando', components.length, 'componentes...');
+            components.forEach((comp, index) => {
                 const { type, data } = comp;
+                console.log('[Pre-Landing Builder] Componente', index + 1, ':', type);
                 
                 if (type === 'hero') {
-                    html += '    <div class="hero-component">\n';
-                    html += '        <h1>' + escapeHtml(data.title || 'Título') + '</h1>\n';
-                    html += '        <p>' + escapeHtml(data.subtitle || 'Subtítulo') + '</p>\n';
-                    html += '        <a href="' + escapeHtml(data.ctaLink || '#') + '" class="btn-cta">' + escapeHtml(data.cta || 'Call to Action') + '</a>\n';
-                    html += '    </div>\n';
+                    html.push('    <div class="hero-component">');
+                    html.push('        <h1>' + escapeHtml(data.title || 'Título') + '</h1>');
+                    html.push('        <p>' + escapeHtml(data.subtitle || 'Subtítulo') + '</p>');
+                    html.push('        <a href="' + escapeHtml(data.ctaLink || '#') + '" class="btn-cta">' + escapeHtml(data.cta || 'Call to Action') + '</a>');
+                    html.push('    </div>');
                 } else if (type === 'features') {
-                    html += '    <div class="features-component">\n';
-                    html += '        <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">' + escapeHtml(data.title || 'Características') + '</h2>\n';
-                    html += '        <div class="features-grid">\n';
+                    html.push('    <div class="features-component">');
+                    html.push('        <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">' + escapeHtml(data.title || 'Características') + '</h2>');
+                    html.push('        <div class="features-grid">');
                     (data.items || []).forEach(item => {
-                        html += '            <div class="feature-item">\n';
-                        html += '                <div class="feature-icon"><i class="' + escapeHtml(item.icon || 'fas fa-star') + '"></i></div>\n';
-                        html += '                <h3>' + escapeHtml(item.title || 'Título') + '</h3>\n';
-                        html += '                <p>' + escapeHtml(item.text || 'Descripción') + '</p>\n';
-                        html += '            </div>\n';
+                        html.push('            <div class="feature-item">');
+                        html.push('                <div class="feature-icon"><i class="' + escapeHtml(item.icon || 'fas fa-star') + '"></i></div>');
+                        html.push('                <h3>' + escapeHtml(item.title || 'Título') + '</h3>');
+                        html.push('                <p>' + escapeHtml(item.text || 'Descripción') + '</p>');
+                        html.push('            </div>');
                     });
-                    html += '        </div>\n';
-                    html += '    </div>\n';
+                    html.push('        </div>');
+                    html.push('    </div>');
                 } else if (type === 'form') {
-                    html += '    <div class="form-component">\n';
-                    html += '        <h2>' + escapeHtml(data.title || 'Formulario') + '</h2>\n';
-                    html += '        <p>' + escapeHtml(data.subtitle || 'Déjanos tu información') + '</p>\n';
-                    html += '        <form>\n';
-                    html += '            <input type="text" class="form-input" placeholder="Nombre" required>\n';
-                    html += '            <input type="email" class="form-input" placeholder="Email" required>\n';
-                    html += '            <button type="submit" class="btn-cta" style="width: 100%;">' + escapeHtml(data.button || 'Enviar') + '</button>\n';
-                    html += '        </form>\n';
-                    html += '    </div>\n';
+                    html.push('    <div class="form-component">');
+                    html.push('        <h2>' + escapeHtml(data.title || 'Formulario') + '</h2>');
+                    html.push('        <p>' + escapeHtml(data.subtitle || 'Déjanos tu información') + '</p>');
+                    html.push('        <form>');
+                    html.push('            <input type="text" class="form-input" placeholder="Nombre" required>');
+                    html.push('            <input type="email" class="form-input" placeholder="Email" required>');
+                    html.push('            <button type="submit" class="btn-cta" style="width: 100%;">' + escapeHtml(data.button || 'Enviar') + '</button>');
+                    html.push('        </form>');
+                    html.push('    </div>');
                 }
             });
-
-            // Build tracking script
-            let trackingScript = '    <script>\n        // Track form submissions\n        document.querySelectorAll("form").forEach(form => {\n            form.addEventListener("submit", function(e) {\n                e.preventDefault();\n';
             
-            if (facebookPixel) {
-                trackingScript += '                if(typeof fbq !== "undefined") fbq("track", "Lead");\n';
-            }
-            if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
-                trackingScript += '                if(typeof ttq !== "undefined") ttq.track("CompleteRegistration");\n';
-            }
-            if (googleAnalytics) {
-                trackingScript += '                if(typeof gtag !== "undefined") gtag("event", "form_submit", {event_category: "engagement"});\n';
-            }
-            
-            trackingScript += '                alert("¡Gracias! Te contactaremos pronto.");\n            });\n        });\n        \n        // Track CTA clicks\n        document.querySelectorAll(".btn-cta").forEach(btn => {\n            btn.addEventListener("click", function() {\n';
-            
-            if (facebookPixel) {
-                trackingScript += '                if(typeof fbq !== "undefined") fbq("track", "InitiateCheckout");\n';
-            }
-            if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
-                trackingScript += '                if(typeof ttq !== "undefined") ttq.track("ClickButton");\n';
-            }
-            if (googleAnalytics) {
-                trackingScript += '                if(typeof gtag !== "undefined") gtag("event", "cta_click", {event_category: "engagement"});\n';
+            // Tracking script
+            if (facebookPixel || tiktokPixel || googleAnalytics) {
+                html.push('    <script>');
+                html.push('        document.querySelectorAll("form").forEach(function(form) {');
+                html.push('            form.addEventListener("submit", function(e) {');
+                html.push('                e.preventDefault();');
+                
+                if (facebookPixel) {
+                    html.push('                if(typeof fbq !== "undefined") fbq("track", "Lead");');
+                }
+                if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
+                    html.push('                if(typeof ttq !== "undefined") ttq.track("CompleteRegistration");');
+                }
+                if (googleAnalytics) {
+                    html.push('                if(typeof gtag !== "undefined") gtag("event", "form_submit", {event_category: "engagement"});');
+                }
+                
+                html.push('                alert("Gracias por tu mensaje");');
+                html.push('            });');
+                html.push('        });');
+                html.push('    </' + 'script>');
             }
             
-            trackingScript += '            });\n        });\n    </script>\n</body>\n</html>';
+            html.push('</body>');
+            html.push('</html>');
             
-            html += trackingScript;
+            const finalHtml = html.join('\n');
+            console.log('[Pre-Landing Builder] HTML generado exitosamente!');
+            console.log('[Pre-Landing Builder] Total líneas:', html.length);
+            console.log('[Pre-Landing Builder] Total caracteres:', finalHtml.length);
             
-            console.log('[Pre-Landing Builder] HTML generado exitosamente, longitud:', html.length);
-            return html;
+            return finalHtml;
         }
 
         function copyCode() {
