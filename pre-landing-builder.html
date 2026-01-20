@@ -306,6 +306,8 @@
             margin-bottom: 20px;
             padding-bottom: 16px;
             border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .device-toggle {
@@ -718,10 +720,18 @@
             background: white;
             border-radius: 20px;
             padding: 32px;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
-            max-height: 80vh;
+            max-height: 85vh;
             overflow-y: auto;
+        }
+        
+        .property-group small {
+            display: block;
+            margin-top: 6px;
+            color: var(--text-medium);
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .modal-header {
@@ -758,24 +768,37 @@
             margin-bottom: 20px;
             max-height: 400px;
             overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .btn-copy {
             width: 100%;
-            padding: 14px;
-            background: var(--primary-gradient);
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #10b981 0%, #0ea5e9 100%);
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 16px;
+            border-radius: 12px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
             margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-copy:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-copy:active {
+            transform: translateY(0);
         }
 
         /* Responsive */
@@ -988,20 +1011,23 @@
                 <!-- Preview Area -->
                 <div class="preview-area">
                     <div class="preview-toolbar">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
+                                <span style="font-size: 13px; color: var(--text-medium); font-weight: 600;">Actualización automática activa</span>
+                            </div>
+                        </div>
                         <div class="device-toggle">
-                            <button class="device-btn active" data-device="desktop">
-                                <i class="fas fa-desktop"></i> Desktop
-                            </button>
                             <button class="device-btn" data-device="mobile">
-                                <i class="fas fa-mobile-alt"></i> Mobile
+                                <i class="fas fa-mobile-alt"></i> Móvil
+                            </button>
+                            <button class="device-btn active" data-device="desktop">
+                                <i class="fas fa-laptop"></i> Escritorio
                             </button>
                         </div>
                         <div class="preview-actions">
-                            <button class="btn-action btn-preview" id="previewBtn">
-                                <i class="fas fa-eye"></i> Vista Previa
-                            </button>
                             <button class="btn-action btn-export" id="exportBtn">
-                                <i class="fas fa-download"></i> Exportar
+                                <i class="fas fa-code"></i> Exportar
                             </button>
                         </div>
                     </div>
@@ -1031,17 +1057,23 @@
     <div class="modal" id="exportModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Exportar Landing Page</h2>
+                <h2 style="display: flex; align-items: center; gap: 8px;">
+                    <span style="color: var(--primary);">Exportar</span>
+                    <span style="color: var(--secondary);">Landing Page</span>
+                </h2>
                 <button class="modal-close" onclick="closeExportModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             <div class="property-group">
-                <label class="property-label">Código HTML</label>
-                <div class="code-preview" id="codePreview"></div>
-                <button class="btn-copy" onclick="copyCode()">
-                    <i class="fas fa-copy"></i> Copiar Código
-                </button>
+                <label class="property-label" style="color: var(--primary); font-size: 14px;">URL de Destino Final</label>
+                <input type="url" class="property-input" id="destinationUrl" placeholder="https://ejemplo.com/oferta-final" required style="font-size: 15px; padding: 14px 16px;">
+                <small>URL a la que se redirigirá después del tiempo de espera</small>
+            </div>
+            <div class="property-group">
+                <label class="property-label" style="color: var(--primary); font-size: 14px;">Segundos de Espera (1-30)</label>
+                <input type="number" class="property-input" id="waitSeconds" min="1" max="30" value="5" placeholder="5" style="font-size: 15px; padding: 14px 16px;">
+                <small>Tiempo en segundos antes de redirigir automáticamente</small>
             </div>
             <div class="property-group">
                 <label class="property-label">Píxel de Facebook (Opcional)</label>
@@ -1054,6 +1086,16 @@
             <div class="property-group">
                 <label class="property-label">Google Analytics (Opcional)</label>
                 <input type="text" class="property-input" id="googleAnalytics" placeholder="Ej: G-XXXXXXXXXX">
+            </div>
+            <div class="property-group" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--border);">
+                <label class="property-label" style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-code" style="color: var(--primary);"></i>
+                    Código HTML Generado
+                </label>
+                <div class="code-preview" id="codePreview" style="min-height: 200px; font-size: 12px;">// Por favor, ingresa la URL de Destino Final.</div>
+                <button class="btn-copy" onclick="copyCode()" style="margin-top: 16px;">
+                    <i class="fas fa-copy"></i> COPIAR CÓDIGO HTML
+                </button>
             </div>
         </div>
     </div>
@@ -1201,7 +1243,7 @@
             return defaults[type] || {};
         }
 
-        // Render Preview
+            // Render Preview
         function renderPreview() {
             console.log('[Pre-Landing Builder] Renderizando preview, componentes:', components.length);
             const previewContent = document.getElementById('previewContent');
@@ -1242,6 +1284,9 @@
                     selectComponent(this.dataset.componentId);
                 });
             });
+            
+            // Actualizar vista previa en vivo
+            updateLivePreview();
         }
 
         function escapeHtml(text) {
@@ -1508,6 +1553,12 @@
                         alert('Agrega al menos un componente para ver la vista previa');
                         return;
                     }
+                    const destinationUrl = document.getElementById('destinationUrl');
+                    if (!destinationUrl || !destinationUrl.value.trim()) {
+                        alert('Por favor, configura la URL de Destino Final antes de ver la vista previa');
+                        if (destinationUrl) destinationUrl.focus();
+                        return;
+                    }
                     try {
                         const htmlCode = generateHTML();
                         const newWindow = window.open('', '_blank');
@@ -1525,7 +1576,14 @@
 
         function openExportModal() {
             const modal = document.getElementById('exportModal');
-            const codePreview = document.getElementById('codePreview');
+            const destinationUrl = document.getElementById('destinationUrl');
+            
+            // Validar URL antes de abrir
+            if (!destinationUrl.value.trim()) {
+                alert('Por favor, ingresa la URL de Destino Final antes de exportar');
+                destinationUrl.focus();
+                return;
+            }
             
             updateExportCode();
             modal.classList.add('active');
@@ -1533,20 +1591,38 @@
 
         function updateExportCode() {
             const codePreview = document.getElementById('codePreview');
-            const htmlCode = generateHTML();
-            codePreview.textContent = htmlCode;
+            const destinationUrl = document.getElementById('destinationUrl');
+            
+            if (!codePreview) return;
+            
+            if (!destinationUrl || !destinationUrl.value.trim()) {
+                codePreview.textContent = '// Por favor, ingresa la URL de Destino Final.';
+                codePreview.style.color = '#9ca3af';
+                return;
+            }
+            
+            try {
+                const htmlCode = generateHTML();
+                codePreview.textContent = htmlCode;
+                codePreview.style.color = '#10b981';
+                console.log('[Pre-Landing Builder] Código actualizado en preview');
+            } catch (error) {
+                console.error('[Pre-Landing Builder] Error al generar código:', error);
+                codePreview.textContent = '// Error al generar el código. Por favor, verifica los campos.';
+                codePreview.style.color = '#dc2626';
+            }
         }
 
-        // Update code when pixel inputs change
+        // Update code when inputs change
         function initializePixelInputs() {
-            const pixelInputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics'];
-            pixelInputs.forEach(id => {
+            const inputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics', 'destinationUrl', 'waitSeconds'];
+            inputs.forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
                     input.addEventListener('input', function() {
-                        const modal = document.getElementById('exportModal');
-                        if (modal && modal.classList.contains('active')) {
-                            updateExportCode();
+                        updateExportCode();
+                        if (id === 'destinationUrl' || id === 'waitSeconds') {
+                            updateLivePreview();
                         }
                     });
                 } else {
@@ -1561,11 +1637,24 @@
 
         function generateHTML() {
             console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
+            const destinationUrl = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
+            const waitSeconds = document.getElementById('waitSeconds') ? parseInt(document.getElementById('waitSeconds').value) || 5 : 5;
             const facebookPixel = document.getElementById('facebookPixel') ? document.getElementById('facebookPixel').value.trim() : '';
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
             
-            console.log('[Pre-Landing Builder] Píxeles configurados:', {
+            // Validar URL de destino
+            if (!destinationUrl) {
+                console.warn('[Pre-Landing Builder] No hay URL de destino configurada');
+                return '<!DOCTYPE html><html><head><title>Error</title></head><body><p>Por favor, configura la URL de destino final.</p></body></html>';
+            }
+            
+            // Validar segundos de espera
+            const validWaitSeconds = Math.max(1, Math.min(30, waitSeconds));
+            
+            console.log('[Pre-Landing Builder] Configuración:', {
+                destinationUrl: destinationUrl,
+                waitSeconds: validWaitSeconds,
                 facebook: facebookPixel ? 'Sí' : 'No',
                 tiktok: tiktokPixel ? 'Sí' : 'No',
                 google: googleAnalytics ? 'Sí' : 'No'
@@ -1663,7 +1752,9 @@
                     html.push('    <div class="hero-component">');
                     html.push('        <h1>' + escapeHtml(data.title || 'Título') + '</h1>');
                     html.push('        <p>' + escapeHtml(data.subtitle || 'Subtítulo') + '</p>');
-                    html.push('        <a href="' + escapeHtml(data.ctaLink || '#') + '" class="btn-cta">' + escapeHtml(data.cta || 'Call to Action') + '</a>');
+                    // Usar URL de destino si no hay link específico o si es #
+                    const ctaLink = (data.ctaLink && data.ctaLink !== '#') ? escapeHtml(data.ctaLink) : 'javascript:void(0)';
+                    html.push('        <a href="' + ctaLink + '" class="btn-cta">' + escapeHtml(data.cta || 'Call to Action') + '</a>');
                     html.push('    </div>');
                 } else if (type === 'features') {
                     html.push('    <div class="features-component">');
@@ -1691,36 +1782,84 @@
                 }
             });
             
-            // Tracking script
-            if (facebookPixel || tiktokPixel || googleAnalytics) {
-                html.push('    <script>');
-                html.push('        document.querySelectorAll("form").forEach(function(form) {');
-                html.push('            form.addEventListener("submit", function(e) {');
-                html.push('                e.preventDefault();');
-                
-                if (facebookPixel) {
-                    html.push('                if(typeof fbq !== "undefined") fbq("track", "Lead");');
-                }
-                if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
-                    html.push('                if(typeof ttq !== "undefined") ttq.track("CompleteRegistration");');
-                }
-                if (googleAnalytics) {
-                    html.push('                if(typeof gtag !== "undefined") gtag("event", "form_submit", {event_category: "engagement"});');
-                }
-                
-                html.push('                alert("Gracias por tu mensaje");');
-                html.push('            });');
-                html.push('        });');
-                html.push('    </' + 'script>');
+            // Redirection script
+            html.push('    <script>');
+            html.push('        // Redirección automática después de espera');
+            html.push('        var destinationUrl = "' + escapeHtml(destinationUrl) + '";');
+            html.push('        var waitSeconds = ' + validWaitSeconds + ';');
+            html.push('        var countdown = waitSeconds;');
+            html.push('        ');
+            html.push('        // Mostrar countdown si hay tiempo de espera');
+            html.push('        if (waitSeconds > 0) {');
+            html.push('            var countdownElement = document.createElement("div");');
+            html.push('            countdownElement.id = "redirect-countdown";');
+            html.push('            countdownElement.style.cssText = "position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 10000; font-family: sans-serif;";');
+            html.push('            document.body.appendChild(countdownElement);');
+            html.push('            ');
+            html.push('            var interval = setInterval(function() {');
+            html.push('                countdown--;');
+            html.push('                if (countdownElement) {');
+            html.push('                    countdownElement.textContent = "Redirigiendo en " + countdown + " segundo" + (countdown !== 1 ? "s" : "") + "...";');
+            html.push('                }');
+            html.push('                if (countdown <= 0) {');
+            html.push('                    clearInterval(interval);');
+            html.push('                    window.location.href = destinationUrl;');
+            html.push('                }');
+            html.push('            }, 1000);');
+            html.push('        }');
+            html.push('        ');
+            html.push('        // Tracking script');
+            html.push('        document.querySelectorAll("form").forEach(function(form) {');
+            html.push('            form.addEventListener("submit", function(e) {');
+            html.push('                e.preventDefault();');
+            
+            if (facebookPixel) {
+                html.push('                if(typeof fbq !== "undefined") fbq("track", "Lead");');
             }
+            if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
+                html.push('                if(typeof ttq !== "undefined") ttq.track("CompleteRegistration");');
+            }
+            if (googleAnalytics) {
+                html.push('                if(typeof gtag !== "undefined") gtag("event", "form_submit", {event_category: "engagement"});');
+            }
+            
+            html.push('                alert("Gracias por tu mensaje. Redirigiendo...");');
+            html.push('                setTimeout(function() { window.location.href = destinationUrl; }, 1000);');
+            html.push('            });');
+            html.push('        });');
+            html.push('        ');
+            html.push('        // Track CTA clicks');
+            html.push('        document.querySelectorAll(".btn-cta").forEach(function(btn) {');
+            html.push('            btn.addEventListener("click", function(e) {');
+            html.push('                if (this.href && this.href !== "#" && !this.href.includes("javascript:")) {');
+            html.push('                    return; // Permitir navegación normal si tiene href válido');
+            html.push('                }');
+            html.push('                e.preventDefault();');
+            
+            if (facebookPixel) {
+                html.push('                if(typeof fbq !== "undefined") fbq("track", "InitiateCheckout");');
+            }
+            if (tiktokPixel && /^C[A-Z0-9]+$/i.test(tiktokPixel)) {
+                html.push('                if(typeof ttq !== "undefined") ttq.track("ClickButton");');
+            }
+            if (googleAnalytics) {
+                html.push('                if(typeof gtag !== "undefined") gtag("event", "cta_click", {event_category: "engagement"});');
+            }
+            
+            html.push('                window.location.href = destinationUrl;');
+            html.push('            });');
+            html.push('        });');
+            html.push('    </' + 'script>');
             
             html.push('</body>');
             html.push('</html>');
             
             const finalHtml = html.join('\n');
-            console.log('[Pre-Landing Builder] HTML generado exitosamente!');
+            console.log('[Pre-Landing Builder] ✅ HTML generado exitosamente!');
             console.log('[Pre-Landing Builder] Total líneas:', html.length);
             console.log('[Pre-Landing Builder] Total caracteres:', finalHtml.length);
+            console.log('[Pre-Landing Builder] URL destino:', destinationUrl);
+            console.log('[Pre-Landing Builder] Segundos espera:', validWaitSeconds);
             
             return finalHtml;
         }
