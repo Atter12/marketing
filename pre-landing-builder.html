@@ -309,6 +309,16 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+        
+        .preview-toolbar .property-input {
+            border: 2px solid var(--border);
+            transition: all 0.3s;
+        }
+        
+        .preview-toolbar .property-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
 
         .device-toggle {
             display: flex;
@@ -855,6 +865,25 @@
                 flex-wrap: wrap;
                 gap: 12px;
             }
+            
+            .preview-toolbar > div:nth-child(2) {
+                width: 100%;
+                order: -1;
+                margin-bottom: 12px;
+            }
+            
+            .preview-toolbar > div:nth-child(2) {
+                flex-direction: column;
+            }
+            
+            .preview-toolbar > div:nth-child(2) > div {
+                width: 100%;
+            }
+            
+            .preview-toolbar > div:nth-child(2) input {
+                width: 100%;
+                margin-bottom: 8px;
+            }
 
             .preview-actions {
                 width: 100%;
@@ -1011,10 +1040,20 @@
                 <!-- Preview Area -->
                 <div class="preview-area">
                     <div class="preview-toolbar">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
                                 <span style="font-size: 13px; color: var(--text-medium); font-weight: 600;">Actualización automática activa</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 600px;">
+                            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">URL Destino</label>
+                                <input type="url" id="destinationUrlMain" class="property-input" placeholder="https://ejemplo.com/oferta-final" style="font-size: 13px; padding: 10px 14px; margin: 0;">
+                            </div>
+                            <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Seg (1-30)</label>
+                                <input type="number" id="waitSecondsMain" class="property-input" min="1" max="30" value="5" placeholder="5" style="font-size: 13px; padding: 10px 14px; width: 80px; margin: 0;">
                             </div>
                         </div>
                         <div class="device-toggle">
@@ -1553,10 +1592,17 @@
                         alert('Agrega al menos un componente para ver la vista previa');
                         return;
                     }
-                    const destinationUrl = document.getElementById('destinationUrl');
-                    if (!destinationUrl || !destinationUrl.value.trim()) {
+                    const destinationUrlMain = document.getElementById('destinationUrlMain');
+                    const destinationUrlModal = document.getElementById('destinationUrl');
+                    const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
+                    
+                    if (!urlValue) {
                         alert('Por favor, configura la URL de Destino Final antes de ver la vista previa');
-                        if (destinationUrl) destinationUrl.focus();
+                        if (destinationUrlMain) {
+                            destinationUrlMain.focus();
+                        } else if (destinationUrlModal) {
+                            destinationUrlModal.focus();
+                        }
                         return;
                     }
                     try {
@@ -1576,12 +1622,29 @@
 
         function openExportModal() {
             const modal = document.getElementById('exportModal');
-            const destinationUrl = document.getElementById('destinationUrl');
+            const destinationUrlMain = document.getElementById('destinationUrlMain');
+            const destinationUrlModal = document.getElementById('destinationUrl');
+            
+            // Sincronizar valores del campo principal al modal
+            if (destinationUrlMain && destinationUrlModal) {
+                destinationUrlModal.value = destinationUrlMain.value;
+            }
+            
+            const waitSecondsMain = document.getElementById('waitSecondsMain');
+            const waitSecondsModal = document.getElementById('waitSeconds');
+            if (waitSecondsMain && waitSecondsModal) {
+                waitSecondsModal.value = waitSecondsMain.value;
+            }
             
             // Validar URL antes de abrir
-            if (!destinationUrl.value.trim()) {
+            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
+            if (!urlValue) {
                 alert('Por favor, ingresa la URL de Destino Final antes de exportar');
-                destinationUrl.focus();
+                if (destinationUrlMain) {
+                    destinationUrlMain.focus();
+                } else if (destinationUrlModal) {
+                    destinationUrlModal.focus();
+                }
                 return;
             }
             
@@ -1591,11 +1654,13 @@
 
         function updateExportCode() {
             const codePreview = document.getElementById('codePreview');
-            const destinationUrl = document.getElementById('destinationUrl');
+            const destinationUrlMain = document.getElementById('destinationUrlMain');
+            const destinationUrlModal = document.getElementById('destinationUrl');
+            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
             
             if (!codePreview) return;
             
-            if (!destinationUrl || !destinationUrl.value.trim()) {
+            if (!urlValue) {
                 codePreview.textContent = '// Por favor, ingresa la URL de Destino Final.';
                 codePreview.style.color = '#9ca3af';
                 return;
@@ -1613,15 +1678,49 @@
             }
         }
 
+        // Sincronizar campos principales con modal
+        function syncMainFields() {
+            const mainUrl = document.getElementById('destinationUrlMain');
+            const mainWait = document.getElementById('waitSecondsMain');
+            const modalUrl = document.getElementById('destinationUrl');
+            const modalWait = document.getElementById('waitSeconds');
+            
+            if (mainUrl && modalUrl) {
+                mainUrl.addEventListener('input', function() {
+                    modalUrl.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+                modalUrl.addEventListener('input', function() {
+                    mainUrl.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+            }
+            
+            if (mainWait && modalWait) {
+                mainWait.addEventListener('input', function() {
+                    modalWait.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+                modalWait.addEventListener('input', function() {
+                    mainWait.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+            }
+        }
+        
         // Update code when inputs change
         function initializePixelInputs() {
-            const inputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics', 'destinationUrl', 'waitSeconds'];
+            const inputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics', 'destinationUrl', 'waitSeconds', 'destinationUrlMain', 'waitSecondsMain'];
             inputs.forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
                     input.addEventListener('input', function() {
                         updateExportCode();
-                        if (id === 'destinationUrl' || id === 'waitSeconds') {
+                        if (id === 'destinationUrl' || id === 'waitSeconds' || id === 'destinationUrlMain' || id === 'waitSecondsMain') {
                             updateLivePreview();
                         }
                     });
@@ -1629,6 +1728,9 @@
                     console.warn('[Pre-Landing Builder] Input no encontrado:', id);
                 }
             });
+            
+            // Sincronizar campos principales con modal
+            syncMainFields();
         }
 
         function closeExportModal() {
@@ -1637,8 +1739,15 @@
 
         function generateHTML() {
             console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
-            const destinationUrl = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
-            const waitSeconds = document.getElementById('waitSeconds') ? parseInt(document.getElementById('waitSeconds').value) || 5 : 5;
+            // Obtener URL de destino (puede estar en el campo principal o en el modal)
+            const destinationUrlMain = document.getElementById('destinationUrlMain') ? document.getElementById('destinationUrlMain').value.trim() : '';
+            const destinationUrlModal = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
+            const destinationUrl = destinationUrlMain || destinationUrlModal;
+            
+            // Obtener segundos de espera
+            const waitSecondsMain = document.getElementById('waitSecondsMain') ? parseInt(document.getElementById('waitSecondsMain').value) || 5 : 5;
+            const waitSecondsModal = document.getElementById('waitSeconds') ? parseInt(document.getElementById('waitSeconds').value) || 5 : 5;
+            const waitSeconds = waitSecondsMain || waitSecondsModal;
             const facebookPixel = document.getElementById('facebookPixel') ? document.getElementById('facebookPixel').value.trim() : '';
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
