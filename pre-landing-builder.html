@@ -165,8 +165,8 @@
             display: grid;
             grid-template-columns: 280px 1fr 320px;
             gap: 24px;
-            height: calc(100vh - 300px);
-            min-height: 600px;
+            min-height: calc(100vh - 250px);
+            max-height: calc(100vh - 250px);
         }
 
         /* Sidebar - Templates */
@@ -383,6 +383,11 @@
             position: relative;
         }
 
+        .preview-content-wrapper {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
         .preview-content.mobile {
             max-width: 375px;
             margin: 0 auto;
@@ -503,11 +508,15 @@
         /* Landing Page Components */
         .landing-component {
             position: relative;
-            margin-bottom: 24px;
-            padding: 16px;
+            margin-bottom: 32px;
+            padding: 0;
             border: 2px dashed transparent;
             border-radius: 12px;
             transition: all 0.2s;
+        }
+
+        .landing-component:last-child {
+            margin-bottom: 0;
         }
 
         .landing-component:hover {
@@ -527,6 +536,7 @@
             gap: 4px;
             opacity: 0;
             transition: opacity 0.2s;
+            z-index: 10;
         }
 
         .landing-component:hover .component-controls,
@@ -569,6 +579,8 @@
             background: var(--primary-gradient);
             border-radius: 16px;
             color: white;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .hero-component h1 {
@@ -604,6 +616,8 @@
         /* Features Component */
         .features-component {
             padding: 60px 20px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .features-grid {
@@ -647,6 +661,8 @@
             border-radius: 16px;
             max-width: 500px;
             margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .form-component h2 {
@@ -769,10 +785,28 @@
             }
         }
 
+        .mobile-toggle {
+            display: none;
+            padding: 12px 20px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+
         @media (max-width: 968px) {
             .builder-container {
                 grid-template-columns: 1fr;
-                height: auto;
+                min-height: auto;
+                max-height: none;
+            }
+
+            .mobile-toggle {
+                display: block;
             }
 
             .templates-sidebar,
@@ -791,6 +825,21 @@
                 z-index: 200;
                 height: 100vh;
                 overflow-y: auto;
+                background: white;
+            }
+
+            .preview-toolbar {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .preview-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .btn-action {
+                flex: 1;
             }
         }
 
@@ -957,10 +1006,12 @@
                         </div>
                     </div>
                     <div class="preview-content desktop" id="previewContent">
-                        <div class="empty-state">
-                            <i class="fas fa-mouse-pointer"></i>
-                            <h3>Selecciona un Template</h3>
-                            <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                        <div class="preview-content-wrapper">
+                            <div class="empty-state">
+                                <i class="fas fa-mouse-pointer"></i>
+                                <h3>Selecciona un Template</h3>
+                                <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1142,19 +1193,22 @@
             
             if (components.length === 0) {
                 previewContent.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-mouse-pointer"></i>
-                        <h3>Selecciona un Template</h3>
-                        <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                    <div class="preview-content-wrapper">
+                        <div class="empty-state">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <h3>Selecciona un Template</h3>
+                            <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
-            let html = '';
+            let html = '<div class="preview-content-wrapper">';
             components.forEach(comp => {
                 html += renderComponent(comp);
             });
+            html += '</div>';
             
             previewContent.innerHTML = html;
             
@@ -1167,12 +1221,19 @@
             });
         }
 
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function renderComponent(component) {
             const { id, type, data } = component;
             
             let html = `<div class="landing-component" data-component-id="${id}">`;
             html += `<div class="component-controls">
-                <button class="btn-control" onclick="deleteComponent('${id}')">
+                <button class="btn-control delete" onclick="deleteComponent('${id}')" title="Eliminar">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>`;
@@ -1181,24 +1242,24 @@
                 case 'hero':
                     html += `
                         <div class="hero-component">
-                            <h1>${data.title || 'Título'}</h1>
-                            <p>${data.subtitle || 'Subtítulo'}</p>
-                            <a href="${data.ctaLink || '#'}" class="btn-cta">${data.cta || 'Call to Action'}</a>
+                            <h1>${escapeHtml(data.title || 'Título')}</h1>
+                            <p>${escapeHtml(data.subtitle || 'Subtítulo')}</p>
+                            <a href="${escapeHtml(data.ctaLink || '#')}" class="btn-cta">${escapeHtml(data.cta || 'Call to Action')}</a>
                         </div>
                     `;
                     break;
                 case 'features':
                     html += `
                         <div class="features-component">
-                            <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">${data.title || 'Características'}</h2>
+                            <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">${escapeHtml(data.title || 'Características')}</h2>
                             <div class="features-grid">
                                 ${(data.items || []).map(item => `
                                     <div class="feature-item">
                                         <div class="feature-icon">
-                                            <i class="${item.icon || 'fas fa-star'}"></i>
+                                            <i class="${escapeHtml(item.icon || 'fas fa-star')}"></i>
                                         </div>
-                                        <h3>${item.title || 'Título'}</h3>
-                                        <p>${item.text || 'Descripción'}</p>
+                                        <h3>${escapeHtml(item.title || 'Título')}</h3>
+                                        <p>${escapeHtml(item.text || 'Descripción')}</p>
                                     </div>
                                 `).join('')}
                             </div>
@@ -1208,16 +1269,16 @@
                 case 'form':
                     html += `
                         <div class="form-component">
-                            <h2>${data.title || 'Formulario'}</h2>
-                            <p>${data.subtitle || 'Déjanos tu información'}</p>
-                            <form>
+                            <h2>${escapeHtml(data.title || 'Formulario')}</h2>
+                            <p>${escapeHtml(data.subtitle || 'Déjanos tu información')}</p>
+                            <form onsubmit="event.preventDefault(); return false;">
                                 <div class="form-group">
                                     <input type="text" class="form-input" placeholder="Nombre" required>
                                 </div>
                                 <div class="form-group">
                                     <input type="email" class="form-input" placeholder="Email" required>
                                 </div>
-                                <button type="submit" class="btn-cta" style="width: 100%;">${data.button || 'Enviar'}</button>
+                                <button type="submit" class="btn-cta" style="width: 100%;">${escapeHtml(data.button || 'Enviar')}</button>
                             </form>
                         </div>
                     `;
@@ -1260,7 +1321,7 @@
             const { type, data } = selectedComponent;
             let html = `<div class="property-group">
                 <div class="property-label">Tipo de Componente</div>
-                <div style="padding: 12px; background: var(--bg-gray); border-radius: 10px; font-weight: 600;">${type}</div>
+                <div style="padding: 12px; background: var(--bg-gray); border-radius: 10px; font-weight: 600; text-transform: capitalize;">${type}</div>
             </div>`;
 
             // Render properties based on component type
@@ -1268,46 +1329,102 @@
                 html += `
                     <div class="property-group">
                         <label class="property-label">Título</label>
-                        <input type="text" class="property-input" value="${data.title || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.title || '')}" 
                                onchange="updateComponentData('title', this.value)">
                     </div>
                     <div class="property-group">
                         <label class="property-label">Subtítulo</label>
-                        <input type="text" class="property-input" value="${data.subtitle || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.subtitle || '')}" 
                                onchange="updateComponentData('subtitle', this.value)">
                     </div>
                     <div class="property-group">
                         <label class="property-label">Texto del Botón</label>
-                        <input type="text" class="property-input" value="${data.cta || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.cta || '')}" 
                                onchange="updateComponentData('cta', this.value)">
                     </div>
                     <div class="property-group">
                         <label class="property-label">Link del Botón</label>
-                        <input type="text" class="property-input" value="${data.ctaLink || ''}" 
-                               onchange="updateComponentData('ctaLink', this.value)">
+                        <input type="text" class="property-input" value="${escapeHtml(data.ctaLink || '')}" 
+                               onchange="updateComponentData('ctaLink', this.value)" placeholder="https://...">
                     </div>
                 `;
             } else if (type === 'form') {
                 html += `
                     <div class="property-group">
                         <label class="property-label">Título</label>
-                        <input type="text" class="property-input" value="${data.title || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.title || '')}" 
                                onchange="updateComponentData('title', this.value)">
                     </div>
                     <div class="property-group">
                         <label class="property-label">Subtítulo</label>
-                        <input type="text" class="property-input" value="${data.subtitle || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.subtitle || '')}" 
                                onchange="updateComponentData('subtitle', this.value)">
                     </div>
                     <div class="property-group">
                         <label class="property-label">Texto del Botón</label>
-                        <input type="text" class="property-input" value="${data.button || ''}" 
+                        <input type="text" class="property-input" value="${escapeHtml(data.button || '')}" 
                                onchange="updateComponentData('button', this.value)">
+                    </div>
+                `;
+            } else if (type === 'features') {
+                html += `
+                    <div class="property-group">
+                        <label class="property-label">Título de la Sección</label>
+                        <input type="text" class="property-input" value="${escapeHtml(data.title || '')}" 
+                               onchange="updateComponentData('title', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Número de Items</label>
+                        <input type="number" class="property-input" min="1" max="6" value="${(data.items || []).length}" 
+                               onchange="updateFeaturesCount(this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Items de Características</label>
+                        ${(data.items || []).map((item, index) => `
+                            <div style="margin-bottom: 16px; padding: 12px; background: var(--bg-gray); border-radius: 8px;">
+                                <div style="font-size: 11px; font-weight: 700; color: var(--text-medium); margin-bottom: 8px;">Item ${index + 1}</div>
+                                <input type="text" class="property-input" style="margin-bottom: 8px;" value="${escapeHtml(item.title || '')}" 
+                                       placeholder="Título" onchange="updateFeatureItem(${index}, 'title', this.value)">
+                                <input type="text" class="property-input" value="${escapeHtml(item.text || '')}" 
+                                       placeholder="Descripción" onchange="updateFeatureItem(${index}, 'text', this.value)">
+                            </div>
+                        `).join('')}
                     </div>
                 `;
             }
 
             panel.innerHTML = html;
+        }
+
+        function updateFeaturesCount(count) {
+            if (!selectedComponent || selectedComponent.type !== 'features') return;
+            const currentItems = selectedComponent.data.items || [];
+            const newCount = parseInt(count) || 1;
+            
+            if (newCount > currentItems.length) {
+                // Add new items
+                for (let i = currentItems.length; i < newCount; i++) {
+                    currentItems.push({
+                        icon: 'fas fa-star',
+                        title: `Característica ${i + 1}`,
+                        text: 'Descripción breve'
+                    });
+                }
+            } else if (newCount < currentItems.length) {
+                // Remove items
+                selectedComponent.data.items = currentItems.slice(0, newCount);
+            }
+            
+            renderPreview();
+            renderProperties();
+        }
+
+        function updateFeatureItem(index, key, value) {
+            if (!selectedComponent || selectedComponent.type !== 'features') return;
+            if (!selectedComponent.data.items || !selectedComponent.data.items[index]) return;
+            
+            selectedComponent.data.items[index][key] = value;
+            renderPreview();
         }
 
         function updateComponentData(key, value) {
@@ -1345,18 +1462,52 @@
 
         // Export
         document.getElementById('exportBtn').addEventListener('click', function() {
+            if (components.length === 0) {
+                alert('Agrega al menos un componente antes de exportar');
+                return;
+            }
             openExportModal();
+        });
+
+        document.getElementById('previewBtn').addEventListener('click', function() {
+            if (components.length === 0) {
+                alert('Agrega al menos un componente para ver la vista previa');
+                return;
+            }
+            const htmlCode = generateHTML();
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(htmlCode);
+            newWindow.document.close();
         });
 
         function openExportModal() {
             const modal = document.getElementById('exportModal');
             const codePreview = document.getElementById('codePreview');
             
-            const htmlCode = generateHTML();
-            codePreview.textContent = htmlCode;
-            
+            updateExportCode();
             modal.classList.add('active');
         }
+
+        function updateExportCode() {
+            const codePreview = document.getElementById('codePreview');
+            const htmlCode = generateHTML();
+            codePreview.textContent = htmlCode;
+        }
+
+        // Update code when pixel inputs change
+        document.addEventListener('DOMContentLoaded', function() {
+            const pixelInputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics'];
+            pixelInputs.forEach(id => {
+                const input = document.getElementById(id);
+                if (input) {
+                    input.addEventListener('input', function() {
+                        if (document.getElementById('exportModal').classList.contains('active')) {
+                            updateExportCode();
+                        }
+                    });
+                }
+            });
+        });
 
         function closeExportModal() {
             document.getElementById('exportModal').classList.remove('active');
@@ -1496,12 +1647,19 @@
         function copyCode() {
             const code = document.getElementById('codePreview').textContent;
             navigator.clipboard.writeText(code).then(() => {
-                const btn = event.target.closest('.btn-copy');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                }, 2000);
+                const btn = event.target ? event.target.closest('.btn-copy') : document.querySelector('.btn-copy');
+                if (btn) {
+                    const originalText = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                    btn.style.background = 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.style.background = '';
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                alert('No se pudo copiar el código. Por favor, selecciónalo manualmente.');
             });
         }
 
