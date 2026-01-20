@@ -32,6 +32,14 @@
       "dest": "/facebook-ads-downloader.html"
     },
     {
+      "src": "/pre-landing-builder",
+      "dest": "/pre-landing-builder.html"
+    },
+    {
+      "src": "/pre-landing-builder.html",
+      "dest": "/pre-landing-builder.html"
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },

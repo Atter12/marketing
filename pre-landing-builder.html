@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Pre-Landing Builder | Crea Landing Pages de Alta Conversión | EcomTools</title>
+    <meta name="description" content="Crea páginas de aterrizaje de alta conversión con templates optimizados para ads. Constructor visual gratuito y sin código.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --secondary: #6366f1;
+            --accent: #10b981;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --bg-dark: #1f2937;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 40px 24px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero-section h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .hero-section h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 16px;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Builder Section */
+        .builder-section {
+            padding: 40px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .builder-container {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            gap: 24px;
+            height: calc(100vh - 300px);
+            min-height: 600px;
+        }
+
+        /* Sidebar - Templates */
+        .templates-sidebar {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .sidebar-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-title i {
+            color: var(--primary);
+            font-size: 14px;
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .template-card {
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .template-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .template-card.active {
+            border-color: var(--primary);
+            background: #fff0ed;
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 120px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .template-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .template-card p {
+            font-size: 12px;
+            color: var(--text-medium);
+        }
+
+        .component-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .component-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: move;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .component-item:hover {
+            border-color: var(--primary);
+            background: white;
+        }
+
+        .component-item i {
+            color: var(--primary);
+            width: 20px;
+        }
+
+        /* Preview Area */
+        .preview-area {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .preview-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .device-toggle {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-gray);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .device-btn {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .device-btn.active {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .preview-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-action {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-preview {
+            background: var(--bg-gray);
+            color: var(--text-dark);
+            border: 2px solid var(--border);
+        }
+
+        .btn-preview:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .btn-export {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+        }
+
+        .preview-content {
+            background: white;
+            min-height: 500px;
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            position: relative;
+        }
+
+        .preview-content.mobile {
+            max-width: 375px;
+            margin: 0 auto;
+        }
+
+        .preview-content.desktop {
+            max-width: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-medium);
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Properties Panel */
+        .properties-panel {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+
+        .properties-panel.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .properties-empty {
+            text-align: center;
+            color: var(--text-light);
+        }
+
+        .properties-empty i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .properties-empty p {
+            font-size: 14px;
+        }
+
+        .property-group {
+            margin-bottom: 24px;
+        }
+
+        .property-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .property-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .property-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .property-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .color-picker {
+            width: 60px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Landing Page Components */
+        .landing-component {
+            position: relative;
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 2px dashed transparent;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .landing-component:hover {
+            border-color: var(--primary);
+        }
+
+        .landing-component.selected {
+            border-color: var(--primary);
+            background: #fff0ed;
+        }
+
+        .component-controls {
+            position: absolute;
+            top: -12px;
+            right: 8px;
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .landing-component:hover .component-controls,
+        .landing-component.selected .component-controls {
+            opacity: 1;
+        }
+
+        .btn-control {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-control:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .btn-control.delete {
+            background: #dc2626;
+        }
+
+        .btn-control.delete:hover {
+            background: #b91c1c;
+        }
+
+        /* Hero Component */
+        .hero-component {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--primary-gradient);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .hero-component h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .hero-component p {
+            font-size: 20px;
+            margin-bottom: 32px;
+            opacity: 0.95;
+        }
+
+        .btn-cta {
+            display: inline-block;
+            padding: 16px 32px;
+            background: white;
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Features Component */
+        .features-component {
+            padding: 60px 20px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+        }
+
+        .feature-item {
+            text-align: center;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: var(--primary-gradient);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 28px;
+        }
+
+        .feature-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-item p {
+            font-size: 16px;
+            color: var(--text-medium);
+        }
+
+        /* Form Component */
+        .form-component {
+            background: var(--bg-gray);
+            padding: 40px;
+            border-radius: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .form-component h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .form-component p {
+            text-align: center;
+            color: var(--text-medium);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 15px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Export Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-gray);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-medium);
+        }
+
+        .code-preview {
+            background: var(--bg-dark);
+            color: #10b981;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .btn-copy {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 12px;
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .builder-container {
+                grid-template-columns: 240px 1fr 280px;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .builder-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .templates-sidebar,
+            .properties-panel {
+                display: none;
+            }
+
+            .templates-sidebar.mobile-active,
+            .properties-panel.mobile-active {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                height: 100vh;
+                overflow-y: auto;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            .hero-section {
+                padding: 30px 16px;
+            }
+
+            .builder-section {
+                padding: 20px 16px 50px;
+            }
+
+            .preview-content {
+                padding: 20px;
+            }
+
+            .hero-component h1 {
+                font-size: 32px;
+            }
+
+            .hero-component p {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver a herramientas
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-rocket"></i>
+                Constructor Visual • Sin Código
+            </div>
+            <h1>Crea <span>Landing Pages</span> de Alta Conversión</h1>
+            <p>Diseña páginas de aterrizaje optimizadas para ads con nuestro editor visual. Templates profesionales listos para usar.</p>
+        </div>
+    </section>
+
+    <!-- Builder Section -->
+    <section class="builder-section">
+        <div class="container">
+            <div class="builder-container">
+                <!-- Templates Sidebar -->
+                <div class="templates-sidebar" id="templatesSidebar">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">
+                            <i class="fas fa-layer-group"></i>
+                            Templates
+                        </div>
+                        <div class="template-grid" id="templateGrid">
+                            <div class="template-card" data-template="ecommerce">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);">
+                                    <i class="fas fa-shopping-cart" style="color: white;"></i>
+                                </div>
+                                <h4>E-commerce</h4>
+                                <p>Producto destacado</p>
+                            </div>
+                            <div class="template-card" data-template="lead">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                                    <i class="fas fa-envelope" style="color: white;"></i>
+                                </div>
+                                <h4>Lead Magnet</h4>
+                                <p>Captura de email</p>
+                            </div>
+                            <div class="template-card" data-template="offer">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);">
+                                    <i class="fas fa-tag" style="color: white;"></i>
+                                </div>
+                                <h4>Oferta Especial</h4>
+                                <p>Descuento/Promo</p>
+                            </div>
+                            <div class="template-card" data-template="webinar">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);">
+                                    <i class="fas fa-video" style="color: white;"></i>
+                                </div>
+                                <h4>Webinar</h4>
+                                <p>Evento/Registro</p>
+                            </div>
+                            <div class="template-card" data-template="minimal">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);">
+                                    <i class="fas fa-bullseye" style="color: white;"></i>
+                                </div>
+                                <h4>Minimalista</h4>
+                                <p>CTA Simple</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">
+                            <i class="fas fa-puzzle-piece"></i>
+                            Componentes
+                        </div>
+                        <div class="component-list">
+                            <div class="component-item" data-component="hero">
+                                <i class="fas fa-heading"></i>
+                                <span>Hero Section</span>
+                            </div>
+                            <div class="component-item" data-component="features">
+                                <i class="fas fa-star"></i>
+                                <span>Features</span>
+                            </div>
+                            <div class="component-item" data-component="form">
+                                <i class="fas fa-envelope"></i>
+                                <span>Formulario</span>
+                            </div>
+                            <div class="component-item" data-component="testimonial">
+                                <i class="fas fa-quote-left"></i>
+                                <span>Testimonial</span>
+                            </div>
+                            <div class="component-item" data-component="pricing">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>Precios</span>
+                            </div>
+                            <div class="component-item" data-component="faq">
+                                <i class="fas fa-question-circle"></i>
+                                <span>FAQ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="preview-area">
+                    <div class="preview-toolbar">
+                        <div class="device-toggle">
+                            <button class="device-btn active" data-device="desktop">
+                                <i class="fas fa-desktop"></i> Desktop
+                            </button>
+                            <button class="device-btn" data-device="mobile">
+                                <i class="fas fa-mobile-alt"></i> Mobile
+                            </button>
+                        </div>
+                        <div class="preview-actions">
+                            <button class="btn-action btn-preview" id="previewBtn">
+                                <i class="fas fa-eye"></i> Vista Previa
+                            </button>
+                            <button class="btn-action btn-export" id="exportBtn">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="preview-content desktop" id="previewContent">
+                        <div class="empty-state">
+                            <i class="fas fa-mouse-pointer"></i>
+                            <h3>Selecciona un Template</h3>
+                            <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Properties Panel -->
+                <div class="properties-panel empty" id="propertiesPanel">
+                    <div class="properties-empty">
+                        <i class="fas fa-sliders-h"></i>
+                        <p>Selecciona un elemento para editar sus propiedades</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Modal -->
+    <div class="modal" id="exportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Exportar Landing Page</h2>
+                <button class="modal-close" onclick="closeExportModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Código HTML</label>
+                <div class="code-preview" id="codePreview"></div>
+                <button class="btn-copy" onclick="copyCode()">
+                    <i class="fas fa-copy"></i> Copiar Código
+                </button>
+            </div>
+            <div class="property-group">
+                <label class="property-label">Píxel de Facebook (Opcional)</label>
+                <input type="text" class="property-input" id="facebookPixel" placeholder="Ej: 123456789012345">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Píxel de TikTok (Opcional)</label>
+                <input type="text" class="property-input" id="tiktokPixel" placeholder="Ej: C1234567890ABCDEF">
+            </div>
+            <div class="property-group">
+                <label class="property-label">Google Analytics (Opcional)</label>
+                <input type="text" class="property-input" id="googleAnalytics" placeholder="Ej: G-XXXXXXXXXX">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State Management
+        let currentTemplate = null;
+        let selectedComponent = null;
+        let components = [];
+        let deviceView = 'desktop';
+
+        // Templates Data
+        const templates = {
+            ecommerce: {
+                name: 'E-commerce',
+                components: [
+                    { type: 'hero', data: { title: 'Producto Destacado', subtitle: 'La mejor solución para tu negocio', cta: 'Comprar Ahora', ctaLink: '#' } },
+                    { type: 'features', data: { title: 'Características', items: [
+                        { icon: 'fas fa-shipping-fast', title: 'Envío Gratis', text: 'En todos los pedidos' },
+                        { icon: 'fas fa-shield-alt', title: 'Garantía', text: '30 días de garantía' },
+                        { icon: 'fas fa-headset', title: 'Soporte 24/7', text: 'Atención al cliente' }
+                    ]} },
+                    { type: 'form', data: { title: 'Contacta con Nosotros', subtitle: 'Déjanos tu email y te contactaremos', button: 'Enviar' } }
+                ]
+            },
+            lead: {
+                name: 'Lead Magnet',
+                components: [
+                    { type: 'hero', data: { title: 'Descarga Gratis', subtitle: 'Obtén nuestra guía exclusiva ahora mismo', cta: 'Descargar', ctaLink: '#' } },
+                    { type: 'form', data: { title: 'Ingresa tu Email', subtitle: 'Te enviaremos el contenido directamente a tu correo', button: 'Obtener Ahora' } }
+                ]
+            },
+            offer: {
+                name: 'Oferta Especial',
+                components: [
+                    { type: 'hero', data: { title: '50% OFF', subtitle: 'Oferta limitada por tiempo', cta: 'Aprovechar Oferta', ctaLink: '#' } },
+                    { type: 'features', data: { title: 'Beneficios', items: [
+                        { icon: 'fas fa-check', title: 'Ahorra 50%', text: 'En tu primera compra' },
+                        { icon: 'fas fa-gift', title: 'Regalo Incluido', text: 'Con tu pedido' }
+                    ]} }
+                ]
+            },
+            webinar: {
+                name: 'Webinar',
+                components: [
+                    { type: 'hero', data: { title: 'Webinar Exclusivo', subtitle: 'Aprende las estrategias que funcionan', cta: 'Registrarse', ctaLink: '#' } },
+                    { type: 'form', data: { title: 'Regístrate Ahora', subtitle: 'Espacios limitados', button: 'Reservar Mi Lugar' } }
+                ]
+            },
+            minimal: {
+                name: 'Minimalista',
+                components: [
+                    { type: 'hero', data: { title: 'Transforma tu Negocio', subtitle: 'La solución que estabas buscando', cta: 'Comenzar', ctaLink: '#' } }
+                ]
+            }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTemplates();
+            initializeComponents();
+            initializeDeviceToggle();
+        });
+
+        // Template Selection
+        function initializeTemplates() {
+            const templateCards = document.querySelectorAll('.template-card');
+            templateCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const templateId = this.dataset.template;
+                    loadTemplate(templateId);
+                    
+                    // Update active state
+                    templateCards.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }
+
+        function loadTemplate(templateId) {
+            currentTemplate = templateId;
+            const template = templates[templateId];
+            
+            if (!template) return;
+
+            components = template.components.map((comp, index) => ({
+                id: `comp-${Date.now()}-${index}`,
+                type: comp.type,
+                data: { ...comp.data }
+            }));
+
+            renderPreview();
+        }
+
+        // Component Drag & Drop
+        function initializeComponents() {
+            const componentItems = document.querySelectorAll('.component-item');
+            componentItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const componentType = this.dataset.component;
+                    addComponent(componentType);
+                });
+            });
+        }
+
+        function addComponent(type) {
+            const defaultData = getDefaultComponentData(type);
+            const component = {
+                id: `comp-${Date.now()}`,
+                type: type,
+                data: defaultData
+            };
+            
+            components.push(component);
+            renderPreview();
+        }
+
+        function getDefaultComponentData(type) {
+            const defaults = {
+                hero: { title: 'Título Principal', subtitle: 'Subtítulo descriptivo', cta: 'Call to Action', ctaLink: '#' },
+                features: { title: 'Características', items: [
+                    { icon: 'fas fa-star', title: 'Característica 1', text: 'Descripción breve' },
+                    { icon: 'fas fa-star', title: 'Característica 2', text: 'Descripción breve' },
+                    { icon: 'fas fa-star', title: 'Característica 3', text: 'Descripción breve' }
+                ]},
+                form: { title: 'Formulario de Contacto', subtitle: 'Déjanos tu información', button: 'Enviar' },
+                testimonial: { name: 'Cliente Satisfecho', text: 'Testimonio del cliente', role: 'CEO' },
+                pricing: { title: 'Planes', plans: [] },
+                faq: { title: 'Preguntas Frecuentes', items: [] }
+            };
+            return defaults[type] || {};
+        }
+
+        // Render Preview
+        function renderPreview() {
+            const previewContent = document.getElementById('previewContent');
+            
+            if (components.length === 0) {
+                previewContent.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-mouse-pointer"></i>
+                        <h3>Selecciona un Template</h3>
+                        <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            components.forEach(comp => {
+                html += renderComponent(comp);
+            });
+            
+            previewContent.innerHTML = html;
+            
+            // Add click handlers
+            document.querySelectorAll('.landing-component').forEach(comp => {
+                comp.addEventListener('click', function(e) {
+                    if (e.target.closest('.btn-control')) return;
+                    selectComponent(this.dataset.componentId);
+                });
+            });
+        }
+
+        function renderComponent(component) {
+            const { id, type, data } = component;
+            
+            let html = `<div class="landing-component" data-component-id="${id}">`;
+            html += `<div class="component-controls">
+                <button class="btn-control" onclick="deleteComponent('${id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>`;
+
+            switch(type) {
+                case 'hero':
+                    html += `
+                        <div class="hero-component">
+                            <h1>${data.title || 'Título'}</h1>
+                            <p>${data.subtitle || 'Subtítulo'}</p>
+                            <a href="${data.ctaLink || '#'}" class="btn-cta">${data.cta || 'Call to Action'}</a>
+                        </div>
+                    `;
+                    break;
+                case 'features':
+                    html += `
+                        <div class="features-component">
+                            <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">${data.title || 'Características'}</h2>
+                            <div class="features-grid">
+                                ${(data.items || []).map(item => `
+                                    <div class="feature-item">
+                                        <div class="feature-icon">
+                                            <i class="${item.icon || 'fas fa-star'}"></i>
+                                        </div>
+                                        <h3>${item.title || 'Título'}</h3>
+                                        <p>${item.text || 'Descripción'}</p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'form':
+                    html += `
+                        <div class="form-component">
+                            <h2>${data.title || 'Formulario'}</h2>
+                            <p>${data.subtitle || 'Déjanos tu información'}</p>
+                            <form>
+                                <div class="form-group">
+                                    <input type="text" class="form-input" placeholder="Nombre" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="email" class="form-input" placeholder="Email" required>
+                                </div>
+                                <button type="submit" class="btn-cta" style="width: 100%;">${data.button || 'Enviar'}</button>
+                            </form>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+
+        // Component Selection
+        function selectComponent(componentId) {
+            selectedComponent = components.find(c => c.id === componentId);
+            
+            // Update UI
+            document.querySelectorAll('.landing-component').forEach(comp => {
+                comp.classList.remove('selected');
+            });
+            document.querySelector(`[data-component-id="${componentId}"]`).classList.add('selected');
+            
+            renderProperties();
+        }
+
+        function renderProperties() {
+            const panel = document.getElementById('propertiesPanel');
+            
+            if (!selectedComponent) {
+                panel.innerHTML = `
+                    <div class="properties-empty">
+                        <i class="fas fa-sliders-h"></i>
+                        <p>Selecciona un elemento para editar sus propiedades</p>
+                    </div>
+                `;
+                panel.classList.add('empty');
+                return;
+            }
+            
+            panel.classList.remove('empty');
+            
+            const { type, data } = selectedComponent;
+            let html = `<div class="property-group">
+                <div class="property-label">Tipo de Componente</div>
+                <div style="padding: 12px; background: var(--bg-gray); border-radius: 10px; font-weight: 600;">${type}</div>
+            </div>`;
+
+            // Render properties based on component type
+            if (type === 'hero') {
+                html += `
+                    <div class="property-group">
+                        <label class="property-label">Título</label>
+                        <input type="text" class="property-input" value="${data.title || ''}" 
+                               onchange="updateComponentData('title', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Subtítulo</label>
+                        <input type="text" class="property-input" value="${data.subtitle || ''}" 
+                               onchange="updateComponentData('subtitle', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Texto del Botón</label>
+                        <input type="text" class="property-input" value="${data.cta || ''}" 
+                               onchange="updateComponentData('cta', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Link del Botón</label>
+                        <input type="text" class="property-input" value="${data.ctaLink || ''}" 
+                               onchange="updateComponentData('ctaLink', this.value)">
+                    </div>
+                `;
+            } else if (type === 'form') {
+                html += `
+                    <div class="property-group">
+                        <label class="property-label">Título</label>
+                        <input type="text" class="property-input" value="${data.title || ''}" 
+                               onchange="updateComponentData('title', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Subtítulo</label>
+                        <input type="text" class="property-input" value="${data.subtitle || ''}" 
+                               onchange="updateComponentData('subtitle', this.value)">
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">Texto del Botón</label>
+                        <input type="text" class="property-input" value="${data.button || ''}" 
+                               onchange="updateComponentData('button', this.value)">
+                    </div>
+                `;
+            }
+
+            panel.innerHTML = html;
+        }
+
+        function updateComponentData(key, value) {
+            if (!selectedComponent) return;
+            selectedComponent.data[key] = value;
+            renderPreview();
+            selectComponent(selectedComponent.id); // Re-select to update properties
+        }
+
+        function deleteComponent(componentId) {
+            components = components.filter(c => c.id !== componentId);
+            if (selectedComponent && selectedComponent.id === componentId) {
+                selectedComponent = null;
+            }
+            renderPreview();
+            renderProperties();
+        }
+
+        // Device Toggle
+        function initializeDeviceToggle() {
+            const deviceBtns = document.querySelectorAll('.device-btn');
+            deviceBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deviceView = this.dataset.device;
+                    
+                    deviceBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const previewContent = document.getElementById('previewContent');
+                    previewContent.classList.remove('desktop', 'mobile');
+                    previewContent.classList.add(deviceView);
+                });
+            });
+        }
+
+        // Export
+        document.getElementById('exportBtn').addEventListener('click', function() {
+            openExportModal();
+        });
+
+        function openExportModal() {
+            const modal = document.getElementById('exportModal');
+            const codePreview = document.getElementById('codePreview');
+            
+            const htmlCode = generateHTML();
+            codePreview.textContent = htmlCode;
+            
+            modal.classList.add('active');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.remove('active');
+        }
+
+        function generateHTML() {
+            const facebookPixel = document.getElementById('facebookPixel').value.trim();
+            const tiktokPixel = document.getElementById('tiktokPixel').value.trim();
+            const googleAnalytics = document.getElementById('googleAnalytics').value.trim();
+            
+            let html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    ${facebookPixel ? `<!-- Facebook Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '${facebookPixel}');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=${facebookPixel}&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- End Facebook Pixel Code -->` : ''}
+    ${tiktokPixel ? `<!-- TikTok Pixel Code -->
+    <script>
+        !function (w, d, t) {
+            w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+            ttq.load('${tiktokPixel}');
+            ttq.page();
+        }(window, document, 'ttq');
+    </script>
+    <!-- End TikTok Pixel Code -->` : ''}
+    ${googleAnalytics ? `<!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${googleAnalytics}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${googleAnalytics}');
+    </script>
+    <!-- End Google Analytics -->` : ''}
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.6; }
+        .hero-component { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; color: white; }
+        .hero-component h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }
+        .hero-component p { font-size: 20px; margin-bottom: 32px; opacity: 0.95; }
+        .btn-cta { display: inline-block; padding: 16px 32px; background: white; color: #ff6b4a; border-radius: 12px; font-size: 18px; font-weight: 700; text-decoration: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .features-component { padding: 60px 20px; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; max-width: 1200px; margin: 0 auto; }
+        .feature-item { text-align: center; }
+        .feature-icon { width: 64px; height: 64px; margin: 0 auto 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; }
+        .form-component { background: #f8f9fa; padding: 40px; border-radius: 16px; max-width: 500px; margin: 0 auto; }
+        .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; margin-bottom: 20px; }
+        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }
+    </style>
+</head>
+<body>`;
+
+            components.forEach(comp => {
+                const { type, data } = comp;
+                
+                if (type === 'hero') {
+                    html += `
+    <div class="hero-component">
+        <h1>${data.title || 'Título'}</h1>
+        <p>${data.subtitle || 'Subtítulo'}</p>
+        <a href="${data.ctaLink || '#'}" class="btn-cta">${data.cta || 'Call to Action'}</a>
+    </div>`;
+                } else if (type === 'features') {
+                    html += `
+    <div class="features-component">
+        <h2 style="text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 40px;">${data.title || 'Características'}</h2>
+        <div class="features-grid">
+            ${(data.items || []).map(item => `
+            <div class="feature-item">
+                <div class="feature-icon"><i class="${item.icon || 'fas fa-star'}"></i></div>
+                <h3>${item.title || 'Título'}</h3>
+                <p>${item.text || 'Descripción'}</p>
+            </div>`).join('')}
+        </div>
+    </div>`;
+                } else if (type === 'form') {
+                    html += `
+    <div class="form-component">
+        <h2>${data.title || 'Formulario'}</h2>
+        <p>${data.subtitle || 'Déjanos tu información'}</p>
+        <form>
+            <input type="text" class="form-input" placeholder="Nombre" required>
+            <input type="email" class="form-input" placeholder="Email" required>
+            <button type="submit" class="btn-cta" style="width: 100%;">${data.button || 'Enviar'}</button>
+        </form>
+    </div>`;
+                }
+            });
+
+            html += `
+    <script>
+        // Track form submissions
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                ${facebookPixel ? `if(typeof fbq !== 'undefined') fbq('track', 'Lead');` : ''}
+                ${tiktokPixel ? `if(typeof ttq !== 'undefined') ttq.track('CompleteRegistration');` : ''}
+                ${googleAnalytics ? `if(typeof gtag !== 'undefined') gtag('event', 'form_submit', {'event_category': 'engagement'});` : ''}
+                alert('¡Gracias! Te contactaremos pronto.');
+            });
+        });
+        
+        // Track CTA clicks
+        document.querySelectorAll('.btn-cta').forEach(btn => {
+            btn.addEventListener('click', function() {
+                ${facebookPixel ? `if(typeof fbq !== 'undefined') fbq('track', 'InitiateCheckout');` : ''}
+                ${tiktokPixel ? `if(typeof ttq !== 'undefined') ttq.track('ClickButton');` : ''}
+                ${googleAnalytics ? `if(typeof gtag !== 'undefined') gtag('event', 'cta_click', {'event_category': 'engagement'});` : ''}
+            });
+        });
+    </script>
+</body>
+</html>`;
+            
+            return html;
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codePreview').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target.closest('.btn-copy');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            });
+        }
+
+        // Close modal on outside click
+        document.getElementById('exportModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeExportModal();
+            }
+        });
+    </script>
+</body>
+</html>
