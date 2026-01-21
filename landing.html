@@ -161,54 +161,117 @@
             var locationOfferOverlay = document.getElementById("locationOfferOverlay");
             var locationElement = document.getElementById("detectedLocation");
             
-            // Intentar detectar ubicación automáticamente (usar API basada en IP como fallback)
+            // Sistema de logging para debug
+            function debugLog(message, data) {
+                console.log('[Landing] ' + message, data || '');
+            }
+            
+            // Intentar detectar ubicación automáticamente con múltiples estrategias
             function detectLocation() {
-                // Primero intentar geolocalización del navegador
+                debugLog('Iniciando detección de ubicación...');
+                
+                // Estrategia 1: API basada en IP (más confiable, funciona siempre)
+                useIPLocation();
+                
+                // Estrategia 2: Intentar geolocalización del navegador (solo si no está bloqueada)
                 if (navigator.geolocation) {
                     try {
+                        debugLog('Intentando geolocalización del navegador...');
                         navigator.geolocation.getCurrentPosition(
                             function(position) {
+                                debugLog('Geolocalización exitosa:', { lat: position.coords.latitude, lng: position.coords.longitude });
                                 fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")
                                     .then(response => response.json())
                                     .then(data => {
+                                        debugLog('Datos de geocodificación:', data);
                                         if (data.city) {
                                             detectedLocation = data.city;
                                             if (locationElement) locationElement.textContent = detectedLocation;
+                                            debugLog('Ubicación actualizada desde GPS:', detectedLocation);
                                         } else if (data.principalSubdivision) {
                                             detectedLocation = data.principalSubdivision;
                                             if (locationElement) locationElement.textContent = detectedLocation;
+                                            debugLog('Ubicación actualizada desde GPS (región):', detectedLocation);
                                         }
                                     })
-                                    .catch(function() { useIPLocation(); });
+                                    .catch(function(error) { 
+                                        debugLog('Error en geocodificación GPS:', error);
+                                    });
                             },
                             function(error) {
-                                useIPLocation();
-                            }
+                                debugLog('Error de geolocalización:', { code: error.code, message: error.message });
+                                // Ya se está usando IP location, no hacer nada
+                            },
+                            { timeout: 5000, enableHighAccuracy: false }
                         );
                     } catch (e) {
-                        useIPLocation();
+                        debugLog('Excepción en geolocalización:', e);
                     }
                 } else {
-                    useIPLocation();
+                    debugLog('Geolocalización no disponible en este navegador');
                 }
             }
             
-            // Función fallback usando API basada en IP
+            // Función usando múltiples APIs basadas en IP (fallback)
             function useIPLocation() {
-                fetch("https://ipapi.co/json/")
-                    .then(response => response.json())
+                debugLog('Usando API basada en IP...');
+                
+                // Intentar múltiples APIs en paralelo
+                const apis = [
+                    { url: 'https://ipapi.co/json/', name: 'ipapi.co' },
+                    { url: 'https://ip-api.com/json/?lang=es', name: 'ip-api.com' },
+                    { url: 'https://api.ipify.org?format=json', name: 'ipify' }
+                ];
+                
+                // Intentar primera API
+                fetch(apis[0].url)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Response not ok');
+                        return response.json();
+                    })
                     .then(data => {
+                        debugLog('Datos de ' + apis[0].name + ':', data);
                         if (data.city) {
                             detectedLocation = data.city;
                             if (locationElement) locationElement.textContent = detectedLocation;
+                            debugLog('Ubicación actualizada desde IP:', detectedLocation);
                         } else if (data.region) {
                             detectedLocation = data.region;
                             if (locationElement) locationElement.textContent = detectedLocation;
+                            debugLog('Ubicación actualizada desde IP (región):', detectedLocation);
+                        } else if (data.query) {
+                            // ip-api.com usa 'query' para la IP
+                            trySecondAPI();
                         }
                     })
-                    .catch(function() {
-                        // Si todo falla, usar ubicación por defecto
+                    .catch(function(error) {
+                        debugLog('Error con ' + apis[0].name + ':', error);
+                        trySecondAPI();
                     });
+                
+                function trySecondAPI() {
+                    fetch(apis[1].url)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Response not ok');
+                            return response.json();
+                        })
+                        .then(data => {
+                            debugLog('Datos de ' + apis[1].name + ':', data);
+                            if (data.city) {
+                                detectedLocation = data.city;
+                                if (locationElement) locationElement.textContent = detectedLocation;
+                                debugLog('Ubicación actualizada desde IP (API 2):', detectedLocation);
+                            } else if (data.regionName) {
+                                detectedLocation = data.regionName;
+                                if (locationElement) locationElement.textContent = detectedLocation;
+                                debugLog('Ubicación actualizada desde IP (región API 2):', detectedLocation);
+                            }
+                        })
+                        .catch(function(error) {
+                            debugLog('Error con ' + apis[1].name + ':', error);
+                            debugLog('Usando ubicación por defecto: Lima');
+                        });
+                }
             }
             
             // Ejecutar detección de ubicación
@@ -216,30 +279,110 @@
             
             // Función helper para redirección segura (maneja CSP e iframes sandboxed)
             function safeRedirect(url) {
-                // Si estamos en un iframe sandboxed, abrir en nueva ventana
+                debugLog('Iniciando redirección a:', url);
+                
+                // Estrategia 1: Redirección directa (más común)
                 try {
-                    // Intentar redirección normal primero
+                    debugLog('Estrategia 1: Intentando window.location.href');
                     window.location.href = url;
+                    return;
                 } catch (e) {
-                    // Si falla, intentar abrir en nueva ventana/tab
-                    try {
-                        window.open(url, "_blank");
-                    } catch (e2) {
-                        // Si también falla, intentar con replace
-                        try {
-                            window.location.replace(url);
-                        } catch (e3) {
-                            // Último recurso: crear link y hacer click
-                            var link = document.createElement("a");
-                            link.href = url;
-                            link.target = "_blank";
-                            link.rel = "noopener noreferrer";
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                        }
-                    }
+                    debugLog('Estrategia 1 falló:', e);
                 }
+                
+                // Estrategia 2: window.location.replace (no deja historial)
+                try {
+                    debugLog('Estrategia 2: Intentando window.location.replace');
+                    window.location.replace(url);
+                    return;
+                } catch (e2) {
+                    debugLog('Estrategia 2 falló:', e2);
+                }
+                
+                // Estrategia 3: window.location.assign
+                try {
+                    debugLog('Estrategia 3: Intentando window.location.assign');
+                    window.location.assign(url);
+                    return;
+                } catch (e3) {
+                    debugLog('Estrategia 3 falló:', e3);
+                }
+                
+                // Estrategia 4: window.open en nueva ventana
+                try {
+                    debugLog('Estrategia 4: Intentando window.open');
+                    var newWindow = window.open(url, "_blank", "noopener,noreferrer");
+                    if (newWindow) {
+                        debugLog('Redirección exitosa con window.open');
+                        return;
+                    }
+                } catch (e4) {
+                    debugLog('Estrategia 4 falló:', e4);
+                }
+                
+                // Estrategia 5: Crear link y hacer click programático
+                try {
+                    debugLog('Estrategia 5: Intentando crear link y hacer click');
+                    var link = document.createElement("a");
+                    link.href = url;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.style.display = "none";
+                    document.body.appendChild(link);
+                    
+                    // Intentar click
+                    if (link.click) {
+                        link.click();
+                        debugLog('Click en link ejecutado');
+                    } else {
+                        // Fallback para navegadores antiguos
+                        var event = new MouseEvent('click', {
+                            view: window,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        link.dispatchEvent(event);
+                        debugLog('Evento click disparado');
+                    }
+                    
+                    setTimeout(function() {
+                        document.body.removeChild(link);
+                    }, 100);
+                    return;
+                } catch (e5) {
+                    debugLog('Estrategia 5 falló:', e5);
+                }
+                
+                // Estrategia 6: Usar form submit
+                try {
+                    debugLog('Estrategia 6: Intentando form submit');
+                    var form = document.createElement("form");
+                    form.method = "GET";
+                    form.action = url;
+                    form.target = "_blank";
+                    document.body.appendChild(form);
+                    form.submit();
+                    setTimeout(function() {
+                        document.body.removeChild(form);
+                    }, 100);
+                    debugLog('Form submit ejecutado');
+                    return;
+                } catch (e6) {
+                    debugLog('Estrategia 6 falló:', e6);
+                }
+                
+                // Último recurso: Mostrar mensaje al usuario
+                debugLog('Todas las estrategias fallaron, mostrando mensaje al usuario');
+                alert('Por favor, haz clic en el siguiente enlace para continuar:\n\n' + url);
+                
+                // Intentar una vez más con location después del alert
+                setTimeout(function() {
+                    try {
+                        window.location.href = url;
+                    } catch (finalError) {
+                        debugLog('Redirección final falló:', finalError);
+                    }
+                }, 100);
             }
             
             // Mostrar popup automáticamente

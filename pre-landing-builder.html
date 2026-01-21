@@ -2253,7 +2253,7 @@
                         <label class="property-label" style="color: var(--primary); font-size: 14px;">URL para Compartir</label>
                         <div style="position: relative; display: flex; align-items: center; gap: 8px;">
                             <input type="text" id="shareableUrlInput" class="property-input" value="${shareableUrl}" readonly style="font-size: 14px; padding: 12px 16px; flex: 1; background: var(--bg-gray);">
-                            <button type="button" class="btn-copy" onclick="copyShareableUrl()" style="padding: 12px 20px; margin: 0; white-space: nowrap;">
+                            <button type="button" class="btn-copy" onclick="copyShareableUrl(event)" style="padding: 12px 20px; margin: 0; white-space: nowrap;">
                                 <i class="fas fa-copy"></i> Copiar
                             </button>
                         </div>
@@ -2262,9 +2262,9 @@
                         </small>
                     </div>
                     <div class="property-group" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
-                        <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">Nota Importante</label>
+                        <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">✅ Listo para Usar</label>
                         <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
-                            Necesitas crear un archivo <strong>landing.html</strong> en tu servidor que lea los parámetros de la URL y genere el popup automáticamente.
+                            El archivo <strong>landing.html</strong> ya está creado. Solo sube este archivo a tu proyecto de Vercel y comparte la URL generada. El popup se mostrará automáticamente con geolocalización.
                         </p>
                     </div>
                 </div>
@@ -2279,26 +2279,66 @@
             });
             
             // Función para copiar URL
-            window.copyShareableUrl = function() {
+            window.copyShareableUrl = function(e) {
                 const input = document.getElementById('shareableUrlInput');
+                if (!input) return;
+                
+                const urlToCopy = input.value;
+                if (!urlToCopy) {
+                    alert('No hay URL para copiar');
+                    return;
+                }
+                
+                // Intentar usar API moderna del portapapeles
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(urlToCopy).then(() => {
+                        const btn = e ? e.target.closest('.btn-copy') : document.querySelector('.btn-copy');
+                        if (btn) {
+                            const originalText = btn.innerHTML;
+                            btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                            btn.style.background = 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)';
+                            setTimeout(() => {
+                                btn.innerHTML = originalText;
+                                btn.style.background = '';
+                            }, 2000);
+                        }
+                    }).catch(err => {
+                        console.error('Error copiando con clipboard API:', err);
+                        fallbackCopyUrl(urlToCopy, e);
+                    });
+                } else {
+                    fallbackCopyUrl(urlToCopy, e);
+                }
+            };
+            
+            function fallbackCopyUrl(text, e) {
+                const input = document.getElementById('shareableUrlInput');
+                if (!input) return;
+                
                 input.select();
                 input.setSelectionRange(0, 99999);
                 try {
-                    document.execCommand('copy');
-                    const btn = event.target.closest('.btn-copy');
-                    if (btn) {
-                        const originalText = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)';
-                        setTimeout(() => {
-                            btn.innerHTML = originalText;
-                            btn.style.background = '';
-                        }, 2000);
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        const btn = e ? e.target.closest('.btn-copy') : document.querySelector('.btn-copy');
+                        if (btn) {
+                            const originalText = btn.innerHTML;
+                            btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                            btn.style.background = 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)';
+                            setTimeout(() => {
+                                btn.innerHTML = originalText;
+                                btn.style.background = '';
+                            }, 2000);
+                        }
+                    } else {
+                        throw new Error('execCommand failed');
                     }
                 } catch (err) {
-                    alert('No se pudo copiar. Por favor, selecciona y copia manualmente.');
+                    console.error('Error copiando:', err);
+                    input.select();
+                    alert('Por favor, copia la URL manualmente (Ctrl+C o Cmd+C)');
                 }
-            };
+            }
         }
 
         function generateHTML() {
@@ -2537,53 +2577,101 @@
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
                 html.push('        ');
-                html.push('        // Intentar detectar ubicación automáticamente (usar API basada en IP como fallback)');
+                html.push('        // Sistema de logging para debug');
+                html.push('        function debugLog(message, data) {');
+                html.push('            console.log("[Landing] " + message, data || "");');
+                html.push('        }');
+                html.push('        ');
+                html.push('        // Intentar detectar ubicación automáticamente con múltiples estrategias');
                 html.push('        function detectLocation() {');
-                html.push('            // Primero intentar geolocalización del navegador');
+                html.push('            debugLog("Iniciando detección de ubicación...");');
+                html.push('            ');
+                html.push('            // Estrategia 1: API basada en IP (más confiable, funciona siempre)');
+                html.push('            useIPLocation();');
+                html.push('            ');
+                html.push('            // Estrategia 2: Intentar geolocalización del navegador (solo si no está bloqueada)');
                 html.push('            if (navigator.geolocation) {');
                 html.push('                try {');
+                html.push('                    debugLog("Intentando geolocalización del navegador...");');
                 html.push('                    navigator.geolocation.getCurrentPosition(');
                 html.push('                        function(position) {');
+                html.push('                            debugLog("Geolocalización exitosa:", { lat: position.coords.latitude, lng: position.coords.longitude });');
                 html.push('                            fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")');
                 html.push('                                .then(response => response.json())');
                 html.push('                                .then(data => {');
+                html.push('                                    debugLog("Datos de geocodificación:", data);');
                 html.push('                                    if (data.city) {');
                 html.push('                                        detectedLocation = data.city;');
                 html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                        debugLog("Ubicación actualizada desde GPS:", detectedLocation);');
                 html.push('                                    } else if (data.principalSubdivision) {');
                 html.push('                                        detectedLocation = data.principalSubdivision;');
                 html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                        debugLog("Ubicación actualizada desde GPS (región):", detectedLocation);');
                 html.push('                                    }');
                 html.push('                                })');
-                html.push('                                .catch(function() { useIPLocation(); });');
+                html.push('                                .catch(function(error) { ');
+                html.push('                                    debugLog("Error en geocodificación GPS:", error);');
+                html.push('                                });');
                 html.push('                        },');
                 html.push('                        function(error) {');
-                html.push('                            useIPLocation();');
-                html.push('                        }');
+                html.push('                            debugLog("Error de geolocalización:", { code: error.code, message: error.message });');
+                html.push('                        },');
+                html.push('                        { timeout: 5000, enableHighAccuracy: false }');
                 html.push('                    );');
                 html.push('                } catch (e) {');
-                html.push('                    useIPLocation();');
+                html.push('                    debugLog("Excepción en geolocalización:", e);');
                 html.push('                }');
                 html.push('            } else {');
-                html.push('                useIPLocation();');
+                html.push('                debugLog("Geolocalización no disponible en este navegador");');
                 html.push('            }');
                 html.push('        }');
                 html.push('        ');
-                html.push('        // Función fallback usando API basada en IP');
+                html.push('        // Función usando múltiples APIs basadas en IP (fallback)');
                 html.push('        function useIPLocation() {');
+                html.push('            debugLog("Usando API basada en IP...");');
+                html.push('            ');
+                html.push('            // Intentar múltiples APIs');
                 html.push('            fetch("https://ipapi.co/json/")');
-                html.push('                .then(response => response.json())');
+                html.push('                .then(response => {');
+                html.push('                    if (!response.ok) throw new Error("Response not ok");');
+                html.push('                    return response.json();');
+                html.push('                })');
                 html.push('                .then(data => {');
+                html.push('                    debugLog("Datos de ipapi.co:", data);');
                 html.push('                    if (data.city) {');
                 html.push('                        detectedLocation = data.city;');
                 html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                        debugLog("Ubicación actualizada desde IP:", detectedLocation);');
                 html.push('                    } else if (data.region) {');
                 html.push('                        detectedLocation = data.region;');
                 html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                        debugLog("Ubicación actualizada desde IP (región):", detectedLocation);');
                 html.push('                    }');
                 html.push('                })');
-                html.push('                .catch(function() {');
-                html.push('                    // Si todo falla, usar ubicación por defecto');
+                html.push('                .catch(function(error) {');
+                html.push('                    debugLog("Error con ipapi.co, intentando ip-api.com:", error);');
+                html.push('                    // Fallback a segunda API');
+                html.push('                    fetch("https://ip-api.com/json/?lang=es")');
+                html.push('                        .then(response => {');
+                html.push('                            if (!response.ok) throw new Error("Response not ok");');
+                html.push('                            return response.json();');
+                html.push('                        })');
+                html.push('                        .then(data => {');
+                html.push('                            debugLog("Datos de ip-api.com:", data);');
+                html.push('                            if (data.city) {');
+                html.push('                                detectedLocation = data.city;');
+                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                debugLog("Ubicación actualizada desde IP (API 2):", detectedLocation);');
+                html.push('                            } else if (data.regionName) {');
+                html.push('                                detectedLocation = data.regionName;');
+                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                debugLog("Ubicación actualizada desde IP (región API 2):", detectedLocation);');
+                html.push('                            }');
+                html.push('                        })');
+                html.push('                        .catch(function() {');
+                html.push('                            debugLog("Usando ubicación por defecto: Lima");');
+                html.push('                        });');
                 html.push('                });');
                 html.push('        }');
                 html.push('        ');
@@ -2607,30 +2695,110 @@
             
             html.push('        // Función helper para redirección segura (maneja CSP e iframes sandboxed)');
             html.push('        function safeRedirect(url) {');
-            html.push('            // Si estamos en un iframe sandboxed, abrir en nueva ventana');
+            html.push('            debugLog("Iniciando redirección a:", url);');
+            html.push('            ');
+            html.push('            // Estrategia 1: Redirección directa (más común)');
             html.push('            try {');
-            html.push('                // Intentar redirección normal primero');
+            html.push('                debugLog("Estrategia 1: Intentando window.location.href");');
             html.push('                window.location.href = url;');
+            html.push('                return;');
             html.push('            } catch (e) {');
-            html.push('                // Si falla, intentar abrir en nueva ventana/tab');
-            html.push('                try {');
-            html.push('                    window.open(url, "_blank");');
-            html.push('                } catch (e2) {');
-            html.push('                    // Si también falla, intentar con replace');
-            html.push('                    try {');
-            html.push('                        window.location.replace(url);');
-            html.push('                    } catch (e3) {');
-            html.push('                        // Último recurso: crear link y hacer click');
-            html.push('                        var link = document.createElement("a");');
-            html.push('                        link.href = url;');
-            html.push('                        link.target = "_blank";');
-            html.push('                        link.rel = "noopener noreferrer";');
-            html.push('                        document.body.appendChild(link);');
-            html.push('                        link.click();');
-            html.push('                        document.body.removeChild(link);');
-            html.push('                    }');
-            html.push('                }');
+            html.push('                debugLog("Estrategia 1 falló:", e);');
             html.push('            }');
+            html.push('            ');
+            html.push('            // Estrategia 2: window.location.replace (no deja historial)');
+            html.push('            try {');
+            html.push('                debugLog("Estrategia 2: Intentando window.location.replace");');
+            html.push('                window.location.replace(url);');
+            html.push('                return;');
+            html.push('            } catch (e2) {');
+            html.push('                debugLog("Estrategia 2 falló:", e2);');
+            html.push('            }');
+            html.push('            ');
+            html.push('            // Estrategia 3: window.location.assign');
+            html.push('            try {');
+            html.push('                debugLog("Estrategia 3: Intentando window.location.assign");');
+            html.push('                window.location.assign(url);');
+            html.push('                return;');
+            html.push('            } catch (e3) {');
+            html.push('                debugLog("Estrategia 3 falló:", e3);');
+            html.push('            }');
+            html.push('            ');
+            html.push('            // Estrategia 4: window.open en nueva ventana');
+            html.push('            try {');
+            html.push('                debugLog("Estrategia 4: Intentando window.open");');
+            html.push('                var newWindow = window.open(url, "_blank", "noopener,noreferrer");');
+            html.push('                if (newWindow) {');
+            html.push('                    debugLog("Redirección exitosa con window.open");');
+            html.push('                    return;');
+            html.push('                }');
+            html.push('            } catch (e4) {');
+            html.push('                debugLog("Estrategia 4 falló:", e4);');
+            html.push('            }');
+            html.push('            ');
+            html.push('            // Estrategia 5: Crear link y hacer click programático');
+            html.push('            try {');
+            html.push('                debugLog("Estrategia 5: Intentando crear link y hacer click");');
+            html.push('                var link = document.createElement("a");');
+            html.push('                link.href = url;');
+            html.push('                link.target = "_blank";');
+            html.push('                link.rel = "noopener noreferrer";');
+            html.push('                link.style.display = "none";');
+            html.push('                document.body.appendChild(link);');
+            html.push('                ');
+            html.push('                // Intentar click');
+            html.push('                if (link.click) {');
+            html.push('                    link.click();');
+            html.push('                    debugLog("Click en link ejecutado");');
+            html.push('                } else {');
+            html.push('                    // Fallback para navegadores antiguos');
+            html.push('                    var event = new MouseEvent("click", {');
+            html.push('                        view: window,');
+            html.push('                        bubbles: true,');
+            html.push('                        cancelable: true');
+            html.push('                    });');
+            html.push('                    link.dispatchEvent(event);');
+            html.push('                    debugLog("Evento click disparado");');
+            html.push('                }');
+            html.push('                ');
+            html.push('                setTimeout(function() {');
+            html.push('                    document.body.removeChild(link);');
+            html.push('                }, 100);');
+            html.push('                return;');
+            html.push('            } catch (e5) {');
+            html.push('                debugLog("Estrategia 5 falló:", e5);');
+            html.push('            }');
+            html.push('            ');
+            html.push('            // Estrategia 6: Usar form submit');
+            html.push('            try {');
+            html.push('                debugLog("Estrategia 6: Intentando form submit");');
+            html.push('                var form = document.createElement("form");');
+            html.push('                form.method = "GET";');
+            html.push('                form.action = url;');
+            html.push('                form.target = "_blank";');
+            html.push('                document.body.appendChild(form);');
+            html.push('                form.submit();');
+            html.push('                setTimeout(function() {');
+            html.push('                    document.body.removeChild(form);');
+            html.push('                }, 100);');
+            html.push('                debugLog("Form submit ejecutado");');
+            html.push('                return;');
+            html.push('            } catch (e6) {');
+            html.push('                debugLog("Estrategia 6 falló:", e6);');
+            html.push('            }');
+            html.push('            ');
+            html.push('            // Último recurso: Mostrar mensaje al usuario');
+            html.push('            debugLog("Todas las estrategias fallaron, mostrando mensaje al usuario");');
+            html.push('            alert("Por favor, haz clic en el siguiente enlace para continuar:\\n\\n" + url);');
+            html.push('            ');
+            html.push('            // Intentar una vez más con location después del alert');
+            html.push('            setTimeout(function() {');
+            html.push('                try {');
+            html.push('                    window.location.href = url;');
+            html.push('                } catch (finalError) {');
+            html.push('                    debugLog("Redirección final falló:", finalError);');
+            html.push('                }');
+            html.push('            }, 100);');
             html.push('        }');
             html.push('        ');
             html.push('        // Redirección automática después de espera');
