@@ -926,6 +926,73 @@
         .location-offer-cta i {
             font-size: 18px;
         }
+        
+        /* Responsive para popup */
+        @media (max-width: 768px) {
+            .location-offer-preview {
+                padding: 20px 15px;
+                min-height: 300px;
+            }
+            
+            .location-offer-card {
+                padding: 30px 20px;
+                max-width: 100%;
+                border-radius: 16px;
+            }
+            
+            .location-offer-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 28px;
+                margin-bottom: 20px;
+            }
+            
+            .location-offer-title {
+                font-size: 20px;
+                line-height: 1.3;
+            }
+            
+            .location-offer-subtitle {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .location-offer-timer {
+                padding: 12px 20px;
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+            
+            .location-offer-cta {
+                padding: 16px 24px;
+                font-size: 14px;
+                gap: 8px;
+            }
+            
+            .location-offer-cta i {
+                font-size: 16px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .location-offer-preview {
+                padding: 15px 10px;
+            }
+            
+            .location-offer-card {
+                padding: 25px 15px;
+            }
+            
+            .location-offer-title {
+                font-size: 18px;
+            }
+            
+            .location-offer-cta {
+                padding: 14px 20px;
+                font-size: 13px;
+                letter-spacing: 0.5px;
+            }
+        }
 
         /* Export Modal */
         .modal {
@@ -1081,36 +1148,60 @@
             }
 
             .preview-toolbar {
-                flex-wrap: wrap;
+                flex-direction: column;
                 gap: 12px;
             }
             
-            .preview-toolbar > div:nth-child(2) {
+            .preview-toolbar > div {
                 width: 100%;
-                order: -1;
-                margin-bottom: 12px;
             }
             
             .preview-toolbar > div:nth-child(2) {
-                flex-direction: column;
+                order: -1;
+                margin-bottom: 0;
             }
             
             .preview-toolbar > div:nth-child(2) > div {
                 width: 100%;
             }
             
-            .preview-toolbar > div:nth-child(2) input {
+            .preview-toolbar input {
+                width: 100% !important;
+            }
+            
+            .device-toggle {
                 width: 100%;
-                margin-bottom: 8px;
+                justify-content: center;
             }
 
             .preview-actions {
                 width: 100%;
-                justify-content: space-between;
+                justify-content: center;
             }
 
             .btn-action {
                 flex: 1;
+                max-width: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .preview-toolbar {
+                padding: 12px;
+            }
+            
+            .preview-toolbar label {
+                font-size: 10px !important;
+            }
+            
+            .preview-toolbar input {
+                font-size: 12px !important;
+                padding: 8px 12px !important;
+            }
+            
+            .btn-action {
+                font-size: 12px;
+                padding: 8px 16px;
             }
         }
 
@@ -1121,6 +1212,10 @@
 
             .hero-section {
                 padding: 30px 16px;
+            }
+
+            .hero-section h1 {
+                font-size: 28px;
             }
 
             .builder-section {
@@ -1137,6 +1232,56 @@
 
             .hero-component p {
                 font-size: 16px;
+            }
+            
+            .modal-content {
+                padding: 24px 20px;
+                width: 95%;
+                max-height: 90vh;
+            }
+            
+            .modal-header h2 {
+                font-size: 20px;
+            }
+            
+            .code-preview {
+                font-size: 11px;
+                padding: 15px;
+            }
+            
+            .btn-copy {
+                padding: 14px 20px;
+                font-size: 13px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .modal-content {
+                padding: 20px 15px;
+                width: 100%;
+                border-radius: 16px;
+            }
+            
+            .modal-header {
+                margin-bottom: 20px;
+            }
+            
+            .modal-header h2 {
+                font-size: 18px;
+            }
+            
+            .property-group {
+                margin-bottom: 20px;
+            }
+            
+            .property-input {
+                font-size: 14px;
+                padding: 12px 14px;
+            }
+            
+            .code-preview {
+                font-size: 10px;
+                padding: 12px;
             }
         }
     </style>
@@ -1362,6 +1507,8 @@
                 initializePixelInputs();
                 initializeModal();
                 initializeUrlValidation();
+                // Renderizar preview inicial si hay URL
+                renderPreview();
                 console.log('[Pre-Landing Builder] Inicialización completa');
             } catch (error) {
                 console.error('[Pre-Landing Builder] Error en inicialización:', error);
@@ -2251,19 +2398,16 @@
             html.push('        // Función helper para redirección segura (maneja CSP e iframes)');
             html.push('        function safeRedirect(url) {');
             html.push('            try {');
-            html.push('                if (window.top !== window.self) {');
-            html.push('                    // Estamos en un iframe, redirigir el frame superior');
+            html.push('                var isInFrame = window.top !== window.self;');
+            html.push('                if (isInFrame) {');
             html.push('                    window.top.location.href = url;');
             html.push('                } else {');
-            html.push('                    // No estamos en iframe, redirección normal');
             html.push('                    window.location.href = url;');
             html.push('                }');
             html.push('            } catch (e) {');
-            html.push('                // Si falla por CSP, intentar redirección normal');
             html.push('                try {');
             html.push('                    window.location.href = url;');
             html.push('                } catch (e2) {');
-            html.push('                    // Último recurso: usar replace');
             html.push('                    window.location.replace(url);');
             html.push('                }');
             html.push('            }');
