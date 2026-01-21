@@ -512,15 +512,87 @@
         .preview-content-wrapper {
             max-width: 100%;
             margin: 0 auto;
+            width: 100%;
         }
 
         .preview-content.mobile {
             max-width: 375px;
             margin: 0 auto;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: #f8f9fa;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .preview-content.mobile::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
         }
 
         .preview-content.desktop {
             max-width: 100%;
+            width: 100%;
+        }
+        
+        .preview-content.mobile .preview-content-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 600px;
+            overflow-x: hidden;
+        }
+        
+        .preview-content.mobile .location-offer-preview {
+            padding: 15px 10px;
+            min-height: auto;
+        }
+        
+        .preview-content.mobile .location-offer-card {
+            padding: 25px 15px;
+            max-width: 100%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .preview-content.mobile .location-offer-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-content.mobile .location-offer-title {
+            font-size: 18px;
+            line-height: 1.3;
+        }
+        
+        .preview-content.mobile .location-offer-subtitle {
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-content.mobile .location-offer-timer {
+            padding: 12px 18px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .preview-content.mobile .location-offer-cta {
+            padding: 14px 20px;
+            font-size: 13px;
+            gap: 8px;
+        }
+        
+        .preview-content.mobile .location-offer-cta i {
+            font-size: 14px;
         }
 
         .empty-state {
@@ -2259,7 +2331,21 @@
                 html.push('        .location-offer-cta { width: 100%; padding: 18px 32px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }');
                 html.push('        .location-offer-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4); }');
                 html.push('        .location-offer-cta i { font-size: 18px; }');
-                html.push('        @media (max-width: 768px) { .location-offer-card { padding: 30px 20px; } .location-offer-title { font-size: 20px; } }');
+                html.push('        @media (max-width: 768px) {');
+                html.push('            .location-offer-overlay { padding: 15px; }');
+                html.push('            .location-offer-card { padding: 30px 20px; max-width: 100%; }');
+                html.push('            .location-offer-icon { width: 60px; height: 60px; font-size: 28px; margin-bottom: 20px; }');
+                html.push('            .location-offer-title { font-size: 20px; line-height: 1.3; }');
+                html.push('            .location-offer-subtitle { font-size: 14px; margin-bottom: 20px; }');
+                html.push('            .location-offer-timer { padding: 12px 20px; font-size: 14px; margin-bottom: 20px; }');
+                html.push('            .location-offer-cta { padding: 16px 24px; font-size: 14px; gap: 8px; }');
+                html.push('            .location-offer-cta i { font-size: 16px; }');
+                html.push('        }');
+                html.push('        @media (max-width: 480px) {');
+                html.push('            .location-offer-card { padding: 25px 15px; }');
+                html.push('            .location-offer-title { font-size: 18px; }');
+                html.push('            .location-offer-cta { padding: 14px 20px; font-size: 13px; letter-spacing: 0.5px; }');
+                html.push('        }');
             }
             
             html.push('        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }');
@@ -2395,20 +2481,23 @@
                 html.push('        ');
             }
             
-            html.push('        // Función helper para redirección segura (maneja CSP e iframes)');
+            html.push('        // Función helper para redirección segura (maneja CSP)');
             html.push('        function safeRedirect(url) {');
+            html.push('            // Intentar redirección directa primero (evita problemas de CSP)');
             html.push('            try {');
-            html.push('                var isInFrame = window.top !== window.self;');
-            html.push('                if (isInFrame) {');
-            html.push('                    window.top.location.href = url;');
-            html.push('                } else {');
-            html.push('                    window.location.href = url;');
-            html.push('                }');
+            html.push('                window.location.href = url;');
             html.push('            } catch (e) {');
+            html.push('                // Si falla, intentar con replace');
             html.push('                try {');
-            html.push('                    window.location.href = url;');
-            html.push('                } catch (e2) {');
             html.push('                    window.location.replace(url);');
+            html.push('                } catch (e2) {');
+            html.push('                    // Último recurso: usar assign');
+            html.push('                    try {');
+            html.push('                        window.location.assign(url);');
+            html.push('                    } catch (e3) {');
+            html.push('                        // Si todo falla, abrir en nueva ventana');
+            html.push('                        window.open(url, "_top");');
+            html.push('                    }');
             html.push('                }');
             html.push('            }');
             html.push('        }');
