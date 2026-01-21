@@ -1272,21 +1272,13 @@
                                 <span style="font-size: 13px; color: var(--text-medium); font-weight: 600;">Actualización automática activa</span>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 800px; flex-wrap: wrap;">
-                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 700px;">
+                            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
                                 <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">
-                                    <i class="fas fa-shopping-bag" style="margin-right: 4px;"></i>URL Producto
+                                    <i class="fas fa-link" style="margin-right: 4px;"></i>URL de Destino
                                 </label>
                                 <div style="position: relative; display: flex; align-items: center; gap: 8px;">
-                                    <input type="url" id="productUrlMain" class="property-input url-input" placeholder="https://tienda.com/producto" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
-                                    <i class="fas fa-shopping-bag url-icon" id="productUrlIcon" style="position: absolute; left: 14px; color: var(--text-light); font-size: 14px; pointer-events: none;"></i>
-                                </div>
-                                <small style="font-size: 10px; color: var(--text-light);">URL del producto que se está vendiendo</small>
-                            </div>
-                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">URL Destino</label>
-                                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
-                                    <input type="url" id="destinationUrlMain" class="property-input url-input" placeholder="https://ejemplo.com/oferta-final" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
+                                    <input type="url" id="destinationUrlMain" class="property-input url-input" placeholder="https://tienda.com/producto" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
                                     <i class="fas fa-link url-icon" id="urlIcon" style="position: absolute; left: 14px; color: var(--text-light); font-size: 14px; pointer-events: none;"></i>
                                     <button type="button" id="testUrlBtn" class="btn-test-url" title="Probar URL" style="display: none; padding: 10px 14px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; white-space: nowrap;">
                                         <i class="fas fa-external-link-alt"></i>
@@ -1348,17 +1340,7 @@
                 </button>
             </div>
             <div class="property-group">
-                <label class="property-label" style="color: var(--primary); font-size: 14px;">
-                    <i class="fas fa-shopping-bag" style="margin-right: 6px;"></i>URL del Producto
-                </label>
-                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
-                    <input type="url" class="property-input url-input-modal" id="productUrl" placeholder="https://tienda.com/producto" style="font-size: 15px; padding: 14px 16px 14px 45px; flex: 1;">
-                    <i class="fas fa-shopping-bag url-icon-modal" id="productUrlIconModal" style="position: absolute; left: 16px; color: var(--text-light); font-size: 15px; pointer-events: none;"></i>
-                </div>
-                <small style="display: block; margin-top: 6px;">URL del producto que se está vendiendo (se usará como destino si no hay URL de destino configurada)</small>
-            </div>
-            <div class="property-group">
-                <label class="property-label" style="color: var(--primary); font-size: 14px;">URL de Destino Final</label>
+                <label class="property-label" style="color: var(--primary); font-size: 14px;">URL de Destino</label>
                 <div style="position: relative; display: flex; align-items: center; gap: 8px;">
                     <input type="url" class="property-input url-input-modal" id="destinationUrl" placeholder="https://ejemplo.com/oferta-final" required style="font-size: 15px; padding: 14px 16px 14px 45px; flex: 1;">
                     <i class="fas fa-link url-icon-modal" id="urlIconModal" style="position: absolute; left: 16px; color: var(--text-light); font-size: 15px; pointer-events: none;"></i>
@@ -1565,40 +1547,84 @@
                 return;
             }
             
-            if (components.length === 0) {
+            // Verificar si hay URL ingresada
+            const destinationUrlMain = document.getElementById('destinationUrlMain');
+            const urlValue = destinationUrlMain ? destinationUrlMain.value.trim() : '';
+            
+            // Si hay URL, mostrar automáticamente el popup de oferta
+            if (urlValue) {
+                const locationOfferData = {
+                    title: '¡Espera! Oferta especial para',
+                    subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
+                    cta: 'CLICK AQUÍ PARA CONTINUAR',
+                    location: 'Lima' // Se detectará automáticamente en el HTML generado
+                };
+                
                 previewContent.innerHTML = `
                     <div class="preview-content-wrapper">
-                        <div class="empty-state">
-                            <i class="fas fa-mouse-pointer"></i>
-                            <h3>Selecciona un Template</h3>
-                            <p>Elige un template de la izquierda o arrastra componentes para empezar</p>
+                        <div class="location-offer-preview">
+                            <div class="location-offer-card">
+                                <div class="location-offer-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <h2 class="location-offer-title">
+                                    ${escapeHtml(locationOfferData.title)} 
+                                    <span class="location-highlight">${escapeHtml(locationOfferData.location)}</span>
+                                    <span class="blinking-cursor">|</span>
+                                </h2>
+                                <p class="location-offer-subtitle">${escapeHtml(locationOfferData.subtitle)}</p>
+                                <div class="location-offer-timer">
+                                    <span>⏰ ¡Tiempo terminado!</span>
+                                </div>
+                                <button class="location-offer-cta">
+                                    <i class="fas fa-hand-point-right"></i>
+                                    ${escapeHtml(locationOfferData.cta)}
+                                    <i class="fas fa-hand-point-left"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
-                console.log('[Pre-Landing Builder] Mostrando estado vacío');
+                console.log('[Pre-Landing Builder] Mostrando popup de oferta automático');
+                updateLivePreview();
                 return;
             }
-
-            let html = '<div class="preview-content-wrapper">';
-            components.forEach((comp, index) => {
-                console.log('[Pre-Landing Builder] Renderizando componente', index + 1, ':', comp.type);
-                html += renderComponent(comp);
-            });
-            html += '</div>';
             
-            previewContent.innerHTML = html;
-            console.log('[Pre-Landing Builder] Preview renderizado correctamente');
-            
-            // Add click handlers
-            document.querySelectorAll('.landing-component').forEach(comp => {
-                comp.addEventListener('click', function(e) {
-                    if (e.target.closest('.btn-control')) return;
-                    selectComponent(this.dataset.componentId);
+            // Si no hay URL pero hay componentes, mostrar componentes
+            if (components.length > 0) {
+                let html = '<div class="preview-content-wrapper">';
+                components.forEach((comp, index) => {
+                    console.log('[Pre-Landing Builder] Renderizando componente', index + 1, ':', comp.type);
+                    html += renderComponent(comp);
                 });
-            });
+                html += '</div>';
+                
+                previewContent.innerHTML = html;
+                console.log('[Pre-Landing Builder] Preview renderizado correctamente');
+                
+                // Add click handlers
+                document.querySelectorAll('.landing-component').forEach(comp => {
+                    comp.addEventListener('click', function(e) {
+                        if (e.target.closest('.btn-control')) return;
+                        selectComponent(this.dataset.componentId);
+                    });
+                });
+                
+                updateLivePreview();
+                return;
+            }
             
-            // Actualizar vista previa en vivo
-            updateLivePreview();
+            // Estado vacío
+            previewContent.innerHTML = `
+                <div class="preview-content-wrapper">
+                    <div class="empty-state">
+                        <i class="fas fa-link"></i>
+                        <h3>Ingresa una URL</h3>
+                        <p>Ingresa la URL de destino arriba para ver la vista previa automática del popup de oferta</p>
+                    </div>
+                </div>
+            `;
+            console.log('[Pre-Landing Builder] Mostrando estado vacío');
         }
 
         function escapeHtml(text) {
@@ -1876,8 +1902,11 @@
             
             if (exportBtn) {
                 exportBtn.addEventListener('click', function() {
-                    if (components.length === 0) {
-                        alert('Agrega al menos un componente antes de exportar');
+                    const destinationUrlMain = document.getElementById('destinationUrlMain');
+                    const urlValue = destinationUrlMain ? destinationUrlMain.value.trim() : '';
+                    if (!urlValue) {
+                        alert('Por favor, ingresa una URL de destino antes de exportar');
+                        if (destinationUrlMain) destinationUrlMain.focus();
                         return;
                     }
                     openExportModal();
@@ -1920,15 +1949,10 @@
 
         function openExportModal() {
             const modal = document.getElementById('exportModal');
-            const productUrlMain = document.getElementById('productUrlMain');
-            const productUrlModal = document.getElementById('productUrl');
             const destinationUrlMain = document.getElementById('destinationUrlMain');
             const destinationUrlModal = document.getElementById('destinationUrl');
             
             // Sincronizar valores del campo principal al modal
-            if (productUrlMain && productUrlModal) {
-                productUrlModal.value = productUrlMain.value;
-            }
             if (destinationUrlMain && destinationUrlModal) {
                 destinationUrlModal.value = destinationUrlMain.value;
             }
@@ -1939,16 +1963,12 @@
                 waitSecondsModal.value = waitSecondsMain.value;
             }
             
-            // Validar URL antes de abrir (producto o destino)
-            const productUrlValue = (productUrlMain && productUrlMain.value.trim()) || (productUrlModal && productUrlModal.value.trim());
-            const destinationUrlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
-            const urlValue = productUrlValue || destinationUrlValue;
+            // Validar URL antes de abrir
+            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
             
             if (!urlValue) {
-                alert('Por favor, ingresa la URL del Producto o la URL de Destino Final antes de exportar');
-                if (productUrlMain) {
-                    productUrlMain.focus();
-                } else if (destinationUrlMain) {
+                alert('Por favor, ingresa la URL de Destino antes de exportar');
+                if (destinationUrlMain) {
                     destinationUrlMain.focus();
                 }
                 return;
@@ -1994,26 +2014,10 @@
 
         // Sincronizar campos principales con modal
         function syncMainFields() {
-            const mainProductUrl = document.getElementById('productUrlMain');
-            const modalProductUrl = document.getElementById('productUrl');
             const mainUrl = document.getElementById('destinationUrlMain');
             const mainWait = document.getElementById('waitSecondsMain');
             const modalUrl = document.getElementById('destinationUrl');
             const modalWait = document.getElementById('waitSeconds');
-            
-            // Sincronizar URL del producto
-            if (mainProductUrl && modalProductUrl) {
-                mainProductUrl.addEventListener('input', function() {
-                    modalProductUrl.value = this.value;
-                    updateExportCode();
-                    updateLivePreview();
-                });
-                modalProductUrl.addEventListener('input', function() {
-                    mainProductUrl.value = this.value;
-                    updateExportCode();
-                    updateLivePreview();
-                });
-            }
             
             if (mainUrl && modalUrl) {
                 mainUrl.addEventListener('input', function() {
@@ -2056,6 +2060,10 @@
                         updateExportCode();
                         if (id === 'destinationUrl' || id === 'waitSeconds' || id === 'destinationUrlMain' || id === 'waitSecondsMain') {
                             updateLivePreview();
+                            // Si es el campo de URL principal, actualizar vista previa automáticamente
+                            if (id === 'destinationUrlMain') {
+                                renderPreview();
+                            }
                         }
                     });
                 } else {
@@ -2073,16 +2081,10 @@
 
         function generateHTML() {
             console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
-            // Obtener URL del producto (puede estar en el campo principal o en el modal)
-            const productUrlMain = document.getElementById('productUrlMain') ? document.getElementById('productUrlMain').value.trim() : '';
-            const productUrlModal = document.getElementById('productUrl') ? document.getElementById('productUrl').value.trim() : '';
-            const productUrl = productUrlMain || productUrlModal;
-            
             // Obtener URL de destino (puede estar en el campo principal o en el modal)
             const destinationUrlMain = document.getElementById('destinationUrlMain') ? document.getElementById('destinationUrlMain').value.trim() : '';
             const destinationUrlModal = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
-            // Si hay URL de producto, usarla como destino, sino usar la URL de destino configurada
-            const destinationUrl = productUrl || destinationUrlMain || destinationUrlModal;
+            const destinationUrl = destinationUrlMain || destinationUrlModal;
             
             // Obtener segundos de espera
             const waitSecondsMain = document.getElementById('waitSecondsMain') ? parseInt(document.getElementById('waitSecondsMain').value) || 5 : 5;
@@ -2092,8 +2094,8 @@
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
             
-            // Verificar si hay componente de oferta con ubicación
-            const hasLocationOffer = components.some(c => c.type === 'location-offer-popup');
+            // Si hay URL, siempre generar popup de oferta con ubicación
+            const hasLocationOffer = !!destinationUrl;
             
             // Validar URL de destino
             if (!destinationUrl) {
@@ -2256,26 +2258,33 @@
                 }
             });
             
-            // Si hay popup de oferta con ubicación, agregarlo al final del body
+            // Si hay URL, siempre generar popup de oferta con ubicación
             if (hasLocationOffer) {
-                const locationOfferData = components.find(c => c.type === 'location-offer-popup')?.data || {};
+                // Datos por defecto del popup
+                const locationOfferData = {
+                    title: '¡Espera! Oferta especial para',
+                    subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
+                    cta: 'CLICK AQUÍ PARA CONTINUAR',
+                    location: 'Lima'
+                };
+                
                 html.push('    <div id="locationOfferOverlay" class="location-offer-overlay" style="display: none;">');
                 html.push('        <div class="location-offer-card">');
                 html.push('            <div class="location-offer-icon">');
                 html.push('                <i class="fas fa-gift"></i>');
                 html.push('            </div>');
                 html.push('            <h2 class="location-offer-title">');
-                html.push('                ' + escapeHtml(locationOfferData.title || '¡Espera! Oferta especial para') + ' ');
-                html.push('                <span class="location-highlight" id="detectedLocation">' + escapeHtml(locationOfferData.location || 'Lima') + '</span>');
+                html.push('                ' + escapeHtml(locationOfferData.title) + ' ');
+                html.push('                <span class="location-highlight" id="detectedLocation">' + escapeHtml(locationOfferData.location) + '</span>');
                 html.push('                <span class="blinking-cursor">|</span>');
                 html.push('            </h2>');
-                html.push('            <p class="location-offer-subtitle">' + escapeHtml(locationOfferData.subtitle || '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!') + '</p>');
+                html.push('            <p class="location-offer-subtitle">' + escapeHtml(locationOfferData.subtitle) + '</p>');
                 html.push('            <div class="location-offer-timer">');
                 html.push('                <span>⏰ ¡Tiempo terminado!</span>');
                 html.push('            </div>');
                 html.push('            <button class="location-offer-cta" id="locationOfferCTA">');
                 html.push('                <i class="fas fa-hand-point-right"></i>');
-                html.push('                ' + escapeHtml(locationOfferData.cta || 'CLICK AQUÍ PARA CONTINUAR'));
+                html.push('                ' + escapeHtml(locationOfferData.cta));
                 html.push('                <i class="fas fa-hand-point-left"></i>');
                 html.push('            </button>');
                 html.push('        </div>');
@@ -2288,7 +2297,7 @@
             // Script de geolocalización si hay popup de oferta
             if (hasLocationOffer) {
                 html.push('        // Geolocalización automática');
-                html.push('        var detectedLocation = "' + escapeHtml(locationOfferData.location || 'Lima') + '";');
+                html.push('        var detectedLocation = "Lima";');
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
                 html.push('        ');
@@ -2541,7 +2550,13 @@
                 }
                 
                 // Validar en tiempo real
-                urlInput.addEventListener('input', updateUrlValidation);
+                urlInput.addEventListener('input', function() {
+                    updateUrlValidation();
+                    // Si es el campo principal, actualizar vista previa automáticamente
+                    if (urlInput.id === 'destinationUrlMain') {
+                        renderPreview();
+                    }
+                });
                 urlInput.addEventListener('blur', function() {
                     // Auto-completar con https:// si no tiene protocolo
                     const url = this.value.trim();
@@ -2550,6 +2565,10 @@
                         if (validation.valid && validation.fullUrl) {
                             this.value = validation.fullUrl;
                             updateUrlValidation();
+                            // Si es el campo principal, actualizar vista previa automáticamente
+                            if (urlInput.id === 'destinationUrlMain') {
+                                renderPreview();
+                            }
                         }
                     }
                 });
