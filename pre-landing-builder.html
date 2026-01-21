@@ -1431,7 +1431,10 @@
                         </div>
                         <div class="preview-actions">
                             <button class="btn-action btn-export" id="exportBtn">
-                                <i class="fas fa-code"></i> Exportar
+                                <i class="fas fa-code"></i> Exportar HTML
+                            </button>
+                            <button class="btn-action btn-export" id="generateUrlBtn" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);">
+                                <i class="fas fa-link"></i> Generar URL
                             </button>
                         </div>
                     </div>
@@ -2022,6 +2025,7 @@
         // Export - Initialize after DOM is ready
         function initializeExportButtons() {
             const exportBtn = document.getElementById('exportBtn');
+            const generateUrlBtn = document.getElementById('generateUrlBtn');
             const previewBtn = document.getElementById('previewBtn');
             
             if (exportBtn) {
@@ -2034,6 +2038,23 @@
                         return;
                     }
                     openExportModal();
+                });
+            }
+            
+            if (generateUrlBtn) {
+                generateUrlBtn.addEventListener('click', function() {
+                    const destinationUrlMain = document.getElementById('destinationUrlMain');
+                    const waitSecondsMain = document.getElementById('waitSecondsMain');
+                    const urlValue = destinationUrlMain ? destinationUrlMain.value.trim() : '';
+                    const waitValue = waitSecondsMain ? parseInt(waitSecondsMain.value) || 5 : 5;
+                    
+                    if (!urlValue) {
+                        alert('Por favor, ingresa una URL de destino antes de generar la URL');
+                        if (destinationUrlMain) destinationUrlMain.focus();
+                        return;
+                    }
+                    
+                    generateShareableUrl(urlValue, waitValue);
                 });
             }
             
@@ -2201,6 +2222,83 @@
 
         function closeExportModal() {
             document.getElementById('exportModal').classList.remove('active');
+        }
+        
+        function generateShareableUrl(destinationUrl, waitSeconds) {
+            // Codificar parámetros en la URL
+            const params = new URLSearchParams({
+                url: destinationUrl,
+                wait: waitSeconds.toString()
+            });
+            
+            // Obtener la URL base (dominio actual)
+            const baseUrl = window.location.origin + window.location.pathname.replace('pre-landing-builder.html', '') + 'landing.html';
+            const shareableUrl = baseUrl + '?' + params.toString();
+            
+            // Mostrar modal con la URL
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.style.display = 'flex';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h2 style="display: flex; align-items: center; gap: 8px;">
+                            <span style="color: var(--primary);">URL Compartible</span>
+                        </h2>
+                        <button class="modal-close" onclick="this.closest('.modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label" style="color: var(--primary); font-size: 14px;">URL para Compartir</label>
+                        <div style="position: relative; display: flex; align-items: center; gap: 8px;">
+                            <input type="text" id="shareableUrlInput" class="property-input" value="${shareableUrl}" readonly style="font-size: 14px; padding: 12px 16px; flex: 1; background: var(--bg-gray);">
+                            <button type="button" class="btn-copy" onclick="copyShareableUrl()" style="padding: 12px 20px; margin: 0; white-space: nowrap;">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                        <small style="display: block; margin-top: 8px; color: var(--text-medium);">
+                            <i class="fas fa-info-circle"></i> Comparte esta URL directamente. El popup se generará automáticamente.
+                        </small>
+                    </div>
+                    <div class="property-group" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
+                        <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">Nota Importante</label>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
+                            Necesitas crear un archivo <strong>landing.html</strong> en tu servidor que lea los parámetros de la URL y genere el popup automáticamente.
+                        </p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Cerrar al hacer clic fuera
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.remove();
+                }
+            });
+            
+            // Función para copiar URL
+            window.copyShareableUrl = function() {
+                const input = document.getElementById('shareableUrlInput');
+                input.select();
+                input.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    const btn = event.target.closest('.btn-copy');
+                    if (btn) {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                        btn.style.background = 'linear-gradient(135deg, #10b981 0%, #14b8a6 100%)';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.style.background = '';
+                        }, 2000);
+                    }
+                } catch (err) {
+                    alert('No se pudo copiar. Por favor, selecciona y copia manualmente.');
+                }
+            };
         }
 
         function generateHTML() {
@@ -2439,32 +2537,58 @@
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
                 html.push('        ');
-                html.push('        // Intentar detectar ubicación automáticamente');
-                html.push('        if (navigator.geolocation) {');
-                html.push('            navigator.geolocation.getCurrentPosition(');
-                html.push('                function(position) {');
-                html.push('                    // Usar API de geocodificación inversa para obtener ciudad');
-                html.push('                    fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")');
-                html.push('                        .then(response => response.json())');
-                html.push('                        .then(data => {');
-                html.push('                            if (data.city) {');
-                html.push('                                detectedLocation = data.city;');
-                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
-                html.push('                            } else if (data.principalSubdivision) {');
-                html.push('                                detectedLocation = data.principalSubdivision;');
-                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
-                html.push('                            }');
-                html.push('                        })');
-                html.push('                        .catch(function(error) {');
-                html.push('                            console.log("Error obteniendo ubicación:", error);');
-                html.push('                        });');
-                html.push('                },');
-                html.push('                function(error) {');
-                html.push('                    console.log("Error de geolocalización:", error);');
-                html.push('                    // Usar ubicación por defecto');
+                html.push('        // Intentar detectar ubicación automáticamente (usar API basada en IP como fallback)');
+                html.push('        function detectLocation() {');
+                html.push('            // Primero intentar geolocalización del navegador');
+                html.push('            if (navigator.geolocation) {');
+                html.push('                try {');
+                html.push('                    navigator.geolocation.getCurrentPosition(');
+                html.push('                        function(position) {');
+                html.push('                            fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")');
+                html.push('                                .then(response => response.json())');
+                html.push('                                .then(data => {');
+                html.push('                                    if (data.city) {');
+                html.push('                                        detectedLocation = data.city;');
+                html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                    } else if (data.principalSubdivision) {');
+                html.push('                                        detectedLocation = data.principalSubdivision;');
+                html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                    }');
+                html.push('                                })');
+                html.push('                                .catch(function() { useIPLocation(); });');
+                html.push('                        },');
+                html.push('                        function(error) {');
+                html.push('                            useIPLocation();');
+                html.push('                        }');
+                html.push('                    );');
+                html.push('                } catch (e) {');
+                html.push('                    useIPLocation();');
                 html.push('                }');
-                html.push('            );');
+                html.push('            } else {');
+                html.push('                useIPLocation();');
+                html.push('            }');
                 html.push('        }');
+                html.push('        ');
+                html.push('        // Función fallback usando API basada en IP');
+                html.push('        function useIPLocation() {');
+                html.push('            fetch("https://ipapi.co/json/")');
+                html.push('                .then(response => response.json())');
+                html.push('                .then(data => {');
+                html.push('                    if (data.city) {');
+                html.push('                        detectedLocation = data.city;');
+                html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                    } else if (data.region) {');
+                html.push('                        detectedLocation = data.region;');
+                html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                    }');
+                html.push('                })');
+                html.push('                .catch(function() {');
+                html.push('                    // Si todo falla, usar ubicación por defecto');
+                html.push('                });');
+                html.push('        }');
+                html.push('        ');
+                html.push('        // Ejecutar detección de ubicación');
+                html.push('        detectLocation();');
                 html.push('        ');
                 html.push('        // Mostrar popup automáticamente');
                 html.push('        if (locationOfferOverlay) {');
@@ -2481,22 +2605,29 @@
                 html.push('        ');
             }
             
-            html.push('        // Función helper para redirección segura (maneja CSP)');
+            html.push('        // Función helper para redirección segura (maneja CSP e iframes sandboxed)');
             html.push('        function safeRedirect(url) {');
-            html.push('            // Intentar redirección directa primero (evita problemas de CSP)');
+            html.push('            // Si estamos en un iframe sandboxed, abrir en nueva ventana');
             html.push('            try {');
+            html.push('                // Intentar redirección normal primero');
             html.push('                window.location.href = url;');
             html.push('            } catch (e) {');
-            html.push('                // Si falla, intentar con replace');
+            html.push('                // Si falla, intentar abrir en nueva ventana/tab');
             html.push('                try {');
-            html.push('                    window.location.replace(url);');
+            html.push('                    window.open(url, "_blank");');
             html.push('                } catch (e2) {');
-            html.push('                    // Último recurso: usar assign');
+            html.push('                    // Si también falla, intentar con replace');
             html.push('                    try {');
-            html.push('                        window.location.assign(url);');
+            html.push('                        window.location.replace(url);');
             html.push('                    } catch (e3) {');
-            html.push('                        // Si todo falla, abrir en nueva ventana');
-            html.push('                        window.open(url, "_top");');
+            html.push('                        // Último recurso: crear link y hacer click');
+            html.push('                        var link = document.createElement("a");');
+            html.push('                        link.href = url;');
+            html.push('                        link.target = "_blank";');
+            html.push('                        link.rel = "noopener noreferrer";');
+            html.push('                        document.body.appendChild(link);');
+            html.push('                        link.click();');
+            html.push('                        document.body.removeChild(link);');
             html.push('                    }');
             html.push('                }');
             html.push('            }');

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oferta Especial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Plus Jakarta Sans", sans-serif; line-height: 1.6; background: #f8f9fa; }
+        
+        .location-offer-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(0,0,0,0.7); 
+            z-index: 10000; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+        }
+        .location-offer-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 40px; 
+            max-width: 500px; 
+            width: 100%; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3); 
+            text-align: center; 
+            position: relative; 
+            animation: slideIn 0.3s ease-out; 
+        }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .location-offer-icon { 
+            width: 80px; 
+            height: 80px; 
+            margin: 0 auto 24px; 
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: white; 
+            font-size: 36px; 
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); 
+        }
+        .location-offer-title { 
+            font-size: 24px; 
+            font-weight: 800; 
+            color: #1f2937; 
+            margin-bottom: 12px; 
+            line-height: 1.4; 
+        }
+        .location-highlight { 
+            color: #dc2626; 
+            position: relative; 
+            display: inline-block; 
+        }
+        .blinking-cursor { 
+            color: #6b7280; 
+            animation: blink 1s infinite; 
+            margin-left: 2px; 
+        }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        .location-offer-subtitle { 
+            font-size: 15px; 
+            color: #6b7280; 
+            margin-bottom: 24px; 
+            line-height: 1.6; 
+        }
+        .location-offer-timer { 
+            background: #f8f9fa; 
+            padding: 16px 24px; 
+            border-radius: 12px; 
+            margin-bottom: 24px; 
+            font-weight: 700; 
+            color: #1f2937; 
+            font-size: 16px; 
+        }
+        .location-offer-cta { 
+            width: 100%; 
+            padding: 18px 32px; 
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); 
+        }
+        .location-offer-cta:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4); 
+        }
+        .location-offer-cta i { 
+            font-size: 18px; 
+        }
+        @media (max-width: 768px) {
+            .location-offer-overlay { padding: 15px; }
+            .location-offer-card { padding: 30px 20px; max-width: 100%; }
+            .location-offer-icon { width: 60px; height: 60px; font-size: 28px; margin-bottom: 20px; }
+            .location-offer-title { font-size: 20px; line-height: 1.3; }
+            .location-offer-subtitle { font-size: 14px; margin-bottom: 20px; }
+            .location-offer-timer { padding: 12px 20px; font-size: 14px; margin-bottom: 20px; }
+            .location-offer-cta { padding: 16px 24px; font-size: 14px; gap: 8px; }
+            .location-offer-cta i { font-size: 16px; }
+        }
+        @media (max-width: 480px) {
+            .location-offer-card { padding: 25px 15px; }
+            .location-offer-title { font-size: 18px; }
+            .location-offer-cta { padding: 14px 20px; font-size: 13px; letter-spacing: 0.5px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="locationOfferOverlay" class="location-offer-overlay" style="display: none;">
+        <div class="location-offer-card">
+            <div class="location-offer-icon">
+                <i class="fas fa-gift"></i>
+            </div>
+            <h2 class="location-offer-title">
+                ¡Espera! Oferta especial para 
+                <span class="location-highlight" id="detectedLocation">Lima</span>
+                <span class="blinking-cursor">|</span>
+            </h2>
+            <p class="location-offer-subtitle">¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!</p>
+            <div class="location-offer-timer">
+                <span>⏰ ¡Tiempo terminado!</span>
+            </div>
+            <button class="location-offer-cta" id="locationOfferCTA">
+                <i class="fas fa-hand-point-right"></i>
+                CLICK AQUÍ PARA CONTINUAR
+                <i class="fas fa-hand-point-left"></i>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Obtener parámetros de la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const destinationUrl = urlParams.get('url') || '';
+        const waitSeconds = parseInt(urlParams.get('wait')) || 5;
+        
+        if (!destinationUrl) {
+            document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h1>Error</h1><p>URL de destino no especificada</p></div>';
+        } else {
+            // Geolocalización automática
+            var detectedLocation = "Lima";
+            var locationOfferOverlay = document.getElementById("locationOfferOverlay");
+            var locationElement = document.getElementById("detectedLocation");
+            
+            // Intentar detectar ubicación automáticamente (usar API basada en IP como fallback)
+            function detectLocation() {
+                // Primero intentar geolocalización del navegador
+                if (navigator.geolocation) {
+                    try {
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.city) {
+                                            detectedLocation = data.city;
+                                            if (locationElement) locationElement.textContent = detectedLocation;
+                                        } else if (data.principalSubdivision) {
+                                            detectedLocation = data.principalSubdivision;
+                                            if (locationElement) locationElement.textContent = detectedLocation;
+                                        }
+                                    })
+                                    .catch(function() { useIPLocation(); });
+                            },
+                            function(error) {
+                                useIPLocation();
+                            }
+                        );
+                    } catch (e) {
+                        useIPLocation();
+                    }
+                } else {
+                    useIPLocation();
+                }
+            }
+            
+            // Función fallback usando API basada en IP
+            function useIPLocation() {
+                fetch("https://ipapi.co/json/")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.city) {
+                            detectedLocation = data.city;
+                            if (locationElement) locationElement.textContent = detectedLocation;
+                        } else if (data.region) {
+                            detectedLocation = data.region;
+                            if (locationElement) locationElement.textContent = detectedLocation;
+                        }
+                    })
+                    .catch(function() {
+                        // Si todo falla, usar ubicación por defecto
+                    });
+            }
+            
+            // Ejecutar detección de ubicación
+            detectLocation();
+            
+            // Función helper para redirección segura (maneja CSP e iframes sandboxed)
+            function safeRedirect(url) {
+                // Si estamos en un iframe sandboxed, abrir en nueva ventana
+                try {
+                    // Intentar redirección normal primero
+                    window.location.href = url;
+                } catch (e) {
+                    // Si falla, intentar abrir en nueva ventana/tab
+                    try {
+                        window.open(url, "_blank");
+                    } catch (e2) {
+                        // Si también falla, intentar con replace
+                        try {
+                            window.location.replace(url);
+                        } catch (e3) {
+                            // Último recurso: crear link y hacer click
+                            var link = document.createElement("a");
+                            link.href = url;
+                            link.target = "_blank";
+                            link.rel = "noopener noreferrer";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                        }
+                    }
+                }
+            }
+            
+            // Mostrar popup automáticamente
+            if (locationOfferOverlay) {
+                locationOfferOverlay.style.display = "flex";
+                
+                // Botón CTA del popup
+                var locationOfferCTA = document.getElementById("locationOfferCTA");
+                if (locationOfferCTA) {
+                    locationOfferCTA.addEventListener("click", function() {
+                        safeRedirect(destinationUrl);
+                    });
+                }
+            }
+            
+            // Actualizar timer en el popup
+            var timerElement = document.querySelector(".location-offer-timer span");
+            if (timerElement && waitSeconds > 0) {
+                var countdown = waitSeconds;
+                var interval = setInterval(function() {
+                    countdown--;
+                    if (timerElement) {
+                        if (countdown > 0) {
+                            timerElement.textContent = "⏰ Redirigiendo en " + countdown + " segundo" + (countdown !== 1 ? "s" : "") + "...";
+                        } else {
+                            timerElement.textContent = "⏰ ¡Tiempo terminado!";
+                        }
+                    }
+                    if (countdown <= 0) {
+                        clearInterval(interval);
+                    }
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
