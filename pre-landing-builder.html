@@ -319,6 +319,120 @@
             border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
         }
+        
+        .url-input {
+            position: relative;
+        }
+        
+        .url-input.valid {
+            border-color: var(--accent);
+            background-color: #f0fdf4;
+        }
+        
+        .url-input.valid:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .url-input.invalid {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+        
+        .url-input.invalid:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        
+        .url-icon.valid-icon {
+            color: var(--accent) !important;
+        }
+        
+        .url-icon.invalid-icon {
+            color: #dc2626 !important;
+        }
+        
+        .btn-test-url {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s;
+        }
+        
+        .btn-test-url.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .btn-test-url:hover {
+            background: var(--secondary) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        #urlValidationMsg.valid-msg {
+            color: var(--accent);
+            display: block;
+        }
+        
+        #urlValidationMsg.invalid-msg {
+            color: #dc2626;
+            display: block;
+        }
+        
+        .url-input-modal.valid {
+            border-color: var(--accent);
+            background-color: #f0fdf4;
+        }
+        
+        .url-input-modal.valid:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        .url-input-modal.invalid {
+            border-color: #dc2626;
+            background-color: #fef2f2;
+        }
+        
+        .url-input-modal.invalid:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        
+        .url-icon-modal.valid-icon {
+            color: var(--accent) !important;
+        }
+        
+        .url-icon-modal.invalid-icon {
+            color: #dc2626 !important;
+        }
+        
+        .btn-test-url-modal {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.3s;
+        }
+        
+        .btn-test-url-modal.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .btn-test-url-modal:hover {
+            background: var(--secondary) !important;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        #urlValidationMsgModal.valid-msg {
+            color: var(--accent);
+            display: block;
+        }
+        
+        #urlValidationMsgModal.invalid-msg {
+            color: #dc2626;
+            display: block;
+        }
 
         .device-toggle {
             display: flex;
@@ -707,6 +821,111 @@
             outline: none;
             border-color: var(--primary);
         }
+        
+        /* Location Offer Popup Component */
+        .location-offer-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 400px;
+            padding: 40px 20px;
+        }
+        
+        .location-offer-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            text-align: center;
+            position: relative;
+        }
+        
+        .location-offer-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .location-offer-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+        
+        .location-highlight {
+            color: #dc2626;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .blinking-cursor {
+            color: var(--text-medium);
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        .location-offer-subtitle {
+            font-size: 15px;
+            color: var(--text-medium);
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        
+        .location-offer-timer {
+            background: var(--bg-gray);
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 16px;
+        }
+        
+        .location-offer-cta {
+            width: 100%;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .location-offer-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4);
+        }
+        
+        .location-offer-cta i {
+            font-size: 18px;
+        }
 
         /* Export Modal */
         .modal {
@@ -1000,6 +1219,13 @@
                                 <h4>Minimalista</h4>
                                 <p>CTA Simple</p>
                             </div>
+                            <div class="template-card" data-template="location-offer">
+                                <div class="template-preview" style="background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);">
+                                    <i class="fas fa-map-marker-alt" style="color: white;"></i>
+                                </div>
+                                <h4>Oferta con Ubicación</h4>
+                                <p>Popup automático + Geolocalización</p>
+                            </div>
                         </div>
                     </div>
 
@@ -1046,10 +1272,27 @@
                                 <span style="font-size: 13px; color: var(--text-medium); font-weight: 600;">Actualización automática activa</span>
                             </div>
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 600px;">
-                            <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 800px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
+                                <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <i class="fas fa-shopping-bag" style="margin-right: 4px;"></i>URL Producto
+                                </label>
+                                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
+                                    <input type="url" id="productUrlMain" class="property-input url-input" placeholder="https://tienda.com/producto" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
+                                    <i class="fas fa-shopping-bag url-icon" id="productUrlIcon" style="position: absolute; left: 14px; color: var(--text-light); font-size: 14px; pointer-events: none;"></i>
+                                </div>
+                                <small style="font-size: 10px; color: var(--text-light);">URL del producto que se está vendiendo</small>
+                            </div>
+                            <div style="flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 4px;">
                                 <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">URL Destino</label>
-                                <input type="url" id="destinationUrlMain" class="property-input" placeholder="https://ejemplo.com/oferta-final" style="font-size: 13px; padding: 10px 14px; margin: 0;">
+                                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
+                                    <input type="url" id="destinationUrlMain" class="property-input url-input" placeholder="https://ejemplo.com/oferta-final" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
+                                    <i class="fas fa-link url-icon" id="urlIcon" style="position: absolute; left: 14px; color: var(--text-light); font-size: 14px; pointer-events: none;"></i>
+                                    <button type="button" id="testUrlBtn" class="btn-test-url" title="Probar URL" style="display: none; padding: 10px 14px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; white-space: nowrap;">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </button>
+                                </div>
+                                <small id="urlValidationMsg" style="font-size: 11px; color: var(--text-light); margin-top: 2px; display: none;"></small>
                             </div>
                             <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px;">
                                 <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Seg (1-30)</label>
@@ -1105,9 +1348,26 @@
                 </button>
             </div>
             <div class="property-group">
+                <label class="property-label" style="color: var(--primary); font-size: 14px;">
+                    <i class="fas fa-shopping-bag" style="margin-right: 6px;"></i>URL del Producto
+                </label>
+                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
+                    <input type="url" class="property-input url-input-modal" id="productUrl" placeholder="https://tienda.com/producto" style="font-size: 15px; padding: 14px 16px 14px 45px; flex: 1;">
+                    <i class="fas fa-shopping-bag url-icon-modal" id="productUrlIconModal" style="position: absolute; left: 16px; color: var(--text-light); font-size: 15px; pointer-events: none;"></i>
+                </div>
+                <small style="display: block; margin-top: 6px;">URL del producto que se está vendiendo (se usará como destino si no hay URL de destino configurada)</small>
+            </div>
+            <div class="property-group">
                 <label class="property-label" style="color: var(--primary); font-size: 14px;">URL de Destino Final</label>
-                <input type="url" class="property-input" id="destinationUrl" placeholder="https://ejemplo.com/oferta-final" required style="font-size: 15px; padding: 14px 16px;">
-                <small>URL a la que se redirigirá después del tiempo de espera</small>
+                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
+                    <input type="url" class="property-input url-input-modal" id="destinationUrl" placeholder="https://ejemplo.com/oferta-final" required style="font-size: 15px; padding: 14px 16px 14px 45px; flex: 1;">
+                    <i class="fas fa-link url-icon-modal" id="urlIconModal" style="position: absolute; left: 16px; color: var(--text-light); font-size: 15px; pointer-events: none;"></i>
+                    <button type="button" id="testUrlBtnModal" class="btn-test-url-modal" title="Probar URL" style="display: none; padding: 14px 18px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; white-space: nowrap;">
+                        <i class="fas fa-external-link-alt"></i> Probar
+                    </button>
+                </div>
+                <small id="urlValidationMsgModal" style="font-size: 12px; color: var(--text-light); margin-top: 6px; display: none;"></small>
+                <small style="display: block; margin-top: 6px;">URL a la que se redirigirá después del tiempo de espera</small>
             </div>
             <div class="property-group">
                 <label class="property-label" style="color: var(--primary); font-size: 14px;">Segundos de Espera (1-30)</label>
@@ -1189,6 +1449,18 @@
                 components: [
                     { type: 'hero', data: { title: 'Transforma tu Negocio', subtitle: 'La solución que estabas buscando', cta: 'Comenzar', ctaLink: '#' } }
                 ]
+            },
+            'location-offer': {
+                name: 'Oferta con Ubicación',
+                components: [
+                    { type: 'location-offer-popup', data: { 
+                        title: '¡Espera! Oferta especial para', 
+                        subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
+                        cta: 'CLICK AQUÍ PARA CONTINUAR',
+                        discount: '50%',
+                        location: 'Lima' // Se detectará automáticamente
+                    } }
+                ]
             }
         };
 
@@ -1202,6 +1474,7 @@
                 initializeExportButtons();
                 initializePixelInputs();
                 initializeModal();
+                initializeUrlValidation();
                 console.log('[Pre-Landing Builder] Inicialización completa');
             } catch (error) {
                 console.error('[Pre-Landing Builder] Error en inicialización:', error);
@@ -1387,6 +1660,31 @@
                                 </div>
                                 <button type="submit" class="btn-cta" style="width: 100%;">${escapeHtml(data.button || 'Enviar')}</button>
                             </form>
+                        </div>
+                    `;
+                    break;
+                case 'location-offer-popup':
+                    html += `
+                        <div class="location-offer-preview">
+                            <div class="location-offer-card">
+                                <div class="location-offer-icon">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <h2 class="location-offer-title">
+                                    ${escapeHtml(data.title || '¡Espera! Oferta especial para')} 
+                                    <span class="location-highlight">${escapeHtml(data.location || 'Lima')}</span>
+                                    <span class="blinking-cursor">|</span>
+                                </h2>
+                                <p class="location-offer-subtitle">${escapeHtml(data.subtitle || '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!')}</p>
+                                <div class="location-offer-timer">
+                                    <span>⏰ ¡Tiempo terminado!</span>
+                                </div>
+                                <button class="location-offer-cta">
+                                    <i class="fas fa-hand-point-right"></i>
+                                    ${escapeHtml(data.cta || 'CLICK AQUÍ PARA CONTINUAR')}
+                                    <i class="fas fa-hand-point-left"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                     break;
@@ -1622,10 +1920,15 @@
 
         function openExportModal() {
             const modal = document.getElementById('exportModal');
+            const productUrlMain = document.getElementById('productUrlMain');
+            const productUrlModal = document.getElementById('productUrl');
             const destinationUrlMain = document.getElementById('destinationUrlMain');
             const destinationUrlModal = document.getElementById('destinationUrl');
             
             // Sincronizar valores del campo principal al modal
+            if (productUrlMain && productUrlModal) {
+                productUrlModal.value = productUrlMain.value;
+            }
             if (destinationUrlMain && destinationUrlModal) {
                 destinationUrlModal.value = destinationUrlMain.value;
             }
@@ -1636,14 +1939,17 @@
                 waitSecondsModal.value = waitSecondsMain.value;
             }
             
-            // Validar URL antes de abrir
-            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
+            // Validar URL antes de abrir (producto o destino)
+            const productUrlValue = (productUrlMain && productUrlMain.value.trim()) || (productUrlModal && productUrlModal.value.trim());
+            const destinationUrlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
+            const urlValue = productUrlValue || destinationUrlValue;
+            
             if (!urlValue) {
-                alert('Por favor, ingresa la URL de Destino Final antes de exportar');
-                if (destinationUrlMain) {
+                alert('Por favor, ingresa la URL del Producto o la URL de Destino Final antes de exportar');
+                if (productUrlMain) {
+                    productUrlMain.focus();
+                } else if (destinationUrlMain) {
                     destinationUrlMain.focus();
-                } else if (destinationUrlModal) {
-                    destinationUrlModal.focus();
                 }
                 return;
             }
@@ -1677,22 +1983,50 @@
                 codePreview.style.color = '#dc2626';
             }
         }
+        
+        function updateLivePreview() {
+            // Actualizar código de exportación si el modal está abierto
+            const modal = document.getElementById('exportModal');
+            if (modal && modal.classList.contains('active')) {
+                updateExportCode();
+            }
+        }
 
         // Sincronizar campos principales con modal
         function syncMainFields() {
+            const mainProductUrl = document.getElementById('productUrlMain');
+            const modalProductUrl = document.getElementById('productUrl');
             const mainUrl = document.getElementById('destinationUrlMain');
             const mainWait = document.getElementById('waitSecondsMain');
             const modalUrl = document.getElementById('destinationUrl');
             const modalWait = document.getElementById('waitSeconds');
             
+            // Sincronizar URL del producto
+            if (mainProductUrl && modalProductUrl) {
+                mainProductUrl.addEventListener('input', function() {
+                    modalProductUrl.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+                modalProductUrl.addEventListener('input', function() {
+                    mainProductUrl.value = this.value;
+                    updateExportCode();
+                    updateLivePreview();
+                });
+            }
+            
             if (mainUrl && modalUrl) {
                 mainUrl.addEventListener('input', function() {
                     modalUrl.value = this.value;
+                    // Disparar evento input para actualizar validación
+                    modalUrl.dispatchEvent(new Event('input'));
                     updateExportCode();
                     updateLivePreview();
                 });
                 modalUrl.addEventListener('input', function() {
                     mainUrl.value = this.value;
+                    // Disparar evento input para actualizar validación
+                    mainUrl.dispatchEvent(new Event('input'));
                     updateExportCode();
                     updateLivePreview();
                 });
@@ -1739,10 +2073,16 @@
 
         function generateHTML() {
             console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
+            // Obtener URL del producto (puede estar en el campo principal o en el modal)
+            const productUrlMain = document.getElementById('productUrlMain') ? document.getElementById('productUrlMain').value.trim() : '';
+            const productUrlModal = document.getElementById('productUrl') ? document.getElementById('productUrl').value.trim() : '';
+            const productUrl = productUrlMain || productUrlModal;
+            
             // Obtener URL de destino (puede estar en el campo principal o en el modal)
             const destinationUrlMain = document.getElementById('destinationUrlMain') ? document.getElementById('destinationUrlMain').value.trim() : '';
             const destinationUrlModal = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
-            const destinationUrl = destinationUrlMain || destinationUrlModal;
+            // Si hay URL de producto, usarla como destino, sino usar la URL de destino configurada
+            const destinationUrl = productUrl || destinationUrlMain || destinationUrlModal;
             
             // Obtener segundos de espera
             const waitSecondsMain = document.getElementById('waitSecondsMain') ? parseInt(document.getElementById('waitSecondsMain').value) || 5 : 5;
@@ -1751,6 +2091,9 @@
             const facebookPixel = document.getElementById('facebookPixel') ? document.getElementById('facebookPixel').value.trim() : '';
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
+            
+            // Verificar si hay componente de oferta con ubicación
+            const hasLocationOffer = components.some(c => c.type === 'location-offer-popup');
             
             // Validar URL de destino
             if (!destinationUrl) {
@@ -1835,7 +2178,7 @@
             // Styles
             html.push('    <style>');
             html.push('        * { margin: 0; padding: 0; box-sizing: border-box; }');
-            html.push('        body { font-family: "Plus Jakarta Sans", sans-serif; line-height: 1.6; }');
+            html.push('        body { font-family: "Plus Jakarta Sans", sans-serif; line-height: 1.6; background: #f8f9fa; }');
             html.push('        .hero-component { text-align: center; padding: 60px 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; color: white; }');
             html.push('        .hero-component h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; }');
             html.push('        .hero-component p { font-size: 20px; margin-bottom: 32px; opacity: 0.95; }');
@@ -1846,6 +2189,25 @@
             html.push('        .feature-icon { width: 64px; height: 64px; margin: 0 auto 20px; background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 28px; }');
             html.push('        .form-component { background: #f8f9fa; padding: 40px; border-radius: 16px; max-width: 500px; margin: 0 auto; }');
             html.push('        .form-input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: inherit; font-size: 15px; margin-bottom: 20px; }');
+            
+            // Estilos para popup de oferta con ubicación
+            if (hasLocationOffer) {
+                html.push('        .location-offer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }');
+                html.push('        .location-offer-card { background: white; border-radius: 20px; padding: 40px; max-width: 500px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; position: relative; animation: slideIn 0.3s ease-out; }');
+                html.push('        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }');
+                html.push('        .location-offer-icon { width: 80px; height: 80px; margin: 0 auto 24px; background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 36px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }');
+                html.push('        .location-offer-title { font-size: 24px; font-weight: 800; color: #1f2937; margin-bottom: 12px; line-height: 1.4; }');
+                html.push('        .location-highlight { color: #dc2626; position: relative; display: inline-block; }');
+                html.push('        .blinking-cursor { color: #6b7280; animation: blink 1s infinite; margin-left: 2px; }');
+                html.push('        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }');
+                html.push('        .location-offer-subtitle { font-size: 15px; color: #6b7280; margin-bottom: 24px; line-height: 1.6; }');
+                html.push('        .location-offer-timer { background: #f8f9fa; padding: 16px 24px; border-radius: 12px; margin-bottom: 24px; font-weight: 700; color: #1f2937; font-size: 16px; }');
+                html.push('        .location-offer-cta { width: 100%; padding: 18px 32px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 12px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); }');
+                html.push('        .location-offer-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(139, 92, 246, 0.4); }');
+                html.push('        .location-offer-cta i { font-size: 18px; }');
+                html.push('        @media (max-width: 768px) { .location-offer-card { padding: 30px 20px; } .location-offer-title { font-size: 20px; } }');
+            }
+            
             html.push('        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }');
             html.push('    </style>');
             html.push('</head>');
@@ -1888,34 +2250,137 @@
                     html.push('            <button type="submit" class="btn-cta" style="width: 100%;">' + escapeHtml(data.button || 'Enviar') + '</button>');
                     html.push('        </form>');
                     html.push('    </div>');
+                } else if (type === 'location-offer-popup') {
+                    // Este componente se renderiza como overlay/popup, no como contenido normal
+                    // Se manejará en el script de geolocalización
                 }
             });
             
-            // Redirection script
+            // Si hay popup de oferta con ubicación, agregarlo al final del body
+            if (hasLocationOffer) {
+                const locationOfferData = components.find(c => c.type === 'location-offer-popup')?.data || {};
+                html.push('    <div id="locationOfferOverlay" class="location-offer-overlay" style="display: none;">');
+                html.push('        <div class="location-offer-card">');
+                html.push('            <div class="location-offer-icon">');
+                html.push('                <i class="fas fa-gift"></i>');
+                html.push('            </div>');
+                html.push('            <h2 class="location-offer-title">');
+                html.push('                ' + escapeHtml(locationOfferData.title || '¡Espera! Oferta especial para') + ' ');
+                html.push('                <span class="location-highlight" id="detectedLocation">' + escapeHtml(locationOfferData.location || 'Lima') + '</span>');
+                html.push('                <span class="blinking-cursor">|</span>');
+                html.push('            </h2>');
+                html.push('            <p class="location-offer-subtitle">' + escapeHtml(locationOfferData.subtitle || '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!') + '</p>');
+                html.push('            <div class="location-offer-timer">');
+                html.push('                <span>⏰ ¡Tiempo terminado!</span>');
+                html.push('            </div>');
+                html.push('            <button class="location-offer-cta" id="locationOfferCTA">');
+                html.push('                <i class="fas fa-hand-point-right"></i>');
+                html.push('                ' + escapeHtml(locationOfferData.cta || 'CLICK AQUÍ PARA CONTINUAR'));
+                html.push('                <i class="fas fa-hand-point-left"></i>');
+                html.push('            </button>');
+                html.push('        </div>');
+                html.push('    </div>');
+            }
+            
+            // Geolocation and Redirection script
             html.push('    <script>');
+            
+            // Script de geolocalización si hay popup de oferta
+            if (hasLocationOffer) {
+                html.push('        // Geolocalización automática');
+                html.push('        var detectedLocation = "' + escapeHtml(locationOfferData.location || 'Lima') + '";');
+                html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
+                html.push('        var locationElement = document.getElementById("detectedLocation");');
+                html.push('        ');
+                html.push('        // Intentar detectar ubicación automáticamente');
+                html.push('        if (navigator.geolocation) {');
+                html.push('            navigator.geolocation.getCurrentPosition(');
+                html.push('                function(position) {');
+                html.push('                    // Usar API de geocodificación inversa para obtener ciudad');
+                html.push('                    fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + position.coords.latitude + "&longitude=" + position.coords.longitude + "&localityLanguage=es")');
+                html.push('                        .then(response => response.json())');
+                html.push('                        .then(data => {');
+                html.push('                            if (data.city) {');
+                html.push('                                detectedLocation = data.city;');
+                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                            } else if (data.principalSubdivision) {');
+                html.push('                                detectedLocation = data.principalSubdivision;');
+                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                            }');
+                html.push('                        })');
+                html.push('                        .catch(function(error) {');
+                html.push('                            console.log("Error obteniendo ubicación:", error);');
+                html.push('                        });');
+                html.push('                },');
+                html.push('                function(error) {');
+                html.push('                    console.log("Error de geolocalización:", error);');
+                html.push('                    // Usar ubicación por defecto');
+                html.push('                }');
+                html.push('            );');
+                html.push('        }');
+                html.push('        ');
+                html.push('        // Mostrar popup automáticamente');
+                html.push('        if (locationOfferOverlay) {');
+                html.push('            locationOfferOverlay.style.display = "flex";');
+                html.push('            ');
+                html.push('            // Botón CTA del popup');
+                html.push('            var locationOfferCTA = document.getElementById("locationOfferCTA");');
+                html.push('            if (locationOfferCTA) {');
+                html.push('                locationOfferCTA.addEventListener("click", function() {');
+                html.push('                    window.location.href = destinationUrl;');
+                html.push('                });');
+                html.push('            }');
+                html.push('        }');
+                html.push('        ');
+            }
+            
             html.push('        // Redirección automática después de espera');
             html.push('        var destinationUrl = "' + escapeHtml(destinationUrl) + '";');
             html.push('        var waitSeconds = ' + validWaitSeconds + ';');
-            html.push('        var countdown = waitSeconds;');
-            html.push('        ');
-            html.push('        // Mostrar countdown si hay tiempo de espera');
-            html.push('        if (waitSeconds > 0) {');
-            html.push('            var countdownElement = document.createElement("div");');
-            html.push('            countdownElement.id = "redirect-countdown";');
-            html.push('            countdownElement.style.cssText = "position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 10000; font-family: sans-serif;";');
-            html.push('            document.body.appendChild(countdownElement);');
-            html.push('            ');
-            html.push('            var interval = setInterval(function() {');
-            html.push('                countdown--;');
-            html.push('                if (countdownElement) {');
-            html.push('                    countdownElement.textContent = "Redirigiendo en " + countdown + " segundo" + (countdown !== 1 ? "s" : "") + "...";');
-            html.push('                }');
-            html.push('                if (countdown <= 0) {');
-            html.push('                    clearInterval(interval);');
-            html.push('                    window.location.href = destinationUrl;');
-            html.push('                }');
-            html.push('            }, 1000);');
-            html.push('        }');
+            
+            // Si hay popup de oferta, no redirigir automáticamente, solo mostrar countdown en el popup
+            if (!hasLocationOffer) {
+                html.push('        var countdown = waitSeconds;');
+                html.push('        ');
+                html.push('        // Mostrar countdown si hay tiempo de espera');
+                html.push('        if (waitSeconds > 0) {');
+                html.push('            var countdownElement = document.createElement("div");');
+                html.push('            countdownElement.id = "redirect-countdown";');
+                html.push('            countdownElement.style.cssText = "position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 10000; font-family: sans-serif;";');
+                html.push('            document.body.appendChild(countdownElement);');
+                html.push('            ');
+                html.push('            var interval = setInterval(function() {');
+                html.push('                countdown--;');
+                html.push('                if (countdownElement) {');
+                html.push('                    countdownElement.textContent = "Redirigiendo en " + countdown + " segundo" + (countdown !== 1 ? "s" : "") + "...";');
+                html.push('                }');
+                html.push('                if (countdown <= 0) {');
+                html.push('                    clearInterval(interval);');
+                html.push('                    window.location.href = destinationUrl;');
+                html.push('                }');
+                html.push('            }, 1000);');
+                html.push('        }');
+            } else {
+                // Si hay popup, actualizar el timer del popup
+                html.push('        // Actualizar timer en el popup');
+                html.push('        var timerElement = document.querySelector(".location-offer-timer span");');
+                html.push('        if (timerElement && waitSeconds > 0) {');
+                html.push('            var countdown = waitSeconds;');
+                html.push('            var interval = setInterval(function() {');
+                html.push('                countdown--;');
+                html.push('                if (timerElement) {');
+                html.push('                    if (countdown > 0) {');
+                html.push('                        timerElement.textContent = "⏰ Redirigiendo en " + countdown + " segundo" + (countdown !== 1 ? "s" : "") + "...";');
+                html.push('                    } else {');
+                html.push('                        timerElement.textContent = "⏰ ¡Tiempo terminado!";');
+                html.push('                    }');
+                html.push('                }');
+                html.push('                if (countdown <= 0) {');
+                html.push('                    clearInterval(interval);');
+                html.push('                }');
+                html.push('            }, 1000);');
+                html.push('        }');
+            }
             html.push('        ');
             html.push('        // Tracking script');
             html.push('        document.querySelectorAll("form").forEach(function(form) {');
@@ -1992,6 +2457,137 @@
             });
         }
 
+        // URL Validation
+        function initializeUrlValidation() {
+            // Función para validar URL
+            function validateUrl(url) {
+                if (!url || url.trim() === '') {
+                    return { valid: false, message: '' };
+                }
+                
+                // Agregar https:// si no tiene protocolo
+                let testUrl = url.trim();
+                if (!testUrl.match(/^https?:\/\//i)) {
+                    testUrl = 'https://' + testUrl;
+                }
+                
+                try {
+                    const urlObj = new URL(testUrl);
+                    // Validar que tenga protocolo válido
+                    if (!['http:', 'https:'].includes(urlObj.protocol)) {
+                        return { valid: false, message: 'URL debe usar http:// o https://' };
+                    }
+                    // Validar que tenga hostname
+                    if (!urlObj.hostname || urlObj.hostname.length < 3) {
+                        return { valid: false, message: 'URL inválida' };
+                    }
+                    return { valid: true, message: 'URL válida', fullUrl: testUrl };
+                } catch (e) {
+                    return { valid: false, message: 'Formato de URL inválido' };
+                }
+            }
+            
+            // Función para configurar validación de un campo
+            function setupUrlValidation(urlInput, urlIcon, testBtn, validationMsg) {
+                if (!urlInput || !urlIcon || !testBtn || !validationMsg) {
+                    return;
+                }
+                
+                // Función para actualizar UI según validación
+                function updateUrlValidation() {
+                    const url = urlInput.value.trim();
+                    const validation = validateUrl(url);
+                    
+                    // Remover clases anteriores
+                    urlInput.classList.remove('valid', 'invalid');
+                    urlIcon.classList.remove('valid-icon', 'invalid-icon', 'fa-check-circle', 'fa-exclamation-circle');
+                    validationMsg.classList.remove('valid-msg', 'invalid-msg');
+                    validationMsg.textContent = '';
+                    
+                    if (url === '') {
+                        // Estado vacío
+                        urlIcon.className = urlIcon.className.includes('modal') ? 'fas fa-link url-icon-modal' : 'fas fa-link url-icon';
+                        testBtn.classList.remove('show');
+                        testBtn.style.display = 'none';
+                        return;
+                    }
+                    
+                    if (validation.valid) {
+                        // URL válida
+                        urlInput.classList.add('valid');
+                        urlIcon.classList.add('valid-icon', 'fa-check-circle');
+                        urlIcon.classList.remove('fa-link');
+                        validationMsg.classList.add('valid-msg');
+                        validationMsg.textContent = '✓ URL válida';
+                        testBtn.style.display = 'block';
+                        testBtn.classList.add('show');
+                        testBtn.dataset.url = validation.fullUrl;
+                    } else {
+                        // URL inválida
+                        urlInput.classList.add('invalid');
+                        urlIcon.classList.add('invalid-icon', 'fa-exclamation-circle');
+                        urlIcon.classList.remove('fa-link');
+                        if (validation.message) {
+                            validationMsg.classList.add('invalid-msg');
+                            validationMsg.textContent = '⚠ ' + validation.message;
+                        }
+                        testBtn.classList.remove('show');
+                        setTimeout(() => {
+                            if (!urlInput.classList.contains('valid')) {
+                                testBtn.style.display = 'none';
+                            }
+                        }, 300);
+                    }
+                }
+                
+                // Validar en tiempo real
+                urlInput.addEventListener('input', updateUrlValidation);
+                urlInput.addEventListener('blur', function() {
+                    // Auto-completar con https:// si no tiene protocolo
+                    const url = this.value.trim();
+                    if (url && !url.match(/^https?:\/\//i)) {
+                        const validation = validateUrl(url);
+                        if (validation.valid && validation.fullUrl) {
+                            this.value = validation.fullUrl;
+                            updateUrlValidation();
+                        }
+                    }
+                });
+                
+                // Botón para probar URL
+                testBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const url = this.dataset.url || urlInput.value.trim();
+                    if (url) {
+                        let testUrl = url;
+                        if (!testUrl.match(/^https?:\/\//i)) {
+                            testUrl = 'https://' + testUrl;
+                        }
+                        window.open(testUrl, '_blank', 'noopener,noreferrer');
+                    }
+                });
+                
+                // Validación inicial
+                updateUrlValidation();
+            }
+            
+            // Configurar validación para el campo principal
+            setupUrlValidation(
+                document.getElementById('destinationUrlMain'),
+                document.getElementById('urlIcon'),
+                document.getElementById('testUrlBtn'),
+                document.getElementById('urlValidationMsg')
+            );
+            
+            // Configurar validación para el campo del modal
+            setupUrlValidation(
+                document.getElementById('destinationUrl'),
+                document.getElementById('urlIconModal'),
+                document.getElementById('testUrlBtnModal'),
+                document.getElementById('urlValidationMsgModal')
+            );
+        }
+        
         // Close modal on outside click
         function initializeModal() {
             const modal = document.getElementById('exportModal');
