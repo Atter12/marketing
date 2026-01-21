@@ -618,6 +618,22 @@
             font-size: 14px;
         }
 
+        /* Editor Panel */
+        .editor-panel {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+        }
+        
+        .editor-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
         /* Properties Panel */
         .properties-panel {
             background: white;
@@ -1195,6 +1211,37 @@
                 min-height: auto;
                 max-height: none;
             }
+            
+            .editor-panel {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                height: 100vh;
+                overflow-y: auto;
+                background: white;
+                padding: 20px;
+            }
+            
+            .editor-panel.mobile-active {
+                display: block;
+            }
+            
+            #editPopupBtn {
+                display: inline-flex !important;
+            }
+            
+            .mobile-close-editor {
+                display: block !important;
+            }
+            
+            .editor-panel .sidebar-section {
+                margin-bottom: 24px;
+            }
+        }
 
             .mobile-toggle {
                 display: block;
@@ -1392,7 +1439,61 @@
     <!-- Builder Section -->
     <section class="builder-section">
         <div class="container">
-            <div class="builder-container" style="grid-template-columns: 1fr;">
+            <div class="builder-container" style="grid-template-columns: 320px 1fr;">
+                <!-- Editor Visual Panel -->
+                <div class="editor-panel" id="editorPanel">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title" style="position: relative;">
+                            <i class="fas fa-palette"></i>
+                            Personalizar Popup
+                            <button onclick="toggleEditorPanel()" style="display: none; position: absolute; right: 0; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; border: none; border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-size: 14px;" class="mobile-close-editor">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="editor-form">
+                            <div class="property-group">
+                                <label class="property-label">Título Principal</label>
+                                <input type="text" id="popupTitle" class="property-input" value="¡Espera! Oferta especial para" placeholder="Título del popup">
+                                <small>Texto que aparece antes de la ubicación</small>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Subtítulo</label>
+                                <textarea id="popupSubtitle" class="property-input property-textarea" placeholder="Descripción de la oferta">¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!</textarea>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Texto del Botón</label>
+                                <input type="text" id="popupButtonText" class="property-input" value="CLICK AQUÍ PARA CONTINUAR" placeholder="Texto del botón CTA">
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Color del Gradiente (Inicio)</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="popupGradientStart" class="color-picker" value="#8b5cf6">
+                                    <input type="text" id="popupGradientStartText" class="property-input" value="#8b5cf6" style="flex: 1;">
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Color del Gradiente (Fin)</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="popupGradientEnd" class="color-picker" value="#ec4899">
+                                    <input type="text" id="popupGradientEndText" class="property-input" value="#ec4899" style="flex: 1;">
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Color de Ubicación</label>
+                                <div class="color-input-group">
+                                    <input type="color" id="popupLocationColor" class="color-picker" value="#dc2626">
+                                    <input type="text" id="popupLocationColorText" class="property-input" value="#dc2626" style="flex: 1;">
+                                </div>
+                            </div>
+                            <div class="property-group">
+                                <label class="property-label">Ubicación por Defecto</label>
+                                <input type="text" id="popupDefaultLocation" class="property-input" value="Lima" placeholder="Ciudad por defecto">
+                                <small>Se usará si no se detecta la ubicación</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <!-- Preview Area -->
                 <div class="preview-area">
                     <div class="preview-toolbar">
@@ -1430,6 +1531,9 @@
                             </button>
                         </div>
                         <div class="preview-actions">
+                            <button class="btn-action btn-export" id="editPopupBtn" style="background: var(--bg-gray); color: var(--text-dark); border: 2px solid var(--border); display: none;" onclick="toggleEditorPanel()">
+                                <i class="fas fa-palette"></i> Personalizar
+                            </button>
                             <button class="btn-action btn-export" id="exportBtn">
                                 <i class="fas fa-code"></i> Exportar HTML
                             </button>
@@ -1582,6 +1686,7 @@
                 initializePixelInputs();
                 initializeModal();
                 initializeUrlValidation();
+                initializeVisualEditor();
                 // Renderizar preview inicial si hay URL
                 renderPreview();
                 console.log('[Pre-Landing Builder] Inicialización completa');
@@ -1680,30 +1785,42 @@
             
             // Si hay URL, mostrar automáticamente el popup de oferta
             if (urlValue) {
+                // Obtener valores del editor visual
+                const popupTitle = document.getElementById('popupTitle') ? document.getElementById('popupTitle').value.trim() : '¡Espera! Oferta especial para';
+                const popupSubtitle = document.getElementById('popupSubtitle') ? document.getElementById('popupSubtitle').value.trim() : '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!';
+                const popupButtonText = document.getElementById('popupButtonText') ? document.getElementById('popupButtonText').value.trim() : 'CLICK AQUÍ PARA CONTINUAR';
+                const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
+                const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
+                const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
+                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                
                 const locationOfferData = {
-                    title: '¡Espera! Oferta especial para',
-                    subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
-                    cta: 'CLICK AQUÍ PARA CONTINUAR',
-                    location: 'Lima' // Se detectará automáticamente en el HTML generado
+                    title: popupTitle,
+                    subtitle: popupSubtitle,
+                    cta: popupButtonText,
+                    location: popupDefaultLocation,
+                    gradientStart: popupGradientStart,
+                    gradientEnd: popupGradientEnd,
+                    locationColor: popupLocationColor
                 };
                 
                 previewContent.innerHTML = `
                     <div class="preview-content-wrapper">
                         <div class="location-offer-preview">
                             <div class="location-offer-card">
-                                <div class="location-offer-icon">
+                                <div class="location-offer-icon" style="background: linear-gradient(135deg, ${escapeHtml(locationOfferData.gradientStart)} 0%, ${escapeHtml(locationOfferData.gradientEnd)} 100%);">
                                     <i class="fas fa-gift"></i>
                                 </div>
                                 <h2 class="location-offer-title">
                                     ${escapeHtml(locationOfferData.title)} 
-                                    <span class="location-highlight">${escapeHtml(locationOfferData.location)}</span>
+                                    <span class="location-highlight" style="color: ${escapeHtml(locationOfferData.locationColor)};">${escapeHtml(locationOfferData.location)}</span>
                                     <span class="blinking-cursor">|</span>
                                 </h2>
                                 <p class="location-offer-subtitle">${escapeHtml(locationOfferData.subtitle)}</p>
                                 <div class="location-offer-timer">
                                     <span>⏰ ¡Tiempo terminado!</span>
                                 </div>
-                                <button class="location-offer-cta">
+                                <button class="location-offer-cta" style="background: linear-gradient(135deg, ${escapeHtml(locationOfferData.gradientStart)} 0%, ${escapeHtml(locationOfferData.gradientEnd)} 100%);">
                                     <i class="fas fa-hand-point-right"></i>
                                     ${escapeHtml(locationOfferData.cta)}
                                     <i class="fas fa-hand-point-left"></i>
@@ -2225,11 +2342,29 @@
         }
         
         function generateShareableUrl(destinationUrl, waitSeconds) {
+            // Obtener valores del editor visual
+            const popupTitle = document.getElementById('popupTitle') ? encodeURIComponent(document.getElementById('popupTitle').value.trim()) : '';
+            const popupSubtitle = document.getElementById('popupSubtitle') ? encodeURIComponent(document.getElementById('popupSubtitle').value.trim()) : '';
+            const popupButtonText = document.getElementById('popupButtonText') ? encodeURIComponent(document.getElementById('popupButtonText').value.trim()) : '';
+            const popupGradientStart = document.getElementById('popupGradientStart') ? encodeURIComponent(document.getElementById('popupGradientStart').value) : '';
+            const popupGradientEnd = document.getElementById('popupGradientEnd') ? encodeURIComponent(document.getElementById('popupGradientEnd').value) : '';
+            const popupLocationColor = document.getElementById('popupLocationColor') ? encodeURIComponent(document.getElementById('popupLocationColor').value) : '';
+            const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? encodeURIComponent(document.getElementById('popupDefaultLocation').value.trim()) : '';
+            
             // Codificar parámetros en la URL
             const params = new URLSearchParams({
                 url: destinationUrl,
                 wait: waitSeconds.toString()
             });
+            
+            // Agregar parámetros personalizados si tienen valores
+            if (popupTitle) params.set('title', decodeURIComponent(popupTitle));
+            if (popupSubtitle) params.set('subtitle', decodeURIComponent(popupSubtitle));
+            if (popupButtonText) params.set('button', decodeURIComponent(popupButtonText));
+            if (popupGradientStart) params.set('gradientStart', decodeURIComponent(popupGradientStart));
+            if (popupGradientEnd) params.set('gradientEnd', decodeURIComponent(popupGradientEnd));
+            if (popupLocationColor) params.set('locationColor', decodeURIComponent(popupLocationColor));
+            if (popupDefaultLocation) params.set('defaultLocation', decodeURIComponent(popupDefaultLocation));
             
             // Obtener la URL base (dominio actual)
             const baseUrl = window.location.origin + window.location.pathname.replace('pre-landing-builder.html', '') + 'landing.html';
@@ -2258,14 +2393,19 @@
                             </button>
                         </div>
                         <small style="display: block; margin-top: 8px; color: var(--text-medium);">
-                            <i class="fas fa-info-circle"></i> Comparte esta URL directamente. El popup se generará automáticamente.
+                            <i class="fas fa-info-circle"></i> Comparte esta URL directamente. El popup se generará automáticamente con todas tus personalizaciones.
                         </small>
                     </div>
                     <div class="property-group" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
                         <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">✅ Listo para Usar</label>
                         <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
-                            El archivo <strong>landing.html</strong> ya está creado. Solo sube este archivo a tu proyecto de Vercel y comparte la URL generada. El popup se mostrará automáticamente con geolocalización.
+                            El archivo <strong>landing.html</strong> ya está creado. Solo sube este archivo a tu proyecto de Vercel y comparte la URL generada. El popup se mostrará automáticamente con:
                         </p>
+                        <ul style="font-size: 13px; color: var(--text-medium); margin-top: 12px; padding-left: 20px; line-height: 1.8;">
+                            <li>✅ Geolocalización automática</li>
+                            <li>✅ Personalizaciones aplicadas (textos, colores, etc.)</li>
+                            <li>✅ Redirección funcionando correctamente</li>
+                        </ul>
                     </div>
                 </div>
             `;
@@ -2536,29 +2676,40 @@
             
             // Si hay URL, siempre generar popup de oferta con ubicación
             if (hasLocationOffer) {
-                // Datos por defecto del popup
+                // Obtener valores del editor visual
+                const popupTitle = document.getElementById('popupTitle') ? document.getElementById('popupTitle').value.trim() : '¡Espera! Oferta especial para';
+                const popupSubtitle = document.getElementById('popupSubtitle') ? document.getElementById('popupSubtitle').value.trim() : '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!';
+                const popupButtonText = document.getElementById('popupButtonText') ? document.getElementById('popupButtonText').value.trim() : 'CLICK AQUÍ PARA CONTINUAR';
+                const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
+                const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
+                const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
+                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                
                 const locationOfferData = {
-                    title: '¡Espera! Oferta especial para',
-                    subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
-                    cta: 'CLICK AQUÍ PARA CONTINUAR',
-                    location: 'Lima'
+                    title: popupTitle,
+                    subtitle: popupSubtitle,
+                    cta: popupButtonText,
+                    location: popupDefaultLocation,
+                    gradientStart: popupGradientStart,
+                    gradientEnd: popupGradientEnd,
+                    locationColor: popupLocationColor
                 };
                 
                 html.push('    <div id="locationOfferOverlay" class="location-offer-overlay" style="display: none;">');
                 html.push('        <div class="location-offer-card">');
-                html.push('            <div class="location-offer-icon">');
+                html.push('            <div class="location-offer-icon" style="background: linear-gradient(135deg, ' + escapeHtml(locationOfferData.gradientStart) + ' 0%, ' + escapeHtml(locationOfferData.gradientEnd) + ' 100%);">');
                 html.push('                <i class="fas fa-gift"></i>');
                 html.push('            </div>');
                 html.push('            <h2 class="location-offer-title">');
                 html.push('                ' + escapeHtml(locationOfferData.title) + ' ');
-                html.push('                <span class="location-highlight" id="detectedLocation">' + escapeHtml(locationOfferData.location) + '</span>');
+                html.push('                <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(locationOfferData.locationColor) + ';">' + escapeHtml(locationOfferData.location) + '</span>');
                 html.push('                <span class="blinking-cursor">|</span>');
                 html.push('            </h2>');
                 html.push('            <p class="location-offer-subtitle">' + escapeHtml(locationOfferData.subtitle) + '</p>');
                 html.push('            <div class="location-offer-timer">');
                 html.push('                <span>⏰ ¡Tiempo terminado!</span>');
                 html.push('            </div>');
-                html.push('            <button class="location-offer-cta" id="locationOfferCTA">');
+                html.push('            <button class="location-offer-cta" id="locationOfferCTA" style="background: linear-gradient(135deg, ' + escapeHtml(locationOfferData.gradientStart) + ' 0%, ' + escapeHtml(locationOfferData.gradientEnd) + ' 100%);">');
                 html.push('                <i class="fas fa-hand-point-right"></i>');
                 html.push('                ' + escapeHtml(locationOfferData.cta));
                 html.push('                <i class="fas fa-hand-point-left"></i>');
@@ -2572,10 +2723,23 @@
             
             // Script de geolocalización si hay popup de oferta
             if (hasLocationOffer) {
+                // Obtener valores del editor visual
+                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
+                
                 html.push('        // Geolocalización automática');
-                html.push('        var detectedLocation = "Lima";');
+                html.push('        var detectedLocation = "' + escapeHtml(popupDefaultLocation) + '";');
+                html.push('        var locationColor = "' + escapeHtml(popupLocationColor) + '";');
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
+                html.push('        ');
+                html.push('        // Función helper para actualizar ubicación manteniendo el color');
+                html.push('        function updateLocationText(location) {');
+                html.push('            if (locationElement) {');
+                html.push('                locationElement.textContent = location;');
+                html.push('                locationElement.style.color = locationColor;');
+                html.push('            }');
+                html.push('        }');
                 html.push('        ');
                 html.push('        // Sistema de logging para debug');
                 html.push('        function debugLog(message, data) {');
@@ -2602,11 +2766,11 @@
                 html.push('                                    debugLog("Datos de geocodificación:", data);');
                 html.push('                                    if (data.city) {');
                 html.push('                                        detectedLocation = data.city;');
-                html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                        updateLocationText(detectedLocation);');
                 html.push('                                        debugLog("Ubicación actualizada desde GPS:", detectedLocation);');
                 html.push('                                    } else if (data.principalSubdivision) {');
                 html.push('                                        detectedLocation = data.principalSubdivision;');
-                html.push('                                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                        updateLocationText(detectedLocation);');
                 html.push('                                        debugLog("Ubicación actualizada desde GPS (región):", detectedLocation);');
                 html.push('                                    }');
                 html.push('                                })');
@@ -2641,11 +2805,11 @@
                 html.push('                    debugLog("Datos de ipapi.co:", data);');
                 html.push('                    if (data.city) {');
                 html.push('                        detectedLocation = data.city;');
-                html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                        updateLocationText(detectedLocation);');
                 html.push('                        debugLog("Ubicación actualizada desde IP:", detectedLocation);');
                 html.push('                    } else if (data.region) {');
                 html.push('                        detectedLocation = data.region;');
-                html.push('                        if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                        updateLocationText(detectedLocation);');
                 html.push('                        debugLog("Ubicación actualizada desde IP (región):", detectedLocation);');
                 html.push('                    }');
                 html.push('                })');
@@ -2661,11 +2825,11 @@
                 html.push('                            debugLog("Datos de ip-api.com:", data);');
                 html.push('                            if (data.city) {');
                 html.push('                                detectedLocation = data.city;');
-                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                updateLocationText(detectedLocation);');
                 html.push('                                debugLog("Ubicación actualizada desde IP (API 2):", detectedLocation);');
                 html.push('                            } else if (data.regionName) {');
                 html.push('                                detectedLocation = data.regionName;');
-                html.push('                                if (locationElement) locationElement.textContent = detectedLocation;');
+                html.push('                                updateLocationText(detectedLocation);');
                 html.push('                                debugLog("Ubicación actualizada desde IP (región API 2):", detectedLocation);');
                 html.push('                            }');
                 html.push('                        })');
@@ -3126,6 +3290,76 @@
                 document.getElementById('testUrlBtnModal'),
                 document.getElementById('urlValidationMsgModal')
             );
+        }
+        
+        // Toggle Editor Panel (móvil)
+        function toggleEditorPanel() {
+            const editorPanel = document.getElementById('editorPanel');
+            if (editorPanel) {
+                editorPanel.classList.toggle('mobile-active');
+            }
+        }
+        
+        // Initialize Visual Editor
+        function initializeVisualEditor() {
+            // Sincronizar campos de color
+            const gradientStart = document.getElementById('popupGradientStart');
+            const gradientStartText = document.getElementById('popupGradientStartText');
+            const gradientEnd = document.getElementById('popupGradientEnd');
+            const gradientEndText = document.getElementById('popupGradientEndText');
+            const locationColor = document.getElementById('popupLocationColor');
+            const locationColorText = document.getElementById('popupLocationColorText');
+            
+            // Sincronizar color picker con input de texto
+            if (gradientStart && gradientStartText) {
+                gradientStart.addEventListener('input', function() {
+                    gradientStartText.value = this.value;
+                    renderPreview();
+                });
+                gradientStartText.addEventListener('input', function() {
+                    if (/^#[0-9A-F]{6}$/i.test(this.value)) {
+                        gradientStart.value = this.value;
+                        renderPreview();
+                    }
+                });
+            }
+            
+            if (gradientEnd && gradientEndText) {
+                gradientEnd.addEventListener('input', function() {
+                    gradientEndText.value = this.value;
+                    renderPreview();
+                });
+                gradientEndText.addEventListener('input', function() {
+                    if (/^#[0-9A-F]{6}$/i.test(this.value)) {
+                        gradientEnd.value = this.value;
+                        renderPreview();
+                    }
+                });
+            }
+            
+            if (locationColor && locationColorText) {
+                locationColor.addEventListener('input', function() {
+                    locationColorText.value = this.value;
+                    renderPreview();
+                });
+                locationColorText.addEventListener('input', function() {
+                    if (/^#[0-9A-F]{6}$/i.test(this.value)) {
+                        locationColor.value = this.value;
+                        renderPreview();
+                    }
+                });
+            }
+            
+            // Agregar listeners a todos los campos del editor
+            const editorFields = ['popupTitle', 'popupSubtitle', 'popupButtonText', 'popupDefaultLocation'];
+            editorFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('input', function() {
+                        renderPreview();
+                    });
+                }
+            });
         }
         
         // Close modal on outside click

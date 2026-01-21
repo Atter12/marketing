@@ -153,17 +153,75 @@
         const destinationUrl = urlParams.get('url') || '';
         const waitSeconds = parseInt(urlParams.get('wait')) || 5;
         
+        // Obtener parámetros personalizados del editor
+        const popupTitle = urlParams.get('title') || '¡Espera! Oferta especial para';
+        const popupSubtitle = urlParams.get('subtitle') || '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!';
+        const popupButtonText = urlParams.get('button') || 'CLICK AQUÍ PARA CONTINUAR';
+        const popupGradientStart = urlParams.get('gradientStart') || '#8b5cf6';
+        const popupGradientEnd = urlParams.get('gradientEnd') || '#ec4899';
+        const popupLocationColor = urlParams.get('locationColor') || '#dc2626';
+        const popupDefaultLocation = urlParams.get('defaultLocation') || 'Lima';
+        
         if (!destinationUrl) {
             document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h1>Error</h1><p>URL de destino no especificada</p></div>';
         } else {
+            // Aplicar personalizaciones al popup
+            function applyCustomizations() {
+                // Actualizar título
+                const titleElement = document.querySelector('.location-offer-title');
+                if (titleElement) {
+                    const locationSpan = titleElement.querySelector('.location-highlight');
+                    if (locationSpan) {
+                        titleElement.innerHTML = escapeHtml(popupTitle) + ' <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(popupLocationColor) + ';">' + escapeHtml(popupDefaultLocation) + '</span><span class="blinking-cursor">|</span>';
+                    }
+                }
+                
+                // Actualizar subtítulo
+                const subtitleElement = document.querySelector('.location-offer-subtitle');
+                if (subtitleElement) {
+                    subtitleElement.textContent = popupSubtitle;
+                }
+                
+                // Actualizar botón
+                const buttonElement = document.getElementById('locationOfferCTA');
+                if (buttonElement) {
+                    buttonElement.innerHTML = '<i class="fas fa-hand-point-right"></i>' + escapeHtml(popupButtonText) + '<i class="fas fa-hand-point-left"></i>';
+                    buttonElement.style.background = 'linear-gradient(135deg, ' + escapeHtml(popupGradientStart) + ' 0%, ' + escapeHtml(popupGradientEnd) + ' 100%)';
+                }
+                
+                // Actualizar icono
+                const iconElement = document.querySelector('.location-offer-icon');
+                if (iconElement) {
+                    iconElement.style.background = 'linear-gradient(135deg, ' + escapeHtml(popupGradientStart) + ' 0%, ' + escapeHtml(popupGradientEnd) + ' 100%)';
+                }
+            }
+            
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            // Aplicar personalizaciones inmediatamente
+            applyCustomizations();
+            
             // Geolocalización automática
-            var detectedLocation = "Lima";
+            var detectedLocation = popupDefaultLocation;
             var locationOfferOverlay = document.getElementById("locationOfferOverlay");
             var locationElement = document.getElementById("detectedLocation");
             
             // Sistema de logging para debug
             function debugLog(message, data) {
                 console.log('[Landing] ' + message, data || '');
+            }
+            
+            // Función helper para actualizar ubicación manteniendo el color
+            function updateLocationText(location) {
+                if (locationElement) {
+                    locationElement.textContent = location;
+                    locationElement.style.color = popupLocationColor;
+                }
             }
             
             // Intentar detectar ubicación automáticamente con múltiples estrategias
@@ -186,11 +244,11 @@
                                         debugLog('Datos de geocodificación:', data);
                                         if (data.city) {
                                             detectedLocation = data.city;
-                                            if (locationElement) locationElement.textContent = detectedLocation;
+                                            updateLocationText(detectedLocation);
                                             debugLog('Ubicación actualizada desde GPS:', detectedLocation);
                                         } else if (data.principalSubdivision) {
                                             detectedLocation = data.principalSubdivision;
-                                            if (locationElement) locationElement.textContent = detectedLocation;
+                                            updateLocationText(detectedLocation);
                                             debugLog('Ubicación actualizada desde GPS (región):', detectedLocation);
                                         }
                                     })
@@ -233,11 +291,11 @@
                         debugLog('Datos de ' + apis[0].name + ':', data);
                         if (data.city) {
                             detectedLocation = data.city;
-                            if (locationElement) locationElement.textContent = detectedLocation;
+                            updateLocationText(detectedLocation);
                             debugLog('Ubicación actualizada desde IP:', detectedLocation);
                         } else if (data.region) {
                             detectedLocation = data.region;
-                            if (locationElement) locationElement.textContent = detectedLocation;
+                            updateLocationText(detectedLocation);
                             debugLog('Ubicación actualizada desde IP (región):', detectedLocation);
                         } else if (data.query) {
                             // ip-api.com usa 'query' para la IP
@@ -259,11 +317,11 @@
                             debugLog('Datos de ' + apis[1].name + ':', data);
                             if (data.city) {
                                 detectedLocation = data.city;
-                                if (locationElement) locationElement.textContent = detectedLocation;
+                                updateLocationText(detectedLocation);
                                 debugLog('Ubicación actualizada desde IP (API 2):', detectedLocation);
                             } else if (data.regionName) {
                                 detectedLocation = data.regionName;
-                                if (locationElement) locationElement.textContent = detectedLocation;
+                                updateLocationText(detectedLocation);
                                 debugLog('Ubicación actualizada desde IP (región API 2):', detectedLocation);
                             }
                         })
