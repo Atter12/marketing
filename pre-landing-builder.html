@@ -1497,21 +1497,15 @@
                 <!-- Preview Area -->
                 <div class="preview-area">
                     <div class="preview-toolbar">
-                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 10px; height: 10px; background: #10b981; border-radius: 50%;"></div>
-                                <span style="font-size: 13px; color: var(--text-medium); font-weight: 600;">Actualización automática activa</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 12px; flex: 2; max-width: 700px;">
+                        <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0;">
                             <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
                                 <label style="font-size: 11px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px;">
                                     <i class="fas fa-link" style="margin-right: 4px;"></i>URL de Destino
                                 </label>
                                 <div style="position: relative; display: flex; align-items: center; gap: 8px;">
-                                    <input type="url" id="destinationUrlMain" class="property-input url-input" placeholder="https://tienda.com/producto" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1;">
+                                    <input type="url" id="destinationUrlMain" class="property-input url-input" placeholder="https://tienda.com/producto" style="font-size: 13px; padding: 10px 14px 10px 40px; margin: 0; flex: 1; min-width: 0;">
                                     <i class="fas fa-link url-icon" id="urlIcon" style="position: absolute; left: 14px; color: var(--text-light); font-size: 14px; pointer-events: none;"></i>
-                                    <button type="button" id="testUrlBtn" class="btn-test-url" title="Probar URL" style="display: none; padding: 10px 14px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; white-space: nowrap;">
+                                    <button type="button" id="testUrlBtn" class="btn-test-url" title="Probar URL" style="display: none; padding: 10px 14px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.3s; white-space: nowrap; flex-shrink: 0;">
                                         <i class="fas fa-external-link-alt"></i>
                                     </button>
                                 </div>
@@ -1534,9 +1528,6 @@
                             <button class="btn-action btn-export" id="editPopupBtn" style="background: var(--bg-gray); color: var(--text-dark); border: 2px solid var(--border); display: none;" onclick="toggleEditorPanel()">
                                 <i class="fas fa-palette"></i> Personalizar
                             </button>
-                            <button class="btn-action btn-export" id="exportBtn">
-                                <i class="fas fa-code"></i> Exportar HTML
-                            </button>
                             <button class="btn-action btn-export" id="generateUrlBtn" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 100%);">
                                 <i class="fas fa-link"></i> Generar URL
                             </button>
@@ -1557,58 +1548,6 @@
     </section>
 
     <!-- Export Modal -->
-    <div class="modal" id="exportModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--primary);">Exportar</span>
-                    <span style="color: var(--secondary);">Landing Page</span>
-                </h2>
-                <button class="modal-close" onclick="closeExportModal()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="property-group">
-                <label class="property-label" style="color: var(--primary); font-size: 14px;">URL de Destino</label>
-                <div style="position: relative; display: flex; align-items: center; gap: 8px;">
-                    <input type="url" class="property-input url-input-modal" id="destinationUrl" placeholder="https://ejemplo.com/oferta-final" required style="font-size: 15px; padding: 14px 16px 14px 45px; flex: 1;">
-                    <i class="fas fa-link url-icon-modal" id="urlIconModal" style="position: absolute; left: 16px; color: var(--text-light); font-size: 15px; pointer-events: none;"></i>
-                    <button type="button" id="testUrlBtnModal" class="btn-test-url-modal" title="Probar URL" style="display: none; padding: 14px 18px; background: var(--secondary); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; white-space: nowrap;">
-                        <i class="fas fa-external-link-alt"></i> Probar
-                    </button>
-                </div>
-                <small id="urlValidationMsgModal" style="font-size: 12px; color: var(--text-light); margin-top: 6px; display: none;"></small>
-                <small style="display: block; margin-top: 6px;">URL a la que se redirigirá después del tiempo de espera</small>
-            </div>
-            <div class="property-group">
-                <label class="property-label" style="color: var(--primary); font-size: 14px;">Segundos de Espera (1-30)</label>
-                <input type="number" class="property-input" id="waitSeconds" min="1" max="30" value="5" placeholder="5" style="font-size: 15px; padding: 14px 16px;">
-                <small>Tiempo en segundos antes de redirigir automáticamente</small>
-            </div>
-            <div class="property-group">
-                <label class="property-label">Píxel de Facebook (Opcional)</label>
-                <input type="text" class="property-input" id="facebookPixel" placeholder="Ej: 123456789012345">
-            </div>
-            <div class="property-group">
-                <label class="property-label">Píxel de TikTok (Opcional)</label>
-                <input type="text" class="property-input" id="tiktokPixel" placeholder="Ej: C1234567890ABCDEF">
-            </div>
-            <div class="property-group">
-                <label class="property-label">Google Analytics (Opcional)</label>
-                <input type="text" class="property-input" id="googleAnalytics" placeholder="Ej: G-XXXXXXXXXX">
-            </div>
-            <div class="property-group" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid var(--border);">
-                <label class="property-label" style="font-size: 13px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-code" style="color: var(--primary);"></i>
-                    Código HTML Generado
-                </label>
-                <div class="code-preview" id="codePreview" style="min-height: 200px; font-size: 12px;">// Por favor, ingresa la URL de Destino Final.</div>
-                <button class="btn-copy" onclick="copyCode()" style="margin-top: 16px;">
-                    <i class="fas fa-copy"></i> COPIAR CÓDIGO HTML
-                </button>
-            </div>
-        </div>
-    </div>
 
     <script>
         // State Management
@@ -1684,7 +1623,6 @@
                 initializeDeviceToggle();
                 initializeExportButtons();
                 initializePixelInputs();
-                initializeModal();
                 initializeUrlValidation();
                 initializeVisualEditor();
                 // Renderizar preview inicial si hay URL
@@ -2141,22 +2079,7 @@
 
         // Export - Initialize after DOM is ready
         function initializeExportButtons() {
-            const exportBtn = document.getElementById('exportBtn');
             const generateUrlBtn = document.getElementById('generateUrlBtn');
-            const previewBtn = document.getElementById('previewBtn');
-            
-            if (exportBtn) {
-                exportBtn.addEventListener('click', function() {
-                    const destinationUrlMain = document.getElementById('destinationUrlMain');
-                    const urlValue = destinationUrlMain ? destinationUrlMain.value.trim() : '';
-                    if (!urlValue) {
-                        alert('Por favor, ingresa una URL de destino antes de exportar');
-                        if (destinationUrlMain) destinationUrlMain.focus();
-                        return;
-                    }
-                    openExportModal();
-                });
-            }
             
             if (generateUrlBtn) {
                 generateUrlBtn.addEventListener('click', function() {
@@ -2174,171 +2097,23 @@
                     generateShareableUrl(urlValue, waitValue);
                 });
             }
-            
-            if (previewBtn) {
-                previewBtn.addEventListener('click', function() {
-                    if (components.length === 0) {
-                        alert('Agrega al menos un componente para ver la vista previa');
-                        return;
-                    }
-                    const destinationUrlMain = document.getElementById('destinationUrlMain');
-                    const destinationUrlModal = document.getElementById('destinationUrl');
-                    const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
-                    
-                    if (!urlValue) {
-                        alert('Por favor, configura la URL de Destino Final antes de ver la vista previa');
-                        if (destinationUrlMain) {
-                            destinationUrlMain.focus();
-                        } else if (destinationUrlModal) {
-                            destinationUrlModal.focus();
-                        }
-                        return;
-                    }
-                    try {
-                        const htmlCode = generateHTML();
-                        const newWindow = window.open('', '_blank');
-                        if (newWindow) {
-                            newWindow.document.write(htmlCode);
-                            newWindow.document.close();
-                        }
-                    } catch (error) {
-                        console.error('[Pre-Landing Builder] Error al generar vista previa:', error);
-                        alert('Error al generar la vista previa. Por favor, intenta de nuevo.');
-                    }
-                });
-            }
         }
 
-        function openExportModal() {
-            const modal = document.getElementById('exportModal');
-            const destinationUrlMain = document.getElementById('destinationUrlMain');
-            const destinationUrlModal = document.getElementById('destinationUrl');
-            
-            // Sincronizar valores del campo principal al modal
-            if (destinationUrlMain && destinationUrlModal) {
-                destinationUrlModal.value = destinationUrlMain.value;
-            }
-            
-            const waitSecondsMain = document.getElementById('waitSecondsMain');
-            const waitSecondsModal = document.getElementById('waitSeconds');
-            if (waitSecondsMain && waitSecondsModal) {
-                waitSecondsModal.value = waitSecondsMain.value;
-            }
-            
-            // Validar URL antes de abrir
-            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
-            
-            if (!urlValue) {
-                alert('Por favor, ingresa la URL de Destino antes de exportar');
-                if (destinationUrlMain) {
-                    destinationUrlMain.focus();
-                }
-                return;
-            }
-            
-            updateExportCode();
-            modal.classList.add('active');
-        }
 
-        function updateExportCode() {
-            const codePreview = document.getElementById('codePreview');
-            const destinationUrlMain = document.getElementById('destinationUrlMain');
-            const destinationUrlModal = document.getElementById('destinationUrl');
-            const urlValue = (destinationUrlMain && destinationUrlMain.value.trim()) || (destinationUrlModal && destinationUrlModal.value.trim());
-            
-            if (!codePreview) return;
-            
-            if (!urlValue) {
-                codePreview.textContent = '// Por favor, ingresa la URL de Destino Final.';
-                codePreview.style.color = '#9ca3af';
-                return;
-            }
-            
-            try {
-                const htmlCode = generateHTML();
-                codePreview.textContent = htmlCode;
-                codePreview.style.color = '#10b981';
-                console.log('[Pre-Landing Builder] Código actualizado en preview');
-            } catch (error) {
-                console.error('[Pre-Landing Builder] Error al generar código:', error);
-                codePreview.textContent = '// Error al generar el código. Por favor, verifica los campos.';
-                codePreview.style.color = '#dc2626';
-            }
-        }
         
-        function updateLivePreview() {
-            // Actualizar código de exportación si el modal está abierto
-            const modal = document.getElementById('exportModal');
-            if (modal && modal.classList.contains('active')) {
-                updateExportCode();
-            }
-        }
-
-        // Sincronizar campos principales con modal
-        function syncMainFields() {
-            const mainUrl = document.getElementById('destinationUrlMain');
-            const mainWait = document.getElementById('waitSecondsMain');
-            const modalUrl = document.getElementById('destinationUrl');
-            const modalWait = document.getElementById('waitSeconds');
-            
-            if (mainUrl && modalUrl) {
-                mainUrl.addEventListener('input', function() {
-                    modalUrl.value = this.value;
-                    // Disparar evento input para actualizar validación
-                    modalUrl.dispatchEvent(new Event('input'));
-                    updateExportCode();
-                    updateLivePreview();
-                });
-                modalUrl.addEventListener('input', function() {
-                    mainUrl.value = this.value;
-                    // Disparar evento input para actualizar validación
-                    mainUrl.dispatchEvent(new Event('input'));
-                    updateExportCode();
-                    updateLivePreview();
-                });
-            }
-            
-            if (mainWait && modalWait) {
-                mainWait.addEventListener('input', function() {
-                    modalWait.value = this.value;
-                    updateExportCode();
-                    updateLivePreview();
-                });
-                modalWait.addEventListener('input', function() {
-                    mainWait.value = this.value;
-                    updateExportCode();
-                    updateLivePreview();
-                });
-            }
-        }
-        
-        // Update code when inputs change
+        // Update preview when inputs change
         function initializePixelInputs() {
-            const inputs = ['facebookPixel', 'tiktokPixel', 'googleAnalytics', 'destinationUrl', 'waitSeconds', 'destinationUrlMain', 'waitSecondsMain'];
+            const inputs = ['destinationUrlMain', 'waitSecondsMain'];
             inputs.forEach(id => {
                 const input = document.getElementById(id);
                 if (input) {
                     input.addEventListener('input', function() {
-                        updateExportCode();
-                        if (id === 'destinationUrl' || id === 'waitSeconds' || id === 'destinationUrlMain' || id === 'waitSecondsMain') {
-                            updateLivePreview();
-                            // Si es el campo de URL principal, actualizar vista previa automáticamente
-                            if (id === 'destinationUrlMain') {
-                                renderPreview();
-                            }
+                        if (id === 'destinationUrlMain') {
+                            renderPreview();
                         }
                     });
-                } else {
-                    console.warn('[Pre-Landing Builder] Input no encontrado:', id);
                 }
             });
-            
-            // Sincronizar campos principales con modal
-            syncMainFields();
-        }
-
-        function closeExportModal() {
-            document.getElementById('exportModal').classList.remove('active');
         }
         
         function generateShareableUrl(destinationUrl, waitSeconds) {
@@ -2397,15 +2172,19 @@
                         </small>
                     </div>
                     <div class="property-group" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
-                        <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">✅ Listo para Usar</label>
+                        <label class="property-label" style="font-size: 13px; margin-bottom: 12px;">✨ ¿Qué hace esta URL?</label>
                         <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6;">
-                            El archivo <strong>landing.html</strong> ya está creado. Solo sube este archivo a tu proyecto de Vercel y comparte la URL generada. El popup se mostrará automáticamente con:
+                            Cuando alguien visite esta URL, el sistema automáticamente:
                         </p>
                         <ul style="font-size: 13px; color: var(--text-medium); margin-top: 12px; padding-left: 20px; line-height: 1.8;">
-                            <li>✅ Geolocalización automática</li>
-                            <li>✅ Personalizaciones aplicadas (textos, colores, etc.)</li>
-                            <li>✅ Redirección funcionando correctamente</li>
+                            <li>📍 Detecta la ubicación del visitante automáticamente</li>
+                            <li>🎨 Muestra el popup personalizado con tus textos y colores</li>
+                            <li>⏱️ Espera el tiempo configurado (${waitSeconds} segundos)</li>
+                            <li>🚀 Redirige automáticamente a tu URL de destino</li>
                         </ul>
+                        <p style="font-size: 13px; color: var(--text-medium); line-height: 1.6; margin-top: 16px; padding: 12px; background: var(--bg-gray); border-radius: 8px;">
+                            <strong>💡 Tip:</strong> Puedes usar esta URL en tus campañas de Facebook Ads, TikTok Ads o cualquier plataforma de publicidad. El popup se mostrará automáticamente a cada visitante.
+                        </p>
                     </div>
                 </div>
             `;
@@ -2483,15 +2262,13 @@
 
         function generateHTML() {
             console.log('[Pre-Landing Builder] === GENERANDO HTML ===');
-            // Obtener URL de destino (puede estar en el campo principal o en el modal)
+            // Obtener URL de destino
             const destinationUrlMain = document.getElementById('destinationUrlMain') ? document.getElementById('destinationUrlMain').value.trim() : '';
-            const destinationUrlModal = document.getElementById('destinationUrl') ? document.getElementById('destinationUrl').value.trim() : '';
-            const destinationUrl = destinationUrlMain || destinationUrlModal;
+            const destinationUrl = destinationUrlMain;
             
             // Obtener segundos de espera
             const waitSecondsMain = document.getElementById('waitSecondsMain') ? parseInt(document.getElementById('waitSecondsMain').value) || 5 : 5;
-            const waitSecondsModal = document.getElementById('waitSeconds') ? parseInt(document.getElementById('waitSeconds').value) || 5 : 5;
-            const waitSeconds = waitSecondsMain || waitSecondsModal;
+            const waitSeconds = waitSecondsMain;
             const facebookPixel = document.getElementById('facebookPixel') ? document.getElementById('facebookPixel').value.trim() : '';
             const tiktokPixel = document.getElementById('tiktokPixel') ? document.getElementById('tiktokPixel').value.trim() : '';
             const googleAnalytics = document.getElementById('googleAnalytics') ? document.getElementById('googleAnalytics').value.trim() : '';
@@ -3282,14 +3059,6 @@
                 document.getElementById('testUrlBtn'),
                 document.getElementById('urlValidationMsg')
             );
-            
-            // Configurar validación para el campo del modal
-            setupUrlValidation(
-                document.getElementById('destinationUrl'),
-                document.getElementById('urlIconModal'),
-                document.getElementById('testUrlBtnModal'),
-                document.getElementById('urlValidationMsgModal')
-            );
         }
         
         // Toggle Editor Panel (móvil)
@@ -3363,23 +3132,6 @@
         }
         
         // Close modal on outside click
-        function initializeModal() {
-            const modal = document.getElementById('exportModal');
-            if (modal) {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        closeExportModal();
-                    }
-                });
-            }
-        }
-        
-        // Initialize modal on DOM ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeModal);
-        } else {
-            initializeModal();
-        }
     </script>
 </body>
 </html>
