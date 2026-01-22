@@ -620,37 +620,90 @@
     </section>
 
     <script>
-        // Cargar QRCode library
+        // Cargar QRCode library - primero intentar archivo local, luego CDNs
         (function() {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
-            script.async = true;
-            script.onload = function() {
-                console.log('QRCode library loaded successfully');
-                if (typeof QRCode !== 'undefined') {
-                    window.qrCodeReady = true;
-                    // Disparar evento personalizado
-                    window.dispatchEvent(new Event('qrCodeLoaded'));
-                }
-            };
-            script.onerror = function() {
-                console.error('Error loading QRCode library from CDN');
-                // Intentar CDN alternativo
-                const altScript = document.createElement('script');
-                altScript.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
-                altScript.async = true;
-                altScript.onload = function() {
-                    console.log('QRCode library loaded from alternative CDN');
-                    window.qrCodeReady = true;
-                    window.dispatchEvent(new Event('qrCodeLoaded'));
+            function loadQRCode() {
+                // Intentar cargar desde archivo local primero
+                const localScript = document.createElement('script');
+                localScript.src = 'qrcode.min.js';
+                localScript.onload = function() {
+                    if (typeof QRCode !== 'undefined') {
+                        window.qrCodeReady = true;
+                        console.log('QRCode library loaded from local file');
+                        window.dispatchEvent(new Event('qrCodeLoaded'));
+                    } else {
+                        tryCDN1();
+                    }
                 };
-                altScript.onerror = function() {
-                    console.error('Error loading QRCode library from alternative CDN');
-                    alert('Error: No se pudo cargar la librería QRCode. Por favor, verifica tu conexión a internet y recarga la página.');
+                localScript.onerror = function() {
+                    console.log('Local file not found, trying CDN...');
+                    tryCDN1();
                 };
-                document.head.appendChild(altScript);
-            };
-            document.head.appendChild(script);
+                document.head.appendChild(localScript);
+            }
+            
+            function tryCDN1() {
+                console.log('Trying CDN 1: jsDelivr...');
+                const script1 = document.createElement('script');
+                script1.src = 'https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js';
+                script1.onload = function() {
+                    if (typeof QRCode !== 'undefined') {
+                        window.qrCodeReady = true;
+                        console.log('QRCode library loaded from jsDelivr CDN');
+                        window.dispatchEvent(new Event('qrCodeLoaded'));
+                    } else {
+                        tryCDN2();
+                    }
+                };
+                script1.onerror = tryCDN2;
+                document.head.appendChild(script1);
+            }
+            
+            function tryCDN2() {
+                console.log('Trying CDN 2: cdnjs...');
+                const script2 = document.createElement('script');
+                script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+                script2.onload = function() {
+                    if (typeof QRCode !== 'undefined') {
+                        window.qrCodeReady = true;
+                        console.log('QRCode library loaded from cdnjs');
+                        window.dispatchEvent(new Event('qrCodeLoaded'));
+                    } else {
+                        tryCDN3();
+                    }
+                };
+                script2.onerror = tryCDN3;
+                document.head.appendChild(script2);
+            }
+            
+            function tryCDN3() {
+                console.log('Trying CDN 3: unpkg...');
+                const script3 = document.createElement('script');
+                script3.src = 'https://unpkg.com/qrcodejs@1.0.0/qrcode.min.js';
+                script3.onload = function() {
+                    if (typeof QRCode !== 'undefined') {
+                        window.qrCodeReady = true;
+                        console.log('QRCode library loaded from unpkg');
+                        window.dispatchEvent(new Event('qrCodeLoaded'));
+                    } else {
+                        showError();
+                    }
+                };
+                script3.onerror = showError;
+                document.head.appendChild(script3);
+            }
+            
+            function showError() {
+                console.error('All loading attempts failed');
+                alert('Error: No se pudo cargar la librería QRCode. Por favor, verifica tu conexión a internet y recarga la página.');
+            }
+            
+            // Iniciar carga cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadQRCode);
+            } else {
+                loadQRCode();
+            }
         })();
     </script>
     <script>
@@ -805,32 +858,46 @@
             qrPreview.innerHTML = '';
             qrPreview.classList.remove('empty');
 
-            // Generate QR
-            QRCode.toCanvas(qrPreview, qrData, {
-                width: size,
-                color: {
-                    dark: color,
-                    light: bgColor
-                },
-                margin: 2
-            }, function(error) {
-                if (error) {
-                    console.error(error);
-                    alert('Error al generar el código QR. Por favor, intenta de nuevo.');
-                    clearPreview();
-                    return;
-                }
+            // Create container for QR code
+            const qrContainer = document.createElement('div');
+            qrContainer.id = 'qrContainer';
+            qrPreview.appendChild(qrContainer);
+
+            try {
+                // Generate QR using davidshimjs/qrcodejs API
+                const qr = new QRCode(qrContainer, {
+                    text: qrData,
+                    width: size,
+                    height: size,
+                    colorDark: color,
+                    colorLight: bgColor,
+                    correctLevel: QRCode.CorrectLevel.H
+                });
                 
-                currentQR = {
-                    data: qrData,
-                    canvas: qrPreview.querySelector('canvas'),
-                    size: size,
-                    color: color,
-                    bgColor: bgColor
-                };
-                
-                qrActions.style.display = 'block';
-            });
+                // Wait for QR to be generated
+                setTimeout(() => {
+                    const canvas = qrContainer.querySelector('canvas');
+                    if (canvas) {
+                        currentQR = {
+                            data: qrData,
+                            canvas: canvas,
+                            qrInstance: qr,
+                            size: size,
+                            color: color,
+                            bgColor: bgColor
+                        };
+                        
+                        qrActions.style.display = 'block';
+                    } else {
+                        alert('Error al generar el código QR. Por favor, intenta de nuevo.');
+                        clearPreview();
+                    }
+                }, 100);
+            } catch (error) {
+                console.error(error);
+                alert('Error al generar el código QR. Por favor, intenta de nuevo.');
+                clearPreview();
+            }
         }
 
         function clearPreview() {
@@ -857,29 +924,15 @@
         downloadSvgBtn.addEventListener('click', function() {
             if (!currentQR) return;
             
-            if (typeof QRCode === 'undefined') {
-                alert('La librería QRCode no está disponible. Por favor, recarga la página.');
-                return;
-            }
-            
+            const canvas = currentQR.canvas;
             const size = currentQR.size;
-            const color = currentQR.color;
-            const bgColor = currentQR.bgColor;
             
-            QRCode.toString(currentQR.data, {
-                type: 'svg',
-                width: size,
-                color: {
-                    dark: color,
-                    light: bgColor
-                },
-                margin: 2
-            }, function(err, svg) {
-                if (err) {
-                    console.error(err);
-                    alert('Error al generar SVG');
-                    return;
-                }
+            // Convert canvas to SVG by embedding the image
+            try {
+                const imageData = canvas.toDataURL('image/png');
+                const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                    <image width="${size}" height="${size}" href="${imageData}"/>
+                </svg>`;
                 
                 const blob = new Blob([svg], { type: 'image/svg+xml' });
                 const url = URL.createObjectURL(blob);
@@ -888,7 +941,15 @@
                 link.href = url;
                 link.click();
                 URL.revokeObjectURL(url);
-            });
+            } catch (err) {
+                console.error(err);
+                alert('Error al generar SVG. Descarga como PNG en su lugar.');
+                // Fallback to PNG
+                const link = document.createElement('a');
+                link.download = 'codigo-qr.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            }
         });
 
         // Auto-generate on input change (debounced)
