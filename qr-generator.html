@@ -98,10 +98,15 @@
             font-size: 14px;
             font-weight: 600;
             transition: color 0.2s;
+            white-space: nowrap;
         }
 
         .back-link:hover {
             color: var(--primary);
+        }
+        
+        .back-link span {
+            display: inline;
         }
 
         /* Hero Section */
@@ -398,18 +403,45 @@
         }
 
         /* Responsive */
+        @media (max-width: 1024px) {
+            .generator-container {
+                gap: 30px;
+            }
+            
+            .generator-card h2,
+            .preview-card h2 {
+                font-size: 22px;
+            }
+        }
+
         @media (max-width: 968px) {
             .generator-container {
                 grid-template-columns: 1fr;
-                gap: 30px;
+                gap: 24px;
             }
 
             .preview-card {
                 position: static;
+                order: -1;
+            }
+            
+            .generator-card {
+                order: 1;
             }
 
             .color-group {
                 grid-template-columns: 1fr;
+            }
+            
+            .type-tabs {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            
+            .type-tab {
+                font-size: 13px;
+                padding: 10px 12px;
+                min-width: calc(50% - 3px);
             }
         }
 
@@ -418,41 +450,262 @@
                 padding: 0 16px;
             }
 
+            nav {
+                padding: 12px 0;
+            }
+            
+            .logo {
+                font-size: 18px;
+            }
+            
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .back-link {
+                font-size: 13px;
+            }
+
             .hero-section {
                 padding: 40px 16px 30px;
             }
+            
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 14px;
+                margin-bottom: 16px;
+            }
+            
+            .hero-section h1 {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+            
+            .hero-section p {
+                font-size: 16px;
+            }
 
             .generator-section {
-                padding: 30px 16px 60px;
+                padding: 24px 16px 50px;
             }
 
             .generator-card,
             .preview-card {
-                padding: 24px;
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+            
+            .generator-card h2,
+            .preview-card h2 {
+                font-size: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+            
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+            
+            .form-group small {
+                font-size: 11px;
+                margin-top: 4px;
+            }
+            
+            .type-tabs {
+                margin-bottom: 20px;
+            }
+            
+            .type-tab {
+                font-size: 12px;
+                padding: 10px 8px;
             }
 
             .qr-preview {
                 min-height: 250px;
                 padding: 20px;
             }
+            
+            .qr-preview canvas {
+                max-width: 100%;
+            }
+            
+            .btn-primary {
+                padding: 14px;
+                font-size: 15px;
+            }
+            
+            .btn-secondary {
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            .info-box {
+                padding: 14px;
+                margin-top: 20px;
+            }
+            
+            .info-box p {
+                font-size: 12px;
+                line-height: 1.5;
+            }
         }
 
         @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            nav {
+                padding: 10px 0;
+            }
+            
+            .back-link {
+                font-size: 12px;
+            }
+            
+            .back-link span {
+                display: none;
+            }
+
+            .hero-section {
+                padding: 30px 12px 24px;
+            }
+            
+            .hero-badge {
+                font-size: 11px;
+                padding: 6px 12px;
+            }
+            
             .hero-section h1 {
-                font-size: 28px;
+                font-size: 26px;
+                line-height: 1.3;
             }
 
             .hero-section p {
-                font-size: 16px;
+                font-size: 15px;
+                line-height: 1.6;
+            }
+
+            .generator-section {
+                padding: 20px 12px 40px;
             }
 
             .generator-card,
             .preview-card {
-                padding: 20px;
+                padding: 20px 16px;
+                border-radius: 16px;
+            }
+            
+            .generator-card h2,
+            .preview-card h2 {
+                font-size: 18px;
+                margin-bottom: 16px;
+            }
+            
+            .form-group {
+                margin-bottom: 16px;
+            }
+            
+            .form-group input,
+            .form-group textarea,
+            .form-group select {
+                padding: 11px 12px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+            
+            .type-tabs {
+                padding: 4px;
+                margin-bottom: 16px;
+            }
+            
+            .type-tab {
+                font-size: 11px;
+                padding: 8px 6px;
+                min-width: calc(50% - 2px);
+            }
+            
+            .color-input-wrapper {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .color-input-wrapper input[type="color"] {
+                width: 100%;
+                height: 45px;
+            }
+            
+            .color-input-wrapper input[type="text"] {
+                width: 100%;
             }
 
+            .qr-preview {
+                min-height: 220px;
+                padding: 16px;
+            }
+            
+            .qr-preview.empty i {
+                font-size: 48px;
+            }
+            
+            .qr-preview.empty p {
+                font-size: 13px;
+            }
+            
+            .btn-primary {
+                padding: 13px;
+                font-size: 14px;
+                border-radius: 10px;
+            }
+            
+            .btn-secondary {
+                padding: 11px;
+                font-size: 13px;
+                border-radius: 10px;
+            }
+            
             .btn-group {
                 grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .info-box {
+                padding: 12px;
+                margin-top: 16px;
+                border-radius: 10px;
+            }
+            
+            .info-box p {
+                font-size: 11px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .hero-section h1 {
+                font-size: 22px;
+            }
+            
+            .type-tab {
+                font-size: 10px;
+                padding: 8px 4px;
+            }
+            
+            .generator-card,
+            .preview-card {
+                padding: 16px 12px;
             }
         }
     </style>
@@ -470,7 +723,7 @@
                 </a>
                 <a href="index.html" class="back-link">
                     <i class="fas fa-arrow-left"></i>
-                    Volver a herramientas
+                    <span>Volver a herramientas</span>
                 </a>
             </nav>
         </div>

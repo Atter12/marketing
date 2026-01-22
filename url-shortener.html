@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Acortador de Links | URLs Personalizadas Gratis | EcomTools</title>
+    <meta name="description" content="Acorta y personaliza tus URLs para redes sociales con seguimiento integrado. Genera links cortos y personalizados en segundos.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --secondary: #6366f1;
+            --accent: #10b981;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .back-link span {
+            display: inline;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 60px 24px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero-section h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero-section h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Shortener Section */
+        .shortener-section {
+            padding: 40px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .shortener-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .shortener-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .url-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .url-input-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .domain-prefix {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            color: var(--text-medium);
+            font-weight: 600;
+            white-space: nowrap;
+            margin-bottom: 0;
+        }
+
+        .btn-primary {
+            padding: 14px 28px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-card {
+            background: white;
+            border: 2px solid var(--accent);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(16, 185, 129, 0.15);
+            display: none;
+        }
+
+        .result-card.active {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .result-header i {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .result-header h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .short-url-display {
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .short-url-display input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            padding: 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .short-url-display input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        .btn-copy {
+            padding: 10px 20px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 74, 0.3);
+        }
+
+        .btn-copy.copied {
+            background: var(--accent);
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-secondary {
+            padding: 14px;
+            background: var(--bg-gray);
+            color: var(--text-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            border-color: var(--text-medium);
+        }
+
+        .info-box {
+            background: var(--bg-gray);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 24px;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .info-box i {
+            color: var(--primary);
+            margin-right: 8px;
+        }
+
+        .stats-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-item .number {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-item .label {
+            font-size: 12px;
+            color: var(--text-medium);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                padding: 12px 0;
+            }
+            
+            .logo {
+                font-size: 18px;
+            }
+            
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .back-link {
+                font-size: 13px;
+            }
+
+            .hero-section {
+                padding: 40px 16px 30px;
+            }
+            
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 14px;
+                margin-bottom: 16px;
+            }
+            
+            .hero-section h1 {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+            
+            .hero-section p {
+                font-size: 16px;
+            }
+
+            .shortener-section {
+                padding: 24px 16px 50px;
+            }
+
+            .shortener-card,
+            .result-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .url-input-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .domain-prefix {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-preview {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .back-link span {
+                display: none;
+            }
+
+            .hero-section {
+                padding: 30px 12px 24px;
+            }
+            
+            .hero-section h1 {
+                font-size: 26px;
+            }
+
+            .hero-section p {
+                font-size: 15px;
+            }
+
+            .shortener-section {
+                padding: 20px 12px 40px;
+            }
+
+            .shortener-card,
+            .result-card {
+                padding: 20px 16px;
+            }
+
+            .short-url-display {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .short-url-display input {
+                text-align: center;
+                margin-bottom: 8px;
+            }
+
+            .btn-copy {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver a herramientas</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-link"></i>
+                Acortador de Links • 100% Gratis
+            </div>
+            <h1>Acortador de <span>Links</span></h1>
+            <p>Acorta y personaliza tus URLs para redes sociales con seguimiento integrado. Genera links cortos y personalizados en segundos.</p>
+        </div>
+    </section>
+
+    <!-- Shortener Section -->
+    <section class="shortener-section">
+        <div class="container">
+            <div class="shortener-container">
+                <!-- Input Card -->
+                <div class="shortener-card">
+                    <h2 style="font-size: 24px; font-weight: 800; margin-bottom: 24px; color: var(--text-dark);">Acorta tu URL</h2>
+                    
+                    <form id="shortenForm">
+                        <div class="form-group">
+                            <label for="originalUrl">URL Original</label>
+                            <input type="url" id="originalUrl" placeholder="https://ejemplo.com/pagina-muy-larga" required>
+                            <small>Ingresa la URL completa que quieres acortar</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="customAlias">Alias Personalizado (Opcional)</label>
+                            <div class="url-input-group">
+                                <div class="domain-prefix" id="domainPrefix">tudominio.com/</div>
+                                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                    <input type="text" id="customAlias" placeholder="mi-link" pattern="[a-zA-Z0-9-_]+" maxlength="50">
+                                </div>
+                            </div>
+                            <small style="margin-top: 6px;">Solo letras, números, guiones y guiones bajos. Si lo dejas vacío, se generará automáticamente.</small>
+                        </div>
+
+                        <button type="submit" class="btn-primary" id="shortenBtn" style="width: 100%; margin-top: 8px;">
+                            <i class="fas fa-compress-alt"></i>
+                            Acortar URL
+                        </button>
+                    </form>
+
+                    <div class="info-box">
+                        <p><i class="fas fa-info-circle"></i> <strong>Nota:</strong> Actualmente esta es una versión de demostración. El link acortado se genera visualmente pero no redirige realmente hasta que se implemente el backend.</p>
+                    </div>
+                </div>
+
+                <!-- Result Card -->
+                <div class="result-card" id="resultCard">
+                    <div class="result-header">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>¡URL Acortada con Éxito!</h3>
+                    </div>
+
+                    <div class="short-url-display">
+                        <input type="text" id="shortUrlInput" readonly>
+                        <button class="btn-copy" id="copyBtn">
+                            <i class="fas fa-copy"></i>
+                            Copiar
+                        </button>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-secondary" id="generateQRBtn">
+                            <i class="fas fa-qrcode"></i>
+                            Generar QR
+                        </button>
+                        <button class="btn-secondary" id="testLinkBtn">
+                            <i class="fas fa-external-link-alt"></i>
+                            Probar Link
+                        </button>
+                    </div>
+
+                    <div class="stats-preview">
+                        <div class="stat-item">
+                            <div class="number" id="clickCount">0</div>
+                            <div class="label">Clics</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="number" id="qrScans">0</div>
+                            <div class="label">Escaneos QR</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="number" id="linkAge">0d</div>
+                            <div class="label">Activo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        const shortenForm = document.getElementById('shortenForm');
+        const originalUrlInput = document.getElementById('originalUrl');
+        const customAliasInput = document.getElementById('customAlias');
+        const shortenBtn = document.getElementById('shortenBtn');
+        const resultCard = document.getElementById('resultCard');
+        const shortUrlInput = document.getElementById('shortUrlInput');
+        const copyBtn = document.getElementById('copyBtn');
+        const generateQRBtn = document.getElementById('generateQRBtn');
+        const testLinkBtn = document.getElementById('testLinkBtn');
+        const domainPrefix = document.getElementById('domainPrefix');
+
+        // Generate random alias
+        function generateRandomAlias() {
+            const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Validate URL
+        function isValidUrl(string) {
+            try {
+                const url = new URL(string);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch (_) {
+                return false;
+            }
+        }
+
+        // Validate alias
+        function isValidAlias(alias) {
+            if (!alias) return true; // Empty is valid (will generate random)
+            const pattern = /^[a-zA-Z0-9-_]+$/;
+            return pattern.test(alias) && alias.length <= 50;
+        }
+
+        // Handle form submission
+        shortenForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const originalUrl = originalUrlInput.value.trim();
+            const customAlias = customAliasInput.value.trim();
+
+            // Validate URL
+            if (!originalUrl) {
+                alert('Por favor, ingresa una URL');
+                return;
+            }
+
+            if (!isValidUrl(originalUrl)) {
+                alert('Por favor, ingresa una URL válida (debe comenzar con http:// o https://)');
+                return;
+            }
+
+            // Validate alias
+            if (customAlias && !isValidAlias(customAlias)) {
+                alert('El alias solo puede contener letras, números, guiones y guiones bajos');
+                return;
+            }
+
+            // Disable button while processing
+            shortenBtn.disabled = true;
+            shortenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Acortando...';
+
+            try {
+                // TODO: Cuando el backend esté listo, descomentar esto y comentar la lógica local
+                /*
+                const response = await fetch('/api/url-shortener/shorten', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        originalUrl: originalUrl,
+                        customAlias: customAlias || null
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Error al acortar la URL');
+                }
+
+                const { shortUrl, alias, clicks, qrScans, createdAt } = data.data;
+                */
+
+                // Lógica local (temporal hasta que el backend esté listo)
+                const alias = customAlias || generateRandomAlias();
+                const shortUrl = `${domainPrefix.textContent}${alias}`;
+                const fullShortUrl = `https://${shortUrl}`;
+
+                // Show result
+                shortUrlInput.value = fullShortUrl;
+                resultCard.classList.add('active');
+
+                // Scroll to result
+                setTimeout(() => {
+                    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+
+                // Store data for QR generation
+                window.currentShortUrl = {
+                    original: originalUrl,
+                    short: fullShortUrl,
+                    alias: alias
+                };
+
+                // Reset stats (will be populated from backend later)
+                // Cuando el backend esté listo, usar: clicks, qrScans de data.data
+                document.getElementById('clickCount').textContent = '0';
+                document.getElementById('qrScans').textContent = '0';
+                document.getElementById('linkAge').textContent = '0d';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al acortar la URL: ' + error.message);
+            } finally {
+                // Re-enable button
+                shortenBtn.disabled = false;
+                shortenBtn.innerHTML = '<i class="fas fa-compress-alt"></i> Acortar URL';
+            }
+        });
+
+        // Copy to clipboard
+        copyBtn.addEventListener('click', function() {
+            const url = shortUrlInput.value;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    const originalHTML = this.innerHTML;
+                    this.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                    this.classList.add('copied');
+                    
+                    setTimeout(() => {
+                        this.innerHTML = originalHTML;
+                        this.classList.remove('copied');
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Error copying:', err);
+                    fallbackCopy(url);
+                });
+            } else {
+                fallbackCopy(url);
+            }
+        });
+
+        function fallbackCopy(text) {
+            shortUrlInput.select();
+            shortUrlInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                copyBtn.classList.add('copied');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                alert('Por favor, copia manualmente: ' + text);
+            }
+        }
+
+        // Generate QR
+        generateQRBtn.addEventListener('click', function() {
+            if (!window.currentShortUrl) {
+                alert('Primero acorta una URL');
+                return;
+            }
+
+            // Open QR generator with the short URL
+            const qrUrl = `qr-generator.html?url=${encodeURIComponent(window.currentShortUrl.short)}`;
+            window.open(qrUrl, '_blank');
+        });
+
+        // Test link
+        testLinkBtn.addEventListener('click', function() {
+            if (!window.currentShortUrl) {
+                alert('Primero acorta una URL');
+                return;
+            }
+
+            // TODO: Cuando el backend esté listo, usar la URL corta que redirige
+            // window.open(window.currentShortUrl.short, '_blank');
+            
+            // Por ahora, abrir la URL original directamente
+            // Cuando el backend esté listo, esto abrirá la URL corta que redirige automáticamente
+            window.open(window.currentShortUrl.original, '_blank');
+        });
+
+        // Validate alias in real-time
+        customAliasInput.addEventListener('input', function() {
+            const alias = this.value.trim();
+            if (alias && !isValidAlias(alias)) {
+                this.style.borderColor = '#dc2626';
+            } else {
+                this.style.borderColor = '';
+            }
+        });
+
+        // Update domain prefix
+        // TODO: Cuando el backend esté listo, obtener el dominio desde la configuración
+        // const domain = await fetch('/api/config').then(r => r.json()).then(d => d.shortDomain);
+        const currentDomain = window.location.hostname || 'tudominio.com';
+        domainPrefix.textContent = currentDomain + '/';
+
+        // TODO: Función para cargar estadísticas desde el backend
+        async function loadStats(alias) {
+            try {
+                const response = await fetch(`/api/url-shortener/stats?alias=${alias}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('clickCount').textContent = data.data.clicks || '0';
+                    document.getElementById('qrScans').textContent = data.data.qrScans || '0';
+                    
+                    // Calcular días activo
+                    const createdAt = new Date(data.data.createdAt);
+                    const days = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
+                    document.getElementById('linkAge').textContent = days + 'd';
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // TODO: Llamar a loadStats cuando se genere una URL
+        // loadStats(window.currentShortUrl.alias);
+    </script>
+</body>
+</html>
