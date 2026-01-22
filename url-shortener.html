@@ -758,8 +758,7 @@
             shortenBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Acortando...';
 
             try {
-                // TODO: Cuando el backend esté listo, descomentar esto y comentar la lógica local
-                /*
+                // Llamar al backend
                 const response = await fetch('/api/url-shortener/shorten', {
                     method: 'POST',
                     headers: {
@@ -778,15 +777,9 @@
                 }
 
                 const { shortUrl, alias, clicks, qrScans, createdAt } = data.data;
-                */
-
-                // Lógica local (temporal hasta que el backend esté listo)
-                const alias = customAlias || generateRandomAlias();
-                const shortUrl = `${domainPrefix.textContent}${alias}`;
-                const fullShortUrl = `https://${shortUrl}`;
 
                 // Show result
-                shortUrlInput.value = fullShortUrl;
+                shortUrlInput.value = shortUrl;
                 resultCard.classList.add('active');
 
                 // Scroll to result
@@ -797,15 +790,25 @@
                 // Store data for QR generation
                 window.currentShortUrl = {
                     original: originalUrl,
-                    short: fullShortUrl,
+                    short: shortUrl,
                     alias: alias
                 };
 
-                // Reset stats (will be populated from backend later)
-                // Cuando el backend esté listo, usar: clicks, qrScans de data.data
-                document.getElementById('clickCount').textContent = '0';
-                document.getElementById('qrScans').textContent = '0';
-                document.getElementById('linkAge').textContent = '0d';
+                // Actualizar estadísticas
+                document.getElementById('clickCount').textContent = clicks || '0';
+                document.getElementById('qrScans').textContent = qrScans || '0';
+                
+                // Calcular días activo
+                if (createdAt) {
+                    const created = new Date(createdAt);
+                    const days = Math.floor((new Date() - created) / (1000 * 60 * 60 * 24));
+                    document.getElementById('linkAge').textContent = days + 'd';
+                } else {
+                    document.getElementById('linkAge').textContent = '0d';
+                }
+
+                // Cargar estadísticas actualizadas
+                loadStats(alias);
 
             } catch (error) {
                 console.error('Error:', error);
@@ -877,12 +880,8 @@
                 return;
             }
 
-            // TODO: Cuando el backend esté listo, usar la URL corta que redirige
-            // window.open(window.currentShortUrl.short, '_blank');
-            
-            // Por ahora, abrir la URL original directamente
-            // Cuando el backend esté listo, esto abrirá la URL corta que redirige automáticamente
-            window.open(window.currentShortUrl.original, '_blank');
+            // Abrir la URL corta que redirige automáticamente
+            window.open(window.currentShortUrl.short, '_blank');
         });
 
         // Validate alias in real-time
@@ -896,15 +895,13 @@
         });
 
         // Update domain prefix
-        // TODO: Cuando el backend esté listo, obtener el dominio desde la configuración
-        // const domain = await fetch('/api/config').then(r => r.json()).then(d => d.shortDomain);
         const currentDomain = window.location.hostname || 'tudominio.com';
         domainPrefix.textContent = currentDomain + '/';
 
-        // TODO: Función para cargar estadísticas desde el backend
+        // Función para cargar estadísticas desde el backend
         async function loadStats(alias) {
             try {
-                const response = await fetch(`/api/url-shortener/stats?alias=${alias}`);
+                const response = await fetch(`/api/url-shortener/stats?alias=${encodeURIComponent(alias)}`);
                 const data = await response.json();
                 
                 if (data.success) {
@@ -912,17 +909,16 @@
                     document.getElementById('qrScans').textContent = data.data.qrScans || '0';
                     
                     // Calcular días activo
-                    const createdAt = new Date(data.data.createdAt);
-                    const days = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
-                    document.getElementById('linkAge').textContent = days + 'd';
+                    if (data.data.createdAt) {
+                        const createdAt = new Date(data.data.createdAt);
+                        const days = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
+                        document.getElementById('linkAge').textContent = days + 'd';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading stats:', error);
             }
         }
-        
-        // TODO: Llamar a loadStats cuando se genere una URL
-        // loadStats(window.currentShortUrl.alias);
     </script>
 </body>
 </html>

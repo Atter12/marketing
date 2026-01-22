@@ -2,40 +2,7 @@
 // Método: GET
 // Descripción: Obtiene estadísticas de una URL acortada
 
-/**
- * Query Parameters:
- * - alias: El alias de la URL acortada
- * 
- * Response (éxito):
- * {
- *   "success": true,
- *   "data": {
- *     "alias": "abc123",
- *     "originalUrl": "https://ejemplo.com",
- *     "shortUrl": "https://tudominio.com/abc123",
- *     "clicks": 150,
- *     "qrScans": 25,
- *     "createdAt": "2024-01-15T10:30:00Z",
- *     "expiresAt": null,
- *     "analytics": [
- *       {
- *         "timestamp": "2024-01-15T11:00:00Z",
- *         "ip": "192.168.1.1",
- *         "userAgent": "Mozilla/5.0...",
- *         "referer": "https://facebook.com"
- *       }
- *     ],
- *     "topReferrers": [
- *       { "source": "facebook.com", "clicks": 50 },
- *       { "source": "twitter.com", "clicks": 30 }
- *     ],
- *     "clicksByDay": [
- *       { "date": "2024-01-15", "clicks": 20 },
- *       { "date": "2024-01-16", "clicks": 30 }
- *     ]
- *   }
- * }
- */
+import { getSupabaseClient } from './supabase.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -49,35 +16,50 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'Alias requerido' });
         }
 
-        // TODO: Implementar lógica de base de datos
-        // 1. Buscar el alias en la base de datos
-        // 2. Calcular estadísticas agregadas
-        // 3. Agrupar por referrers, fechas, etc.
-        // 4. Retornar datos formateados
+        // Conectar a Supabase
+        const supabase = getSupabaseClient();
 
-        // Ejemplo de implementación:
-        /*
-        const db = await connectToDatabase();
-        
-        const shortUrl = await db.collection('shortUrls').findOne({ alias });
-        
-        if (!shortUrl) {
+        // Buscar la URL acortada
+        const { data: shortUrl, error: fetchError } = await supabase
+            .from('short_urls')
+            .select('*')
+            .eq('alias', alias)
+            .single();
+
+        if (fetchError || !shortUrl) {
             return res.status(404).json({ 
                 success: false, 
                 error: 'URL no encontrada' 
             });
         }
 
-        // Calcular estadísticas
-        const analytics = shortUrl.analytics || [];
-        
-        // Top referrers
+        // Obtener analytics
+        const { data: analytics, error: analyticsError } = await supabase
+            .from('url_analytics')
+            .select('*')
+            .eq('short_url_id', shortUrl.id)
+            .order('clicked_at', { ascending: false })
+            .limit(100);
+
+        if (analyticsError) {
+            console.error('Error fetching analytics:', analyticsError);
+        }
+
+        // Calcular top referrers
         const referrerMap = {};
-        analytics.forEach(click => {
-            const source = click.referer ? new URL(click.referer).hostname : 'direct';
+        (analytics || []).forEach(click => {
+            let source = 'direct';
+            if (click.referer) {
+                try {
+                    const url = new URL(click.referer);
+                    source = url.hostname.replace('www.', '');
+                } catch {
+                    source = click.referer;
+                }
+            }
             referrerMap[source] = (referrerMap[source] || 0) + 1;
         });
-        
+
         const topReferrers = Object.entries(referrerMap)
             .map(([source, clicks]) => ({ source, clicks }))
             .sort((a, b) => b.clicks - a.clicks)
@@ -85,39 +67,63 @@ export default async function handler(req, res) {
 
         // Clics por día
         const clicksByDayMap = {};
-        analytics.forEach(click => {
-            const date = new Date(click.timestamp).toISOString().split('T')[0];
+        (analytics || []).forEach(click => {
+            const date = new Date(click.clicked_at).toISOString().split('T')[0];
             clicksByDayMap[date] = (clicksByDayMap[date] || 0) + 1;
         });
-        
+
         const clicksByDay = Object.entries(clicksByDayMap)
             .map(([date, clicks]) => ({ date, clicks }))
             .sort((a, b) => a.date.localeCompare(b.date));
 
-        const domain = process.env.SHORT_DOMAIN || 'tudominio.com';
-        const fullShortUrl = `https://${domain}/${alias}`;
+        // Clics por país
+        const clicksByCountryMap = {};
+        (analytics || []).forEach(click => {
+            const country = click.country || 'unknown';
+            clicksByCountryMap[country] = (clicksByCountryMap[country] || 0) + 1;
+        });
+
+        const clicksByCountry = Object.entries(clicksByCountryMap)
+            .map(([country, clicks]) => ({ country, clicks }))
+            .sort((a, b) => b.clicks - a.clicks)
+            .slice(0, 10);
+
+        // Clics por dispositivo
+        const clicksByDeviceMap = {};
+        (analytics || []).forEach(click => {
+            const device = click.device_type || 'unknown';
+            clicksByDeviceMap[device] = (clicksByDeviceMap[device] || 0) + 1;
+        });
+
+        const clicksByDevice = Object.entries(clicksByDeviceMap)
+            .map(([device, clicks]) => ({ device, clicks }));
+
+        // Construir URL corta
+        const domain = process.env.SHORT_DOMAIN || req.headers.host || 'tudominio.com';
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const fullShortUrl = `${protocol}://${domain}/${alias}`;
+
+        // Calcular días activo
+        const createdAt = new Date(shortUrl.created_at);
+        const daysActive = Math.floor((new Date() - createdAt) / (1000 * 60 * 60 * 24));
 
         return res.status(200).json({
             success: true,
             data: {
                 alias: shortUrl.alias,
-                originalUrl: shortUrl.originalUrl,
+                originalUrl: shortUrl.original_url,
                 shortUrl: fullShortUrl,
                 clicks: shortUrl.clicks || 0,
-                qrScans: shortUrl.qrScans || 0,
-                createdAt: shortUrl.createdAt,
-                expiresAt: shortUrl.expiresAt,
-                analytics: analytics.slice(-100), // Últimos 100 clicks
+                qrScans: shortUrl.qr_scans || 0,
+                createdAt: shortUrl.created_at,
+                expiresAt: shortUrl.expires_at,
+                daysActive: daysActive,
+                analytics: (analytics || []).slice(0, 100), // Últimos 100 clicks
                 topReferrers,
-                clicksByDay
+                clicksByDay,
+                clicksByCountry,
+                clicksByDevice
             }
-        });
-        */
-
-        // Por ahora, respuesta de ejemplo
-        return res.status(501).json({ 
-            success: false, 
-            error: 'Backend no implementado aún. Esta es solo la estructura preparada.' 
         });
 
     } catch (error) {

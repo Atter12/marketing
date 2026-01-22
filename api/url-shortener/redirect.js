@@ -2,15 +2,7 @@
 // Método: GET
 // Descripción: Redirige desde una URL acortada a la URL original y registra el click
 
-/**
- * Query Parameters:
- * - alias: El alias de la URL acortada (ej: "abc123")
- * 
- * Response:
- * - Redirección 302 a la URL original
- * - O 404 si el alias no existe
- * - O 410 si el link ha expirado
- */
+import { getSupabaseClient, getLocationFromIP, detectDevice } from './supabase.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -24,20 +16,18 @@ export default async function handler(req, res) {
             return res.status(400).json({ success: false, error: 'Alias requerido' });
         }
 
-        // TODO: Implementar lógica de base de datos
-        // 1. Buscar el alias en la base de datos
-        // 2. Verificar si existe
-        // 3. Verificar si ha expirado
-        // 4. Registrar el click (analytics)
-        // 5. Redirigir a la URL original
+        // Conectar a Supabase
+        const supabase = getSupabaseClient();
 
-        // Ejemplo de implementación:
-        /*
-        const db = await connectToDatabase();
-        
-        const shortUrl = await db.collection('shortUrls').findOne({ alias });
-        
-        if (!shortUrl) {
+        // Buscar la URL acortada
+        const { data: shortUrl, error: fetchError } = await supabase
+            .from('short_urls')
+            .select('*')
+            .eq('alias', alias)
+            .eq('is_active', true)
+            .single();
+
+        if (fetchError || !shortUrl) {
             return res.status(404).json({ 
                 success: false, 
                 error: 'URL no encontrada' 
@@ -45,42 +35,85 @@ export default async function handler(req, res) {
         }
 
         // Verificar expiración
-        if (shortUrl.expiresAt && new Date(shortUrl.expiresAt) < new Date()) {
-            return res.status(410).json({ 
-                success: false, 
-                error: 'Este link ha expirado' 
-            });
+        if (shortUrl.expires_at) {
+            const expiresAt = new Date(shortUrl.expires_at);
+            if (expiresAt < new Date()) {
+                // Marcar como inactivo
+                await supabase
+                    .from('short_urls')
+                    .update({ is_active: false })
+                    .eq('id', shortUrl.id);
+                
+                return res.status(410).json({ 
+                    success: false, 
+                    error: 'Este link ha expirado' 
+                });
+            }
         }
 
-        // Registrar click
-        const clickData = {
-            alias,
-            timestamp: new Date(),
-            ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
-            userAgent: req.headers['user-agent'],
-            referer: req.headers['referer'] || null
-        };
+        // Obtener información del request
+        const ipRaw = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 
+                      req.headers['x-real-ip'] || 
+                      req.connection?.remoteAddress || 
+                      null;
+        
+        // Limpiar IP (remover puerto si existe)
+        const ip = ipRaw ? ipRaw.split(':')[0] : null;
+        const userAgent = req.headers['user-agent'] || '';
+        const referer = req.headers['referer'] || req.headers['referrer'] || null;
 
-        await db.collection('shortUrls').updateOne(
-            { alias },
-            { 
-                $inc: { clicks: 1 },
-                $push: { analytics: clickData }
-            }
-        );
+        // Detectar dispositivo y ubicación (asíncrono, no bloquea redirección)
+        Promise.all([
+            getLocationFromIP(ip || ''),
+            Promise.resolve(detectDevice(userAgent))
+        ]).then(([location, deviceInfo]) => {
+            const { device, browser, os } = deviceInfo;
+            const { country, city } = location;
 
-        // Redirigir
-        return res.redirect(302, shortUrl.originalUrl);
-        */
+            // Registrar el click en analytics
+            const analyticsData = {
+                short_url_id: shortUrl.id,
+                ip_address: ip || null,
+                user_agent: userAgent || null,
+                referer: referer || null,
+                country: country || null,
+                city: city || null,
+                device_type: device || null,
+                browser: browser || null,
+                os: os || null
+            };
 
-        // Por ahora, respuesta de ejemplo
-        return res.status(501).json({ 
-            success: false, 
-            error: 'Backend no implementado aún. Esta es solo la estructura preparada.' 
+            // Insertar analytics e incrementar clicks
+            supabase
+                .from('url_analytics')
+                .insert(analyticsData)
+                .then(() => {
+                    // Incrementar contador de clicks
+                    return supabase
+                        .from('short_urls')
+                        .update({ clicks: (shortUrl.clicks || 0) + 1 })
+                        .eq('id', shortUrl.id);
+                })
+                .catch(err => {
+                    console.error('Error registrando analytics:', err);
+                });
+        }).catch(err => {
+            console.error('Error procesando analytics:', err);
         });
+
+        // Redirigir inmediatamente
+        return res.redirect(302, shortUrl.original_url);
 
     } catch (error) {
         console.error('Error en redirect:', error);
+        
+        if (error.message.includes('Supabase credentials')) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Error de configuración del servidor' 
+            });
+        }
+        
         return res.status(500).json({ 
             success: false, 
             error: 'Error interno del servidor' 

@@ -1,35 +1,8 @@
 // API Endpoint: /api/url-shortener/shorten
 // Método: POST
-// Descripción: Acorta una URL y la guarda en la base de datos
+// Descripción: Acorta una URL y la guarda en Supabase
 
-/**
- * Estructura del Request:
- * {
- *   "originalUrl": "https://ejemplo.com/pagina-muy-larga",
- *   "customAlias": "mi-link" (opcional),
- *   "userId": "user123" (opcional, para tracking)
- * }
- * 
- * Estructura del Response (éxito):
- * {
- *   "success": true,
- *   "data": {
- *     "shortUrl": "https://tudominio.com/abc123",
- *     "alias": "abc123",
- *     "originalUrl": "https://ejemplo.com/pagina-muy-larga",
- *     "createdAt": "2024-01-15T10:30:00Z",
- *     "expiresAt": null, // o fecha si tiene expiración
- *     "clicks": 0,
- *     "qrScans": 0
- *   }
- * }
- * 
- * Estructura del Response (error):
- * {
- *   "success": false,
- *   "error": "Mensaje de error"
- * }
- */
+import { getSupabaseClient, generateUniqueAlias } from './supabase.js';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -37,7 +10,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { originalUrl, customAlias, userId } = req.body;
+        const { originalUrl, customAlias, userId, expiresAt } = req.body;
 
         // Validaciones
         if (!originalUrl) {
@@ -46,95 +19,99 @@ export default async function handler(req, res) {
 
         // Validar formato de URL
         try {
-            new URL(originalUrl);
+            const url = new URL(originalUrl);
+            // Validar que sea http o https
+            if (!['http:', 'https:'].includes(url.protocol)) {
+                return res.status(400).json({ success: false, error: 'URL debe usar HTTP o HTTPS' });
+            }
         } catch {
             return res.status(400).json({ success: false, error: 'URL inválida' });
         }
 
         // Validar alias si se proporciona
-        if (customAlias && !/^[a-zA-Z0-9-_]+$/.test(customAlias)) {
-            return res.status(400).json({ success: false, error: 'Alias inválido. Solo letras, números, guiones y guiones bajos' });
-        }
-
-        // TODO: Implementar lógica de base de datos
-        // 1. Verificar si el alias ya existe (si se proporciona)
-        // 2. Generar alias aleatorio si no se proporciona
-        // 3. Guardar en base de datos (MongoDB, PostgreSQL, etc.)
-        // 4. Retornar la URL acortada
-
-        // Ejemplo de implementación:
-        /*
-        const db = await connectToDatabase();
-        
-        let alias = customAlias;
-        if (!alias) {
-            // Generar alias único
-            do {
-                alias = generateRandomAlias();
-            } while (await db.collection('shortUrls').findOne({ alias }));
-        } else {
-            // Verificar que no exista
-            const existing = await db.collection('shortUrls').findOne({ alias });
-            if (existing) {
-                return res.status(409).json({ 
-                    success: false, 
-                    error: 'Este alias ya está en uso' 
-                });
+        if (customAlias) {
+            if (!/^[a-zA-Z0-9-_]+$/.test(customAlias)) {
+                return res.status(400).json({ success: false, error: 'Alias inválido. Solo letras, números, guiones y guiones bajos' });
+            }
+            if (customAlias.length > 100) {
+                return res.status(400).json({ success: false, error: 'El alias no puede tener más de 100 caracteres' });
             }
         }
 
-        // Guardar en base de datos
-        const shortUrl = {
+        // Conectar a Supabase
+        const supabase = getSupabaseClient();
+
+        // Generar alias único
+        let alias;
+        try {
+            alias = await generateUniqueAlias(customAlias || null);
+        } catch (error) {
+            if (error.message.includes('ya está en uso')) {
+                return res.status(409).json({ success: false, error: error.message });
+            }
+            throw error;
+        }
+
+        // Preparar datos para insertar
+        const shortUrlData = {
             alias,
-            originalUrl,
-            userId: userId || null,
-            createdAt: new Date(),
-            expiresAt: null, // o calcular expiración
+            original_url: originalUrl,
+            user_id: userId || null,
+            expires_at: expiresAt || null,
             clicks: 0,
-            qrScans: 0,
-            analytics: []
+            qr_scans: 0,
+            is_active: true,
+            metadata: {}
         };
 
-        await db.collection('shortUrls').insertOne(shortUrl);
+        // Insertar en Supabase
+        const { data, error } = await supabase
+            .from('short_urls')
+            .insert(shortUrlData)
+            .select()
+            .single();
 
-        const domain = process.env.SHORT_DOMAIN || 'tudominio.com';
-        const fullShortUrl = `https://${domain}/${alias}`;
+        if (error) {
+            console.error('Error inserting into Supabase:', error);
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Error al guardar la URL en la base de datos' 
+            });
+        }
 
+        // Construir URL corta
+        const domain = process.env.SHORT_DOMAIN || req.headers.host || 'tudominio.com';
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const fullShortUrl = `${protocol}://${domain}/${alias}`;
+
+        // Retornar respuesta exitosa
         return res.status(200).json({
             success: true,
             data: {
                 shortUrl: fullShortUrl,
-                alias,
-                originalUrl,
-                createdAt: shortUrl.createdAt,
-                expiresAt: shortUrl.expiresAt,
-                clicks: 0,
-                qrScans: 0
+                alias: data.alias,
+                originalUrl: data.original_url,
+                createdAt: data.created_at,
+                expiresAt: data.expires_at,
+                clicks: data.clicks,
+                qrScans: data.qr_scans
             }
-        });
-        */
-
-        // Por ahora, respuesta de ejemplo
-        return res.status(501).json({ 
-            success: false, 
-            error: 'Backend no implementado aún. Esta es solo la estructura preparada.' 
         });
 
     } catch (error) {
         console.error('Error en shorten:', error);
+        
+        // Si es error de configuración de Supabase
+        if (error.message.includes('Supabase credentials')) {
+            return res.status(500).json({ 
+                success: false, 
+                error: 'Error de configuración del servidor. Contacta al administrador.' 
+            });
+        }
+        
         return res.status(500).json({ 
             success: false, 
             error: 'Error interno del servidor' 
         });
     }
-}
-
-// Función helper para generar alias aleatorio
-function generateRandomAlias(length = 6) {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
 }

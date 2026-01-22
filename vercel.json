@@ -40,6 +40,35 @@
       "dest": "/pre-landing-builder.html"
     },
     {
+      "src": "/qr-generator",
+      "dest": "/qr-generator.html"
+    },
+    {
+      "src": "/qr-generator.html",
+      "dest": "/qr-generator.html"
+    },
+    {
+      "src": "/url-shortener",
+      "dest": "/url-shortener.html"
+    },
+    {
+      "src": "/url-shortener.html",
+      "dest": "/url-shortener.html"
+    },
+    {
+      "src": "/landing",
+      "dest": "/landing.html"
+    },
+    {
+      "src": "/landing.html",
+      "dest": "/landing.html"
+    },
+    {
+      "src": "^/([a-zA-Z0-9-_]+)$",
+      "dest": "/api/url-shortener/redirect?alias=$1",
+      "check": true
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },
