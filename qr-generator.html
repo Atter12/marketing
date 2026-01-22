@@ -7,7 +7,6 @@
     <meta name="description" content="Crea códigos QR personalizados para tus productos, links y promociones. Generador QR gratuito con opciones de personalización.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         :root {
             --primary: #ff6b4a;
@@ -621,6 +620,43 @@
     </section>
 
     <script>
+        // Cargar QRCode library
+        (function() {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js';
+            script.async = true;
+            script.onload = function() {
+                console.log('QRCode library loaded successfully');
+                if (typeof QRCode !== 'undefined') {
+                    window.qrCodeReady = true;
+                    // Disparar evento personalizado
+                    window.dispatchEvent(new Event('qrCodeLoaded'));
+                }
+            };
+            script.onerror = function() {
+                console.error('Error loading QRCode library from CDN');
+                // Intentar CDN alternativo
+                const altScript = document.createElement('script');
+                altScript.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+                altScript.async = true;
+                altScript.onload = function() {
+                    console.log('QRCode library loaded from alternative CDN');
+                    window.qrCodeReady = true;
+                    window.dispatchEvent(new Event('qrCodeLoaded'));
+                };
+                altScript.onerror = function() {
+                    console.error('Error loading QRCode library from alternative CDN');
+                    alert('Error: No se pudo cargar la librería QRCode. Por favor, verifica tu conexión a internet y recarga la página.');
+                };
+                document.head.appendChild(altScript);
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+    <script>
+        // Verificar que QRCode esté cargado antes de continuar
+        window.qrCodeReady = false;
+
         let currentType = 'url';
         let currentQR = null;
 
@@ -677,10 +713,34 @@
         const qrActions = document.getElementById('qrActions');
 
         generateBtn.addEventListener('click', function() {
+            if (typeof QRCode === 'undefined') {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+                this.disabled = true;
+                
+                // Esperar un momento y verificar de nuevo
+                setTimeout(() => {
+                    if (typeof QRCode !== 'undefined') {
+                        this.innerHTML = '<i class="fas fa-qrcode"></i> Generar QR';
+                        this.disabled = false;
+                        generateQR();
+                    } else {
+                        this.innerHTML = '<i class="fas fa-qrcode"></i> Generar QR';
+                        this.disabled = false;
+                        alert('Error: La librería QRCode no se cargó. Por favor, recarga la página.');
+                    }
+                }, 500);
+                return;
+            }
             generateQR();
         });
 
         function generateQR() {
+            // Verificar que QRCode esté disponible
+            if (typeof QRCode === 'undefined' || !window.qrCodeReady) {
+                alert('La librería QRCode aún no está cargada. Por favor, espera un momento e intenta de nuevo.');
+                return;
+            }
+
             let qrData = '';
 
             // Get data based on type
@@ -797,6 +857,11 @@
         downloadSvgBtn.addEventListener('click', function() {
             if (!currentQR) return;
             
+            if (typeof QRCode === 'undefined') {
+                alert('La librería QRCode no está disponible. Por favor, recarga la página.');
+                return;
+            }
+            
             const size = currentQR.size;
             const color = currentQR.color;
             const bgColor = currentQR.bgColor;
@@ -837,6 +902,26 @@
                     generateTimeout = setTimeout(() => {
                         generateQR();
                     }, 500);
+                }
+            });
+        });
+
+        // Esperar a que el DOM y QRCode estén listos
+        document.addEventListener('DOMContentLoaded', function() {
+            // Si QRCode ya está disponible
+            if (typeof QRCode !== 'undefined') {
+                window.qrCodeReady = true;
+                console.log('QRCode library already available');
+            }
+            
+            // Escuchar evento de carga
+            window.addEventListener('qrCodeLoaded', function() {
+                console.log('QRCode library ready to use');
+                // Habilitar botón si estaba deshabilitado
+                const generateBtn = document.getElementById('generateBtn');
+                if (generateBtn && generateBtn.disabled) {
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<i class="fas fa-qrcode"></i> Generar QR';
                 }
             });
         });
