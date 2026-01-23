@@ -1147,8 +1147,27 @@
 
                             <div class="form-group">
                                 <label for="ttPixelId">Pixel ID</label>
-                                <input type="text" id="ttPixelId" placeholder="ABCDEF1234567890" maxlength="25">
-                                <small>Encuentra tu Pixel ID en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank">TikTok Events Manager</a> o usa <strong>TEST1234567890</strong> para pruebas</small>
+                                <input type="text" id="ttPixelId" placeholder="C1234567890ABCDEF" maxlength="25">
+                                <div class="info-box" style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 14px; margin-top: 12px; font-size: 13px;">
+                                    <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                        <i class="fas fa-info-circle" style="color: #0ea5e9; margin-top: 2px; flex-shrink: 0;"></i>
+                                        <div style="flex: 1;">
+                                            <strong style="color: var(--text-dark); display: block; margin-bottom: 8px;">¿Dónde encuentro mi Pixel ID de TikTok?</strong>
+                                            <ol style="margin: 0; padding-left: 20px; color: var(--text-medium); line-height: 1.8;">
+                                                <li>Ve a <a href="https://ads.tiktok.com/" target="_blank" style="color: #0ea5e9; text-decoration: underline; font-weight: 600;">TikTok Ads Manager</a> e inicia sesión</li>
+                                                <li>En el menú lateral izquierdo, haz clic en <strong>"Assets"</strong> (Recursos)</li>
+                                                <li>Luego selecciona <strong>"Events"</strong> (Eventos)</li>
+                                                <li>Verás una lista de tus pixels. Haz clic en el pixel que quieres usar</li>
+                                                <li>En la página del pixel, busca la sección <strong>"Pixel Code"</strong> o <strong>"Pixel ID"</strong></li>
+                                                <li>El Pixel ID tiene formato: <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-family: monospace;">C1234567890ABCDEF</code> (empieza con "C" seguido de letras y números)</li>
+                                                <li>Copia ese ID completo y pégalo en el campo de arriba</li>
+                                            </ol>
+                                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #bae6fd;">
+                                                <strong style="color: var(--text-dark);">💡 Tip:</strong> Si no tienes un pixel, puedes crear uno nuevo desde <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: #0ea5e9; text-decoration: underline; font-weight: 600;">TikTok Events Manager</a> → "Create Pixel"
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="form-group">
@@ -2581,24 +2600,26 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     
                 } else if (platform === 'tiktok' && typeof ttq !== 'undefined') {
                     let eventData = {};
+                    let tiktokEventName = eventName; // Guardar nombre original para el botón
                     
                     if (eventName === 'ViewContent') {
                         eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
                     } else if (eventName === 'AddToCart') {
                         eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
                     } else if (eventName === 'InitiateCheckout') {
-                        eventName = 'PlaceAnOrder';
+                        tiktokEventName = 'PlaceAnOrder';
                         eventData = { value: 99.99, currency: 'USD' };
                     } else if (eventName === 'Purchase') {
-                        eventName = 'CompletePayment';
+                        tiktokEventName = 'CompletePayment';
                         eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now() };
                     } else if (eventName === 'Lead') {
-                        eventName = 'SubmitForm';
+                        tiktokEventName = 'SubmitForm';
                         eventData = { content_name: 'Formulario de Contacto' };
                     }
 
-                    ttq.track(eventName, eventData);
+                    ttq.track(tiktokEventName, eventData);
                     
+                    // Usar el nombre original del evento para encontrar el botón
                     const eventCard = document.querySelector(`.event-card[data-event="${eventName}"]`);
                     const btn = eventCard ? eventCard.querySelector('.test-event-btn') : null;
                     if (btn) {
@@ -2614,9 +2635,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         }, 3000);
                     }
                     
-                    addEventToLog(eventName, eventData, 'success');
+                    addEventToLog(tiktokEventName, eventData, 'success');
                     updatePixelStatus('active', 'Eventos enviándose correctamente');
-                    console.log('✅ TikTok Pixel Event enviado:', eventName, eventData);
+                    console.log('✅ TikTok Pixel Event enviado:', tiktokEventName, eventData);
                     
                 } else if (platform === 'google') {
                     if (typeof gtag !== 'undefined') {
