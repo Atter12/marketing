@@ -1486,11 +1486,43 @@ eventsCode;
 conversionCode;
         }
 
-        // Save pixel to local storage
-        function savePixel(platform, pixelId, name) {
+        // Save pixel to Supabase
+        async function savePixel(platform, pixelId, name, events = []) {
+            try {
+                const response = await fetch('/api/pixel-activator/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        platform,
+                        pixelId,
+                        name,
+                        metadata: { events }
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    console.error('Error saving pixel:', result.error);
+                    // Fallback a localStorage si falla la API
+                    savePixelLocalStorage(platform, pixelId, name);
+                    return;
+                }
+
+                // Recargar la lista de pixels
+                await renderSavedPixels();
+            } catch (error) {
+                console.error('Error saving pixel:', error);
+                // Fallback a localStorage si falla la API
+                savePixelLocalStorage(platform, pixelId, name);
+            }
+        }
+
+        // Fallback: Save pixel to local storage
+        function savePixelLocalStorage(platform, pixelId, name) {
             const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-            
-            // Check if already exists
             const existingIndex = pixels.findIndex(p => p.platform === platform && p.pixelId === pixelId);
             
             if (existingIndex >= 0) {
@@ -1510,20 +1542,101 @@ conversionCode;
             renderSavedPixels();
         }
 
-        // Render saved pixels
-        function renderSavedPixels() {
-            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+        // Render saved pixels from API
+        async function renderSavedPixels() {
             const pixelList = document.getElementById('pixelList');
             
             if (!pixelList) return;
-            
-            if (pixels.length === 0) {
-                pixelList.innerHTML = `<div class="empty-pixels">
-                    <i class="fas fa-database"></i>
-                    <p>No hay pixels guardados aún</p>
-                </div>`;
-                return;
+
+            // Mostrar loading
+            pixelList.innerHTML = `<div class="empty-pixels">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Cargando pixels...</p>
+            </div>`;
+
+            try {
+                const response = await fetch('/api/pixel-activator/list');
+                const result = await response.json();
+
+                let pixels = [];
+
+                if (result.success && result.data) {
+                    pixels = result.data;
+                } else {
+                    // Fallback a localStorage si falla la API
+                    pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+                }
+
+                if (pixels.length === 0) {
+                    pixelList.innerHTML = `<div class="empty-pixels">
+                        <i class="fas fa-database"></i>
+                        <p>No hay pixels guardados aún</p>
+                    </div>`;
+                    return;
+                }
+
+                const platformIcons = {
+                    facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
+                    tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' },
+                    google: { icon: 'fab fa-google', class: 'google-icon' }
+                };
+
+                pixelList.innerHTML = pixels.map(pixel => {
+                    const iconData = platformIcons[pixel.platform] || { icon: 'fas fa-code', class: '' };
+                    return `<div class="pixel-item" data-id="${pixel.id}">
+                        <div class="pixel-item-icon ${iconData.class}">
+                            <i class="${iconData.icon}"></i>
+                        </div>
+                        <div class="pixel-item-info">
+                            <div class="pixel-item-name">${pixel.name || pixel.pixelId}</div>
+                            <div class="pixel-item-id">${pixel.pixelId}</div>
+                        </div>
+                        <div class="pixel-item-actions">
+                            <button class="pixel-item-btn load-pixel" title="Cargar">
+                                <i class="fas fa-upload"></i>
+                            </button>
+                            <button class="pixel-item-btn delete" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Add event listeners
+                pixelList.querySelectorAll('.load-pixel').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const item = this.closest('.pixel-item');
+                        const pixelId = item.dataset.id;
+                        loadPixel(pixelId);
+                    });
+                });
+
+                pixelList.querySelectorAll('.delete').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const item = this.closest('.pixel-item');
+                        const pixelId = item.dataset.id;
+                        deletePixel(pixelId);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading pixels:', error);
+                // Fallback a localStorage
+                const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+                if (pixels.length === 0) {
+                    pixelList.innerHTML = `<div class="empty-pixels">
+                        <i class="fas fa-database"></i>
+                        <p>No hay pixels guardados aún</p>
+                    </div>`;
+                } else {
+                    renderSavedPixelsFromLocalStorage(pixels);
+                }
             }
+        }
+
+        // Fallback: Render from localStorage
+        function renderSavedPixelsFromLocalStorage(pixels) {
+            const pixelList = document.getElementById('pixelList');
+            if (!pixelList) return;
 
             const platformIcons = {
                 facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
@@ -1538,7 +1651,7 @@ conversionCode;
                         <i class="${iconData.icon}"></i>
                     </div>
                     <div class="pixel-item-info">
-                        <div class="pixel-item-name">${pixel.name}</div>
+                        <div class="pixel-item-name">${pixel.name || pixel.pixelId}</div>
                         <div class="pixel-item-id">${pixel.pixelId}</div>
                     </div>
                     <div class="pixel-item-actions">
@@ -1570,68 +1683,106 @@ conversionCode;
             });
         }
 
-        // Load pixel
-        function loadPixel(id) {
-            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-            const pixel = pixels.find(p => p.id === id);
-            
-            if (!pixel) return;
+        // Load pixel from API
+        async function loadPixel(id) {
+            try {
+                const response = await fetch(`/api/pixel-activator/get?id=${encodeURIComponent(id)}`);
+                const result = await response.json();
 
-            // Switch to correct tab
-            const tab = document.querySelector(`.platform-tab[data-platform="${pixel.platform}"]`);
-            if (tab) tab.click();
+                let pixel;
 
-            // Fill in the pixel ID
-            setTimeout(() => {
-                switch(pixel.platform) {
-                    case 'facebook':
-                        const fbId = document.getElementById('fbPixelId');
-                        const fbName = document.getElementById('fbPixelName');
-                        if (fbId) fbId.value = pixel.pixelId;
-                        if (fbName) fbName.value = pixel.name;
-                        break;
-                    case 'tiktok':
-                        const ttId = document.getElementById('ttPixelId');
-                        const ttName = document.getElementById('ttPixelName');
-                        if (ttId) ttId.value = pixel.pixelId;
-                        if (ttName) ttName.value = pixel.name;
-                        break;
-                    case 'google':
-                        const googleType = document.getElementById('googleType');
-                        if (googleType) {
-                            // Detect type from pixel ID
-                            if (pixel.pixelId.startsWith('G-')) {
-                                googleType.value = 'gtag';
-                                googleType.dispatchEvent(new Event('change'));
-                                const ga4Id = document.getElementById('ga4MeasurementId');
-                                if (ga4Id) ga4Id.value = pixel.pixelId;
-                            } else if (pixel.pixelId.startsWith('GTM-')) {
-                                googleType.value = 'gtm';
-                                googleType.dispatchEvent(new Event('change'));
-                                const gtmId = document.getElementById('gtmContainerId');
-                                if (gtmId) gtmId.value = pixel.pixelId;
-                            } else if (pixel.pixelId.startsWith('AW-')) {
-                                googleType.value = 'ads';
-                                googleType.dispatchEvent(new Event('change'));
-                                const adsId = document.getElementById('adsConversionId');
-                                if (adsId) adsId.value = pixel.pixelId;
-                            }
-                        }
-                        const googleName = document.getElementById('googlePixelName');
-                        if (googleName) googleName.value = pixel.name;
-                        break;
+                if (result.success && result.data) {
+                    pixel = result.data;
+                } else {
+                    // Fallback a localStorage
+                    const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+                    pixel = pixels.find(p => p.id === id);
+                    if (!pixel) {
+                        alert('Pixel no encontrado');
+                        return;
+                    }
                 }
-            }, 100);
+
+                // Switch to correct tab
+                const tab = document.querySelector(`.platform-tab[data-platform="${pixel.platform}"]`);
+                if (tab) tab.click();
+
+                // Fill in the pixel ID
+                setTimeout(() => {
+                    switch(pixel.platform) {
+                        case 'facebook':
+                            const fbId = document.getElementById('fbPixelId');
+                            const fbName = document.getElementById('fbPixelName');
+                            if (fbId) fbId.value = pixel.pixelId;
+                            if (fbName) fbName.value = pixel.name || '';
+                            break;
+                        case 'tiktok':
+                            const ttId = document.getElementById('ttPixelId');
+                            const ttName = document.getElementById('ttPixelName');
+                            if (ttId) ttId.value = pixel.pixelId;
+                            if (ttName) ttName.value = pixel.name || '';
+                            break;
+                        case 'google':
+                            const googleType = document.getElementById('googleType');
+                            if (googleType) {
+                                // Detect type from pixel ID
+                                if (pixel.pixelId.startsWith('G-')) {
+                                    googleType.value = 'gtag';
+                                    googleType.dispatchEvent(new Event('change'));
+                                    const ga4Id = document.getElementById('ga4MeasurementId');
+                                    if (ga4Id) ga4Id.value = pixel.pixelId;
+                                } else if (pixel.pixelId.startsWith('GTM-')) {
+                                    googleType.value = 'gtm';
+                                    googleType.dispatchEvent(new Event('change'));
+                                    const gtmId = document.getElementById('gtmContainerId');
+                                    if (gtmId) gtmId.value = pixel.pixelId;
+                                } else if (pixel.pixelId.startsWith('AW-')) {
+                                    googleType.value = 'ads';
+                                    googleType.dispatchEvent(new Event('change'));
+                                    const adsId = document.getElementById('adsConversionId');
+                                    if (adsId) adsId.value = pixel.pixelId;
+                                }
+                            }
+                            const googleName = document.getElementById('googlePixelName');
+                            if (googleName) googleName.value = pixel.name || '';
+                            break;
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error loading pixel:', error);
+                alert('Error al cargar el pixel');
+            }
         }
 
-        // Delete pixel
-        function deletePixel(id) {
+        // Delete pixel from API
+        async function deletePixel(id) {
             if (!confirm('¿Estás seguro de eliminar este pixel guardado?')) return;
-            
-            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-            const filtered = pixels.filter(p => p.id !== id);
-            localStorage.setItem('savedPixels', JSON.stringify(filtered));
-            renderSavedPixels();
+
+            try {
+                const response = await fetch(`/api/pixel-activator/delete?id=${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Recargar la lista
+                    await renderSavedPixels();
+                } else {
+                    // Fallback a localStorage
+                    const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+                    const filtered = pixels.filter(p => p.id !== id);
+                    localStorage.setItem('savedPixels', JSON.stringify(filtered));
+                    renderSavedPixelsFromLocalStorage(filtered);
+                }
+            } catch (error) {
+                console.error('Error deleting pixel:', error);
+                // Fallback a localStorage
+                const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+                const filtered = pixels.filter(p => p.id !== id);
+                localStorage.setItem('savedPixels', JSON.stringify(filtered));
+                renderSavedPixelsFromLocalStorage(filtered);
+            }
         }
 
         // Initialize app when DOM is ready
@@ -1725,7 +1876,8 @@ conversionCode;
                     const code = generateTikTokPixelCode(pixelId, events);
                     
                     displayCode(code, 'tiktok-pixel.html');
-                    savePixel('tiktok', pixelId, document.getElementById('ttPixelName').value || 'TikTok Pixel');
+                    const pixelName = document.getElementById('ttPixelName').value || 'TikTok Pixel';
+                    savePixel('tiktok', pixelId, pixelName, events);
                 });
             }
 
@@ -1785,7 +1937,9 @@ conversionCode;
                     }
 
                     displayCode(code, filename);
-                    savePixel('google', pixelId, document.getElementById('googlePixelName').value || 'Google Tag');
+                    const pixelName = document.getElementById('googlePixelName').value || 'Google Tag';
+                    const events = type === 'gtag' ? getSelectedEvents('#google-content') : [];
+                    savePixel('google', pixelId, pixelName, events);
                 });
             }
 

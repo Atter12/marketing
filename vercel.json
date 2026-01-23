@@ -56,6 +56,14 @@
       "dest": "/url-shortener.html"
     },
     {
+      "src": "/pixel-activator",
+      "dest": "/pixel-activator.html"
+    },
+    {
+      "src": "/pixel-activator.html",
+      "dest": "/pixel-activator.html"
+    },
+    {
       "src": "/landing",
       "dest": "/landing.html"
     },
