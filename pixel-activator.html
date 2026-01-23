@@ -2678,10 +2678,6 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dataStr = JSON.stringify(eventData, null, 2);
             
-            // Remover mensaje vacío si existe
-            const emptyMsg = eventLog.querySelector('div[style*="text-align: center"]');
-            if (emptyMsg) emptyMsg.remove();
-            
             const logItem = document.createElement('div');
             logItem.className = `event-log-item ${type}`;
             
