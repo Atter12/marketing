@@ -1347,23 +1347,22 @@
                 }
             });
 
-            const baseCode = `<!-- Facebook Pixel Code -->
-<script>
-!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
-fbq('init', '${pixelId}');
-fbq('track', 'PageView');
-</script>
-<noscript><img height="1" width="1" style="display:none"
-src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
-/></noscript>
-<!-- End Facebook Pixel Code -->`;
+            const baseCode = '<!-- Facebook Pixel Code -->\n<' + 'script>\n' +
+'!function(f,b,e,v,n,t,s)\n' +
+'{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\n' +
+'n.callMethod.apply(n,arguments):n.queue.push(arguments)};\n' +
+'if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version=\'2.0\';\n' +
+'n.queue=[];t=b.createElement(e);t.async=!0;\n' +
+'t.src=v;s=b.getElementsByTagName(e)[0];\n' +
+'s.parentNode.insertBefore(t,s)}(window, document,\'script\',\n' +
+'\'https://connect.facebook.net/en_US/fbevents.js\');\n' +
+'fbq(\'init\', \'' + pixelId + '\');\n' +
+'fbq(\'track\', \'PageView\');\n' +
+'</' + 'script>\n' +
+'<noscript><img height="1" width="1" style="display:none"\n' +
+'src="https://www.facebook.com/tr?id=' + pixelId + '&ev=PageView&noscript=1"\n' +
+'/></noscript>\n' +
+'<!-- End Facebook Pixel Code -->';
             
             return baseCode + eventsCode;
         }
@@ -1389,16 +1388,14 @@ src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
                 }
             });
 
-            const baseCode = `<!-- TikTok Pixel Code -->
-<script>
-!function (w, d, t) {
-  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-
-  ttq.load('${pixelId}');
-  ttq.page();
-}(window, document, 'ttq');
-</script>
-<!-- End TikTok Pixel Code -->`;
+            const baseCode = '<!-- TikTok Pixel Code -->\n<' + 'script>\n' +
+'!function (w, d, t) {\n' +
+'  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};\n\n' +
+'  ttq.load(\'' + pixelId + '\');\n' +
+'  ttq.page();\n' +
+'}(window, document, \'ttq\');\n' +
+'</' + 'script>\n' +
+'<!-- End TikTok Pixel Code -->';
             
             return baseCode + eventsCode;
         }
@@ -1433,35 +1430,33 @@ src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
                 }
             });
 
-            return `<!-- Google Analytics 4 (GA4) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '${measurementId}');
-</script>
-<!-- End Google Analytics 4 -->
-${eventsCode}`;
+            return '<!-- Google Analytics 4 (GA4) -->\n' +
+'<' + 'script async src="https://www.googletagmanager.com/gtag/js?id=' + measurementId + '"></' + 'script>\n' +
+'<' + 'script>\n' +
+'  window.dataLayer = window.dataLayer || [];\n' +
+'  function gtag(){dataLayer.push(arguments);}\n' +
+'  gtag(\'js\', new Date());\n' +
+'  gtag(\'config\', \'' + measurementId + '\');\n' +
+'</' + 'script>\n' +
+'<!-- End Google Analytics 4 -->\n' +
+eventsCode;
         }
 
         // Generate GTM Code
         function generateGTMCode(containerId) {
-            return `<!-- Google Tag Manager -->
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${containerId}');</script>
-<!-- End Google Tag Manager -->
-
-<!-- Google Tag Manager (noscript) - Pegar después de <body> -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${containerId}"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
-
-// Para disparar eventos personalizados usa dataLayer:
-// dataLayer.push({'event': 'mi_evento_personalizado'});`;
+            return '<!-- Google Tag Manager -->\n' +
+'<' + 'script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({\'gtm.start\':\n' +
+'new Date().getTime(),event:\'gtm.js\'});var f=d.getElementsByTagName(s)[0],\n' +
+'j=d.createElement(s),dl=l!=\'dataLayer\'?\'&l=\'+l:\'\';j.async=true;j.src=\n' +
+'\'https://www.googletagmanager.com/gtm.js?id=\'+i+dl;f.parentNode.insertBefore(j,f);\n' +
+'})(window,document,\'script\',\'dataLayer\',\'' + containerId + '\');</' + 'script>\n' +
+'<!-- End Google Tag Manager -->\n\n' +
+'<!-- Google Tag Manager (noscript) - Pegar después de <body> -->\n' +
+'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=' + containerId + '"\n' +
+'height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>\n' +
+'<!-- End Google Tag Manager (noscript) -->\n\n' +
+'// Para disparar eventos personalizados usa dataLayer:\n' +
+'// dataLayer.push({\'event\': \'mi_evento_personalizado\'});';
         }
 
         // Generate Google Ads Conversion Code
@@ -1479,16 +1474,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 // });`;
             }
 
-            return `<!-- Google Ads Conversion Tracking -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=${conversionId}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '${conversionId}');
-</script>
-<!-- End Google Ads Conversion Tracking -->
-${conversionCode}`;
+            return '<!-- Google Ads Conversion Tracking -->\n' +
+'<' + 'script async src="https://www.googletagmanager.com/gtag/js?id=' + conversionId + '"></' + 'script>\n' +
+'<' + 'script>\n' +
+'  window.dataLayer = window.dataLayer || [];\n' +
+'  function gtag(){dataLayer.push(arguments);}\n' +
+'  gtag(\'js\', new Date());\n' +
+'  gtag(\'config\', \'' + conversionId + '\');\n' +
+'</' + 'script>\n' +
+'<!-- End Google Ads Conversion Tracking -->\n' +
+conversionCode;
         }
 
         // Save pixel to local storage
@@ -1639,11 +1634,7 @@ ${conversionCode}`;
             renderSavedPixels();
         }
 
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-        });
-
+        // Initialize app when DOM is ready
         function initializeApp() {
             // Platform tab switching
             const platformTabs = document.querySelectorAll('.platform-tab');
@@ -1693,21 +1684,21 @@ ${conversionCode}`;
             const generateFbBtn = document.getElementById('generateFbCode');
             if (generateFbBtn) {
                 generateFbBtn.addEventListener('click', function() {
-            const pixelId = document.getElementById('fbPixelId').value.trim();
-            
-            if (!pixelId) {
-                alert('Por favor, ingresa tu Pixel ID de Facebook');
-                return;
-            }
+                    const pixelId = document.getElementById('fbPixelId').value.trim();
+                    
+                    if (!pixelId) {
+                        alert('Por favor, ingresa tu Pixel ID de Facebook');
+                        return;
+                    }
 
-            if (!/^\d{15,16}$/.test(pixelId)) {
-                alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos');
-                return;
-            }
+                    if (!/^\d{15,16}$/.test(pixelId)) {
+                        alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos');
+                        return;
+                    }
 
-            const events = getSelectedEvents('#facebook-content');
-            const code = generateFacebookPixelCode(pixelId, events);
-            
+                    const events = getSelectedEvents('#facebook-content');
+                    const code = generateFacebookPixelCode(pixelId, events);
+                    
                     displayCode(code, 'facebook-pixel.html');
                     savePixel('facebook', pixelId, document.getElementById('fbPixelName').value || 'Facebook Pixel');
                 });
@@ -1742,56 +1733,56 @@ ${conversionCode}`;
             const generateGoogleBtn = document.getElementById('generateGoogleCode');
             if (generateGoogleBtn) {
                 generateGoogleBtn.addEventListener('click', function() {
-            const type = googleType.value;
-            let code = '';
-            let pixelId = '';
-            let filename = '';
+                    const type = googleType.value;
+                    let code = '';
+                    let pixelId = '';
+                    let filename = '';
 
-            switch(type) {
-                case 'gtag':
-                    pixelId = document.getElementById('ga4MeasurementId').value.trim();
-                    if (!pixelId) {
-                        alert('Por favor, ingresa tu Measurement ID de GA4');
-                        return;
+                    switch(type) {
+                        case 'gtag':
+                            pixelId = document.getElementById('ga4MeasurementId').value.trim();
+                            if (!pixelId) {
+                                alert('Por favor, ingresa tu Measurement ID de GA4');
+                                return;
+                            }
+                            if (!/^G-[A-Z0-9]+$/i.test(pixelId)) {
+                                alert('El Measurement ID debe tener el formato G-XXXXXXXXXX');
+                                return;
+                            }
+                            const ga4Events = getSelectedEvents('#google-content');
+                            code = generateGA4Code(pixelId, ga4Events);
+                            filename = 'ga4-tag.html';
+                            break;
+                        
+                        case 'gtm':
+                            pixelId = document.getElementById('gtmContainerId').value.trim();
+                            if (!pixelId) {
+                                alert('Por favor, ingresa tu Container ID de GTM');
+                                return;
+                            }
+                            if (!/^GTM-[A-Z0-9]+$/i.test(pixelId)) {
+                                alert('El Container ID debe tener el formato GTM-XXXXXXX');
+                                return;
+                            }
+                            code = generateGTMCode(pixelId);
+                            filename = 'gtm-tag.html';
+                            break;
+                        
+                        case 'ads':
+                            pixelId = document.getElementById('adsConversionId').value.trim();
+                            const conversionLabel = document.getElementById('adsConversionLabel').value.trim();
+                            if (!pixelId) {
+                                alert('Por favor, ingresa tu Conversion ID de Google Ads');
+                                return;
+                            }
+                            if (!/^AW-\d+$/i.test(pixelId)) {
+                                alert('El Conversion ID debe tener el formato AW-XXXXXXXXX');
+                                return;
+                            }
+                            code = generateGoogleAdsCode(pixelId, conversionLabel);
+                            filename = 'google-ads-tag.html';
+                            break;
                     }
-                    if (!/^G-[A-Z0-9]+$/i.test(pixelId)) {
-                        alert('El Measurement ID debe tener el formato G-XXXXXXXXXX');
-                        return;
-                    }
-                    const ga4Events = getSelectedEvents('#google-content');
-                    code = generateGA4Code(pixelId, ga4Events);
-                    filename = 'ga4-tag.html';
-                    break;
-                
-                case 'gtm':
-                    pixelId = document.getElementById('gtmContainerId').value.trim();
-                    if (!pixelId) {
-                        alert('Por favor, ingresa tu Container ID de GTM');
-                        return;
-                    }
-                    if (!/^GTM-[A-Z0-9]+$/i.test(pixelId)) {
-                        alert('El Container ID debe tener el formato GTM-XXXXXXX');
-                        return;
-                    }
-                    code = generateGTMCode(pixelId);
-                    filename = 'gtm-tag.html';
-                    break;
-                
-                case 'ads':
-                    pixelId = document.getElementById('adsConversionId').value.trim();
-                    const conversionLabel = document.getElementById('adsConversionLabel').value.trim();
-                    if (!pixelId) {
-                        alert('Por favor, ingresa tu Conversion ID de Google Ads');
-                        return;
-                    }
-                    if (!/^AW-\d+$/i.test(pixelId)) {
-                        alert('El Conversion ID debe tener el formato AW-XXXXXXXXX');
-                        return;
-                    }
-                    code = generateGoogleAdsCode(pixelId, conversionLabel);
-                    filename = 'google-ads-tag.html';
-                    break;
-            }
 
                     displayCode(code, filename);
                     savePixel('google', pixelId, document.getElementById('googlePixelName').value || 'Google Tag');
