@@ -576,6 +576,106 @@
             color: var(--accent);
         }
 
+        /* Pixel Status Styles */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.active {
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-dot.error {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .test-event-btn {
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .test-event-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .test-event-btn.success {
+            background: var(--accent) !important;
+            animation: successPulse 0.5s;
+        }
+
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .event-success-icon {
+            display: inline-block;
+            animation: checkmark 0.5s;
+        }
+
+        @keyframes checkmark {
+            0% { transform: translateY(-50%) scale(0); }
+            50% { transform: translateY(-50%) scale(1.2); }
+            100% { transform: translateY(-50%) scale(1); }
+        }
+
+        .event-log-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #2a2a2a;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+            animation: slideIn 0.3s;
+        }
+
+        .event-log-item.error {
+            border-left-color: #ef4444;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-log-time {
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .event-log-name {
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .event-log-data {
+            color: #b0b0b0;
+            font-size: 11px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
         /* Platform Content */
         .platform-content {
             display: none;
@@ -1267,32 +1367,83 @@
 
                         <!-- Test Section -->
                         <div id="testSection" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
-                            <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--text-dark);">
-                                <i class="fas fa-vial" style="color: var(--accent);"></i> Prueba de Eventos
-                            </h3>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: var(--text-dark); margin: 0;">
+                                    <i class="fas fa-vial" style="color: var(--accent);"></i> Prueba en Tiempo Real
+                                </h3>
+                                <div id="pixelStatus" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: #f0f0f0; border-radius: 20px; font-size: 13px;">
+                                    <span id="pixelStatusIcon" class="status-dot"></span>
+                                    <span id="pixelStatusText">Verificando...</span>
+                                </div>
+                            </div>
+
+                            <div id="pixelInfo" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; display: none;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 13px;">
+                                    <div>
+                                        <strong style="color: var(--text-medium);">Pixel ID:</strong>
+                                        <div style="font-family: monospace; color: var(--text-dark); margin-top: 4px;" id="infoPixelId">-</div>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--text-medium);">Plataforma:</strong>
+                                        <div style="color: var(--text-dark); margin-top: 4px;" id="infoPlatform">-</div>
+                                    </div>
+                                    <div>
+                                        <strong style="color: var(--text-medium);">Estado:</strong>
+                                        <div style="color: var(--text-dark); margin-top: 4px;" id="infoStatus">-</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <p style="font-size: 14px; color: var(--text-medium); margin-bottom: 16px;">
-                                El pixel está instalado en esta página. Haz clic en los botones para disparar eventos y verificar que funcionen:
+                                Haz clic en los botones para disparar eventos. Verás el resultado en tiempo real abajo:
                             </p>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                                <button class="btn-secondary" onclick="testPixelEvent('ViewContent')" style="background: var(--accent); color: white; border-color: var(--accent);">
+                                <button class="btn-secondary test-event-btn" onclick="testPixelEvent('ViewContent')" data-event="ViewContent" style="background: var(--accent); color: white; border-color: var(--accent); position: relative; overflow: hidden;">
                                     <i class="fas fa-eye"></i> ViewContent
+                                    <span class="event-success-icon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">✓</span>
                                 </button>
-                                <button class="btn-secondary" onclick="testPixelEvent('AddToCart')" style="background: var(--accent); color: white; border-color: var(--accent);">
+                                <button class="btn-secondary test-event-btn" onclick="testPixelEvent('AddToCart')" data-event="AddToCart" style="background: var(--accent); color: white; border-color: var(--accent); position: relative; overflow: hidden;">
                                     <i class="fas fa-shopping-cart"></i> AddToCart
+                                    <span class="event-success-icon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">✓</span>
                                 </button>
-                                <button class="btn-secondary" onclick="testPixelEvent('InitiateCheckout')" style="background: var(--accent); color: white; border-color: var(--accent);">
+                                <button class="btn-secondary test-event-btn" onclick="testPixelEvent('InitiateCheckout')" data-event="InitiateCheckout" style="background: var(--accent); color: white; border-color: var(--accent); position: relative; overflow: hidden;">
                                     <i class="fas fa-credit-card"></i> Checkout
+                                    <span class="event-success-icon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">✓</span>
                                 </button>
-                                <button class="btn-secondary" onclick="testPixelEvent('Purchase')" style="background: var(--accent); color: white; border-color: var(--accent);">
+                                <button class="btn-secondary test-event-btn" onclick="testPixelEvent('Purchase')" data-event="Purchase" style="background: var(--accent); color: white; border-color: var(--accent); position: relative; overflow: hidden;">
                                     <i class="fas fa-check-circle"></i> Purchase
+                                    <span class="event-success-icon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">✓</span>
                                 </button>
-                                <button class="btn-secondary" onclick="testPixelEvent('Lead')" style="background: var(--accent); color: white; border-color: var(--accent);">
+                                <button class="btn-secondary test-event-btn" onclick="testPixelEvent('Lead')" data-event="Lead" style="background: var(--accent); color: white; border-color: var(--accent); position: relative; overflow: hidden;">
                                     <i class="fas fa-user-plus"></i> Lead
+                                    <span class="event-success-icon" style="display: none; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">✓</span>
                                 </button>
                             </div>
-                            <div id="testResult" style="margin-top: 16px;"></div>
-                            <div class="info-box success" style="margin-top: 20px;">
-                                <p><i class="fas fa-check-circle"></i> <strong>Verificación:</strong> Instala <a href="https://chrome.google.com/webstore/detail/facebook-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc" target="_blank">Meta Pixel Helper</a> para ver los eventos en tiempo real. También puedes verificar en <a href="https://business.facebook.com/events_manager" target="_blank">Meta Events Manager</a> → Test Events.</p>
+
+                            <!-- Event Log -->
+                            <div style="background: #1e1e1e; border-radius: 8px; padding: 16px; margin-bottom: 20px; max-height: 400px; overflow-y: auto;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <h4 style="color: #d4d4d4; font-size: 14px; font-weight: 600; margin: 0;">
+                                        <i class="fas fa-list" style="color: var(--accent);"></i> Log de Eventos
+                                    </h4>
+                                    <button onclick="clearEventLog()" style="background: transparent; border: 1px solid #444; color: #999; padding: 4px 12px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                                        <i class="fas fa-trash"></i> Limpiar
+                                    </button>
+                                </div>
+                                <div id="eventLog" style="font-family: 'Courier New', monospace; font-size: 12px; color: #d4d4d4;">
+                                    <div style="color: #888; padding: 8px; text-align: center; font-style: italic;">
+                                        Los eventos aparecerán aquí cuando los dispares...
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="info-box" style="margin-top: 20px; background: #e7f3ff; border-left-color: #1877f2;">
+                                <p style="margin: 0;">
+                                    <i class="fas fa-info-circle" style="color: #1877f2;"></i> 
+                                    <strong>Verificación Externa:</strong> Para ver los eventos en Meta Events Manager, instala 
+                                    <a href="https://chrome.google.com/webstore/detail/facebook-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc" target="_blank" style="color: #1877f2; text-decoration: underline;">Meta Pixel Helper</a> 
+                                    o ve a <a href="https://business.facebook.com/events_manager" target="_blank" style="color: #1877f2; text-decoration: underline;">Events Manager → Test Events</a>
+                                </p>
                             </div>
                         </div>
 
@@ -2142,7 +2293,20 @@ conversionCode;
                 
                 // Mostrar sección de prueba
                 document.getElementById('testSection').style.display = 'block';
-                showTestResult('success', '✅ Facebook Pixel instalado correctamente. Verifica con Meta Pixel Helper.');
+                document.getElementById('pixelInfo').style.display = 'block';
+                document.getElementById('infoPixelId').textContent = pixelId;
+                document.getElementById('infoPlatform').textContent = 'Facebook Pixel';
+                
+                // Verificar estado del pixel
+                setTimeout(() => {
+                    verifyPixelStatus();
+                    // Verificar periódicamente
+                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
+                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
+                }, 1000);
+                
+                addEventToLog('PageView', { pixelId: pixelId }, 'success');
+                updatePixelStatus('active', 'Pixel instalado correctamente');
                 
             } else if (platform === 'tiktok') {
                 // Instalar TikTok Pixel
@@ -2156,7 +2320,18 @@ conversionCode;
                 window.currentTestPlatform = 'tiktok';
                 
                 document.getElementById('testSection').style.display = 'block';
-                showTestResult('success', '✅ TikTok Pixel instalado correctamente.');
+                document.getElementById('pixelInfo').style.display = 'block';
+                document.getElementById('infoPixelId').textContent = pixelId;
+                document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
+                
+                setTimeout(() => {
+                    verifyPixelStatus();
+                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
+                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
+                }, 1000);
+                
+                addEventToLog('PageView', { pixelId: pixelId }, 'success');
+                updatePixelStatus('active', 'Pixel instalado correctamente');
                 
             } else if (platform === 'google') {
                 // Instalar Google Tag (GA4, GTM o Ads)
@@ -2202,7 +2377,18 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                 window.currentTestPlatform = 'google';
                 
                 document.getElementById('testSection').style.display = 'block';
-                showTestResult('success', '✅ Google Tag instalado correctamente.');
+                document.getElementById('pixelInfo').style.display = 'block';
+                document.getElementById('infoPixelId').textContent = pixelId;
+                document.getElementById('infoPlatform').textContent = 'Google Tag';
+                
+                setTimeout(() => {
+                    verifyPixelStatus();
+                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
+                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
+                }, 1000);
+                
+                addEventToLog('PageView', { pixelId: pixelId }, 'success');
+                updatePixelStatus('active', 'Pixel instalado correctamente');
             }
         }
 
@@ -2212,7 +2398,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             const pixelId = window.currentTestPixelId;
 
             if (!platform || !pixelId) {
-                showTestResult('error', '❌ El pixel no está instalado. Haz clic en "Instalar y Probar Pixel" primero.');
+                addEventToLog('Error', { message: 'Pixel no instalado. Haz clic en "Instalar y Probar Pixel" primero.' }, 'error');
                 return;
             }
 
@@ -2233,7 +2419,21 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
 
                     fbq('track', eventName, eventData);
-                    showTestResult('success', `✅ Evento <strong>${eventName}</strong> disparado correctamente. Verifica en Meta Pixel Helper.`);
+                    
+                    // Feedback visual
+                    const btn = document.querySelector(`.test-event-btn[data-event="${eventName}"]`);
+                    if (btn) {
+                        btn.classList.add('success');
+                        const icon = btn.querySelector('.event-success-icon');
+                        if (icon) icon.style.display = 'inline-block';
+                        setTimeout(() => {
+                            btn.classList.remove('success');
+                            if (icon) icon.style.display = 'none';
+                        }, 2000);
+                    }
+                    
+                    addEventToLog(eventName, eventData, 'success');
+                    updatePixelStatus('active', 'Pixel funcionando correctamente');
                     console.log('Facebook Pixel Event:', eventName, eventData);
                     
                 } else if (platform === 'tiktok' && typeof ttq !== 'undefined') {
@@ -2255,7 +2455,20 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     }
 
                     ttq.track(eventName, eventData);
-                    showTestResult('success', `✅ Evento <strong>${eventName}</strong> disparado correctamente. Verifica en TikTok Events Manager.`);
+                    
+                    const btn = document.querySelector(`.test-event-btn[data-event="${eventName}"]`);
+                    if (btn) {
+                        btn.classList.add('success');
+                        const icon = btn.querySelector('.event-success-icon');
+                        if (icon) icon.style.display = 'inline-block';
+                        setTimeout(() => {
+                            btn.classList.remove('success');
+                            if (icon) icon.style.display = 'none';
+                        }, 2000);
+                    }
+                    
+                    addEventToLog(eventName, eventData, 'success');
+                    updatePixelStatus('active', 'Pixel funcionando correctamente');
                     console.log('TikTok Pixel Event:', eventName, eventData);
                     
                 } else if (platform === 'google') {
@@ -2280,32 +2493,140 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                         }
 
                         gtag('event', eventName, eventData);
-                        showTestResult('success', `✅ Evento <strong>${eventName}</strong> disparado correctamente. Verifica en Google Analytics.`);
+                        
+                        const btn = document.querySelector(`.test-event-btn[data-event="${eventName}"]`);
+                        if (btn) {
+                            btn.classList.add('success');
+                            const icon = btn.querySelector('.event-success-icon');
+                            if (icon) icon.style.display = 'inline-block';
+                            setTimeout(() => {
+                                btn.classList.remove('success');
+                                if (icon) icon.style.display = 'none';
+                            }, 2000);
+                        }
+                        
+                        addEventToLog(eventName, eventData, 'success');
+                        updatePixelStatus('active', 'Tag funcionando correctamente');
                         console.log('Google Tag Event:', eventName, eventData);
                     } else if (typeof dataLayer !== 'undefined') {
                         // GTM
                         dataLayer.push({ 'event': eventName.toLowerCase().replace(/([A-Z])/g, '_$1').toLowerCase() });
                         showTestResult('success', `✅ Evento disparado en dataLayer. Verifica en Google Tag Manager.`);
                     } else {
-                        showTestResult('error', '❌ Google Tag no está cargado correctamente.');
+                        addEventToLog(eventName, { error: 'Google Tag no cargado' }, 'error');
+                        updatePixelStatus('error', 'Tag no detectado');
                     }
                 } else {
-                    showTestResult('error', '❌ El pixel no está cargado. Recarga la página e intenta de nuevo.');
+                    addEventToLog(eventName, { error: 'Pixel no cargado' }, 'error');
+                    updatePixelStatus('error', 'Pixel no detectado');
                 }
             } catch (error) {
-                showTestResult('error', `❌ Error: ${error.message}`);
+                addEventToLog(eventName, { error: error.message }, 'error');
+                updatePixelStatus('error', 'Error al disparar evento');
                 console.error('Error disparando evento:', error);
             }
         }
 
         function showTestResult(type, message) {
             const resultDiv = document.getElementById('testResult');
-            const className = type === 'success' ? 'info-box success' : 'info-box';
-            resultDiv.innerHTML = `<div class="${className}" style="border-left-color: ${type === 'success' ? 'var(--accent)' : '#dc3545'};"><p>${message}</p></div>`;
+            if (resultDiv) {
+                const className = type === 'success' ? 'info-box success' : 'info-box';
+                resultDiv.innerHTML = `<div class="${className}" style="border-left-color: ${type === 'success' ? 'var(--accent)' : '#dc3545'};"><p>${message}</p></div>`;
+                
+                setTimeout(() => {
+                    resultDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+
+        // Agregar evento al log
+        function addEventToLog(eventName, eventData, type = 'success') {
+            const eventLog = document.getElementById('eventLog');
+            if (!eventLog) return;
+
+            // Remover mensaje vacío si existe
+            const emptyMsg = eventLog.querySelector('div[style*="text-align: center"]');
+            if (emptyMsg) emptyMsg.remove();
+
+            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dataStr = JSON.stringify(eventData, null, 2);
             
-            setTimeout(() => {
-                resultDiv.innerHTML = '';
-            }, 5000);
+            const logItem = document.createElement('div');
+            logItem.className = `event-log-item ${type}`;
+            logItem.innerHTML = `
+                <div class="event-log-time">${time}</div>
+                <div class="event-log-name">${eventName}</div>
+                <div class="event-log-data">${dataStr}</div>
+            `;
+
+            eventLog.insertBefore(logItem, eventLog.firstChild);
+
+            // Limitar a 20 eventos
+            const items = eventLog.querySelectorAll('.event-log-item');
+            if (items.length > 20) {
+                items[items.length - 1].remove();
+            }
+        }
+
+        // Limpiar log de eventos
+        function clearEventLog() {
+            const eventLog = document.getElementById('eventLog');
+            if (eventLog) {
+                eventLog.innerHTML = '<div style="color: #888; padding: 8px; text-align: center; font-style: italic;">Los eventos aparecerán aquí cuando los dispares...</div>';
+            }
+        }
+
+        // Verificar estado del pixel
+        function verifyPixelStatus() {
+            const platform = window.currentTestPlatform;
+            const statusIcon = document.getElementById('pixelStatusIcon');
+            const statusText = document.getElementById('pixelStatusText');
+            const infoStatus = document.getElementById('infoStatus');
+
+            if (!statusIcon || !statusText) return;
+
+            let isActive = false;
+            let message = '';
+
+            if (platform === 'facebook') {
+                isActive = typeof fbq !== 'undefined' && typeof window.fbq !== 'undefined';
+                message = isActive ? 'Pixel funcionando correctamente' : 'Pixel no detectado';
+            } else if (platform === 'tiktok') {
+                isActive = typeof ttq !== 'undefined' && typeof window.ttq !== 'undefined';
+                message = isActive ? 'Pixel funcionando correctamente' : 'Pixel no detectado';
+            } else if (platform === 'google') {
+                isActive = typeof gtag !== 'undefined' || typeof dataLayer !== 'undefined';
+                message = isActive ? 'Tag funcionando correctamente' : 'Tag no detectado';
+            }
+
+            updatePixelStatus(isActive ? 'active' : 'error', message);
+            if (infoStatus) {
+                infoStatus.textContent = isActive ? '✅ Activo' : '❌ No detectado';
+                infoStatus.style.color = isActive ? 'var(--accent)' : '#ef4444';
+            }
+        }
+
+        // Actualizar estado visual del pixel
+        function updatePixelStatus(status, message) {
+            const statusIcon = document.getElementById('pixelStatusIcon');
+            const statusText = document.getElementById('pixelStatusText');
+
+            if (!statusIcon || !statusText) return;
+
+            statusIcon.className = 'status-dot';
+            
+            if (status === 'active') {
+                statusIcon.classList.add('active');
+                statusText.textContent = '✅ ' + message;
+                statusText.style.color = 'var(--accent)';
+            } else if (status === 'error') {
+                statusIcon.classList.add('error');
+                statusText.textContent = '❌ ' + message;
+                statusText.style.color = '#ef4444';
+            } else {
+                statusText.textContent = '⏳ ' + message;
+                statusText.style.color = '#999';
+            }
         }
 
         // Wait for DOM to be ready
