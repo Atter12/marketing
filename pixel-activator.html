@@ -1276,47 +1276,423 @@
     </section>
 
     <script>
-        // Platform tab switching
-        const platformTabs = document.querySelectorAll('.platform-tab');
-        const platformContents = document.querySelectorAll('.platform-content');
+        // Utility Functions - Defined first
+        function getSelectedEvents(containerId) {
+            const checkboxes = document.querySelectorAll(`${containerId} input[type="checkbox"]:checked`);
+            return Array.from(checkboxes).map(cb => cb.dataset.event);
+        }
 
-        platformTabs.forEach(tab => {
-            tab.addEventListener('click', function() {
-                const platform = this.dataset.platform;
-
-                // Update tabs
-                platformTabs.forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-
-                // Update content
-                platformContents.forEach(c => c.classList.remove('active'));
-                document.getElementById(platform + '-content').classList.add('active');
-
-                // Clear code preview
-                clearCodePreview();
-            });
-        });
-
-        // Google type switching
-        const googleType = document.getElementById('googleType');
-        const ga4Fields = document.getElementById('ga4Fields');
-        const gtmFields = document.getElementById('gtmFields');
-        const adsFields = document.getElementById('adsFields');
-        const adsLabelField = document.getElementById('adsLabelField');
-        const ga4Events = document.getElementById('ga4Events');
-
-        googleType.addEventListener('change', function() {
-            const type = this.value;
+        function displayCode(code, filename) {
+            const codeBody = document.getElementById('codeBody');
+            const codeActions = document.getElementById('codeActions');
             
-            ga4Fields.style.display = type === 'gtag' ? 'block' : 'none';
-            gtmFields.style.display = type === 'gtm' ? 'block' : 'none';
-            adsFields.style.display = type === 'ads' ? 'block' : 'none';
-            adsLabelField.style.display = type === 'ads' ? 'block' : 'none';
-            ga4Events.style.display = type === 'gtag' ? 'block' : 'none';
-        });
+            if (!codeBody || !codeActions) return;
+            
+            // Syntax highlight
+            const highlightedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
+                .replace(/('https?:\/\/[^']+')|(https:\/\/[^\s<]+)/g, '<span class="string">$&</span>')
+                .replace(/('G-[A-Z0-9]+'|'\d{15,16}'|'GTM-[A-Z0-9]+'|'AW-\d+'|'[A-Z0-9]{10,}')/gi, '<span class="string">$1</span>')
+                .replace(/(function|var|let|const|return|if|else|for|while)/g, '<span class="function">$1</span>');
+
+            codeBody.innerHTML = `<pre>${highlightedCode}</pre>`;
+            const fileNameEl = document.getElementById('codeFileName');
+            if (fileNameEl) fileNameEl.textContent = filename;
+            codeActions.style.display = 'grid';
+
+            // Store current code for copy/download
+            window.currentGeneratedCode = code;
+            window.currentCodeFilename = filename;
+        }
+
+        function clearCodePreview() {
+            const codeBody = document.getElementById('codeBody');
+            const codeActions = document.getElementById('codeActions');
+            
+            if (!codeBody || !codeActions) return;
+            
+            codeBody.innerHTML = `<div class="code-placeholder">
+                <i class="fas fa-code"></i>
+                <p>Configura tu pixel y haz clic en "Generar Código"</p>
+            </div>`;
+            codeActions.style.display = 'none';
+            window.currentGeneratedCode = null;
+        }
 
         // Generate Facebook Pixel Code
-        document.getElementById('generateFbCode').addEventListener('click', function() {
+        function generateFacebookPixelCode(pixelId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'PageView') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción correspondiente:
+// fbq('track', '${event}');`;
+                    
+                    if (event === 'Purchase') {
+                        eventsCode += `
+// Ejemplo con valor:
+// fbq('track', 'Purchase', {value: 99.99, currency: 'USD'});`;
+                    } else if (event === 'ViewContent') {
+                        eventsCode += `
+// Ejemplo con datos del producto:
+// fbq('track', 'ViewContent', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
+                    } else if (event === 'AddToCart') {
+                        eventsCode += `
+// Ejemplo:
+// fbq('track', 'AddToCart', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
+                    }
+                }
+            });
+
+            const baseCode = `<!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${pixelId}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Facebook Pixel Code -->`;
+            
+            return baseCode + eventsCode;
+        }
+
+        // Generate TikTok Pixel Code
+        function generateTikTokPixelCode(pixelId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'PageView') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
+// ttq.track('${event}');`;
+                    
+                    if (event === 'CompletePayment') {
+                        eventsCode += `
+// Ejemplo con valor:
+// ttq.track('CompletePayment', {value: 99.99, currency: 'USD'});`;
+                    } else if (event === 'ViewContent') {
+                        eventsCode += `
+// Ejemplo con datos:
+// ttq.track('ViewContent', {content_id: '123', content_name: 'Producto X', value: 49.99, currency: 'USD'});`;
+                    }
+                }
+            });
+
+            const baseCode = `<!-- TikTok Pixel Code -->
+<script>
+!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+
+  ttq.load('${pixelId}');
+  ttq.page();
+}(window, document, 'ttq');
+</script>
+<!-- End TikTok Pixel Code -->`;
+            
+            return baseCode + eventsCode;
+        }
+
+        // Generate GA4 Code
+        function generateGA4Code(measurementId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'page_view') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
+// gtag('event', '${event}');`;
+                    
+                    if (event === 'purchase') {
+                        eventsCode += `
+// Ejemplo con valor:
+// gtag('event', 'purchase', {
+//   transaction_id: 'T12345',
+//   value: 99.99,
+//   currency: 'USD',
+//   items: [{item_id: '123', item_name: 'Producto X', price: 99.99}]
+// });`;
+                    } else if (event === 'view_item') {
+                        eventsCode += `
+// Ejemplo:
+// gtag('event', 'view_item', {
+//   currency: 'USD',
+//   value: 49.99,
+//   items: [{item_id: '123', item_name: 'Producto X', price: 49.99}]
+// });`;
+                    }
+                }
+            });
+
+            return `<!-- Google Analytics 4 (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${measurementId}');
+</script>
+<!-- End Google Analytics 4 -->
+${eventsCode}`;
+        }
+
+        // Generate GTM Code
+        function generateGTMCode(containerId) {
+            return `<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${containerId}');</script>
+<!-- End Google Tag Manager -->
+
+<!-- Google Tag Manager (noscript) - Pegar después de <body> -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${containerId}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+// Para disparar eventos personalizados usa dataLayer:
+// dataLayer.push({'event': 'mi_evento_personalizado'});`;
+        }
+
+        // Generate Google Ads Conversion Code
+        function generateGoogleAdsCode(conversionId, conversionLabel) {
+            let conversionCode = '';
+            
+            if (conversionLabel) {
+                conversionCode = `
+// Dispara la conversión cuando se complete una acción (ej: compra):
+// gtag('event', 'conversion', {
+//   'send_to': '${conversionId}/${conversionLabel}',
+//   'value': 99.99,
+//   'currency': 'USD',
+//   'transaction_id': 'ORDER-123'
+// });`;
+            }
+
+            return `<!-- Google Ads Conversion Tracking -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${conversionId}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${conversionId}');
+</script>
+<!-- End Google Ads Conversion Tracking -->
+${conversionCode}`;
+        }
+
+        // Save pixel to local storage
+        function savePixel(platform, pixelId, name) {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            
+            // Check if already exists
+            const existingIndex = pixels.findIndex(p => p.platform === platform && p.pixelId === pixelId);
+            
+            if (existingIndex >= 0) {
+                pixels[existingIndex].name = name;
+                pixels[existingIndex].updatedAt = new Date().toISOString();
+            } else {
+                pixels.push({
+                    id: Date.now().toString(),
+                    platform,
+                    pixelId,
+                    name,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            localStorage.setItem('savedPixels', JSON.stringify(pixels));
+            renderSavedPixels();
+        }
+
+        // Render saved pixels
+        function renderSavedPixels() {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const pixelList = document.getElementById('pixelList');
+            
+            if (!pixelList) return;
+            
+            if (pixels.length === 0) {
+                pixelList.innerHTML = `<div class="empty-pixels">
+                    <i class="fas fa-database"></i>
+                    <p>No hay pixels guardados aún</p>
+                </div>`;
+                return;
+            }
+
+            const platformIcons = {
+                facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
+                tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' },
+                google: { icon: 'fab fa-google', class: 'google-icon' }
+            };
+
+            pixelList.innerHTML = pixels.map(pixel => {
+                const iconData = platformIcons[pixel.platform] || { icon: 'fas fa-code', class: '' };
+                return `<div class="pixel-item" data-id="${pixel.id}">
+                    <div class="pixel-item-icon ${iconData.class}">
+                        <i class="${iconData.icon}"></i>
+                    </div>
+                    <div class="pixel-item-info">
+                        <div class="pixel-item-name">${pixel.name}</div>
+                        <div class="pixel-item-id">${pixel.pixelId}</div>
+                    </div>
+                    <div class="pixel-item-actions">
+                        <button class="pixel-item-btn load-pixel" title="Cargar">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                        <button class="pixel-item-btn delete" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Add event listeners
+            pixelList.querySelectorAll('.load-pixel').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.pixel-item');
+                    const pixelId = item.dataset.id;
+                    loadPixel(pixelId);
+                });
+            });
+
+            pixelList.querySelectorAll('.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.pixel-item');
+                    const pixelId = item.dataset.id;
+                    deletePixel(pixelId);
+                });
+            });
+        }
+
+        // Load pixel
+        function loadPixel(id) {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const pixel = pixels.find(p => p.id === id);
+            
+            if (!pixel) return;
+
+            // Switch to correct tab
+            const tab = document.querySelector(`.platform-tab[data-platform="${pixel.platform}"]`);
+            if (tab) tab.click();
+
+            // Fill in the pixel ID
+            setTimeout(() => {
+                switch(pixel.platform) {
+                    case 'facebook':
+                        const fbId = document.getElementById('fbPixelId');
+                        const fbName = document.getElementById('fbPixelName');
+                        if (fbId) fbId.value = pixel.pixelId;
+                        if (fbName) fbName.value = pixel.name;
+                        break;
+                    case 'tiktok':
+                        const ttId = document.getElementById('ttPixelId');
+                        const ttName = document.getElementById('ttPixelName');
+                        if (ttId) ttId.value = pixel.pixelId;
+                        if (ttName) ttName.value = pixel.name;
+                        break;
+                    case 'google':
+                        const googleType = document.getElementById('googleType');
+                        if (googleType) {
+                            // Detect type from pixel ID
+                            if (pixel.pixelId.startsWith('G-')) {
+                                googleType.value = 'gtag';
+                                googleType.dispatchEvent(new Event('change'));
+                                const ga4Id = document.getElementById('ga4MeasurementId');
+                                if (ga4Id) ga4Id.value = pixel.pixelId;
+                            } else if (pixel.pixelId.startsWith('GTM-')) {
+                                googleType.value = 'gtm';
+                                googleType.dispatchEvent(new Event('change'));
+                                const gtmId = document.getElementById('gtmContainerId');
+                                if (gtmId) gtmId.value = pixel.pixelId;
+                            } else if (pixel.pixelId.startsWith('AW-')) {
+                                googleType.value = 'ads';
+                                googleType.dispatchEvent(new Event('change'));
+                                const adsId = document.getElementById('adsConversionId');
+                                if (adsId) adsId.value = pixel.pixelId;
+                            }
+                        }
+                        const googleName = document.getElementById('googlePixelName');
+                        if (googleName) googleName.value = pixel.name;
+                        break;
+                }
+            }, 100);
+        }
+
+        // Delete pixel
+        function deletePixel(id) {
+            if (!confirm('¿Estás seguro de eliminar este pixel guardado?')) return;
+            
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const filtered = pixels.filter(p => p.id !== id);
+            localStorage.setItem('savedPixels', JSON.stringify(filtered));
+            renderSavedPixels();
+        }
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Platform tab switching
+            const platformTabs = document.querySelectorAll('.platform-tab');
+            const platformContents = document.querySelectorAll('.platform-content');
+
+            platformTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const platform = this.dataset.platform;
+
+                    // Update tabs
+                    platformTabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Update content
+                    platformContents.forEach(c => c.classList.remove('active'));
+                    const targetContent = document.getElementById(platform + '-content');
+                    if (targetContent) {
+                        targetContent.classList.add('active');
+                    }
+
+                    // Clear code preview
+                    clearCodePreview();
+                });
+            });
+
+            // Google type switching
+            const googleType = document.getElementById('googleType');
+            if (googleType) {
+                const ga4Fields = document.getElementById('ga4Fields');
+                const gtmFields = document.getElementById('gtmFields');
+                const adsFields = document.getElementById('adsFields');
+                const adsLabelField = document.getElementById('adsLabelField');
+                const ga4Events = document.getElementById('ga4Events');
+
+                googleType.addEventListener('change', function() {
+                    const type = this.value;
+                    
+                    if (ga4Fields) ga4Fields.style.display = type === 'gtag' ? 'block' : 'none';
+                    if (gtmFields) gtmFields.style.display = type === 'gtm' ? 'block' : 'none';
+                    if (adsFields) adsFields.style.display = type === 'ads' ? 'block' : 'none';
+                    if (adsLabelField) adsLabelField.style.display = type === 'ads' ? 'block' : 'none';
+                    if (ga4Events) ga4Events.style.display = type === 'gtag' ? 'block' : 'none';
+                });
+            }
+
+            // Generate Facebook Pixel Code
+            const generateFbBtn = document.getElementById('generateFbCode');
+            if (generateFbBtn) {
+                generateFbBtn.addEventListener('click', function() {
             const pixelId = document.getElementById('fbPixelId').value.trim();
             
             if (!pixelId) {
@@ -1332,28 +1708,40 @@
             const events = getSelectedEvents('#facebook-content');
             const code = generateFacebookPixelCode(pixelId, events);
             
-            displayCode(code, 'facebook-pixel.html');
-            savePixel('facebook', pixelId, document.getElementById('fbPixelName').value || 'Facebook Pixel');
-        });
-
-        // Generate TikTok Pixel Code
-        document.getElementById('generateTtCode').addEventListener('click', function() {
-            const pixelId = document.getElementById('ttPixelId').value.trim();
-            
-            if (!pixelId) {
-                alert('Por favor, ingresa tu Pixel ID de TikTok');
-                return;
+                    displayCode(code, 'facebook-pixel.html');
+                    savePixel('facebook', pixelId, document.getElementById('fbPixelName').value || 'Facebook Pixel');
+                });
             }
 
-            const events = getSelectedEvents('#tiktok-content');
-            const code = generateTikTokPixelCode(pixelId, events);
-            
-            displayCode(code, 'tiktok-pixel.html');
-            savePixel('tiktok', pixelId, document.getElementById('ttPixelName').value || 'TikTok Pixel');
-        });
+            // Generate TikTok Pixel Code
+            const generateTtBtn = document.getElementById('generateTtCode');
+            if (generateTtBtn) {
+                generateTtBtn.addEventListener('click', function() {
+                    const pixelId = document.getElementById('ttPixelId').value.trim();
+                    
+                    if (!pixelId) {
+                        alert('Por favor, ingresa tu Pixel ID de TikTok');
+                        return;
+                    }
 
-        // Generate Google Code
-        document.getElementById('generateGoogleCode').addEventListener('click', function() {
+                    // TikTok Pixel ID puede tener diferentes formatos, solo validamos que no esté vacío
+                    if (pixelId.length < 5) {
+                        alert('El Pixel ID de TikTok parece ser inválido. Verifica que sea correcto.');
+                        return;
+                    }
+
+                    const events = getSelectedEvents('#tiktok-content');
+                    const code = generateTikTokPixelCode(pixelId, events);
+                    
+                    displayCode(code, 'tiktok-pixel.html');
+                    savePixel('tiktok', pixelId, document.getElementById('ttPixelName').value || 'TikTok Pixel');
+                });
+            }
+
+            // Generate Google Code
+            const generateGoogleBtn = document.getElementById('generateGoogleCode');
+            if (generateGoogleBtn) {
+                generateGoogleBtn.addEventListener('click', function() {
             const type = googleType.value;
             let code = '';
             let pixelId = '';
@@ -1405,12 +1793,65 @@
                     break;
             }
 
-            displayCode(code, filename);
-            savePixel('google', pixelId, document.getElementById('googlePixelName').value || 'Google Tag');
-        });
+                    displayCode(code, filename);
+                    savePixel('google', pixelId, document.getElementById('googlePixelName').value || 'Google Tag');
+                });
+            }
 
-        // Generate Facebook Pixel Code
-        function generateFacebookPixelCode(pixelId, events) {
+            // Copy code to clipboard
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            if (copyCodeBtn) {
+                copyCodeBtn.addEventListener('click', function() {
+                    if (!window.currentGeneratedCode) return;
+
+                    navigator.clipboard.writeText(window.currentGeneratedCode).then(() => {
+                        const btn = this;
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                        btn.classList.add('copied');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.classList.remove('copied');
+                        }, 2000);
+                    }).catch(err => {
+                        // Fallback
+                        const textarea = document.createElement('textarea');
+                        textarea.value = window.currentGeneratedCode;
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        
+                        const btn = this;
+                        const originalHTML = btn.innerHTML;
+                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                        btn.classList.add('copied');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalHTML;
+                            btn.classList.remove('copied');
+                        }, 2000);
+                    });
+                });
+            }
+
+            // Download code as file
+            const downloadCodeBtn = document.getElementById('downloadCodeBtn');
+            if (downloadCodeBtn) {
+                downloadCodeBtn.addEventListener('click', function() {
+                    if (!window.currentGeneratedCode) return;
+
+                    const blob = new Blob([window.currentGeneratedCode], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = window.currentCodeFilename || 'pixel-code.html';
+                    link.click();
+                    URL.revokeObjectURL(url);
+                });
+            }
+        }
             let eventsCode = '';
             
             events.forEach(event => {
@@ -1434,7 +1875,7 @@
                 }
             });
 
-            return `<!-- Facebook Pixel Code -->
+            const baseCode = `<!-- Facebook Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -1450,8 +1891,9 @@ fbq('track', 'PageView');
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
 /></noscript>
-<!-- End Facebook Pixel Code -->
-${eventsCode}`;
+<!-- End Facebook Pixel Code -->`;
+            
+            return baseCode + eventsCode;
         }
 
         // Generate TikTok Pixel Code
@@ -1475,7 +1917,7 @@ ${eventsCode}`;
                 }
             });
 
-            return `<!-- TikTok Pixel Code -->
+            const baseCode = `<!-- TikTok Pixel Code -->
 <script>
 !function (w, d, t) {
   w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
@@ -1484,8 +1926,9 @@ ${eventsCode}`;
   ttq.page();
 }(window, document, 'ttq');
 </script>
-<!-- End TikTok Pixel Code -->
-${eventsCode}`;
+<!-- End TikTok Pixel Code -->`;
+            
+            return baseCode + eventsCode;
         }
 
         // Generate GA4 Code
@@ -1619,53 +2062,6 @@ ${conversionCode}`;
             window.currentGeneratedCode = null;
         }
 
-        // Copy code to clipboard
-        document.getElementById('copyCodeBtn').addEventListener('click', function() {
-            if (!window.currentGeneratedCode) return;
-
-            navigator.clipboard.writeText(window.currentGeneratedCode).then(() => {
-                const btn = this;
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                btn.classList.add('copied');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('copied');
-                }, 2000);
-            }).catch(err => {
-                // Fallback
-                const textarea = document.createElement('textarea');
-                textarea.value = window.currentGeneratedCode;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                
-                const btn = this;
-                const originalHTML = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                btn.classList.add('copied');
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHTML;
-                    btn.classList.remove('copied');
-                }, 2000);
-            });
-        });
-
-        // Download code as file
-        document.getElementById('downloadCodeBtn').addEventListener('click', function() {
-            if (!window.currentGeneratedCode) return;
-
-            const blob = new Blob([window.currentGeneratedCode], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = window.currentCodeFilename || 'pixel-code.html';
-            link.click();
-            URL.revokeObjectURL(url);
-        });
 
         // Save pixel to local storage
         function savePixel(platform, pixelId, name) {
@@ -1802,10 +2198,6 @@ ${conversionCode}`;
             renderSavedPixels();
         }
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-            renderSavedPixels();
-        });
     </script>
 </body>
 </html>
