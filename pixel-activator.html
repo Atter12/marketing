@@ -962,7 +962,7 @@
                             <div class="form-group">
                                 <label for="fbPixelId">Pixel ID</label>
                                 <input type="text" id="fbPixelId" placeholder="123456789012345" maxlength="20">
-                                <small>Encuentra tu Pixel ID en <a href="https://business.facebook.com/events_manager" target="_blank">Meta Events Manager</a></small>
+                                <small>Encuentra tu Pixel ID en <a href="https://business.facebook.com/events_manager" target="_blank">Meta Events Manager</a> o usa <strong>123456789012345</strong> para pruebas</small>
                             </div>
 
                             <div class="form-group">
@@ -1034,7 +1034,7 @@
                             <div class="form-group">
                                 <label for="ttPixelId">Pixel ID</label>
                                 <input type="text" id="ttPixelId" placeholder="ABCDEF1234567890" maxlength="25">
-                                <small>Encuentra tu Pixel ID en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank">TikTok Events Manager</a></small>
+                                <small>Encuentra tu Pixel ID en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank">TikTok Events Manager</a> o usa <strong>TEST1234567890</strong> para pruebas</small>
                             </div>
 
                             <div class="form-group">
@@ -1112,10 +1112,10 @@
                                 </select>
                             </div>
 
-                            <div class="form-group" id="ga4Fields">
+                                <div class="form-group" id="ga4Fields">
                                 <label for="ga4MeasurementId">Measurement ID (GA4)</label>
                                 <input type="text" id="ga4MeasurementId" placeholder="G-XXXXXXXXXX">
-                                <small>Encuentra tu ID en <a href="https://analytics.google.com/" target="_blank">Google Analytics</a> → Admin → Data Streams</small>
+                                <small>Encuentra tu ID en <a href="https://analytics.google.com/" target="_blank">Google Analytics</a> → Admin → Data Streams o usa <strong>G-TEST123456</strong> para pruebas</small>
                             </div>
 
                             <div class="form-group" id="gtmFields" style="display: none;">
@@ -1251,6 +1251,10 @@
                                 <i class="fas fa-download"></i>
                                 Descargar
                             </button>
+                            <button class="btn-secondary" id="testPixelBtn" style="grid-column: 1 / -1; background: var(--accent); color: white; border-color: var(--accent);">
+                                <i class="fas fa-flask"></i>
+                                Probar Pixel Real
+                            </button>
                         </div>
 
                         <div class="info-box warning" style="margin-top: 20px;">
@@ -1347,7 +1351,9 @@
                 }
             });
 
-            const baseCode = '<!-- Facebook Pixel Code -->\n<' + 'script>\n' +
+            // Código oficial de Facebook Pixel - EXACTO como lo proporciona Meta
+            const baseCode = '<!-- Facebook Pixel Code -->\n' +
+'<' + 'script>\n' +
 '!function(f,b,e,v,n,t,s)\n' +
 '{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\n' +
 'n.callMethod.apply(n,arguments):n.queue.push(arguments)};\n' +
@@ -1835,15 +1841,19 @@ conversionCode;
             const generateFbBtn = document.getElementById('generateFbCode');
             if (generateFbBtn) {
                 generateFbBtn.addEventListener('click', function() {
-                    const pixelId = document.getElementById('fbPixelId').value.trim();
+                    let pixelId = document.getElementById('fbPixelId').value.trim();
                     
                     if (!pixelId) {
-                        alert('Por favor, ingresa tu Pixel ID de Facebook');
+                        alert('Por favor, ingresa tu Pixel ID de Facebook\n\n💡 Tip: Puedes obtenerlo en:\nhttps://business.facebook.com/events_manager\n\nO usa un ID de prueba: 123456789012345');
                         return;
                     }
 
-                    if (!/^\d{15,16}$/.test(pixelId)) {
-                        alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos');
+                    // Permitir IDs de prueba comunes
+                    const testIds = ['123456789012345', '1234567890123456', 'test123456789012'];
+                    const isTestId = testIds.includes(pixelId);
+                    
+                    if (!isTestId && !/^\d{15,16}$/.test(pixelId)) {
+                        alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos\n\n💡 Tip: Puedes obtenerlo en:\nhttps://business.facebook.com/events_manager');
                         return;
                     }
 
@@ -1994,6 +2004,46 @@ conversionCode;
                     link.download = window.currentCodeFilename || 'pixel-code.html';
                     link.click();
                     URL.revokeObjectURL(url);
+                });
+            }
+
+            // Test pixel button
+            const testPixelBtn = document.getElementById('testPixelBtn');
+            if (testPixelBtn) {
+                testPixelBtn.addEventListener('click', function() {
+                    // Obtener el Pixel ID actual según la plataforma activa
+                    let pixelId = '';
+                    const activeTab = document.querySelector('.platform-tab.active');
+                    
+                    if (activeTab) {
+                        const platform = activeTab.dataset.platform;
+                        switch(platform) {
+                            case 'facebook':
+                                pixelId = document.getElementById('fbPixelId').value.trim();
+                                break;
+                            case 'tiktok':
+                                pixelId = document.getElementById('ttPixelId').value.trim();
+                                break;
+                            case 'google':
+                                const googleType = document.getElementById('googleType').value;
+                                if (googleType === 'gtag') {
+                                    pixelId = document.getElementById('ga4MeasurementId').value.trim();
+                                } else if (googleType === 'gtm') {
+                                    pixelId = document.getElementById('gtmContainerId').value.trim();
+                                } else if (googleType === 'ads') {
+                                    pixelId = document.getElementById('adsConversionId').value.trim();
+                                }
+                                break;
+                        }
+                    }
+
+                    if (pixelId) {
+                        // Abrir página de prueba con el Pixel ID
+                        const testUrl = `test-pixel-real.html?pixelId=${encodeURIComponent(pixelId)}&platform=${activeTab ? activeTab.dataset.platform : 'facebook'}`;
+                        window.open(testUrl, '_blank');
+                    } else {
+                        alert('Por favor, ingresa un Pixel ID primero y genera el código');
+                    }
                 });
             }
         }

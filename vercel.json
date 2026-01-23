@@ -60,8 +60,20 @@
       "dest": "/pixel-activator.html"
     },
     {
+      "src": "/pixel-activator",
+      "dest": "/pixel-activator.html"
+    },
+    {
       "src": "/pixel-activator.html",
       "dest": "/pixel-activator.html"
+    },
+    {
+      "src": "/test-pixel-real",
+      "dest": "/test-pixel-real.html"
+    },
+    {
+      "src": "/test-pixel-real.html",
+      "dest": "/test-pixel-real.html"
     },
     {
       "src": "/landing",
