@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Activación de Pixel | Configura Facebook, TikTok y Google Ads | EcomTools</title>
+    <meta name="description" content="Activa y configura píxeles de Facebook, TikTok y Google en tus páginas. Genera el código de tracking listo para copiar e implementar.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --secondary: #6366f1;
+            --accent: #10b981;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+            
+            /* Platform Colors */
+            --facebook: #1877f2;
+            --tiktok: #000000;
+            --google: #4285f4;
+            --google-ads: #fbbc04;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .back-link span {
+            display: inline;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 60px 24px 40px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i {
+            color: var(--primary);
+        }
+
+        .hero-section h1 {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero-section h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            color: var(--text-medium);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.7;
+        }
+
+        /* Platform Selector */
+        .platform-section {
+            padding: 40px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .platform-container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .platform-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .platform-tab {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 28px;
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .platform-tab:hover {
+            border-color: var(--text-light);
+            transform: translateY(-2px);
+        }
+
+        .platform-tab.active {
+            border-color: var(--platform-color, var(--primary));
+            background: var(--platform-bg, #fff0ed);
+            color: var(--platform-color, var(--primary));
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-tab i {
+            font-size: 20px;
+        }
+
+        .platform-tab[data-platform="facebook"] {
+            --platform-color: var(--facebook);
+            --platform-bg: #e7f3ff;
+        }
+
+        .platform-tab[data-platform="tiktok"] {
+            --platform-color: var(--tiktok);
+            --platform-bg: #f5f5f5;
+        }
+
+        .platform-tab[data-platform="google"] {
+            --platform-color: var(--google);
+            --platform-bg: #e8f0fe;
+        }
+
+        /* Config Cards */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .config-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+        }
+
+        .config-card h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .config-card h2 i {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .facebook-icon { background: #e7f3ff; color: var(--facebook); }
+        .tiktok-icon { background: #f5f5f5; color: var(--tiktok); }
+        .google-icon { background: #e8f0fe; color: var(--google); }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 6px;
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .form-group small a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .form-group small a:hover {
+            text-decoration: underline;
+        }
+
+        /* Checkboxes */
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg-gray);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: var(--border);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-item .checkbox-content {
+            flex: 1;
+        }
+
+        .checkbox-item .checkbox-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .checkbox-item .checkbox-desc {
+            font-size: 12px;
+            color: var(--text-medium);
+        }
+
+        /* Buttons */
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 74, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Code Preview */
+        .code-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            padding: 36px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 100px;
+        }
+
+        .code-card h2 {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .code-preview {
+            background: #1e1e1e;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .code-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #2d2d2d;
+            border-bottom: 1px solid #3d3d3d;
+        }
+
+        .code-header span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #9ca3af;
+        }
+
+        .code-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .code-dots span:nth-child(1) { background: #ff5f57; }
+        .code-dots span:nth-child(2) { background: #ffbd2e; }
+        .code-dots span:nth-child(3) { background: #28c840; }
+
+        .code-body {
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .code-body pre {
+            margin: 0;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #e4e4e7;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .code-body .comment { color: #6b7280; }
+        .code-body .tag { color: #f472b6; }
+        .code-body .attr { color: #34d399; }
+        .code-body .string { color: #fbbf24; }
+        .code-body .function { color: #60a5fa; }
+
+        .code-placeholder {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .code-placeholder i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .code-placeholder p {
+            font-size: 14px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-secondary {
+            padding: 14px;
+            background: var(--bg-gray);
+            color: var(--text-dark);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            border-color: var(--text-medium);
+        }
+
+        .btn-secondary.copied {
+            background: #dcfce7;
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Info Box */
+        .info-box {
+            background: var(--bg-gray);
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .info-box p {
+            font-size: 13px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .info-box i {
+            color: var(--primary);
+            margin-right: 8px;
+        }
+
+        .info-box.warning {
+            border-left-color: #f59e0b;
+        }
+
+        .info-box.warning i {
+            color: #f59e0b;
+        }
+
+        /* Platform Content */
+        .platform-content {
+            display: none;
+        }
+
+        .platform-content.active {
+            display: block;
+        }
+
+        /* Instructions Section */
+        .instructions-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid var(--border);
+        }
+
+        .instructions-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instructions-list {
+            list-style: none;
+        }
+
+        .instructions-list li {
+            display: flex;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .instructions-list li:last-child {
+            border-bottom: none;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+        }
+
+        .step-content strong {
+            color: var(--text-dark);
+        }
+
+        /* Saved Pixels Section */
+        .saved-pixels-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid var(--border);
+        }
+
+        .saved-pixels-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .saved-pixels-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .pixel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .pixel-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--bg-gray);
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .pixel-item:hover {
+            background: var(--border);
+        }
+
+        .pixel-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .pixel-item-info {
+            flex: 1;
+        }
+
+        .pixel-item-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 2px;
+        }
+
+        .pixel-item-id {
+            font-size: 12px;
+            color: var(--text-medium);
+            font-family: monospace;
+        }
+
+        .pixel-item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .pixel-item-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            background: white;
+            color: var(--text-medium);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pixel-item-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .pixel-item-btn.delete:hover {
+            background: #dc2626;
+        }
+
+        .empty-pixels {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-pixels i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-pixels p {
+            font-size: 14px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .config-grid {
+                gap: 24px;
+            }
+        }
+
+        @media (max-width: 968px) {
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .code-card {
+                position: static;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            nav {
+                padding: 12px 0;
+            }
+
+            .logo {
+                font-size: 18px;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+
+            .back-link {
+                font-size: 13px;
+            }
+
+            .hero-section {
+                padding: 40px 16px 30px;
+            }
+
+            .hero-badge {
+                font-size: 12px;
+                padding: 6px 14px;
+                margin-bottom: 16px;
+            }
+
+            .hero-section h1 {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+
+            .hero-section p {
+                font-size: 16px;
+            }
+
+            .platform-section {
+                padding: 24px 16px 50px;
+            }
+
+            .platform-tabs {
+                gap: 8px;
+                margin-bottom: 24px;
+            }
+
+            .platform-tab {
+                padding: 12px 18px;
+                font-size: 14px;
+            }
+
+            .platform-tab i {
+                font-size: 18px;
+            }
+
+            .config-card,
+            .code-card {
+                padding: 24px 20px;
+                border-radius: 20px;
+            }
+
+            .config-card h2,
+            .code-card h2 {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+
+            .code-body {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 12px;
+            }
+
+            .back-link span {
+                display: none;
+            }
+
+            .hero-section {
+                padding: 30px 12px 24px;
+            }
+
+            .hero-section h1 {
+                font-size: 26px;
+            }
+
+            .hero-section p {
+                font-size: 15px;
+            }
+
+            .platform-section {
+                padding: 20px 12px 40px;
+            }
+
+            .platform-tabs {
+                flex-direction: column;
+            }
+
+            .platform-tab {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .config-card,
+            .code-card {
+                padding: 20px 16px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 12px 14px;
+                font-size: 14px;
+            }
+
+            .checkbox-item {
+                padding: 10px 12px;
+            }
+
+            .code-body pre {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    Ecom<span>Tools</span>
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver a herramientas</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-code"></i>
+                Activación de Pixel • Fácil y Rápido
+            </div>
+            <h1>Activación de <span>Pixel</span></h1>
+            <p>Genera el código de tracking para Facebook, TikTok y Google. Configura eventos de conversión y optimiza tus campañas publicitarias.</p>
+        </div>
+    </section>
+
+    <!-- Platform Section -->
+    <section class="platform-section">
+        <div class="container">
+            <div class="platform-container">
+                <!-- Platform Tabs -->
+                <div class="platform-tabs">
+                    <button class="platform-tab active" data-platform="facebook">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook Pixel
+                    </button>
+                    <button class="platform-tab" data-platform="tiktok">
+                        <i class="fab fa-tiktok"></i>
+                        TikTok Pixel
+                    </button>
+                    <button class="platform-tab" data-platform="google">
+                        <i class="fab fa-google"></i>
+                        Google Tag
+                    </button>
+                </div>
+
+                <!-- Config Grid -->
+                <div class="config-grid">
+                    <!-- Configuration Card -->
+                    <div class="config-card">
+                        <!-- Facebook Config -->
+                        <div class="platform-content active" id="facebook-content">
+                            <h2>
+                                <i class="fab fa-facebook-f facebook-icon"></i>
+                                Configura Facebook Pixel
+                            </h2>
+
+                            <div class="form-group">
+                                <label for="fbPixelId">Pixel ID</label>
+                                <input type="text" id="fbPixelId" placeholder="123456789012345" maxlength="20">
+                                <small>Encuentra tu Pixel ID en <a href="https://business.facebook.com/events_manager" target="_blank">Meta Events Manager</a></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fbPixelName">Nombre del Pixel (Opcional)</label>
+                                <input type="text" id="fbPixelName" placeholder="Mi Tienda Online">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Eventos a Trackear</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" checked data-event="PageView">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">PageView</span>
+                                            <span class="checkbox-desc">Trackea cada visita a la página</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="ViewContent">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">ViewContent</span>
+                                            <span class="checkbox-desc">Cuando ven un producto o contenido</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="AddToCart">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">AddToCart</span>
+                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="InitiateCheckout">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">InitiateCheckout</span>
+                                            <span class="checkbox-desc">Cuando inician checkout</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="Purchase">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">Purchase</span>
+                                            <span class="checkbox-desc">Cuando completan una compra</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="Lead">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">Lead</span>
+                                            <span class="checkbox-desc">Cuando envían un formulario</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary" id="generateFbCode">
+                                <i class="fas fa-code"></i>
+                                Generar Código
+                            </button>
+                        </div>
+
+                        <!-- TikTok Config -->
+                        <div class="platform-content" id="tiktok-content">
+                            <h2>
+                                <i class="fab fa-tiktok tiktok-icon"></i>
+                                Configura TikTok Pixel
+                            </h2>
+
+                            <div class="form-group">
+                                <label for="ttPixelId">Pixel ID</label>
+                                <input type="text" id="ttPixelId" placeholder="ABCDEF1234567890" maxlength="25">
+                                <small>Encuentra tu Pixel ID en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank">TikTok Events Manager</a></small>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ttPixelName">Nombre del Pixel (Opcional)</label>
+                                <input type="text" id="ttPixelName" placeholder="Mi Tienda TikTok">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Eventos a Trackear</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" checked data-event="PageView">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">PageView</span>
+                                            <span class="checkbox-desc">Trackea cada visita a la página</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="ViewContent">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">ViewContent</span>
+                                            <span class="checkbox-desc">Cuando ven un producto</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="AddToCart">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">AddToCart</span>
+                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="PlaceAnOrder">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">PlaceAnOrder</span>
+                                            <span class="checkbox-desc">Cuando inician checkout</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="CompletePayment">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">CompletePayment</span>
+                                            <span class="checkbox-desc">Cuando completan una compra</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="SubmitForm">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">SubmitForm</span>
+                                            <span class="checkbox-desc">Cuando envían un formulario</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary" id="generateTtCode">
+                                <i class="fas fa-code"></i>
+                                Generar Código
+                            </button>
+                        </div>
+
+                        <!-- Google Config -->
+                        <div class="platform-content" id="google-content">
+                            <h2>
+                                <i class="fab fa-google google-icon"></i>
+                                Configura Google Tag
+                            </h2>
+
+                            <div class="form-group">
+                                <label for="googleType">Tipo de Tag</label>
+                                <select id="googleType">
+                                    <option value="gtag">Google Analytics 4 (GA4)</option>
+                                    <option value="gtm">Google Tag Manager (GTM)</option>
+                                    <option value="ads">Google Ads Conversion</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group" id="ga4Fields">
+                                <label for="ga4MeasurementId">Measurement ID (GA4)</label>
+                                <input type="text" id="ga4MeasurementId" placeholder="G-XXXXXXXXXX">
+                                <small>Encuentra tu ID en <a href="https://analytics.google.com/" target="_blank">Google Analytics</a> → Admin → Data Streams</small>
+                            </div>
+
+                            <div class="form-group" id="gtmFields" style="display: none;">
+                                <label for="gtmContainerId">Container ID (GTM)</label>
+                                <input type="text" id="gtmContainerId" placeholder="GTM-XXXXXXX">
+                                <small>Encuentra tu ID en <a href="https://tagmanager.google.com/" target="_blank">Google Tag Manager</a></small>
+                            </div>
+
+                            <div class="form-group" id="adsFields" style="display: none;">
+                                <label for="adsConversionId">Conversion ID</label>
+                                <input type="text" id="adsConversionId" placeholder="AW-XXXXXXXXX">
+                                <small>Encuentra tu ID en Google Ads → Tools → Conversions</small>
+                            </div>
+
+                            <div class="form-group" id="adsLabelField" style="display: none;">
+                                <label for="adsConversionLabel">Conversion Label (Opcional)</label>
+                                <input type="text" id="adsConversionLabel" placeholder="AbCdEfGhIjK-LmN">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="googlePixelName">Nombre (Opcional)</label>
+                                <input type="text" id="googlePixelName" placeholder="Mi Analytics">
+                            </div>
+
+                            <div class="form-group" id="ga4Events">
+                                <label>Eventos GA4 a Configurar</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" checked data-event="page_view">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">page_view</span>
+                                            <span class="checkbox-desc">Trackea cada visita (automático)</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="view_item">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">view_item</span>
+                                            <span class="checkbox-desc">Cuando ven un producto</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="add_to_cart">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">add_to_cart</span>
+                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="begin_checkout">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">begin_checkout</span>
+                                            <span class="checkbox-desc">Cuando inician checkout</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="purchase">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">purchase</span>
+                                            <span class="checkbox-desc">Cuando completan una compra</span>
+                                        </div>
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" data-event="generate_lead">
+                                        <div class="checkbox-content">
+                                            <span class="checkbox-label">generate_lead</span>
+                                            <span class="checkbox-desc">Cuando envían un formulario</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button class="btn-primary" id="generateGoogleCode">
+                                <i class="fas fa-code"></i>
+                                Generar Código
+                            </button>
+                        </div>
+
+                        <!-- Instructions -->
+                        <div class="instructions-section">
+                            <h3><i class="fas fa-book"></i> Instrucciones de Instalación</h3>
+                            <ol class="instructions-list">
+                                <li>
+                                    <span class="step-number">1</span>
+                                    <span class="step-content"><strong>Genera el código</strong> ingresando tu Pixel ID y seleccionando los eventos que deseas trackear.</span>
+                                </li>
+                                <li>
+                                    <span class="step-number">2</span>
+                                    <span class="step-content"><strong>Copia el código base</strong> y pégalo justo después de la etiqueta <code>&lt;head&gt;</code> en todas tus páginas.</span>
+                                </li>
+                                <li>
+                                    <span class="step-number">3</span>
+                                    <span class="step-content"><strong>Dispara eventos</strong> llamando a las funciones correspondientes cuando ocurra cada acción (clic en botón, envío de formulario, etc.).</span>
+                                </li>
+                                <li>
+                                    <span class="step-number">4</span>
+                                    <span class="step-content"><strong>Verifica la instalación</strong> usando las herramientas de debug de cada plataforma (Meta Pixel Helper, TikTok Pixel Helper, Google Tag Assistant).</span>
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Code Preview Card -->
+                    <div class="code-card">
+                        <h2>
+                            <i class="fas fa-terminal" style="color: var(--primary);"></i>
+                            Código Generado
+                        </h2>
+
+                        <div class="code-preview">
+                            <div class="code-header">
+                                <div class="code-dots">
+                                    <span></span>
+                                    <span></span>
+                                    <span></span>
+                                </div>
+                                <span id="codeFileName">pixel-code.html</span>
+                            </div>
+                            <div class="code-body" id="codeBody">
+                                <div class="code-placeholder">
+                                    <i class="fas fa-code"></i>
+                                    <p>Configura tu pixel y haz clic en "Generar Código"</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="action-buttons" id="codeActions" style="display: none;">
+                            <button class="btn-secondary" id="copyCodeBtn">
+                                <i class="fas fa-copy"></i>
+                                Copiar Código
+                            </button>
+                            <button class="btn-secondary" id="downloadCodeBtn">
+                                <i class="fas fa-download"></i>
+                                Descargar
+                            </button>
+                        </div>
+
+                        <div class="info-box warning" style="margin-top: 20px;">
+                            <p><i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> El código base debe ir en el <code>&lt;head&gt;</code> de tu página. Los eventos específicos se disparan con JavaScript cuando ocurre la acción.</p>
+                        </div>
+
+                        <!-- Saved Pixels -->
+                        <div class="saved-pixels-section" id="savedPixelsSection">
+                            <div class="saved-pixels-header">
+                                <h3>Pixels Guardados</h3>
+                            </div>
+                            <div class="pixel-list" id="pixelList">
+                                <div class="empty-pixels">
+                                    <i class="fas fa-database"></i>
+                                    <p>No hay pixels guardados aún</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        // Platform tab switching
+        const platformTabs = document.querySelectorAll('.platform-tab');
+        const platformContents = document.querySelectorAll('.platform-content');
+
+        platformTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                const platform = this.dataset.platform;
+
+                // Update tabs
+                platformTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+
+                // Update content
+                platformContents.forEach(c => c.classList.remove('active'));
+                document.getElementById(platform + '-content').classList.add('active');
+
+                // Clear code preview
+                clearCodePreview();
+            });
+        });
+
+        // Google type switching
+        const googleType = document.getElementById('googleType');
+        const ga4Fields = document.getElementById('ga4Fields');
+        const gtmFields = document.getElementById('gtmFields');
+        const adsFields = document.getElementById('adsFields');
+        const adsLabelField = document.getElementById('adsLabelField');
+        const ga4Events = document.getElementById('ga4Events');
+
+        googleType.addEventListener('change', function() {
+            const type = this.value;
+            
+            ga4Fields.style.display = type === 'gtag' ? 'block' : 'none';
+            gtmFields.style.display = type === 'gtm' ? 'block' : 'none';
+            adsFields.style.display = type === 'ads' ? 'block' : 'none';
+            adsLabelField.style.display = type === 'ads' ? 'block' : 'none';
+            ga4Events.style.display = type === 'gtag' ? 'block' : 'none';
+        });
+
+        // Generate Facebook Pixel Code
+        document.getElementById('generateFbCode').addEventListener('click', function() {
+            const pixelId = document.getElementById('fbPixelId').value.trim();
+            
+            if (!pixelId) {
+                alert('Por favor, ingresa tu Pixel ID de Facebook');
+                return;
+            }
+
+            if (!/^\d{15,16}$/.test(pixelId)) {
+                alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos');
+                return;
+            }
+
+            const events = getSelectedEvents('#facebook-content');
+            const code = generateFacebookPixelCode(pixelId, events);
+            
+            displayCode(code, 'facebook-pixel.html');
+            savePixel('facebook', pixelId, document.getElementById('fbPixelName').value || 'Facebook Pixel');
+        });
+
+        // Generate TikTok Pixel Code
+        document.getElementById('generateTtCode').addEventListener('click', function() {
+            const pixelId = document.getElementById('ttPixelId').value.trim();
+            
+            if (!pixelId) {
+                alert('Por favor, ingresa tu Pixel ID de TikTok');
+                return;
+            }
+
+            const events = getSelectedEvents('#tiktok-content');
+            const code = generateTikTokPixelCode(pixelId, events);
+            
+            displayCode(code, 'tiktok-pixel.html');
+            savePixel('tiktok', pixelId, document.getElementById('ttPixelName').value || 'TikTok Pixel');
+        });
+
+        // Generate Google Code
+        document.getElementById('generateGoogleCode').addEventListener('click', function() {
+            const type = googleType.value;
+            let code = '';
+            let pixelId = '';
+            let filename = '';
+
+            switch(type) {
+                case 'gtag':
+                    pixelId = document.getElementById('ga4MeasurementId').value.trim();
+                    if (!pixelId) {
+                        alert('Por favor, ingresa tu Measurement ID de GA4');
+                        return;
+                    }
+                    if (!/^G-[A-Z0-9]+$/i.test(pixelId)) {
+                        alert('El Measurement ID debe tener el formato G-XXXXXXXXXX');
+                        return;
+                    }
+                    const ga4Events = getSelectedEvents('#google-content');
+                    code = generateGA4Code(pixelId, ga4Events);
+                    filename = 'ga4-tag.html';
+                    break;
+                
+                case 'gtm':
+                    pixelId = document.getElementById('gtmContainerId').value.trim();
+                    if (!pixelId) {
+                        alert('Por favor, ingresa tu Container ID de GTM');
+                        return;
+                    }
+                    if (!/^GTM-[A-Z0-9]+$/i.test(pixelId)) {
+                        alert('El Container ID debe tener el formato GTM-XXXXXXX');
+                        return;
+                    }
+                    code = generateGTMCode(pixelId);
+                    filename = 'gtm-tag.html';
+                    break;
+                
+                case 'ads':
+                    pixelId = document.getElementById('adsConversionId').value.trim();
+                    const conversionLabel = document.getElementById('adsConversionLabel').value.trim();
+                    if (!pixelId) {
+                        alert('Por favor, ingresa tu Conversion ID de Google Ads');
+                        return;
+                    }
+                    if (!/^AW-\d+$/i.test(pixelId)) {
+                        alert('El Conversion ID debe tener el formato AW-XXXXXXXXX');
+                        return;
+                    }
+                    code = generateGoogleAdsCode(pixelId, conversionLabel);
+                    filename = 'google-ads-tag.html';
+                    break;
+            }
+
+            displayCode(code, filename);
+            savePixel('google', pixelId, document.getElementById('googlePixelName').value || 'Google Tag');
+        });
+
+        // Generate Facebook Pixel Code
+        function generateFacebookPixelCode(pixelId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'PageView') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción correspondiente:
+// fbq('track', '${event}');`;
+                    
+                    if (event === 'Purchase') {
+                        eventsCode += `
+// Ejemplo con valor:
+// fbq('track', 'Purchase', {value: 99.99, currency: 'USD'});`;
+                    } else if (event === 'ViewContent') {
+                        eventsCode += `
+// Ejemplo con datos del producto:
+// fbq('track', 'ViewContent', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
+                    } else if (event === 'AddToCart') {
+                        eventsCode += `
+// Ejemplo:
+// fbq('track', 'AddToCart', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
+                    }
+                }
+            });
+
+            return `<!-- Facebook Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${pixelId}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Facebook Pixel Code -->
+${eventsCode}`;
+        }
+
+        // Generate TikTok Pixel Code
+        function generateTikTokPixelCode(pixelId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'PageView') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
+// ttq.track('${event}');`;
+                    
+                    if (event === 'CompletePayment') {
+                        eventsCode += `
+// Ejemplo con valor:
+// ttq.track('CompletePayment', {value: 99.99, currency: 'USD'});`;
+                    } else if (event === 'ViewContent') {
+                        eventsCode += `
+// Ejemplo con datos:
+// ttq.track('ViewContent', {content_id: '123', content_name: 'Producto X', value: 49.99, currency: 'USD'});`;
+                    }
+                }
+            });
+
+            return `<!-- TikTok Pixel Code -->
+<script>
+!function (w, d, t) {
+  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+
+  ttq.load('${pixelId}');
+  ttq.page();
+}(window, document, 'ttq');
+</script>
+<!-- End TikTok Pixel Code -->
+${eventsCode}`;
+        }
+
+        // Generate GA4 Code
+        function generateGA4Code(measurementId, events) {
+            let eventsCode = '';
+            
+            events.forEach(event => {
+                if (event !== 'page_view') {
+                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
+// gtag('event', '${event}');`;
+                    
+                    if (event === 'purchase') {
+                        eventsCode += `
+// Ejemplo con valor:
+// gtag('event', 'purchase', {
+//   transaction_id: 'T12345',
+//   value: 99.99,
+//   currency: 'USD',
+//   items: [{item_id: '123', item_name: 'Producto X', price: 99.99}]
+// });`;
+                    } else if (event === 'view_item') {
+                        eventsCode += `
+// Ejemplo:
+// gtag('event', 'view_item', {
+//   currency: 'USD',
+//   value: 49.99,
+//   items: [{item_id: '123', item_name: 'Producto X', price: 49.99}]
+// });`;
+                    }
+                }
+            });
+
+            return `<!-- Google Analytics 4 (GA4) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${measurementId}');
+</script>
+<!-- End Google Analytics 4 -->
+${eventsCode}`;
+        }
+
+        // Generate GTM Code
+        function generateGTMCode(containerId) {
+            return `<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${containerId}');</script>
+<!-- End Google Tag Manager -->
+
+<!-- Google Tag Manager (noscript) - Pegar después de <body> -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${containerId}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+// Para disparar eventos personalizados usa dataLayer:
+// dataLayer.push({'event': 'mi_evento_personalizado'});`;
+        }
+
+        // Generate Google Ads Conversion Code
+        function generateGoogleAdsCode(conversionId, conversionLabel) {
+            let conversionCode = '';
+            
+            if (conversionLabel) {
+                conversionCode = `
+// Dispara la conversión cuando se complete una acción (ej: compra):
+// gtag('event', 'conversion', {
+//   'send_to': '${conversionId}/${conversionLabel}',
+//   'value': 99.99,
+//   'currency': 'USD',
+//   'transaction_id': 'ORDER-123'
+// });`;
+            }
+
+            return `<!-- Google Ads Conversion Tracking -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=${conversionId}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '${conversionId}');
+</script>
+<!-- End Google Ads Conversion Tracking -->
+${conversionCode}`;
+        }
+
+        // Get selected events from checkboxes
+        function getSelectedEvents(containerId) {
+            const checkboxes = document.querySelectorAll(`${containerId} input[type="checkbox"]:checked`);
+            return Array.from(checkboxes).map(cb => cb.dataset.event);
+        }
+
+        // Display generated code
+        function displayCode(code, filename) {
+            const codeBody = document.getElementById('codeBody');
+            const codeActions = document.getElementById('codeActions');
+            
+            // Syntax highlight
+            const highlightedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
+                .replace(/('https?:\/\/[^']+')|(https:\/\/[^\s<]+)/g, '<span class="string">$&</span>')
+                .replace(/('G-[A-Z0-9]+'|'\d{15,16}'|'GTM-[A-Z0-9]+'|'AW-\d+'|'[A-Z0-9]{10,}')/gi, '<span class="string">$1</span>')
+                .replace(/(function|var|let|const|return|if|else|for|while)/g, '<span class="function">$1</span>');
+
+            codeBody.innerHTML = `<pre>${highlightedCode}</pre>`;
+            document.getElementById('codeFileName').textContent = filename;
+            codeActions.style.display = 'grid';
+
+            // Store current code for copy/download
+            window.currentGeneratedCode = code;
+            window.currentCodeFilename = filename;
+        }
+
+        // Clear code preview
+        function clearCodePreview() {
+            const codeBody = document.getElementById('codeBody');
+            const codeActions = document.getElementById('codeActions');
+            
+            codeBody.innerHTML = `<div class="code-placeholder">
+                <i class="fas fa-code"></i>
+                <p>Configura tu pixel y haz clic en "Generar Código"</p>
+            </div>`;
+            codeActions.style.display = 'none';
+            window.currentGeneratedCode = null;
+        }
+
+        // Copy code to clipboard
+        document.getElementById('copyCodeBtn').addEventListener('click', function() {
+            if (!window.currentGeneratedCode) return;
+
+            navigator.clipboard.writeText(window.currentGeneratedCode).then(() => {
+                const btn = this;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                // Fallback
+                const textarea = document.createElement('textarea');
+                textarea.value = window.currentGeneratedCode;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                
+                const btn = this;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        });
+
+        // Download code as file
+        document.getElementById('downloadCodeBtn').addEventListener('click', function() {
+            if (!window.currentGeneratedCode) return;
+
+            const blob = new Blob([window.currentGeneratedCode], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = window.currentCodeFilename || 'pixel-code.html';
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Save pixel to local storage
+        function savePixel(platform, pixelId, name) {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            
+            // Check if already exists
+            const existingIndex = pixels.findIndex(p => p.platform === platform && p.pixelId === pixelId);
+            
+            if (existingIndex >= 0) {
+                pixels[existingIndex].name = name;
+                pixels[existingIndex].updatedAt = new Date().toISOString();
+            } else {
+                pixels.push({
+                    id: Date.now().toString(),
+                    platform,
+                    pixelId,
+                    name,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            localStorage.setItem('savedPixels', JSON.stringify(pixels));
+            renderSavedPixels();
+        }
+
+        // Render saved pixels
+        function renderSavedPixels() {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const pixelList = document.getElementById('pixelList');
+            
+            if (pixels.length === 0) {
+                pixelList.innerHTML = `<div class="empty-pixels">
+                    <i class="fas fa-database"></i>
+                    <p>No hay pixels guardados aún</p>
+                </div>`;
+                return;
+            }
+
+            const platformIcons = {
+                facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
+                tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' },
+                google: { icon: 'fab fa-google', class: 'google-icon' }
+            };
+
+            pixelList.innerHTML = pixels.map(pixel => {
+                const iconData = platformIcons[pixel.platform] || { icon: 'fas fa-code', class: '' };
+                return `<div class="pixel-item" data-id="${pixel.id}">
+                    <div class="pixel-item-icon ${iconData.class}">
+                        <i class="${iconData.icon}"></i>
+                    </div>
+                    <div class="pixel-item-info">
+                        <div class="pixel-item-name">${pixel.name}</div>
+                        <div class="pixel-item-id">${pixel.pixelId}</div>
+                    </div>
+                    <div class="pixel-item-actions">
+                        <button class="pixel-item-btn load-pixel" title="Cargar">
+                            <i class="fas fa-upload"></i>
+                        </button>
+                        <button class="pixel-item-btn delete" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Add event listeners
+            pixelList.querySelectorAll('.load-pixel').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.pixel-item');
+                    const pixelId = item.dataset.id;
+                    loadPixel(pixelId);
+                });
+            });
+
+            pixelList.querySelectorAll('.delete').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const item = this.closest('.pixel-item');
+                    const pixelId = item.dataset.id;
+                    deletePixel(pixelId);
+                });
+            });
+        }
+
+        // Load pixel
+        function loadPixel(id) {
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const pixel = pixels.find(p => p.id === id);
+            
+            if (!pixel) return;
+
+            // Switch to correct tab
+            const tab = document.querySelector(`.platform-tab[data-platform="${pixel.platform}"]`);
+            if (tab) tab.click();
+
+            // Fill in the pixel ID
+            setTimeout(() => {
+                switch(pixel.platform) {
+                    case 'facebook':
+                        document.getElementById('fbPixelId').value = pixel.pixelId;
+                        document.getElementById('fbPixelName').value = pixel.name;
+                        break;
+                    case 'tiktok':
+                        document.getElementById('ttPixelId').value = pixel.pixelId;
+                        document.getElementById('ttPixelName').value = pixel.name;
+                        break;
+                    case 'google':
+                        // Detect type from pixel ID
+                        if (pixel.pixelId.startsWith('G-')) {
+                            googleType.value = 'gtag';
+                            googleType.dispatchEvent(new Event('change'));
+                            document.getElementById('ga4MeasurementId').value = pixel.pixelId;
+                        } else if (pixel.pixelId.startsWith('GTM-')) {
+                            googleType.value = 'gtm';
+                            googleType.dispatchEvent(new Event('change'));
+                            document.getElementById('gtmContainerId').value = pixel.pixelId;
+                        } else if (pixel.pixelId.startsWith('AW-')) {
+                            googleType.value = 'ads';
+                            googleType.dispatchEvent(new Event('change'));
+                            document.getElementById('adsConversionId').value = pixel.pixelId;
+                        }
+                        document.getElementById('googlePixelName').value = pixel.name;
+                        break;
+                }
+            }, 100);
+        }
+
+        // Delete pixel
+        function deletePixel(id) {
+            if (!confirm('¿Estás seguro de eliminar este pixel guardado?')) return;
+            
+            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
+            const filtered = pixels.filter(p => p.id !== id);
+            localStorage.setItem('savedPixels', JSON.stringify(filtered));
+            renderSavedPixels();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderSavedPixels();
+        });
+    </script>
+</body>
+</html>
