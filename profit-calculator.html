@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Calculadora Profit | Márgenes, ROI, ROAS y Break-even | EcomTools</title>
+    <meta name="description" content="Calcula márgenes, ROI, ROAS y break-even en segundos para optimizar ganancias en tus campañas.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-dark: #e85a3a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --secondary: #6366f1;
+            --accent: #10b981;
+            --accent-red: #ef4444;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+            --radius-sm: 12px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-white);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        /* Header */
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-dark);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo span { color: var(--primary); }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-medium);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover { color: var(--primary); }
+
+        /* Hero */
+        .hero-section {
+            padding: 48px 24px 36px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-medium);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-badge i { color: var(--primary); }
+
+        .hero-section h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            color: var(--text-dark);
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .hero-section h1 span {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-section p {
+            font-size: 16px;
+            color: var(--text-medium);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        /* Calculator Section */
+        .calc-section {
+            padding: 24px 24px 80px;
+            background: var(--bg-white);
+        }
+
+        .calc-wrapper {
+            max-width: 960px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .calc-card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            box-shadow: var(--shadow);
+            transition: box-shadow 0.3s;
+        }
+
+        .calc-card:hover { box-shadow: var(--shadow-hover); }
+
+        .calc-card h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .calc-card h2 i {
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 6px;
+        }
+
+        .form-group label .optional {
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 16px;
+            color: var(--text-dark);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.12);
+        }
+
+        .form-group input::placeholder { color: var(--text-light); }
+
+        .input-suffix {
+            position: relative;
+        }
+
+        .input-suffix input { padding-right: 44px; }
+
+        .input-suffix .suffix {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Results Card */
+        .results-card {
+            background: linear-gradient(160deg, #1f2937 0%, #111827 100%);
+            border: none;
+            color: white;
+            padding: 28px 24px;
+        }
+
+        .results-card h2 { color: rgba(255,255,255,0.9); }
+
+        .results-card h2 i { color: var(--accent); }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            gap: 16px;
+        }
+
+        .result-row:last-child { border-bottom: none; }
+
+        .result-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .result-value.positive { color: #34d399; }
+
+        .result-value.negative { color: #f87171; }
+
+        .result-value.neutral { color: rgba(255,255,255,0.95); }
+
+        .result-value small {
+            font-size: 12px;
+            font-weight: 500;
+            opacity: 0.8;
+        }
+
+        .result-placeholder {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            font-weight: 500;
+        }
+
+        .break-even-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: rgba(16, 185, 129, 0.15);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .break-even-box .label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 6px;
+        }
+
+        .break-even-box .value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #34d399;
+        }
+
+        .break-even-box .hint {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+            margin-top: 8px;
+        }
+
+        /* Footer minimal */
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        footer a:hover { text-decoration: underline; }
+
+        footer p { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .calc-wrapper {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .calc-section { padding: 16px 16px 60px; }
+
+            .hero-section { padding: 36px 16px 28px; }
+
+            .result-value { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                    Holistic <span>Ecom</span> Tools
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver a herramientas</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-calculator"></i>
+                Análisis & Investigación
+            </div>
+            <h1>Calculadora <span>Profit</span></h1>
+            <p>Calcula márgenes, ROI, ROAS y break-even en segundos para optimizar ganancias.</p>
+        </div>
+    </section>
+
+    <section class="calc-section">
+        <div class="container">
+            <div class="calc-wrapper">
+                <div class="calc-card">
+                    <h2><i class="fas fa-edit"></i> Datos del producto y ventas</h2>
+                    <div class="form-group">
+                        <label>Precio de venta</label>
+                        <div class="input-suffix">
+                            <input type="number" id="precioVenta" placeholder="0" min="0" step="0.01" value="">
+                            <span class="suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Costo del producto</label>
+                        <div class="input-suffix">
+                            <input type="number" id="costoProducto" placeholder="0" min="0" step="0.01" value="">
+                            <span class="suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Costo de envío por unidad <span class="optional">(opcional)</span></label>
+                        <div class="input-suffix">
+                            <input type="number" id="costoEnvio" placeholder="0" min="0" step="0.01" value="0">
+                            <span class="suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Gasto en publicidad</label>
+                        <div class="input-suffix">
+                            <input type="number" id="gastoAds" placeholder="0" min="0" step="0.01" value="">
+                            <span class="suffix">€</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Unidades vendidas <span class="optional">(para ROI/ROAS)</span></label>
+                        <div class="input-suffix">
+                            <input type="number" id="unidadesVendidas" placeholder="0" min="0" step="1" value="">
+                            <span class="suffix">uds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-card results-card">
+                    <h2><i class="fas fa-chart-line"></i> Resultados</h2>
+                    <div class="result-row">
+                        <span class="result-label">Margen por unidad</span>
+                        <span class="result-value neutral" id="resMargenUnidad">—<small> €</small></span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Margen %</span>
+                        <span class="result-value neutral" id="resMargenPct">—<small> %</small></span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Ingresos</span>
+                        <span class="result-value neutral" id="resIngresos">—<small> €</small></span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">ROAS</span>
+                        <span class="result-value neutral" id="resROAS">—</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Profit neto</span>
+                        <span class="result-value neutral" id="resProfitNeto">—<small> €</small></span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">ROI</span>
+                        <span class="result-value neutral" id="resROI">—<small> %</small></span>
+                    </div>
+                    <div class="break-even-box">
+                        <div class="label">Unidades break-even (cubrir ads)</div>
+                        <div class="value" id="resBreakEven">—</div>
+                        <div class="hint">Ventas mínimas para recuperar el gasto en publicidad.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p><a href="index.html">Holistic Ecom Tools</a> · Calculadora Profit</p>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var precioVenta = document.getElementById('precioVenta');
+            var costoProducto = document.getElementById('costoProducto');
+            var costoEnvio = document.getElementById('costoEnvio');
+            var gastoAds = document.getElementById('gastoAds');
+            var unidadesVendidas = document.getElementById('unidadesVendidas');
+
+            var resMargenUnidad = document.getElementById('resMargenUnidad');
+            var resMargenPct = document.getElementById('resMargenPct');
+            var resIngresos = document.getElementById('resIngresos');
+            var resROAS = document.getElementById('resROAS');
+            var resProfitNeto = document.getElementById('resProfitNeto');
+            var resROI = document.getElementById('resROI');
+            var resBreakEven = document.getElementById('resBreakEven');
+
+            function parseNum(val) {
+                var n = parseFloat(String(val).replace(',', '.'));
+                return isNaN(n) ? 0 : n;
+            }
+
+            function formatMoney(n) {
+                return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function formatPct(n) {
+                return n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            }
+
+            function updateResults() {
+                var precio = parseNum(precioVenta.value);
+                var costo = parseNum(costoProducto.value);
+                var envio = parseNum(costoEnvio.value);
+                var ads = parseNum(gastoAds.value);
+                var uds = parseNum(unidadesVendidas.value);
+
+                var profitUnidad = precio - costo - envio;
+                var margenPct = precio > 0 ? (profitUnidad / precio) * 100 : 0;
+                var ingresos = uds * precio;
+                var costosTotales = uds * (costo + envio);
+                var profitNeto = ingresos - costosTotales - ads;
+                var roas = ads > 0 ? ingresos / ads : 0;
+                var roi = ads > 0 ? (profitNeto / ads) * 100 : 0;
+                var breakEven = profitUnidad > 0 ? Math.ceil(ads / profitUnidad) : 0;
+
+                resMargenUnidad.textContent = formatMoney(profitUnidad) + '\u00A0€';
+                resMargenUnidad.className = 'result-value ' + (profitUnidad >= 0 ? 'positive' : 'negative');
+
+                resMargenPct.textContent = formatPct(margenPct) + '\u00A0%';
+                resMargenPct.className = 'result-value ' + (margenPct >= 0 ? 'positive' : 'negative');
+
+                resIngresos.textContent = formatMoney(ingresos) + '\u00A0€';
+                resIngresos.className = 'result-value neutral';
+
+                if (ads > 0 && uds > 0) {
+                    resROAS.textContent = formatPct(roas) + '\u00D7';
+                    resROAS.className = 'result-value neutral';
+                } else {
+                    resROAS.textContent = '—';
+                    resROAS.className = 'result-value neutral';
+                }
+
+                resProfitNeto.textContent = formatMoney(profitNeto) + '\u00A0€';
+                resProfitNeto.className = 'result-value ' + (profitNeto >= 0 ? 'positive' : 'negative');
+
+                if (ads > 0) {
+                    resROI.textContent = formatPct(roi) + '\u00A0%';
+                    resROI.className = 'result-value ' + (roi >= 0 ? 'positive' : 'negative');
+                } else {
+                    resROI.textContent = '—\u00A0%';
+                    resROI.className = 'result-value neutral';
+                }
+
+                if (profitUnidad > 0 && ads > 0) {
+                    resBreakEven.textContent = breakEven + ' unidades';
+                } else if (profitUnidad <= 0 && (precio > 0 || ads > 0)) {
+                    resBreakEven.textContent = 'Sin margen';
+                } else {
+                    resBreakEven.textContent = '—';
+                }
+            }
+
+            [precioVenta, costoProducto, costoEnvio, gastoAds, unidadesVendidas].forEach(function (el) {
+                el.addEventListener('input', updateResults);
+                el.addEventListener('change', updateResults);
+            });
+
+            updateResults();
+        })();
+    </script>
+</body>
+</html>
