@@ -68,6 +68,14 @@
       "dest": "/pixel-activator.html"
     },
     {
+      "src": "/profit-calculator",
+      "dest": "/profit-calculator.html"
+    },
+    {
+      "src": "/profit-calculator.html",
+      "dest": "/profit-calculator.html"
+    },
+    {
       "src": "/landing",
       "dest": "/landing.html"
     },

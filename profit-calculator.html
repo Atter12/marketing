@@ -318,6 +318,131 @@
             margin-top: 8px;
         }
 
+        .health-box {
+            margin-top: 20px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+        }
+        .health-badge {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        .health-badge.viable { color: #34d399; }
+        .health-badge.ajustado { color: #fbbf24; }
+        .health-badge.perdida { color: #f87171; }
+        .health-badge.neutral { color: rgba(255,255,255,0.6); }
+        .health-desc { font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.45; }
+
+        .save-row { margin-top: 20px; margin-bottom: 4px; }
+        .save-row input { padding: 12px 14px; border-radius: var(--radius-sm); border: 2px solid var(--border); font-size: 14px; width: 100%; outline: none; }
+        .save-row input:focus { border-color: var(--primary); }
+        .btn-save {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            padding: 14px 20px;
+            margin-top: 12px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4); }
+        .btn-save:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .save-feedback { font-size: 13px; margin-top: 10px; min-height: 20px; font-weight: 600; }
+        .save-feedback.success { color: var(--accent); }
+        .save-feedback.error { color: var(--accent-red); }
+
+        .saved-section {
+            max-width: 960px;
+            margin: 40px auto 0;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+        }
+        .saved-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .saved-title i { color: var(--primary); }
+        .saved-list { display: flex; flex-wrap: wrap; gap: 12px; }
+        .saved-item {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            min-width: 200px;
+            max-width: 100%;
+            transition: box-shadow 0.2s;
+        }
+        .saved-item:hover { box-shadow: var(--shadow); }
+        .saved-item-info { flex: 1; min-width: 0; }
+        .saved-item-name { font-size: 14px; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .saved-item-name.empty { color: var(--text-light); font-style: italic; }
+        .saved-item-date { font-size: 12px; color: var(--text-light); margin-top: 2px; }
+        .saved-item-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .btn-load, .btn-delete {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-load { background: var(--bg-gray); color: var(--text-dark); }
+        .btn-load:hover { background: var(--primary); color: white; }
+        .btn-delete { background: #fef2f2; color: #dc2626; }
+        .btn-delete:hover { background: #dc2626; color: white; }
+        .saved-empty { font-size: 14px; color: var(--text-light); padding: 16px 0; }
+        .saved-empty.hidden { display: none; }
+
+        .how-it-works {
+            max-width: 960px;
+            margin: 40px auto 0;
+            padding: 20px 24px;
+            background: var(--bg-gray);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .how-it-works summary {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .how-it-works summary i { color: var(--primary); }
+        .how-content { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .how-content p { font-size: 13px; color: var(--text-medium); margin-bottom: 10px; line-height: 1.6; }
+        .how-content p:last-child { margin-bottom: 0; }
+
         /* Footer minimal */
         footer {
             background: var(--text-dark);
@@ -405,6 +530,13 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label>Comisión pasarela <span class="optional">(Stripe/PayPal %)</span></label>
+                        <div class="input-suffix">
+                            <input type="number" id="comisionPasarela" placeholder="0" min="0" max="100" step="0.1" value="0">
+                            <span class="suffix">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
                         <label>Gasto en publicidad</label>
                         <div class="input-suffix">
                             <input type="number" id="gastoAds" placeholder="0" min="0" step="0.01" value="">
@@ -418,6 +550,14 @@
                             <span class="suffix">uds</span>
                         </div>
                     </div>
+                    <div class="form-group save-row">
+                        <label>Nombre del cálculo <span class="optional">(opcional)</span></label>
+                        <input type="text" id="calcName" placeholder="Ej: Producto X - Campaña Black Friday" maxlength="255">
+                    </div>
+                    <button type="button" class="btn-save" id="btnSave">
+                        <i class="fas fa-save"></i> Guardar cálculo
+                    </button>
+                    <p class="save-feedback" id="saveFeedback"></p>
                 </div>
 
                 <div class="calc-card results-card">
@@ -446,6 +586,18 @@
                         <span class="result-label">ROI</span>
                         <span class="result-value neutral" id="resROI">—<small> %</small></span>
                     </div>
+                    <div class="result-row">
+                        <span class="result-label">Break-even ROAS</span>
+                        <span class="result-value neutral" id="resBEROAS">—</span>
+                    </div>
+                    <div class="result-row">
+                        <span class="result-label">Target ROAS <small>(+20% beneficio)</small></span>
+                        <span class="result-value neutral" id="resTargetROAS">—</span>
+                    </div>
+                    <div class="health-box" id="healthBox">
+                        <div class="health-badge" id="healthBadge">—</div>
+                        <div class="health-desc" id="healthDesc"></div>
+                    </div>
                     <div class="break-even-box">
                         <div class="label">Unidades break-even (cubrir ads)</div>
                         <div class="value" id="resBreakEven">—</div>
@@ -453,6 +605,23 @@
                     </div>
                 </div>
             </div>
+
+            <div class="saved-section">
+                <h2 class="saved-title"><i class="fas fa-folder-open"></i> Cálculos guardados</h2>
+                <div class="saved-list" id="savedList"></div>
+                <p class="saved-empty" id="savedEmpty">Aún no hay cálculos guardados. Rellena los datos y pulsa «Guardar cálculo».</p>
+            </div>
+
+            <details class="how-it-works">
+                <summary><i class="fas fa-info-circle"></i> Cómo funciona esta calculadora</summary>
+                <div class="how-content">
+                    <p><strong>Margen %</strong> = (Precio − Costo producto − Envío − Comisión pasarela) ÷ Precio × 100</p>
+                    <p><strong>Break-even ROAS</strong> = 1 ÷ Margen (decimal). Es el ROAS mínimo para no perder con los ads. Ej: 40% margen → ROAS 2,5×.</p>
+                    <p><strong>Target ROAS (+20%)</strong> = Break-even ROAS × 1,2. Objetivo recomendado para dejar beneficio real.</p>
+                    <p><strong>ROI</strong> = (Profit neto ÷ Gasto en ads) × 100. Si es positivo, los ads son rentables.</p>
+                    <p><strong>Unidades break-even</strong> = Gasto en ads ÷ Profit por unidad. Ventas mínimas para cubrir la publicidad.</p>
+                </div>
+            </details>
         </div>
     </section>
 
@@ -467,8 +636,14 @@
             var precioVenta = document.getElementById('precioVenta');
             var costoProducto = document.getElementById('costoProducto');
             var costoEnvio = document.getElementById('costoEnvio');
+            var comisionPasarela = document.getElementById('comisionPasarela');
             var gastoAds = document.getElementById('gastoAds');
             var unidadesVendidas = document.getElementById('unidadesVendidas');
+            var calcName = document.getElementById('calcName');
+            var btnSave = document.getElementById('btnSave');
+            var saveFeedback = document.getElementById('saveFeedback');
+            var savedList = document.getElementById('savedList');
+            var savedEmpty = document.getElementById('savedEmpty');
 
             var resMargenUnidad = document.getElementById('resMargenUnidad');
             var resMargenPct = document.getElementById('resMargenPct');
@@ -476,7 +651,15 @@
             var resROAS = document.getElementById('resROAS');
             var resProfitNeto = document.getElementById('resProfitNeto');
             var resROI = document.getElementById('resROI');
+            var resBEROAS = document.getElementById('resBEROAS');
+            var resTargetROAS = document.getElementById('resTargetROAS');
             var resBreakEven = document.getElementById('resBreakEven');
+            var healthBadge = document.getElementById('healthBadge');
+            var healthDesc = document.getElementById('healthDesc');
+
+            var lastResults = {};
+
+            var API = '/api/profit-calculator';
 
             function parseNum(val) {
                 var n = parseFloat(String(val).replace(',', '.'));
@@ -491,21 +674,59 @@
                 return n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
             }
 
+            function getCurrentInputs() {
+                return {
+                    precioVenta: parseNum(precioVenta.value),
+                    costoProducto: parseNum(costoProducto.value),
+                    costoEnvio: parseNum(costoEnvio.value),
+                    comisionPasarela: parseNum(comisionPasarela.value),
+                    gastoAds: parseNum(gastoAds.value),
+                    unidadesVendidas: parseNum(unidadesVendidas.value)
+                };
+            }
+
+            function setInputs(inputs) {
+                if (!inputs) return;
+                precioVenta.value = inputs.precioVenta != null ? inputs.precioVenta : '';
+                costoProducto.value = inputs.costoProducto != null ? inputs.costoProducto : '';
+                costoEnvio.value = inputs.costoEnvio != null ? inputs.costoEnvio : '0';
+                if (comisionPasarela) comisionPasarela.value = inputs.comisionPasarela != null ? inputs.comisionPasarela : '0';
+                gastoAds.value = inputs.gastoAds != null ? inputs.gastoAds : '';
+                unidadesVendidas.value = inputs.unidadesVendidas != null ? inputs.unidadesVendidas : '';
+                updateResults();
+            }
+
             function updateResults() {
                 var precio = parseNum(precioVenta.value);
                 var costo = parseNum(costoProducto.value);
                 var envio = parseNum(costoEnvio.value);
+                var comision = comisionPasarela ? parseNum(comisionPasarela.value) : 0;
                 var ads = parseNum(gastoAds.value);
                 var uds = parseNum(unidadesVendidas.value);
 
-                var profitUnidad = precio - costo - envio;
+                var costePasarela = precio * (comision / 100);
+                var profitUnidad = precio - costo - envio - costePasarela;
                 var margenPct = precio > 0 ? (profitUnidad / precio) * 100 : 0;
                 var ingresos = uds * precio;
-                var costosTotales = uds * (costo + envio);
+                var costosTotales = uds * (costo + envio + costePasarela);
                 var profitNeto = ingresos - costosTotales - ads;
                 var roas = ads > 0 ? ingresos / ads : 0;
                 var roi = ads > 0 ? (profitNeto / ads) * 100 : 0;
                 var breakEven = profitUnidad > 0 ? Math.ceil(ads / profitUnidad) : 0;
+                var beroas = profitUnidad > 0 && precio > 0 ? precio / profitUnidad : 0;
+                var targetROAS = beroas * 1.2;
+
+                lastResults = {
+                    margenUnidad: profitUnidad,
+                    margenPct: margenPct,
+                    ingresos: ingresos,
+                    roas: roas,
+                    profitNeto: profitNeto,
+                    roi: roi,
+                    breakEven: breakEven,
+                    beroas: beroas,
+                    targetROAS: targetROAS
+                };
 
                 resMargenUnidad.textContent = formatMoney(profitUnidad) + '\u00A0€';
                 resMargenUnidad.className = 'result-value ' + (profitUnidad >= 0 ? 'positive' : 'negative');
@@ -518,7 +739,7 @@
 
                 if (ads > 0 && uds > 0) {
                     resROAS.textContent = formatPct(roas) + '\u00D7';
-                    resROAS.className = 'result-value neutral';
+                    resROAS.className = 'result-value ' + (beroas > 0 && roas >= beroas ? 'positive' : roas > 0 && roas < beroas ? 'negative' : 'neutral');
                 } else {
                     resROAS.textContent = '—';
                     resROAS.className = 'result-value neutral';
@@ -535,6 +756,21 @@
                     resROI.className = 'result-value neutral';
                 }
 
+                if (beroas > 0) {
+                    resBEROAS.textContent = formatPct(beroas) + '\u00D7';
+                    resBEROAS.className = 'result-value neutral';
+                } else {
+                    resBEROAS.textContent = '—';
+                    resBEROAS.className = 'result-value neutral';
+                }
+                if (targetROAS > 0) {
+                    resTargetROAS.textContent = formatPct(targetROAS) + '\u00D7';
+                    resTargetROAS.className = 'result-value neutral';
+                } else {
+                    resTargetROAS.textContent = '—';
+                    resTargetROAS.className = 'result-value neutral';
+                }
+
                 if (profitUnidad > 0 && ads > 0) {
                     resBreakEven.textContent = breakEven + ' unidades';
                 } else if (profitUnidad <= 0 && (precio > 0 || ads > 0)) {
@@ -542,14 +778,151 @@
                 } else {
                     resBreakEven.textContent = '—';
                 }
+
+                var health = 'neutral';
+                var desc = 'Introduce precio, costes y gasto en ads para ver el diagnóstico.';
+                if (precio > 0) {
+                    if (profitUnidad <= 0) {
+                        health = 'perdida';
+                        desc = 'No hay margen por unidad (costes \u2265 precio). Revisa precios o costes.';
+                    } else if (margenPct < 10) {
+                        health = 'perdida';
+                        desc = 'Margen muy bajo (<10%). Es difícil ser rentable en ads. Sube precio o baja costes.';
+                    } else if (margenPct >= 25 && (ads === 0 || roi >= 0)) {
+                        health = 'viable';
+                        desc = 'Margen s\u00F3lido. ' + (ads > 0 && roas >= beroas ? 'Tu ROAS supera el break-even. \u00A1Rentable!' : ads > 0 ? 'Objetivo: ROAS \u2265 ' + formatPct(beroas) + '\u00D7 para no perder.' : 'A\u00F1ade gasto en ads y unidades para ver ROI.');
+                    } else if (margenPct >= 10 && margenPct < 25) {
+                        health = 'ajustado';
+                        desc = 'Margen ajustado (10-25%). Objetivo ROAS recomendado: ' + formatPct(targetROAS) + '\u00D7. Vigila costes y precios.';
+                    } else if (ads > 0 && roas > 0 && roas < beroas) {
+                        health = 'perdida';
+                        desc = 'Tu ROAS actual (' + formatPct(roas) + '\u00D7) est\u00E1 por debajo del break-even (' + formatPct(beroas) + '\u00D7). Est\u00E1s perdiendo en ads.';
+                    } else {
+                        health = 'ajustado';
+                        desc = 'Objetivo ROAS recomendado: ' + formatPct(targetROAS) + '\u00D7 (break-even + 20%).';
+                    }
+                }
+                healthBadge.textContent = health === 'viable' ? 'Viable' : health === 'ajustado' ? 'Ajustado' : health === 'perdida' ? 'P\u00E9rdida' : '—';
+                healthBadge.className = 'health-badge ' + health;
+                healthDesc.textContent = desc;
             }
 
-            [precioVenta, costoProducto, costoEnvio, gastoAds, unidadesVendidas].forEach(function (el) {
-                el.addEventListener('input', updateResults);
-                el.addEventListener('change', updateResults);
+            function showFeedback(msg, isError) {
+                saveFeedback.textContent = msg;
+                saveFeedback.className = 'save-feedback ' + (isError ? 'error' : 'success');
+            }
+
+            function loadSavedList() {
+                savedList.innerHTML = '';
+                savedEmpty.classList.remove('hidden');
+                fetch(API + '/list')
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        if (!json.success || !json.data || !json.data.length) {
+                            return;
+                        }
+                        savedEmpty.classList.add('hidden');
+                        json.data.forEach(function (item) {
+                            var dateStr = item.createdAt ? new Date(item.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                            var name = (item.name && item.name.trim()) ? item.name.trim() : '';
+                            var div = document.createElement('div');
+                            div.className = 'saved-item';
+                            div.innerHTML =
+                                '<div class="saved-item-info">' +
+                                '<div class="saved-item-name' + (name ? '' : ' empty') + '">' + (name || 'Sin nombre') + '</div>' +
+                                '<div class="saved-item-date">' + dateStr + '</div>' +
+                                '</div>' +
+                                '<div class="saved-item-actions">' +
+                                '<button type="button" class="btn-load" data-id="' + item.id + '">Cargar</button>' +
+                                '<button type="button" class="btn-delete" data-id="' + item.id + '">Eliminar</button>' +
+                                '</div>';
+                            savedList.appendChild(div);
+                            div.querySelector('.btn-load').addEventListener('click', function () {
+                                loadCalculation(this.getAttribute('data-id'));
+                            });
+                            div.querySelector('.btn-delete').addEventListener('click', function () {
+                                deleteCalculation(this.getAttribute('data-id'));
+                            });
+                        });
+                    })
+                    .catch(function () {
+                        showFeedback('No se pudo cargar la lista.', true);
+                    });
+            }
+
+            function loadCalculation(id) {
+                fetch(API + '/get?id=' + encodeURIComponent(id))
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        if (json.success && json.data && json.data.inputs) {
+                            setInputs(json.data.inputs);
+                            showFeedback('Cálculo cargado.', false);
+                            setTimeout(function () { showFeedback('', false); }, 2000);
+                        }
+                    })
+                    .catch(function () {
+                        showFeedback('Error al cargar el cálculo.', true);
+                    });
+            }
+
+            function deleteCalculation(id) {
+                if (!confirm('¿Eliminar este cálculo?')) return;
+                fetch(API + '/delete?id=' + encodeURIComponent(id), { method: 'DELETE' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        if (json.success) {
+                            loadSavedList();
+                        } else {
+                            showFeedback(json.error || 'Error al eliminar.', true);
+                        }
+                    })
+                    .catch(function () {
+                        showFeedback('Error al eliminar.', true);
+                    });
+            }
+
+            btnSave.addEventListener('click', function () {
+                var inputs = getCurrentInputs();
+                var name = (calcName && calcName.value) ? calcName.value.trim() : null;
+                btnSave.disabled = true;
+                showFeedback('Guardando…', false);
+                fetch(API + '/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name || null,
+                        inputs: inputs,
+                        results: lastResults
+                    })
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        btnSave.disabled = false;
+                        if (json.success) {
+                            showFeedback('Cálculo guardado correctamente.', false);
+                            loadSavedList();
+                            if (calcName) calcName.value = '';
+                            setTimeout(function () { showFeedback('', false); }, 3000);
+                        } else {
+                            showFeedback(json.error || 'Error al guardar.', true);
+                        }
+                    })
+                    .catch(function () {
+                        btnSave.disabled = false;
+                        showFeedback('Error de conexión. Revisa la API.', true);
+                    });
             });
 
+            [precioVenta, costoProducto, costoEnvio, gastoAds, unidadesVendidas].forEach(function (el) {
+                if (el) { el.addEventListener('input', updateResults); el.addEventListener('change', updateResults); }
+            });
+            if (comisionPasarela) {
+                comisionPasarela.addEventListener('input', updateResults);
+                comisionPasarela.addEventListener('change', updateResults);
+            }
+
             updateResults();
+            loadSavedList();
         })();
     </script>
 </body>
