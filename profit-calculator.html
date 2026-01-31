@@ -461,18 +461,101 @@
 
         footer p { font-size: 13px; color: rgba(255,255,255,0.6); }
 
-        /* Responsive */
+        /* Responsive - móvil cómodo */
         @media (max-width: 768px) {
             .calc-wrapper {
                 grid-template-columns: 1fr;
-                gap: 24px;
+                gap: 16px;
+                display: flex;
+                flex-direction: column;
             }
 
-            .calc-section { padding: 16px 16px 60px; }
+            .calc-wrapper .results-card {
+                order: -1;
+                position: sticky;
+                top: 56px;
+                z-index: 5;
+                padding: 16px 18px;
+                margin-bottom: 4px;
+            }
 
-            .hero-section { padding: 36px 16px 28px; }
+            .calc-wrapper .calc-card:not(.results-card) {
+                order: 1;
+            }
 
-            .result-value { font-size: 16px; }
+            .calc-section { padding: 12px 14px 48px; }
+
+            .hero-section {
+                padding: 24px 14px 20px;
+            }
+
+            .hero-section h1 { font-size: 24px; }
+            .hero-section p { font-size: 14px; }
+
+            .calc-card {
+                padding: 18px 16px;
+            }
+
+            .calc-card h2 {
+                font-size: 12px;
+                margin-bottom: 14px;
+            }
+
+            .form-group {
+                margin-bottom: 12px;
+            }
+
+            .form-group label { font-size: 12px; }
+
+            .form-group input {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+
+            .result-row {
+                padding: 10px 0;
+            }
+
+            .result-label { font-size: 12px; }
+
+            .result-value { font-size: 15px; }
+
+            .break-even-box {
+                margin-top: 14px;
+                padding: 12px 14px;
+            }
+
+            .break-even-box .value { font-size: 20px; }
+
+            .health-box {
+                margin-top: 14px;
+                padding: 12px 14px;
+            }
+
+            .health-badge { font-size: 12px; }
+            .health-desc { font-size: 11px; }
+
+            .save-row { margin-top: 14px; }
+            .btn-save { padding: 12px 16px; font-size: 14px; margin-top: 10px; }
+
+            .saved-section {
+                padding-top: 24px;
+                margin-top: 24px;
+            }
+
+            .how-it-works {
+                margin-top: 24px;
+                padding: 14px 16px;
+            }
+
+            .how-it-works summary { font-size: 13px; }
+            .how-content p { font-size: 12px; }
+        }
+
+        @media (max-width: 380px) {
+            .calc-wrapper .results-card { padding: 14px 14px; top: 52px; }
+            .result-value { font-size: 14px; }
+            .calc-card { padding: 14px 12px; }
         }
     </style>
 </head>
