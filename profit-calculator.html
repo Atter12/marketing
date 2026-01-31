@@ -512,21 +512,21 @@
                         <label>Precio de venta</label>
                         <div class="input-suffix">
                             <input type="number" id="precioVenta" placeholder="0" min="0" step="0.01" value="">
-                            <span class="suffix">€</span>
+                            <span class="suffix">S/</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Costo del producto</label>
                         <div class="input-suffix">
                             <input type="number" id="costoProducto" placeholder="0" min="0" step="0.01" value="">
-                            <span class="suffix">€</span>
+                            <span class="suffix">S/</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Costo de envío por unidad <span class="optional">(opcional)</span></label>
                         <div class="input-suffix">
                             <input type="number" id="costoEnvio" placeholder="0" min="0" step="0.01" value="0">
-                            <span class="suffix">€</span>
+                            <span class="suffix">S/</span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -540,7 +540,7 @@
                         <label>Gasto en publicidad</label>
                         <div class="input-suffix">
                             <input type="number" id="gastoAds" placeholder="0" min="0" step="0.01" value="">
-                            <span class="suffix">€</span>
+                            <span class="suffix">S/</span>
                         </div>
                     </div>
                     <div class="form-group">
@@ -564,7 +564,7 @@
                     <h2><i class="fas fa-chart-line"></i> Resultados</h2>
                     <div class="result-row">
                         <span class="result-label">Margen por unidad</span>
-                        <span class="result-value neutral" id="resMargenUnidad">—<small> €</small></span>
+                        <span class="result-value neutral" id="resMargenUnidad">—<small> S/</small></span>
                     </div>
                     <div class="result-row">
                         <span class="result-label">Margen %</span>
@@ -572,7 +572,7 @@
                     </div>
                     <div class="result-row">
                         <span class="result-label">Ingresos</span>
-                        <span class="result-value neutral" id="resIngresos">—<small> €</small></span>
+                        <span class="result-value neutral" id="resIngresos">—<small> S/</small></span>
                     </div>
                     <div class="result-row">
                         <span class="result-label">ROAS</span>
@@ -580,7 +580,7 @@
                     </div>
                     <div class="result-row">
                         <span class="result-label">Profit neto</span>
-                        <span class="result-value neutral" id="resProfitNeto">—<small> €</small></span>
+                        <span class="result-value neutral" id="resProfitNeto">—<small> S/</small></span>
                     </div>
                     <div class="result-row">
                         <span class="result-label">ROI</span>
@@ -667,11 +667,11 @@
             }
 
             function formatMoney(n) {
-                return n.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return n.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             }
 
             function formatPct(n) {
-                return n.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+                return n.toLocaleString('es-PE', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
             }
 
             function getCurrentInputs() {
@@ -728,13 +728,13 @@
                     targetROAS: targetROAS
                 };
 
-                resMargenUnidad.textContent = formatMoney(profitUnidad) + '\u00A0€';
+                resMargenUnidad.textContent = formatMoney(profitUnidad) + '\u00A0S/';
                 resMargenUnidad.className = 'result-value ' + (profitUnidad >= 0 ? 'positive' : 'negative');
 
                 resMargenPct.textContent = formatPct(margenPct) + '\u00A0%';
                 resMargenPct.className = 'result-value ' + (margenPct >= 0 ? 'positive' : 'negative');
 
-                resIngresos.textContent = formatMoney(ingresos) + '\u00A0€';
+                resIngresos.textContent = formatMoney(ingresos) + '\u00A0S/';
                 resIngresos.className = 'result-value neutral';
 
                 if (ads > 0 && uds > 0) {
@@ -745,7 +745,7 @@
                     resROAS.className = 'result-value neutral';
                 }
 
-                resProfitNeto.textContent = formatMoney(profitNeto) + '\u00A0€';
+                resProfitNeto.textContent = formatMoney(profitNeto) + '\u00A0S/';
                 resProfitNeto.className = 'result-value ' + (profitNeto >= 0 ? 'positive' : 'negative');
 
                 if (ads > 0) {
