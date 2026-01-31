@@ -59,6 +59,52 @@
         .hero-section h1 span { background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
         .hero-section p { font-size: 15px; color: var(--text-medium); }
 
+        .hero-trust {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+        .hero-trust span { display: inline-flex; align-items: center; gap: 8px; }
+        .hero-trust i { color: var(--accent); font-size: 15px; }
+
+        /* Mobile CTA bar (solo móvil) */
+        .mobile-cta-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 98;
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            background: var(--bg-white);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+        .mobile-cta-bar a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+        .mobile-cta-bar a:active { opacity: 0.95; }
+        body.has-mobile-cta { padding-bottom: 76px; }
+        @media (min-width: 769px) { body.has-mobile-cta { padding-bottom: 0; } }
+
         .tool-section { padding: 24px 24px 60px; }
         .card {
             background: var(--bg-white);
@@ -176,9 +222,12 @@
         footer p { font-size: 13px; color: rgba(255,255,255,0.6); }
 
         @media (max-width: 768px) {
-            .tool-section { padding: 16px 14px 48px; }
+            .hero-section { padding: 28px 14px 24px; }
+            .hero-trust { gap: 16px; margin-top: 16px; font-size: 13px; }
+            .tool-section { padding: 16px 14px 56px; }
             .card { padding: 20px 16px; }
             .form-group input, .form-group select, .form-group textarea { padding: 12px 14px; font-size: 16px; }
+            .mobile-cta-bar { display: flex; }
         }
     </style>
 </head>
@@ -206,6 +255,11 @@
             </div>
             <h1>Copy con <span>IA</span></h1>
             <p>Genera descripciones de productos, textos para ads y emails con inteligencia artificial.</p>
+            <div class="hero-trust">
+                <span><i class="fas fa-check-circle"></i> Gratis</span>
+                <span><i class="fas fa-check-circle"></i> Sin registro</span>
+                <span><i class="fas fa-check-circle"></i> En español</span>
+            </div>
         </div>
     </section>
 
@@ -264,6 +318,29 @@
         </div>
     </footer>
 
+    <div class="mobile-cta-bar" id="mobileCtaBar" aria-hidden="true">
+        <a href="index.html"><i class="fas fa-th-large"></i> Volver a herramientas</a>
+    </div>
+
+    <script>
+        (function() {
+            var bar = document.getElementById('mobileCtaBar');
+            var mq = window.matchMedia('(max-width: 768px)');
+            function update() {
+                if (mq.matches && bar) {
+                    bar.style.display = 'flex';
+                    bar.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('has-mobile-cta');
+                } else if (bar) {
+                    bar.style.display = 'none';
+                    bar.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('has-mobile-cta');
+                }
+            }
+            mq.addListener(update);
+            update();
+        })();
+    </script>
     <script>
         (function () {
             var type = document.getElementById('type');
