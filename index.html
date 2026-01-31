@@ -221,18 +221,91 @@
             line-height: 1.7;
         }
 
-        /* Category Filters */
+        .hero-trust {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+
+        .hero-trust span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-trust i {
+            color: var(--accent);
+            font-size: 15px;
+        }
+
+        /* Search + Filters (sticky) */
+        .filters-wrap {
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+        }
+
+        .filters-inner {
+            padding: 16px 24px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .search-tools {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            max-width: 360px;
+            margin: 0 auto 14px;
+            padding: 12px 16px;
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .search-tools:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+        }
+
+        .search-tools i {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            background: none;
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-light);
+        }
+
         .filters {
             display: flex;
             justify-content: center;
-            gap: 6px;
-            padding: 20px 24px 28px;
+            gap: 8px;
             flex-wrap: wrap;
-            background: var(--bg-white);
         }
 
         .filter-btn {
             padding: 10px 18px;
+            min-height: 44px;
             background: var(--bg-gray);
             border: none;
             border-radius: 10px;
@@ -289,6 +362,10 @@
             gap: 20px;
             max-width: 1200px;
             margin: 0 auto;
+        }
+
+        .tools-grid > .filter-hidden {
+            display: none !important;
         }
 
         .tool-card {
@@ -352,6 +429,12 @@
             font-size: 13px;
             color: var(--text-medium);
             line-height: 1.55;
+        }
+
+        @media (min-width: 769px) {
+            .tool-card {
+                min-height: 200px;
+            }
         }
 
         .tool-badge {
@@ -695,6 +778,63 @@
             color: white;
         }
 
+        /* Mobile CTA bar (solo móvil) */
+        .mobile-cta-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 98;
+            padding: 12px 16px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+            background: var(--bg-white);
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+        }
+
+        .mobile-cta-bar a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+
+        .mobile-cta-bar a:active {
+            opacity: 0.95;
+        }
+
+        body.has-mobile-cta {
+            padding-bottom: 76px;
+        }
+
+        @media (min-width: 769px) {
+            body.has-mobile-cta { padding-bottom: 0; }
+        }
+
+        /* No results message */
+        .tools-no-results {
+            display: none;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-medium);
+            font-size: 15px;
+        }
+
+        .tools-no-results.visible {
+            display: block;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .feature-grid {
@@ -785,18 +925,36 @@
                 padding: 0 8px;
             }
 
+            .hero-trust {
+                gap: 16px;
+                margin-top: 20px;
+                font-size: 13px;
+            }
+
+            .filters-inner {
+                padding: 12px 16px 16px;
+            }
+
+            .search-tools {
+                max-width: none;
+                margin-bottom: 12px;
+            }
+
             .filters {
-                padding: 16px 16px 20px;
-                gap: 6px;
+                gap: 8px;
             }
 
             .filter-btn {
                 padding: 10px 16px;
                 font-size: 12px;
-                min-height: 40px;
+                min-height: 44px;
                 display: inline-flex;
                 align-items: center;
                 touch-action: manipulation;
+            }
+
+            .mobile-cta-bar {
+                display: flex;
             }
 
             .tools-section {
@@ -1215,21 +1373,34 @@
         <div class="hero-content">
             <div class="hero-badge">
                 <i class="fas fa-sparkles"></i>
-                +20 herramientas gratuitas
+                25+ herramientas gratuitas
             </div>
             <h1>Herramientas online para <span>E-commerce</span></h1>
-            <p>Suite completa y gratuita para crear pre-landings, analizar competidores, descargar videos, calcular profits y mucho más. Sin instalación, 100% online.</p>
+            <p>Suite completa para crear pre-landings, analizar competidores, descargar videos, calcular profits y generar copy con IA. Sin instalación, 100% online.</p>
+            <div class="hero-trust">
+                <span><i class="fas fa-check-circle"></i> Gratis</span>
+                <span><i class="fas fa-check-circle"></i> Sin registro</span>
+                <span><i class="fas fa-check-circle"></i> En español</span>
+            </div>
         </div>
     </section>
 
-    <!-- Filters -->
-    <div class="filters">
-        <button class="filter-btn active">Todos</button>
-        <button class="filter-btn">Conversión</button>
-        <button class="filter-btn">Análisis</button>
-        <button class="filter-btn">Media</button>
-        <button class="filter-btn">Marketing</button>
-        <button class="filter-btn">Utilidades</button>
+    <!-- Search + Filters (sticky) -->
+    <div class="filters-wrap">
+        <div class="filters-inner container">
+            <div class="search-tools">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchTools" class="search-input" placeholder="Buscar herramienta..." autocomplete="off" aria-label="Buscar herramienta">
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="conversion">Conversión</button>
+                <button class="filter-btn" data-filter="analisis">Análisis</button>
+                <button class="filter-btn" data-filter="media">Media</button>
+                <button class="filter-btn" data-filter="marketing">Marketing</button>
+                <button class="filter-btn" data-filter="utilidades">Utilidades</button>
+            </div>
+        </div>
     </div>
 
     <!-- Tools Grid -->
@@ -1237,6 +1408,7 @@
         <p class="section-title" id="seccion-conversion">Herramientas de Conversión</p>
         
         <div class="tools-grid">
+            <p class="tools-no-results" id="toolsNoResults" aria-live="polite">No hay herramientas que coincidan con tu búsqueda. Prueba otro término o filtro.</p>
             <!-- CONVERSIÓN -->
             <a href="pre-landing-builder.html" style="text-decoration: none; color: inherit;">
                 <div class="tool-card" style="--card-accent: var(--cat-conversion);">
@@ -1418,14 +1590,16 @@
                 </div>
             </a>
 
-            <div class="tool-card" style="--card-accent: var(--cat-marketing);">
-                <span class="tool-badge badge-pro">Pro</span>
-                <div class="tool-icon icon-pink">
-                    <i class="fas fa-robot"></i>
+            <a href="copy-ia.html" style="text-decoration: none; color: inherit;">
+                <div class="tool-card" style="--card-accent: var(--cat-marketing);">
+                    <span class="tool-badge badge-pro">Pro</span>
+                    <div class="tool-icon icon-pink">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>Copy con IA</h3>
+                    <p>Genera descripciones de productos, ads y emails con inteligencia artificial.</p>
                 </div>
-                <h3>Copy con IA</h3>
-                <p>Genera descripciones de productos, ads y emails con inteligencia artificial.</p>
-            </div>
+            </a>
 
             <!-- UTILIDADES -->
             <div class="category-divider" id="seccion-utilidades">
@@ -1671,7 +1845,30 @@
         </div>
     </footer>
 
+    <div class="mobile-cta-bar" id="mobileCtaBar" aria-hidden="true">
+        <a href="#registro">Comenzar gratis</a>
+    </div>
+
     <script>
+        // Mobile CTA: show only on mobile
+        (function() {
+            var bar = document.getElementById('mobileCtaBar');
+            var mq = window.matchMedia('(max-width: 768px)');
+            function update() {
+                if (mq.matches && bar) {
+                    bar.style.display = 'flex';
+                    bar.setAttribute('aria-hidden', 'false');
+                    document.body.classList.add('has-mobile-cta');
+                } else if (bar) {
+                    bar.style.display = 'none';
+                    bar.setAttribute('aria-hidden', 'true');
+                    document.body.classList.remove('has-mobile-cta');
+                }
+            }
+            mq.addListener(update);
+            update();
+        })();
+
         // Mobile menu toggle
         const mobileMenu = document.querySelector('.mobile-menu');
         const navLinks = document.querySelector('.nav-links');
@@ -1699,35 +1896,82 @@
             });
         }
 
-        // Filter buttons with scroll to section
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const filterMap = {
-            'Todos': 'tools',
-            'Conversión': 'seccion-conversion',
-            'Análisis': 'seccion-analisis',
-            'Media': 'seccion-media',
-            'Marketing': 'seccion-marketing',
-            'Utilidades': 'seccion-utilidades'
+        // Assign data-category to each card wrapper
+        var toolsGrid = document.querySelector('.tools-grid');
+        if (toolsGrid) {
+            var children = Array.from(toolsGrid.children);
+            var lastSection = 'conversion';
+            children.forEach(function(el) {
+                var id = el.id;
+                if (id && id.indexOf('seccion-') === 0) {
+                    lastSection = id.replace('seccion-', '');
+                }
+                var card = el.classList.contains('tool-card') ? el : el.querySelector('.tool-card');
+                if (card) {
+                    el.setAttribute('data-category', lastSection);
+                }
+            });
+        }
+
+        // Search + filter
+        var searchInput = document.getElementById('searchTools');
+        var filterButtons = document.querySelectorAll('.filter-btn');
+        var noResultsEl = document.getElementById('toolsNoResults');
+        var filterMap = {
+            'all': null,
+            'conversion': 'seccion-conversion',
+            'analisis': 'seccion-analisis',
+            'media': 'seccion-media',
+            'marketing': 'seccion-marketing',
+            'utilidades': 'seccion-utilidades'
         };
 
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', function() {
-                // Update active state
-                filterButtons.forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
+        function applyFilters() {
+            var searchQ = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
+            var activeFilter = document.querySelector('.filter-btn.active');
+            var filterValue = activeFilter && activeFilter.getAttribute('data-filter') ? activeFilter.getAttribute('data-filter') : 'all';
 
-                // Scroll to corresponding section
-                const filterText = this.textContent.trim();
-                const targetId = filterMap[filterText];
-                
+            var visibleCount = 0;
+            if (toolsGrid) {
+                Array.from(toolsGrid.children).forEach(function(el) {
+                    var card = el.classList.contains('tool-card') ? el : el.querySelector('.tool-card');
+                    if (!card) {
+                        if (!el.classList.contains('tools-no-results') && !el.id) return;
+                        return;
+                    }
+                    var category = el.getAttribute('data-category') || '';
+                    var title = (card.querySelector('h3') && card.querySelector('h3').textContent) || '';
+                    var desc = (card.querySelector('p') && card.querySelector('p').textContent) || '';
+                    var textMatch = !searchQ || (title + ' ' + desc).toLowerCase().indexOf(searchQ) >= 0;
+                    var categoryMatch = filterValue === 'all' || category === filterValue;
+                    var show = textMatch && categoryMatch;
+                    el.classList.toggle('filter-hidden', !show);
+                    if (show) visibleCount++;
+                });
+            }
+
+            if (noResultsEl) {
+                noResultsEl.classList.toggle('visible', visibleCount === 0);
+            }
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', applyFilters);
+            searchInput.addEventListener('keyup', applyFilters);
+        }
+
+        filterButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                filterButtons.forEach(function(b) { b.classList.remove('active'); });
+                this.classList.add('active');
+                applyFilters();
+                var filterValue = this.getAttribute('data-filter');
+                var targetId = filterMap[filterValue];
                 if (targetId) {
-                    const targetElement = document.getElementById(targetId);
-                    if (targetElement) {
-                        const offsetTop = targetElement.offsetTop - 100; // 100px offset for header
-                        window.scrollTo({
-                            top: offsetTop,
-                            behavior: 'smooth'
-                        });
+                    var targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        var top = targetEl.getBoundingClientRect().top + window.pageYOffset - 100;
+                        window.scrollTo({ top: top, behavior: 'smooth' });
                     }
                 }
             });

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Copy con IA | Descripciones, Ads y Emails | Holistic Ecom Tools</title>
+    <meta name="description" content="Genera descripciones de productos, textos para ads y emails con inteligencia artificial.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-light: #ff8a6a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --accent: #10b981;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+            --radius-sm: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-white); color: var(--text-dark); line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--text-dark); text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: var(--primary-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+        .logo span { color: var(--primary); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-medium); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .back-link:hover { color: var(--primary); }
+
+        .hero-section {
+            padding: 40px 24px 28px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 50px;
+            font-size: 13px; font-weight: 600; color: var(--text-medium); margin-bottom: 14px; box-shadow: var(--shadow);
+        }
+        .hero-badge i { color: var(--primary); }
+        .hero-section h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 800; color: var(--text-dark); margin-bottom: 10px; }
+        .hero-section h1 span { background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-section p { font-size: 15px; color: var(--text-medium); }
+
+        .tool-section { padding: 24px 24px 60px; }
+        .card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+        .card h2 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h2 i { color: var(--primary); }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-dark);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.12);
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: var(--text-light); }
+
+        .btn-generate {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            justify-content: center;
+            padding: 16px 24px;
+            margin-top: 8px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+        .btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4); }
+        .btn-generate:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .result-card {
+            display: none;
+            background: linear-gradient(160deg, #1f2937 0%, #111827 100%);
+            border: none;
+            color: white;
+            padding: 24px 24px;
+        }
+        .result-card.visible { display: block; }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .result-header h2 { color: rgba(255,255,255,0.9); margin-bottom: 0; }
+        .btn-copy {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-copy:hover { background: var(--accent); border-color: var(--accent); }
+        .btn-copy.copied { background: var(--accent); border-color: var(--accent); }
+        .result-body {
+            font-size: 15px;
+            line-height: 1.7;
+            color: rgba(255,255,255,0.95);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .feedback { font-size: 14px; margin-top: 12px; min-height: 22px; font-weight: 600; }
+        .feedback.error { color: #ef4444; }
+        .feedback.success { color: var(--accent); }
+
+        footer {
+            background: var(--text-dark);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        footer a { color: var(--primary-light); text-decoration: none; font-weight: 600; }
+        footer a:hover { text-decoration: underline; }
+        footer p { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+        @media (max-width: 768px) {
+            .tool-section { padding: 16px 14px 48px; }
+            .card { padding: 20px 16px; }
+            .form-group input, .form-group select, .form-group textarea { padding: 12px 14px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                    Holistic <span>Ecom</span> Tools
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver a herramientas</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-robot"></i>
+                Marketing & Ads · Con IA
+            </div>
+            <h1>Copy con <span>IA</span></h1>
+            <p>Genera descripciones de productos, textos para ads y emails con inteligencia artificial.</p>
+        </div>
+    </section>
+
+    <section class="tool-section">
+        <div class="container">
+            <div class="card">
+                <h2><i class="fas fa-edit"></i> Qué quieres generar</h2>
+                <div class="form-group">
+                    <label>Tipo de copy</label>
+                    <select id="type">
+                        <option value="producto">Descripción de producto (web / marketplace)</option>
+                        <option value="ad_facebook">Anuncio Facebook / Instagram</option>
+                        <option value="ad_tiktok">Anuncio TikTok</option>
+                        <option value="email">Email marketing (asunto + cuerpo)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nombre del producto o servicio</label>
+                    <input type="text" id="productName" placeholder="Ej: Crema hidratante con vitamina C" maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label>Contexto o características <span style="color:var(--text-light);font-weight:500">(opcional)</span></label>
+                    <textarea id="context" placeholder="Ej: Para piel seca, sin parabenos, 50 ml, precio competitivo..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tono <span style="color:var(--text-light);font-weight:500">(opcional)</span></label>
+                    <select id="tone">
+                        <option value="">Cualquiera</option>
+                        <option value="profesional">Profesional</option>
+                        <option value="cercano y amigable">Cercano y amigable</option>
+                        <option value="urgente y con oferta">Urgente / con oferta</option>
+                        <option value="premium y exclusivo">Premium y exclusivo</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-generate" id="btnGenerate">
+                    <i class="fas fa-magic"></i> Generar copy
+                </button>
+                <p class="feedback" id="feedback"></p>
+            </div>
+
+            <div class="card result-card" id="resultCard">
+                <div class="result-header">
+                    <h2><i class="fas fa-file-alt"></i> Resultado</h2>
+                    <button type="button" class="btn-copy" id="btnCopy">
+                        <i class="fas fa-copy"></i><span>Copiar</span>
+                    </button>
+                </div>
+                <div class="result-body" id="resultBody"></div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p><a href="index.html">Holistic Ecom Tools</a> · Copy con IA</p>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var type = document.getElementById('type');
+            var productName = document.getElementById('productName');
+            var context = document.getElementById('context');
+            var tone = document.getElementById('tone');
+            var btnGenerate = document.getElementById('btnGenerate');
+            var feedback = document.getElementById('feedback');
+            var resultCard = document.getElementById('resultCard');
+            var resultBody = document.getElementById('resultBody');
+            var btnCopy = document.getElementById('btnCopy');
+
+            function setFeedback(msg, isError) {
+                feedback.textContent = msg;
+                feedback.className = 'feedback ' + (isError ? 'error' : 'success');
+            }
+
+            btnGenerate.addEventListener('click', function () {
+                var payload = {
+                    type: type.value,
+                    productName: (productName.value || '').trim(),
+                    context: (context.value || '').trim(),
+                    tone: (tone.value || '').trim()
+                };
+
+                btnGenerate.disabled = true;
+                setFeedback('Generando...', false);
+                resultCard.classList.remove('visible');
+
+                fetch('/api/copy-ia/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) {
+                        btnGenerate.disabled = false;
+                        if (json.success && json.data && json.data.text) {
+                            resultBody.textContent = json.data.text;
+                            resultCard.classList.add('visible');
+                            setFeedback('Listo. Revisa el resultado y copia si quieres.', false);
+                            resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        } else {
+                            setFeedback(json.error || 'No se pudo generar el texto.', true);
+                        }
+                    })
+                    .catch(function () {
+                        btnGenerate.disabled = false;
+                        setFeedback('Error de conexión. Revisa tu red e intenta de nuevo.', true);
+                    });
+            });
+
+            btnCopy.addEventListener('click', function () {
+                var text = resultBody.textContent;
+                if (!text) return;
+                navigator.clipboard.writeText(text).then(function () {
+                    var label = btnCopy.querySelector('span');
+                    if (label) label.textContent = 'Copiado';
+                    btnCopy.classList.add('copied');
+                    setTimeout(function () {
+                        btnCopy.classList.remove('copied');
+                        if (btnCopy.querySelector('span')) btnCopy.querySelector('span').textContent = 'Copiar';
+                    }, 2000);
+                }).catch(function () {
+                    setFeedback('No se pudo copiar al portapapeles.', true);
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

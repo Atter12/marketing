@@ -76,6 +76,14 @@
       "dest": "/profit-calculator.html"
     },
     {
+      "src": "/copy-ia",
+      "dest": "/copy-ia.html"
+    },
+    {
+      "src": "/copy-ia.html",
+      "dest": "/copy-ia.html"
+    },
+    {
       "src": "/landing",
       "dest": "/landing.html"
     },
