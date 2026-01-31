@@ -12,7 +12,8 @@ function buildPrompt(type, productName, context, tone) {
         producto: `Eres un copywriter experto en e-commerce. Genera una descripción de producto atractiva para web o marketplace (Amazon, Mercado Libre, etc.). ${base} Responde solo con el texto de la descripción, sin títulos ni explicaciones. Usa viñetas si ayuda. Máximo 250 palabras.`,
         ad_facebook: `Eres un copywriter experto en Meta Ads (Facebook/Instagram). Genera el texto principal de un anuncio que convierta. ${base} Responde solo con el copy del anuncio, sin explicaciones. Incluye gancho, beneficio y CTA. Máximo 125 caracteres para el gancho si es posible, luego el resto. En español.`,
         ad_tiktok: `Eres un copywriter experto en TikTok Ads y contenido viral. Genera el texto/copy para un anuncio en TikTok: directo, con gancho y CTA. ${base} Responde solo con el copy, sin explicaciones. Corto y impactante. En español.`,
-        email: `Eres un copywriter experto en email marketing para e-commerce. Genera el cuerpo de un email (asunto + mensaje breve). ${base} Responde con dos líneas: primera línea "Asunto: ...", segunda línea el cuerpo del email. En español.`
+        email: `Eres un copywriter experto en email marketing para e-commerce. Genera el cuerpo de un email (asunto + mensaje breve). ${base} Responde con dos líneas: primera línea "Asunto: ...", segunda línea el cuerpo del email. En español.`,
+        seo: `Eres un experto en SEO para e-commerce. Genera un título y una descripción meta optimizados para buscadores (Google) del producto o servicio. ${base} Responde exactamente con dos líneas: primera "Título (max 60 caracteres): ...", segunda "Descripción (max 155 caracteres): ...". Incluye palabras clave naturales, atractivas para clics y en español. Sin explicaciones adicionales.`
     };
 
     return prompts[type] || prompts.producto;
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
 
     try {
         const { type, productName, context, tone } = req.body || {};
-        const validTypes = ['producto', 'ad_facebook', 'ad_tiktok', 'email'];
+        const validTypes = ['producto', 'ad_facebook', 'ad_tiktok', 'email', 'seo'];
         const chosenType = validTypes.includes(type) ? type : 'producto';
 
         const userPrompt = buildPrompt(chosenType, String(productName || '').trim(), String(context || '').trim(), String(tone || '').trim());
@@ -44,7 +45,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 model: MODEL,
                 messages: [
-                    { role: 'system', content: 'Eres un copywriter profesional. Responde únicamente con el texto solicitado, en español, sin rodeos ni explicaciones previas.' },
+                    { role: 'system', content: 'Eres un copywriter profesional. Responde únicamente con el texto solicitado, en español, sin rodeos ni explicaciones previas. Siempre usa moneda en soles peruanos (S/) para precios, envíos o montos; nunca euros (€) ni dólares ($).' },
                     { role: 'user', content: userPrompt }
                 ],
                 max_tokens: 800,

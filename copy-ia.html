@@ -211,6 +211,32 @@
         .feedback.error { color: #ef4444; }
         .feedback.success { color: var(--accent); }
 
+        .seo-explainer {
+            margin-top: 28px;
+            padding: 20px 24px;
+            background: var(--bg-gray);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+        .seo-explainer summary {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .seo-explainer summary i { color: var(--primary); }
+        .seo-explainer-content { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+        .seo-explainer-content p {
+            font-size: 14px;
+            color: var(--text-medium);
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .seo-explainer-content p:last-child { margin-bottom: 0; }
+
         footer {
             background: var(--text-dark);
             color: white;
@@ -227,6 +253,9 @@
             .tool-section { padding: 16px 14px 56px; }
             .card { padding: 20px 16px; }
             .form-group input, .form-group select, .form-group textarea { padding: 12px 14px; font-size: 16px; }
+            .seo-explainer { margin-top: 24px; padding: 16px 18px; }
+            .seo-explainer summary { font-size: 13px; }
+            .seo-explainer-content p { font-size: 13px; }
             .mobile-cta-bar { display: flex; }
         }
     </style>
@@ -254,7 +283,7 @@
                 Marketing & Ads · Con IA
             </div>
             <h1>Copy con <span>IA</span></h1>
-            <p>Genera descripciones de productos, textos para ads y emails con inteligencia artificial.</p>
+            <p>Genera descripciones de productos, textos para ads, emails y <strong>frase con SEO incluido</strong> (título y descripción para Google) con inteligencia artificial.</p>
             <div class="hero-trust">
                 <span><i class="fas fa-check-circle"></i> Gratis</span>
                 <span><i class="fas fa-check-circle"></i> Sin registro</span>
@@ -274,6 +303,7 @@
                         <option value="ad_facebook">Anuncio Facebook / Instagram</option>
                         <option value="ad_tiktok">Anuncio TikTok</option>
                         <option value="email">Email marketing (asunto + cuerpo)</option>
+                        <option value="seo">Frase con SEO (título y descripción para Google)</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -309,6 +339,14 @@
                 </div>
                 <div class="result-body" id="resultBody"></div>
             </div>
+
+            <details class="seo-explainer">
+                <summary><i class="fas fa-search"></i> ¿Qué es SEO y para qué sirve?</summary>
+                <div class="seo-explainer-content">
+                    <p><strong>SEO</strong> (Search Engine Optimization) es la optimización de tu web y textos para que aparezcan mejor en buscadores como Google.</p>
+                    <p><strong>Para qué sirve:</strong> Que más personas encuentren tu producto o tienda cuando buscan en Google. Un buen título y descripción meta (los que generamos aquí) mejoran los clics desde los resultados de búsqueda y ayudan a posicionar tu página.</p>
+                </div>
+            </details>
         </div>
     </section>
 
