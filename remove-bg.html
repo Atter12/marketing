@@ -258,7 +258,7 @@
 
                 <div class="privacy-note">
                     <p><strong>Todo en tu dispositivo.</strong> La IA corre en tu navegador; tus fotos no se envían a ningún servidor.</p>
-                    <p>La primera vez se descargará el modelo (~40 MB, solo una vez). Luego será mucho más rápido.</p>
+                    <p>La primera vez puede tardar un poco más; después será más rápido.</p>
                 </div>
 
                 <button type="button" class="btn-remove" id="btnRemove" disabled>
@@ -381,12 +381,12 @@
             btnRemove.addEventListener('click', function () {
                 if (!currentFile) return;
                 btnRemove.disabled = true;
-                setStatus('Cargando modelo de IA...', true, 0);
+                setStatus('Preparando...', true, 0);
 
                 var config = {
                     progress: function (key, current, total) {
                         var pct = total > 0 ? Math.round((current / total) * 100) : 0;
-                        setStatus('Descargando modelo (solo la primera vez)... ' + pct + '%', true, pct);
+                        setStatus('Preparando... ' + pct + '%', true, pct);
                     },
                     output: { format: 'image/png', type: 'foreground' }
                 };
