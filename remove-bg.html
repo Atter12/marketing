@@ -392,10 +392,14 @@
                 };
 
                 var src = currentFile;
-                import('https://esm.sh/@imgly/background-removal').then(function (mod) {
-                    var removeBackground = mod.default;
+                import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm').then(function (mod) {
+                    var fn = mod.default || mod.removeBackground;
+                    if (typeof fn !== 'function' && mod.default && typeof mod.default.default === 'function') fn = mod.default.default;
+                    if (typeof fn !== 'function') {
+                        throw new Error('No se pudo cargar la librería de quitar fondo. Prueba con otro navegador o recarga.');
+                    }
                     setStatus('Procesando imagen...', false);
-                    return removeBackground(src, config);
+                    return fn(src, config);
                 }).then(function (blob) {
                     resultBlob = blob;
                     if (originalUrl) URL.revokeObjectURL(originalUrl);
