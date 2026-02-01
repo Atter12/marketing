@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Comprimir Imágenes | Reduce peso sin perder calidad | Holistic Ecom Tools</title>
-    <meta name="description" content="Reduce el peso de tus imágenes sin perder calidad para mejorar velocidad de tu web y ads.">
+    <title>Comprimir y optimizar imágenes | Peso, formato y recomendaciones | Holistic Ecom Tools</title>
+    <meta name="description" content="Reduce peso, cambia de formato (JPG, PNG, WebP) y optimiza para web, redes o ads. Recomendaciones según el uso. Gratis y en el navegador.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -113,7 +113,6 @@
             outline: none;
         }
         .form-group select:focus { border-color: var(--primary); }
-        .quality-value { font-size: 13px; font-weight: 600; color: var(--primary); }
 
         .btn-compress {
             display: inline-flex;
@@ -267,8 +266,8 @@
                 <i class="fas fa-compress-alt"></i>
                 Media & Contenido
             </div>
-            <h1>Comprimir <span>Imágenes</span></h1>
-            <p>Reduce el peso de tus imágenes sin perder calidad para mejorar velocidad de tu web y ads.</p>
+            <h1>Comprimir y <span>optimizar</span> imágenes</h1>
+            <p>Reduce peso, cambia de formato (JPG, PNG, WebP) y optimiza para web, redes o ads. Recomendaciones según el uso.</p>
             <div class="hero-trust">
                 <span><i class="fas fa-check-circle"></i> Gratis</span>
                 <span><i class="fas fa-check-circle"></i> En el navegador (privacidad)</span>
@@ -310,10 +309,6 @@
 
                 <div class="options-row" id="optionsRow" style="display: none;">
                     <div class="form-group">
-                        <label>Calidad <span class="quality-value" id="qualityValue">85%</span></label>
-                        <input type="range" id="quality" min="50" max="100" value="85" step="5">
-                    </div>
-                    <div class="form-group">
                         <label>Formato de salida <span id="formatRecommendLabel" style="color:var(--accent);font-weight:600;"></span></label>
                         <select id="format">
                             <option value="image/jpeg">JPG</option>
@@ -340,7 +335,7 @@
 
     <footer>
         <div class="container">
-            <p><a href="index.html">Holistic Ecom Tools</a> · Comprimir Imágenes</p>
+            <p><a href="index.html">Holistic Ecom Tools</a> · Comprimir y optimizar imágenes</p>
         </div>
     </footer>
 
@@ -355,8 +350,6 @@
             var premiumCta = document.getElementById('premiumCta');
             var optionsRow = document.getElementById('optionsRow');
             var maxWidthGroup = document.getElementById('maxWidthGroup');
-            var quality = document.getElementById('quality');
-            var qualityValue = document.getElementById('qualityValue');
             var format = document.getElementById('format');
             var maxWidth = document.getElementById('maxWidth');
             var btnCompress = document.getElementById('btnCompress');
@@ -405,21 +398,9 @@
                 var currentFmt = getCurrentFormatLabel(first.type);
                 format.value = rec.format;
                 formatRecommendLabel.textContent = '(recomendado: ' + rec.label + ')';
-                if (format.value === 'image/png') {
-                    quality.value = 100;
-                    qualityValue.textContent = '100%';
-                }
                 recommendationBox.innerHTML = '<p><strong>Formato actual:</strong> ' + currentFmt + '.</p><p><strong>Para ' + (uc === 'web' ? 'tu web' : uc === 'redes' ? 'redes sociales' : uc === 'email' ? 'email' : uc === 'ads' ? 'anuncios' : 'este uso') + ' te recomendamos:</strong> ' + rec.label + ' — ' + rec.reason + '</p>';
                 recommendationBox.style.display = 'block';
             }
-
-            quality.addEventListener('input', function () { qualityValue.textContent = this.value + '%'; });
-            format.addEventListener('change', function () {
-                if (this.value === 'image/png') {
-                    quality.value = 100;
-                    qualityValue.textContent = '100%';
-                }
-            });
 
             dropZone.addEventListener('click', function () { fileInput.click(); });
             dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('dragover'); });
@@ -466,7 +447,7 @@
                 updateRecommendation(files);
             }
 
-            function compressImage(file, qualityNum, mime, maxW, callback) {
+            function compressImage(file, mime, maxW, callback) {
                 var img = new Image();
                 var url = URL.createObjectURL(file);
                 img.onload = function () {
@@ -482,7 +463,7 @@
                     canvas.height = h;
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    var q = mime === 'image/png' ? 1 : qualityNum / 100;
+                    var q = mime === 'image/png' ? 1 : 0.5;
                     canvas.toBlob(function (blob) { callback(blob); }, mime, q);
                 };
                 img.onerror = function () { URL.revokeObjectURL(url); callback(null); };
@@ -511,7 +492,7 @@
                     '<div class="img-wrap"><img src="' + URL.createObjectURL(blob) + '" alt="Comprimida"></div>' +
                     '<div class="meta"><strong>' + formatBytes(newSize) + '</strong> · ' + name + '</div>' +
                     '<div class="reduction">Reducción: ' + pct + '% (' + formatBytes(saved) + ' menos)</div>' +
-                    (parseFloat(pct) < 15 ? '<div class="reduction-tip">Consejo: prueba WebP o calidad 80% para reducir más.</div>' : '') +
+                    (parseFloat(pct) < 15 ? '<div class="reduction-tip">Consejo: prueba formato WebP para reducir más.</div>' : '') +
                     '</div>';
                 previewContainer.appendChild(block);
 
@@ -526,7 +507,6 @@
             btnCompress.addEventListener('click', function () {
                 if (!currentFiles.length) return;
                 btnCompress.disabled = true;
-                var qualityNum = parseInt(quality.value, 10);
                 var mime = format.value;
                 var maxW = maxWidth.value ? parseInt(maxWidth.value, 10) : null;
                 var pending = currentFiles.length;
@@ -534,7 +514,7 @@
                 previewArea.classList.add('visible');
 
                 currentFiles.forEach(function (file, idx) {
-                    compressImage(file, qualityNum, mime, maxW, function (blob) {
+                    compressImage(file, mime, maxW, function (blob) {
                         if (blob) renderResult(file, blob, mime, idx);
                         pending--;
                         if (pending === 0) btnCompress.disabled = false;
