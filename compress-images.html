@@ -72,8 +72,11 @@
             margin-bottom: 24px;
             box-shadow: var(--shadow);
         }
-        .card h2 { font-size: 14px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card h2 { font-size: 14px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
         .card h2 i { color: var(--primary); }
+        .card h2 + .form-group { margin-bottom: 24px; }
+        #useCase { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; color: var(--text-dark); outline: none; }
+        #useCase:focus { border-color: var(--primary); }
 
         .drop-zone {
             border: 2px dashed var(--border);
@@ -141,6 +144,8 @@
             border-top: 1px solid var(--border);
         }
         .preview-area.visible { display: block; }
+        #previewContainer .btn-download { margin-top: 12px; }
+        #previewContainer .preview-grid + .btn-download { margin-top: 16px; }
         .preview-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -159,6 +164,50 @@
         .preview-box .meta { font-size: 12px; color: var(--text-medium); padding: 10px 12px; border-top: 1px solid var(--border); }
         .preview-box .meta strong { color: var(--text-dark); }
         .reduction { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 8px; }
+        .reduction-tip { font-size: 12px; color: var(--text-medium); margin-top: 4px; }
+
+        .recommendation-box {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            color: var(--text-dark);
+        }
+        .recommendation-box strong { color: #047857; }
+        .recommendation-box p { margin-bottom: 6px; }
+        .recommendation-box p:last-child { margin-bottom: 0; }
+
+        .premium-cta {
+            margin-top: 20px;
+            padding: 20px 24px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+            border: 2px solid #c4b5fd;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(124, 58, 237, 0.08);
+        }
+        .premium-cta .premium-icon { font-size: 20px; color: #7c3aed; margin-bottom: 10px; display: block; }
+        .premium-cta p { font-size: 14px; color: var(--text-dark); margin-bottom: 14px; font-weight: 600; line-height: 1.5; }
+        .premium-cta p span { color: #6d28d9; font-weight: 700; }
+        .premium-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+        }
+        .premium-cta a:hover { filter: brightness(1.08); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4); }
+
+        .file-count { font-size: 13px; font-weight: 600; color: var(--primary); margin-top: 8px; }
 
         .btn-download {
             display: inline-flex;
@@ -231,12 +280,32 @@
     <section class="tool-section">
         <div class="container">
             <div class="card">
+                <h2><i class="fas fa-bullseye"></i> ¿Para qué usarás la imagen?</h2>
+                <div class="form-group">
+                    <select id="useCase">
+                        <option value="web">Mi web (sitio, tienda, blog)</option>
+                        <option value="redes">Redes sociales (Instagram, Facebook, TikTok)</option>
+                        <option value="email">Email / Newsletter</option>
+                        <option value="ads">Anuncios (Meta, Google Ads)</option>
+                        <option value="otro">Otro uso</option>
+                    </select>
+                </div>
+
                 <h2><i class="fas fa-image"></i> Sube tu imagen</h2>
                 <div class="drop-zone" id="dropZone">
                     <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Arrastra una imagen aquí o haz clic para elegir</p>
-                    <span>JPG, PNG o WebP · Máx. recomendado 10 MB</span>
-                    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+                    <p>Arrastra aquí o haz clic · 1 o 2 imágenes</p>
+                    <span>JPG, PNG o WebP · Máx. recomendado 10 MB por imagen</span>
+                    <span class="file-count" id="fileCount" style="display:none;"></span>
+                    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+                </div>
+
+                <div class="recommendation-box" id="recommendationBox" style="display: none;"></div>
+
+                <div class="premium-cta" id="premiumCta" style="display: none;">
+                    <i class="fas fa-crown premium-icon"></i>
+                    <p>¿Comprimir más de 2 imágenes? <span>Premium</span> te permite procesar lotes grandes sin límites.</p>
+                    <a href="index.html#registro"><i class="fas fa-user-plus"></i> Ir a registro</a>
                 </div>
 
                 <div class="options-row" id="optionsRow" style="display: none;">
@@ -245,7 +314,7 @@
                         <input type="range" id="quality" min="50" max="100" value="85" step="5">
                     </div>
                     <div class="form-group">
-                        <label>Formato de salida</label>
+                        <label>Formato de salida <span id="formatRecommendLabel" style="color:var(--accent);font-weight:600;"></span></label>
                         <select id="format">
                             <option value="image/jpeg">JPG</option>
                             <option value="image/png">PNG</option>
@@ -259,26 +328,11 @@
                 </div>
 
                 <button type="button" class="btn-compress" id="btnCompress" disabled>
-                    <i class="fas fa-compress-alt"></i> Comprimir imagen
+                    <i class="fas fa-compress-alt"></i> Comprimir imagen<span id="btnCompressCount"></span>
                 </button>
 
                 <div class="preview-area" id="previewArea">
-                    <div class="preview-grid">
-                        <div class="preview-box">
-                            <h3>Original</h3>
-                            <div class="img-wrap"><img id="previewOriginal" src="" alt="Original"></div>
-                            <div class="meta" id="metaOriginal">—</div>
-                        </div>
-                        <div class="preview-box">
-                            <h3>Comprimida</h3>
-                            <div class="img-wrap"><img id="previewCompressed" src="" alt="Comprimida"></div>
-                            <div class="meta" id="metaCompressed">—</div>
-                            <div class="reduction" id="reduction"></div>
-                        </div>
-                    </div>
-                    <a href="#" class="btn-download" id="btnDownload" download>
-                        <i class="fas fa-download"></i> Descargar imagen comprimida
-                    </a>
+                    <div id="previewContainer"></div>
                 </div>
             </div>
         </div>
@@ -292,8 +346,13 @@
 
     <script>
         (function () {
+            var useCase = document.getElementById('useCase');
             var dropZone = document.getElementById('dropZone');
             var fileInput = document.getElementById('fileInput');
+            var fileCount = document.getElementById('fileCount');
+            var recommendationBox = document.getElementById('recommendationBox');
+            var formatRecommendLabel = document.getElementById('formatRecommendLabel');
+            var premiumCta = document.getElementById('premiumCta');
             var optionsRow = document.getElementById('optionsRow');
             var maxWidthGroup = document.getElementById('maxWidthGroup');
             var quality = document.getElementById('quality');
@@ -301,16 +360,32 @@
             var format = document.getElementById('format');
             var maxWidth = document.getElementById('maxWidth');
             var btnCompress = document.getElementById('btnCompress');
+            var btnCompressCount = document.getElementById('btnCompressCount');
             var previewArea = document.getElementById('previewArea');
-            var previewOriginal = document.getElementById('previewOriginal');
-            var previewCompressed = document.getElementById('previewCompressed');
-            var metaOriginal = document.getElementById('metaOriginal');
-            var metaCompressed = document.getElementById('metaCompressed');
-            var reduction = document.getElementById('reduction');
-            var btnDownload = document.getElementById('btnDownload');
+            var previewContainer = document.getElementById('previewContainer');
 
-            var currentFile = null;
-            var compressedBlob = null;
+            var currentFiles = [];
+            var MAX_FREE = 2;
+
+            var recommendations = {
+                web: { format: 'image/webp', label: 'WebP', reason: 'Mejor relación peso/calidad en navegadores. Ideal para tu web o tienda.' },
+                redes: { format: 'image/webp', label: 'WebP', reason: 'Ligero y compatible con Instagram, Facebook y TikTok.' },
+                email: { format: 'image/jpeg', label: 'JPG', reason: 'Mejor compatibilidad en clientes de correo (Gmail, Outlook, etc.).' },
+                ads: { format: 'image/webp', label: 'WebP', reason: 'Carga más rápida en anuncios; Meta y Google lo soportan bien.' },
+                otro: { format: 'image/jpeg', label: 'JPG', reason: 'Formato universal, compatible en todos los dispositivos.' }
+            };
+
+            function getFormatLabel(mime) {
+                if (mime === 'image/jpeg') return 'JPG';
+                if (mime === 'image/png') return 'PNG';
+                return 'WebP';
+            }
+            function getCurrentFormatLabel(type) {
+                if (type.indexOf('jpeg') >= 0) return 'JPG';
+                if (type.indexOf('png') >= 0) return 'PNG';
+                if (type.indexOf('webp') >= 0) return 'WebP';
+                return 'imagen';
+            }
 
             function formatBytes(n) {
                 if (n < 1024) return n + ' B';
@@ -318,16 +393,27 @@
                 return (n / (1024 * 1024)).toFixed(2) + ' MB';
             }
 
-            function showOptions() {
-                optionsRow.style.display = 'grid';
-                maxWidthGroup.style.display = 'block';
-                btnCompress.disabled = false;
+            function updateRecommendation(files) {
+                if (!files || !files.length) {
+                    recommendationBox.style.display = 'none';
+                    formatRecommendLabel.textContent = '';
+                    return;
+                }
+                var uc = useCase.value || 'web';
+                var rec = recommendations[uc] || recommendations.web;
+                var first = files[0];
+                var currentFmt = getCurrentFormatLabel(first.type);
+                format.value = rec.format;
+                formatRecommendLabel.textContent = '(recomendado: ' + rec.label + ')';
+                if (format.value === 'image/png') {
+                    quality.value = 100;
+                    qualityValue.textContent = '100%';
+                }
+                recommendationBox.innerHTML = '<p><strong>Formato actual:</strong> ' + currentFmt + '.</p><p><strong>Para ' + (uc === 'web' ? 'tu web' : uc === 'redes' ? 'redes sociales' : uc === 'email' ? 'email' : uc === 'ads' ? 'anuncios' : 'este uso') + ' te recomendamos:</strong> ' + rec.label + ' — ' + rec.reason + '</p>';
+                recommendationBox.style.display = 'block';
             }
 
-            quality.addEventListener('input', function () {
-                qualityValue.textContent = this.value + '%';
-            });
-
+            quality.addEventListener('input', function () { qualityValue.textContent = this.value + '%'; });
             format.addEventListener('change', function () {
                 if (this.value === 'image/png') {
                     quality.value = 100;
@@ -336,32 +422,48 @@
             });
 
             dropZone.addEventListener('click', function () { fileInput.click(); });
-            dropZone.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
-            });
+            dropZone.addEventListener('dragover', function (e) { e.preventDefault(); dropZone.classList.add('dragover'); });
             dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
             dropZone.addEventListener('drop', function (e) {
                 e.preventDefault();
                 dropZone.classList.remove('dragover');
-                var files = e.dataTransfer.files;
-                if (files && files[0] && files[0].type.indexOf('image/') === 0) {
-                    fileInput.files = files;
-                    handleFile(files[0]);
+                var files = [];
+                for (var i = 0; i < e.dataTransfer.files.length; i++) {
+                    if (e.dataTransfer.files[i].type.indexOf('image/') === 0) files.push(e.dataTransfer.files[i]);
                 }
+                handleFiles(files);
             });
 
             fileInput.addEventListener('change', function () {
-                if (this.files && this.files[0]) handleFile(this.files[0]);
+                var files = [];
+                for (var i = 0; i < (this.files && this.files.length); i++) {
+                    if (this.files[i].type.indexOf('image/') === 0) files.push(this.files[i]);
+                }
+                handleFiles(files);
             });
 
-            function handleFile(file) {
-                currentFile = file;
+            function handleFiles(files) {
+                if (!files || !files.length) return;
+                if (files.length > MAX_FREE) {
+                    premiumCta.style.display = 'block';
+                    files = [files[0], files[1]];
+                } else {
+                    premiumCta.style.display = 'none';
+                }
+                currentFiles = files;
+                var dt = new DataTransfer();
+                files.forEach(function (f) { dt.items.add(f); });
+                fileInput.files = dt.files;
+
+                fileCount.style.display = 'block';
+                fileCount.textContent = files.length === 1 ? '1 imagen' : '2 de 2 imágenes';
+                btnCompressCount.textContent = files.length > 1 ? ' (' + files.length + ')' : '';
+                optionsRow.style.display = 'grid';
+                maxWidthGroup.style.display = 'block';
+                btnCompress.disabled = false;
                 previewArea.classList.remove('visible');
-                btnDownload.classList.remove('visible');
-                btnDownload.href = '#';
-                compressedBlob = null;
-                showOptions();
+                previewContainer.innerHTML = '';
+                updateRecommendation(files);
             }
 
             function compressImage(file, qualityNum, mime, maxW, callback) {
@@ -381,45 +483,67 @@
                     var ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
                     var q = mime === 'image/png' ? 1 : qualityNum / 100;
-                    canvas.toBlob(function (blob) {
-                        callback(blob);
-                    }, mime, q);
+                    canvas.toBlob(function (blob) { callback(blob); }, mime, q);
                 };
-                img.onerror = function () {
-                    URL.revokeObjectURL(url);
-                    callback(null);
-                };
+                img.onerror = function () { URL.revokeObjectURL(url); callback(null); };
                 img.src = url;
             }
 
+            function renderResult(file, blob, mime, index) {
+                var origSize = file.size;
+                var newSize = blob.size;
+                var pct = origSize > 0 ? ((1 - newSize / origSize) * 100).toFixed(1) : 0;
+                var saved = origSize - newSize;
+                var ext = mime === 'image/jpeg' ? '.jpg' : mime === 'image/png' ? '.png' : '.webp';
+                var name = file.name.replace(/\.[^.]+$/, '') + ext;
+
+                var block = document.createElement('div');
+                block.className = 'preview-grid';
+                if (index > 0) block.style.marginTop = '24px';
+                block.innerHTML =
+                    '<div class="preview-box">' +
+                    '<h3>Original' + (currentFiles.length > 1 ? ' ' + (index + 1) : '') + '</h3>' +
+                    '<div class="img-wrap"><img src="' + URL.createObjectURL(file) + '" alt="Original"></div>' +
+                    '<div class="meta"><strong>' + formatBytes(origSize) + '</strong> · ' + file.name + '</div>' +
+                    '</div>' +
+                    '<div class="preview-box">' +
+                    '<h3>Comprimida' + (currentFiles.length > 1 ? ' ' + (index + 1) : '') + '</h3>' +
+                    '<div class="img-wrap"><img src="' + URL.createObjectURL(blob) + '" alt="Comprimida"></div>' +
+                    '<div class="meta"><strong>' + formatBytes(newSize) + '</strong> · ' + name + '</div>' +
+                    '<div class="reduction">Reducción: ' + pct + '% (' + formatBytes(saved) + ' menos)</div>' +
+                    (parseFloat(pct) < 15 ? '<div class="reduction-tip">Consejo: prueba WebP o calidad 80% para reducir más.</div>' : '') +
+                    '</div>';
+                previewContainer.appendChild(block);
+
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = name;
+                a.className = 'btn-download visible';
+                a.innerHTML = '<i class="fas fa-download"></i> Descargar ' + (currentFiles.length > 1 ? 'imagen ' + (index + 1) : 'imagen comprimida');
+                previewContainer.appendChild(a);
+            }
+
             btnCompress.addEventListener('click', function () {
-                if (!currentFile) return;
+                if (!currentFiles.length) return;
                 btnCompress.disabled = true;
                 var qualityNum = parseInt(quality.value, 10);
                 var mime = format.value;
                 var maxW = maxWidth.value ? parseInt(maxWidth.value, 10) : null;
+                var pending = currentFiles.length;
+                previewContainer.innerHTML = '';
+                previewArea.classList.add('visible');
 
-                compressImage(currentFile, qualityNum, mime, maxW, function (blob) {
-                    btnCompress.disabled = false;
-                    if (!blob) {
-                        alert('No se pudo comprimir la imagen.');
-                        return;
-                    }
-                    compressedBlob = blob;
-                    var origSize = currentFile.size;
-                    var newSize = blob.size;
-
-                    previewOriginal.src = URL.createObjectURL(currentFile);
-                    previewCompressed.src = URL.createObjectURL(blob);
-                    metaOriginal.innerHTML = '<strong>' + formatBytes(origSize) + '</strong> · ' + currentFile.name;
-                    metaCompressed.innerHTML = '<strong>' + formatBytes(newSize) + '</strong> · ' + (currentFile.name.replace(/\.[^.]+$/, '') + (mime === 'image/jpeg' ? '.jpg' : mime === 'image/png' ? '.png' : '.webp'));
-                    var pct = origSize > 0 ? ((1 - newSize / origSize) * 100).toFixed(1) : 0;
-                    reduction.textContent = 'Reducción: ' + pct + '%';
-                    btnDownload.href = URL.createObjectURL(blob);
-                    btnDownload.download = currentFile.name.replace(/\.[^.]+$/, '') + (mime === 'image/jpeg' ? '.jpg' : mime === 'image/png' ? '.png' : '.webp');
-                    btnDownload.classList.add('visible');
-                    previewArea.classList.add('visible');
+                currentFiles.forEach(function (file, idx) {
+                    compressImage(file, qualityNum, mime, maxW, function (blob) {
+                        if (blob) renderResult(file, blob, mime, idx);
+                        pending--;
+                        if (pending === 0) btnCompress.disabled = false;
+                    });
                 });
+            });
+
+            useCase.addEventListener('change', function () {
+                if (currentFiles.length) updateRecommendation(currentFiles);
             });
         })();
     </script>
