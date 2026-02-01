@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>Comprimir Imágenes | Reduce peso sin perder calidad | Holistic Ecom Tools</title>
+    <meta name="description" content="Reduce el peso de tus imágenes sin perder calidad para mejorar velocidad de tu web y ads.">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff6b4a;
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
+            --accent: #10b981;
+            --text-dark: #1f2937;
+            --text-medium: #6b7280;
+            --text-light: #9ca3af;
+            --bg-white: #ffffff;
+            --bg-cream: #fffbf8;
+            --bg-gray: #f8f9fa;
+            --border: #e5e7eb;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
+            --radius: 16px;
+            --radius-sm: 12px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-white); color: var(--text-dark); line-height: 1.6; }
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        header {
+            background: var(--bg-white);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow);
+        }
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: var(--text-dark); text-decoration: none; }
+        .logo-icon { width: 36px; height: 36px; background: var(--primary-gradient); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; }
+        .logo span { color: var(--primary); }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-medium); text-decoration: none; font-size: 14px; font-weight: 600; }
+        .back-link:hover { color: var(--primary); }
+
+        .hero-section {
+            padding: 40px 24px 28px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 50px;
+            font-size: 13px; font-weight: 600; color: var(--text-medium); margin-bottom: 14px; box-shadow: var(--shadow);
+        }
+        .hero-badge i { color: var(--primary); }
+        .hero-section h1 { font-size: clamp(26px, 4vw, 36px); font-weight: 800; color: var(--text-dark); margin-bottom: 10px; }
+        .hero-section h1 span { background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-section p { font-size: 15px; color: var(--text-medium); }
+
+        .hero-trust { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; margin-top: 20px; font-size: 14px; font-weight: 600; color: var(--text-medium); }
+        .hero-trust span { display: inline-flex; align-items: center; gap: 8px; }
+        .hero-trust i { color: var(--accent); font-size: 15px; }
+
+        .tool-section { padding: 24px 24px 60px; }
+
+        .card {
+            background: var(--bg-white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+        .card h2 { font-size: 14px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .card h2 i { color: var(--primary); }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 40px 24px;
+            text-align: center;
+            background: var(--bg-gray);
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .drop-zone:hover, .drop-zone.dragover { border-color: var(--primary); background: rgba(255, 107, 74, 0.06); }
+        .drop-zone i { font-size: 48px; color: var(--text-light); margin-bottom: 12px; display: block; }
+        .drop-zone p { font-size: 15px; color: var(--text-dark); font-weight: 600; margin-bottom: 4px; }
+        .drop-zone span { font-size: 13px; color: var(--text-light); }
+        .drop-zone input { display: none; }
+
+        .options-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 24px;
+        }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
+        .form-group input[type="range"] { width: 100%; height: 8px; accent-color: var(--primary); }
+        .form-group select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            color: var(--text-dark);
+            outline: none;
+        }
+        .form-group select:focus { border-color: var(--primary); }
+        .quality-value { font-size: 13px; font-weight: 600; color: var(--primary); }
+
+        .btn-compress {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px 24px;
+            margin-top: 20px;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+        .btn-compress:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4); }
+        .btn-compress:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .preview-area {
+            display: none;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+        .preview-area.visible { display: block; }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .preview-box {
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            background: #fafafa;
+        }
+        .preview-box h3 { font-size: 12px; font-weight: 700; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; background: var(--bg-gray); border-bottom: 1px solid var(--border); }
+        .preview-box .img-wrap { padding: 12px; min-height: 120px; display: flex; align-items: center; justify-content: center; }
+        .preview-box .img-wrap img { max-width: 100%; max-height: 200px; object-fit: contain; }
+        .preview-box .meta { font-size: 12px; color: var(--text-medium); padding: 10px 12px; border-top: 1px solid var(--border); }
+        .preview-box .meta strong { color: var(--text-dark); }
+        .reduction { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 8px; }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 14px 24px;
+            margin-top: 12px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s;
+        }
+        .btn-download:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn-download:not([href]) { display: none; }
+        .btn-download.visible { display: inline-flex; }
+
+        footer { background: var(--text-dark); color: white; padding: 24px; text-align: center; }
+        footer a { color: #ff8a6a; text-decoration: none; font-weight: 600; }
+        footer a:hover { text-decoration: underline; }
+        footer p { font-size: 13px; color: rgba(255,255,255,0.6); }
+
+        @media (max-width: 768px) {
+            .options-row { grid-template-columns: 1fr; }
+            .preview-grid { grid-template-columns: 1fr; }
+            .tool-section { padding: 16px 14px 48px; }
+            .card { padding: 20px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                    Holistic <span>Ecom</span> Tools
+                </a>
+                <a href="index.html" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver a herramientas</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-badge">
+                <i class="fas fa-compress-alt"></i>
+                Media & Contenido
+            </div>
+            <h1>Comprimir <span>Imágenes</span></h1>
+            <p>Reduce el peso de tus imágenes sin perder calidad para mejorar velocidad de tu web y ads.</p>
+            <div class="hero-trust">
+                <span><i class="fas fa-check-circle"></i> Gratis</span>
+                <span><i class="fas fa-check-circle"></i> En el navegador (privacidad)</span>
+                <span><i class="fas fa-check-circle"></i> Sin subir al servidor</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="tool-section">
+        <div class="container">
+            <div class="card">
+                <h2><i class="fas fa-image"></i> Sube tu imagen</h2>
+                <div class="drop-zone" id="dropZone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Arrastra una imagen aquí o haz clic para elegir</p>
+                    <span>JPG, PNG o WebP · Máx. recomendado 10 MB</span>
+                    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp">
+                </div>
+
+                <div class="options-row" id="optionsRow" style="display: none;">
+                    <div class="form-group">
+                        <label>Calidad <span class="quality-value" id="qualityValue">85%</span></label>
+                        <input type="range" id="quality" min="50" max="100" value="85" step="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Formato de salida</label>
+                        <select id="format">
+                            <option value="image/jpeg">JPG</option>
+                            <option value="image/png">PNG</option>
+                            <option value="image/webp">WebP</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" id="maxWidthGroup" style="display: none;">
+                    <label>Ancho máximo (px) <span style="color:var(--text-light);font-weight:500">opcional</span></label>
+                    <input type="number" id="maxWidth" placeholder="Ej: 1920" min="100" max="4000" step="100" style="width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-size:14px;">
+                </div>
+
+                <button type="button" class="btn-compress" id="btnCompress" disabled>
+                    <i class="fas fa-compress-alt"></i> Comprimir imagen
+                </button>
+
+                <div class="preview-area" id="previewArea">
+                    <div class="preview-grid">
+                        <div class="preview-box">
+                            <h3>Original</h3>
+                            <div class="img-wrap"><img id="previewOriginal" src="" alt="Original"></div>
+                            <div class="meta" id="metaOriginal">—</div>
+                        </div>
+                        <div class="preview-box">
+                            <h3>Comprimida</h3>
+                            <div class="img-wrap"><img id="previewCompressed" src="" alt="Comprimida"></div>
+                            <div class="meta" id="metaCompressed">—</div>
+                            <div class="reduction" id="reduction"></div>
+                        </div>
+                    </div>
+                    <a href="#" class="btn-download" id="btnDownload" download>
+                        <i class="fas fa-download"></i> Descargar imagen comprimida
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p><a href="index.html">Holistic Ecom Tools</a> · Comprimir Imágenes</p>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            var dropZone = document.getElementById('dropZone');
+            var fileInput = document.getElementById('fileInput');
+            var optionsRow = document.getElementById('optionsRow');
+            var maxWidthGroup = document.getElementById('maxWidthGroup');
+            var quality = document.getElementById('quality');
+            var qualityValue = document.getElementById('qualityValue');
+            var format = document.getElementById('format');
+            var maxWidth = document.getElementById('maxWidth');
+            var btnCompress = document.getElementById('btnCompress');
+            var previewArea = document.getElementById('previewArea');
+            var previewOriginal = document.getElementById('previewOriginal');
+            var previewCompressed = document.getElementById('previewCompressed');
+            var metaOriginal = document.getElementById('metaOriginal');
+            var metaCompressed = document.getElementById('metaCompressed');
+            var reduction = document.getElementById('reduction');
+            var btnDownload = document.getElementById('btnDownload');
+
+            var currentFile = null;
+            var compressedBlob = null;
+
+            function formatBytes(n) {
+                if (n < 1024) return n + ' B';
+                if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+                return (n / (1024 * 1024)).toFixed(2) + ' MB';
+            }
+
+            function showOptions() {
+                optionsRow.style.display = 'grid';
+                maxWidthGroup.style.display = 'block';
+                btnCompress.disabled = false;
+            }
+
+            quality.addEventListener('input', function () {
+                qualityValue.textContent = this.value + '%';
+            });
+
+            format.addEventListener('change', function () {
+                if (this.value === 'image/png') {
+                    quality.value = 100;
+                    qualityValue.textContent = '100%';
+                }
+            });
+
+            dropZone.addEventListener('click', function () { fileInput.click(); });
+            dropZone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', function () { dropZone.classList.remove('dragover'); });
+            dropZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                var files = e.dataTransfer.files;
+                if (files && files[0] && files[0].type.indexOf('image/') === 0) {
+                    fileInput.files = files;
+                    handleFile(files[0]);
+                }
+            });
+
+            fileInput.addEventListener('change', function () {
+                if (this.files && this.files[0]) handleFile(this.files[0]);
+            });
+
+            function handleFile(file) {
+                currentFile = file;
+                previewArea.classList.remove('visible');
+                btnDownload.classList.remove('visible');
+                btnDownload.href = '#';
+                compressedBlob = null;
+                showOptions();
+            }
+
+            function compressImage(file, qualityNum, mime, maxW, callback) {
+                var img = new Image();
+                var url = URL.createObjectURL(file);
+                img.onload = function () {
+                    URL.revokeObjectURL(url);
+                    var w = img.naturalWidth;
+                    var h = img.naturalHeight;
+                    if (maxW && w > maxW) {
+                        h = Math.round((h * maxW) / w);
+                        w = maxW;
+                    }
+                    var canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    var q = mime === 'image/png' ? 1 : qualityNum / 100;
+                    canvas.toBlob(function (blob) {
+                        callback(blob);
+                    }, mime, q);
+                };
+                img.onerror = function () {
+                    URL.revokeObjectURL(url);
+                    callback(null);
+                };
+                img.src = url;
+            }
+
+            btnCompress.addEventListener('click', function () {
+                if (!currentFile) return;
+                btnCompress.disabled = true;
+                var qualityNum = parseInt(quality.value, 10);
+                var mime = format.value;
+                var maxW = maxWidth.value ? parseInt(maxWidth.value, 10) : null;
+
+                compressImage(currentFile, qualityNum, mime, maxW, function (blob) {
+                    btnCompress.disabled = false;
+                    if (!blob) {
+                        alert('No se pudo comprimir la imagen.');
+                        return;
+                    }
+                    compressedBlob = blob;
+                    var origSize = currentFile.size;
+                    var newSize = blob.size;
+
+                    previewOriginal.src = URL.createObjectURL(currentFile);
+                    previewCompressed.src = URL.createObjectURL(blob);
+                    metaOriginal.innerHTML = '<strong>' + formatBytes(origSize) + '</strong> · ' + currentFile.name;
+                    metaCompressed.innerHTML = '<strong>' + formatBytes(newSize) + '</strong> · ' + (currentFile.name.replace(/\.[^.]+$/, '') + (mime === 'image/jpeg' ? '.jpg' : mime === 'image/png' ? '.png' : '.webp'));
+                    var pct = origSize > 0 ? ((1 - newSize / origSize) * 100).toFixed(1) : 0;
+                    reduction.textContent = 'Reducción: ' + pct + '%';
+                    btnDownload.href = URL.createObjectURL(blob);
+                    btnDownload.download = currentFile.name.replace(/\.[^.]+$/, '') + (mime === 'image/jpeg' ? '.jpg' : mime === 'image/png' ? '.png' : '.webp');
+                    btnDownload.classList.add('visible');
+                    previewArea.classList.add('visible');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

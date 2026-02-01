@@ -84,6 +84,14 @@
       "dest": "/copy-ia.html"
     },
     {
+      "src": "/compress-images",
+      "dest": "/compress-images.html"
+    },
+    {
+      "src": "/compress-images.html",
+      "dest": "/compress-images.html"
+    },
+    {
       "src": "/landing",
       "dest": "/landing.html"
     },
