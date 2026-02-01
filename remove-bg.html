@@ -196,6 +196,19 @@
             transition: all 0.2s;
         }
         .btn-download:hover { filter: brightness(1.05); transform: translateY(-1px); }
+        .btn-download-secondary { background: var(--bg-gray); color: var(--text-dark); border: 2px solid var(--border); margin-top: 8px; }
+        .btn-download-secondary:hover { background: #eee; border-color: var(--text-light); }
+
+        .whatsapp-tip {
+            margin-top: 16px;
+            padding: 14px 16px;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            color: var(--text-dark);
+        }
+        .whatsapp-tip strong { color: #92400e; }
 
         .first-time-tip {
             margin-top: 12px;
@@ -285,9 +298,15 @@
                             <div class="img-wrap checkerboard" id="resultWrap"><img id="resultImg" alt="Sin fondo"></div>
                             <div class="meta" id="resultMeta"></div>
                             <a href="#" class="btn-download" id="btnDownload" download="sin-fondo.png">
-                                <i class="fas fa-download"></i> Descargar PNG
+                                <i class="fas fa-download"></i> Descargar PNG (transparente)
+                            </a>
+                            <a href="#" class="btn-download btn-download-secondary" id="btnDownloadWhite" style="display: none;">
+                                <i class="fas fa-file-image"></i> Descargar con fondo blanco (para WhatsApp)
                             </a>
                         </div>
+                    </div>
+                    <div class="whatsapp-tip" id="whatsappTip" style="display: none;">
+                        <strong>¿Por qué en WhatsApp se ve con fondo blanco?</strong> WhatsApp comprime las fotos y quita la transparencia. Para conservar el PNG transparente, envía el archivo como <strong>Documento</strong> (clip → Documento) en lugar de como Imagen. Si lo envías como foto, puedes usar la versión "con fondo blanco" de arriba.
                     </div>
                     <p class="first-time-tip">Puedes usar esta imagen en tu web, redes o anuncios. El fondo transparente se ve bien sobre cualquier color.</p>
                 </div>
@@ -320,6 +339,8 @@
             var resultImg = document.getElementById('resultImg');
             var resultMeta = document.getElementById('resultMeta');
             var btnDownload = document.getElementById('btnDownload');
+            var btnDownloadWhite = document.getElementById('btnDownloadWhite');
+            var whatsappTip = document.getElementById('whatsappTip');
 
             var currentFile = null;
             var resultBlob = null;
@@ -410,6 +431,8 @@
                     resultMeta.textContent = 'sin-fondo.png · ' + formatBytes(blob.size);
                     btnDownload.href = URL.createObjectURL(blob);
                     btnDownload.download = currentFile.name.replace(/\.[^.]+$/, '') + '-sin-fondo.png';
+                    btnDownloadWhite.style.display = 'inline-flex';
+                    whatsappTip.style.display = 'block';
                     previewArea.classList.add('visible');
                     hideStatus();
                     btnRemove.disabled = false;
@@ -418,6 +441,32 @@
                     setStatus('Error: ' + (err.message || 'No se pudo quitar el fondo. Prueba otra imagen o recarga la página.'), false);
                     btnRemove.disabled = false;
                 });
+            });
+
+            btnDownloadWhite.addEventListener('click', function (e) {
+                e.preventDefault();
+                if (!resultBlob) return;
+                var img = new Image();
+                var url = URL.createObjectURL(resultBlob);
+                img.onload = function () {
+                    URL.revokeObjectURL(url);
+                    var canvas = document.createElement('canvas');
+                    canvas.width = img.naturalWidth;
+                    canvas.height = img.naturalHeight;
+                    var ctx = canvas.getContext('2d');
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0);
+                    canvas.toBlob(function (whiteBlob) {
+                        var a = document.createElement('a');
+                        a.href = URL.createObjectURL(whiteBlob);
+                        a.download = (currentFile && currentFile.name ? currentFile.name.replace(/\.[^.]+$/, '') : 'imagen') + '-sin-fondo-whatsapp.png';
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                    }, 'image/png');
+                };
+                img.onerror = function () { URL.revokeObjectURL(url); };
+                img.src = url;
             });
         })();
     </script>
