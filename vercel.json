@@ -92,6 +92,14 @@
       "dest": "/compress-images.html"
     },
     {
+      "src": "/remove-bg",
+      "dest": "/remove-bg.html"
+    },
+    {
+      "src": "/remove-bg.html",
+      "dest": "/remove-bg.html"
+    },
+    {
       "src": "/landing",
       "dest": "/landing.html"
     },
