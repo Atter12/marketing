@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>TikTok Pixel Activator | Genera e instala tu pixel en minutos | EcomTools</title>
-    <meta name="description" content="Activa tu TikTok Pixel: genera el código de tracking, configura eventos (PageView, ViewContent, CompletePayment) y verifica la instalación. Fácil y listo para copiar.">
+    <meta name="description" content="TikTok Pixel Activator: conecta tu pixel con el ID, actívalo enviando los 14 eventos de prueba y genera el código para tu web. Fácil y en minutos.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -682,6 +682,161 @@
             word-break: break-all;
         }
 
+        /* Pixel Display Card (estado Conectado / No conectado) */
+        .pixel-display-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        .pixel-display-card.connected {
+            border-left: 4px solid var(--accent);
+            background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%);
+        }
+        .pixel-display-card .pixel-card-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+        }
+        .pixel-display-card .pixel-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: #d1d5db;
+        }
+        .pixel-display-card.connected .pixel-dot {
+            background: var(--accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .pixel-display-card .pixel-card-label {
+            font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .pixel-display-card .pixel-card-name {
+            font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px;
+        }
+        .pixel-display-card .pixel-card-id {
+            font-size: 13px; color: var(--text-medium); font-family: monospace;
+        }
+        .pixel-display-card .pixel-card-status {
+            display: inline-block; margin-top: 10px; padding: 6px 12px; background: #f3f4f6; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-medium);
+        }
+        .pixel-display-card.connected .pixel-card-status {
+            background: #d1fae5; color: #065f46;
+        }
+        /* Activar eventos: botón y progreso */
+        .btn-activate-events {
+            width: 100%;
+            padding: 18px;
+            background: var(--primary-gradient);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 16px;
+            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
+        }
+        .btn-activate-events:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+        }
+        .btn-activate-events:disabled {
+            background: #e5e7eb;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .progress-activate-section {
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .progress-activate-section.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .progress-activate-section .progress-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .progress-activate-section .progress-event-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .progress-activate-section .progress-count {
+            font-size: 13px;
+            color: var(--text-medium);
+        }
+        .progress-activate-section .progress-track {
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-activate-section .progress-bar-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.25s ease-out;
+        }
+        .progress-activate-section .progress-bar-fill.done {
+            background: var(--accent);
+        }
+        .progress-activate-section .success-activate-msg {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 16px;
+            padding: 14px;
+            background: #f0fdf4;
+            border-radius: 10px;
+            border: 1px solid var(--accent);
+            opacity: 0;
+            transform: scale(0.98);
+            transition: all 0.3s ease;
+        }
+        .progress-activate-section .success-activate-msg.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .progress-activate-section .success-activate-msg .success-check {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            flex-shrink: 0;
+        }
+        .progress-activate-section .success-activate-msg .success-activate-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #065f46;
+        }
+        .btn-load-connect:hover {
+            background: #374151 !important;
+        }
+        .btn-load-connect:disabled {
+            background: #9ca3af !important;
+            cursor: not-allowed;
+        }
+
         /* Platform Content */
         .platform-content {
             display: none;
@@ -1038,7 +1193,7 @@
                 TikTok Pixel • Fácil y en minutos
             </div>
             <h1>TikTok <span>Pixel Activator</span></h1>
-            <p>Genera el código de tu TikTok Pixel, elige los eventos a trackear y cópialo a tu web. Incluye verificación en vivo y lista de pixels guardados.</p>
+            <p><strong>Conecta</strong> tu pixel con el ID, luego <strong>actívalo</strong> enviando todos los eventos de prueba a TikTok. Así el pixel queda listo y puedes copiar el código para tu web.</p>
         </div>
     </section>
 
@@ -1056,9 +1211,23 @@
                                 Configura TikTok Pixel
                             </h2>
 
+                            <!-- Card estado: No conectado / Conectado (como el demo) -->
+                            <div class="pixel-display-card" id="pixelDisplayCard">
+                                <div class="pixel-card-header">
+                                    <div class="pixel-dot"></div>
+                                    <span class="pixel-card-label">Pixel</span>
+                                </div>
+                                <div class="pixel-card-name" id="pixelDisplayName">No conectado</div>
+                                <div class="pixel-card-id" id="pixelDisplayId">—</div>
+                                <div class="pixel-card-status" id="pixelDisplayStatus">Sin conexión</div>
+                            </div>
+
                             <div class="form-group">
                                 <label for="ttPixelId">Pixel ID</label>
-                                <input type="text" id="ttPixelId" placeholder="C1234567890ABCDEF" maxlength="25">
+                                <div style="display: flex; gap: 10px; align-items: stretch;">
+                                    <input type="text" id="ttPixelId" placeholder="C1234567890ABCDEF" maxlength="25" style="flex: 1;">
+                                    <button type="button" class="btn-load-connect" id="btnConnectPixel" style="padding: 12px 20px; background: var(--text-dark); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap;">Conectar</button>
+                                </div>
                                 <div class="info-box" style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 14px; margin-top: 12px; font-size: 13px;">
                                     <div style="display: flex; gap: 10px; align-items: flex-start;">
                                         <i class="fas fa-info-circle" style="color: #0ea5e9; margin-top: 2px; flex-shrink: 0;"></i>
@@ -1134,22 +1303,30 @@
                                 </div>
                             </div>
 
+                            <!-- Activar eventos (como el demo: disparar todos en secuencia) -->
+                            <p style="font-size: 13px; color: var(--text-medium); margin-top: 8px; margin-bottom: 4px;">Después de conectar, activa el pixel enviando todos los eventos de prueba a TikTok:</p>
+                            <button class="btn-activate-events" id="btnActivateEvents" type="button" disabled>
+                                <i class="fas fa-bolt"></i>
+                                Activar 14 eventos
+                            </button>
+                            <div class="progress-activate-section" id="progressActivateSection">
+                                <div class="progress-row">
+                                    <span class="progress-event-name" id="currentActivateEvent">—</span>
+                                    <span class="progress-count" id="progressActivateCount">0/14</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-bar-fill" id="progressActivateBar"></div>
+                                </div>
+                                <div class="success-activate-msg" id="successActivateMsg">
+                                    <div class="success-check"><i class="fas fa-check"></i></div>
+                                    <span class="success-activate-text" id="successActivateText">14 eventos enviados a TikTok</span>
+                                </div>
+                            </div>
+
                             <button class="btn-primary" id="generateTtCode">
                                 <i class="fas fa-code"></i>
                                 Generar Código
                             </button>
-
-                            <!-- Cómo pedir el pixel a tu supervisor -->
-                            <div class="info-box" style="background: #f0fdf4; border-left: 4px solid var(--accent); margin-top: 24px;">
-                                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px;"><i class="fas fa-handshake" style="color: var(--accent);"></i> ¿Cómo pedir el pixel a mi supervisor?</h4>
-                                <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Si no tienes acceso a TikTok Ads Manager, pide a tu supervisor o al administrador de la cuenta:</p>
-                                <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-medium); line-height: 1.8;">
-                                    <li><strong>Acceso a Events Manager</strong> en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: var(--primary); font-weight: 600;">TikTok Events Manager</a> (o que cree el pixel y te comparta el <strong>Pixel ID</strong>).</li>
-                                    <li>El <strong>Pixel ID</strong> tiene formato tipo <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">C1234567890ABCDEF</code> (empieza con "C").</li>
-                                    <li>Para pruebas pueden crear un pixel de prueba o darte un ID de desarrollo.</li>
-                                </ol>
-                                <p style="font-size: 12px; color: var(--text-light); margin-top: 12px; margin-bottom: 0;"><strong>Ejemplo de mensaje:</strong> "Hola, necesito el Pixel ID de TikTok (Events Manager) para implementar el tracking en la web. ¿Puedes compartirlo o darme acceso a Events Manager para copiarlo?"</p>
-                            </div>
                         </div>
 
                         <!-- Instructions -->
@@ -1781,8 +1958,186 @@
             }
         }
 
+        // Lista de 14 eventos TikTok (como el demo "activar")
+        const TIKTOK_ACTIVATE_EVENTS = [
+            'ViewContent', 'ClickButton', 'Search', 'AddToWishlist',
+            'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'PlaceAnOrder',
+            'CompletePayment', 'Subscribe', 'Contact', 'SubmitForm',
+            'Download', 'CompleteRegistration'
+        ];
+
+        // Obtener nombre del pixel desde TikTok (opcional, puede fallar por CORS)
+        async function fetchPixelInfo(pixelId) {
+            try {
+                const res = await fetch(`https://analytics.tiktok.com/i18n/pixel/config.js?sdkid=${pixelId}&verifyDomain=true&lib=ttq&t=${Date.now()}`);
+                if (!res.ok) throw new Error('Not found');
+                const text = await res.text();
+                let name = null;
+                const nameMatch = text.match(/"pixel_name"\s*:\s*"([^"]+)"/);
+                if (nameMatch) name = nameMatch[1];
+                if (!name) {
+                    const displayMatch = text.match(/"display_name"\s*:\s*"([^"]+)"/);
+                    if (displayMatch) name = displayMatch[1];
+                }
+                if (!name) {
+                    const anyName = text.match(/"name"\s*:\s*"([^"]+)"/);
+                    if (anyName) name = anyName[1];
+                }
+                if (text.includes(pixelId) || text.length > 200) {
+                    return { name: name || 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
+                }
+            } catch (e) {}
+            return { name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
+        }
+
+        // Conectar pixel: cargar en página y actualizar card
+        async function connectPixel() {
+            const pixelId = document.getElementById('ttPixelId').value.trim();
+            if (!pixelId) {
+                alert('Ingresa tu Pixel ID de TikTok (ej: C1234567890ABCDEF).');
+                return;
+            }
+            if (pixelId.length < 5) {
+                alert('El Pixel ID parece inválido. Verifica que sea correcto.');
+                return;
+            }
+
+            const card = document.getElementById('pixelDisplayCard');
+            const nameEl = document.getElementById('pixelDisplayName');
+            const idEl = document.getElementById('pixelDisplayId');
+            const statusEl = document.getElementById('pixelDisplayStatus');
+            const btnConnect = document.getElementById('btnConnectPixel');
+            const btnActivate = document.getElementById('btnActivateEvents');
+
+            card.classList.remove('connected');
+            nameEl.textContent = 'Conectando...';
+            idEl.textContent = pixelId;
+            statusEl.textContent = 'Verificando';
+            if (btnConnect) btnConnect.disabled = true;
+
+            try {
+                const info = await fetchPixelInfo(pixelId);
+
+                // Quitar pixel anterior
+                const oldScript = document.querySelector('script[src*="analytics.tiktok.com"]');
+                if (oldScript) oldScript.remove();
+                if (window.ttq) delete window.ttq;
+
+                // Cargar TikTok Pixel
+                !function (w, d, t) {
+                    w.TiktokAnalyticsObject = t;
+                    var ttq = w[t] = w[t] || [];
+                    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+                    ttq.setAndDefer = function (t, e) { t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } };
+                    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+                    ttq.instance = function (t) { for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]); return e };
+                    ttq.load = function (e, n) {
+                        var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+                        ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = i;
+                        ttq._t = ttq._t || {}; ttq._t[e] = +new Date;
+                        ttq._o = ttq._o || {}; ttq._o[e] = n || {};
+                        var o = document.createElement("script");
+                        o.type = "text/javascript"; o.async = !0; o.id = "ttPixelScript";
+                        o.src = i + "?sdkid=" + e + "&lib=" + t;
+                        var a = document.getElementsByTagName("script")[0];
+                        a.parentNode.insertBefore(o, a);
+                    };
+                    ttq.load(pixelId);
+                    ttq.page();
+                }(window, document, 'ttq');
+
+                window.currentTestPixelId = pixelId;
+                window.currentTestPlatform = 'tiktok';
+                window.pixelActivateName = info.name;
+
+                card.classList.add('connected');
+                nameEl.textContent = info.name;
+                idEl.textContent = pixelId;
+                statusEl.textContent = 'Conectado';
+                if (btnActivate) btnActivate.disabled = false;
+                document.getElementById('progressActivateSection').classList.remove('show');
+                document.getElementById('successActivateMsg').classList.remove('show');
+                document.getElementById('progressActivateBar').style.width = '0%';
+                document.getElementById('progressActivateBar').classList.remove('done');
+
+                localStorage.setItem('ttPixelId', pixelId);
+            } catch (err) {
+                nameEl.textContent = 'Error de conexión';
+                statusEl.textContent = 'No encontrado';
+                idEl.textContent = pixelId;
+            }
+            if (btnConnect) btnConnect.disabled = false;
+        }
+
+        // Activar 14 eventos en secuencia (como el demo)
+        function fireAllActivateEvents() {
+            if (!window.currentTestPixelId || typeof ttq === 'undefined') {
+                alert('Primero conecta el pixel con el botón "Conectar".');
+                return;
+            }
+
+            const progressSection = document.getElementById('progressActivateSection');
+            const progressBar = document.getElementById('progressActivateBar');
+            const currentEvent = document.getElementById('currentActivateEvent');
+            const progressCount = document.getElementById('progressActivateCount');
+            const successMsg = document.getElementById('successActivateMsg');
+            const successText = document.getElementById('successActivateText');
+            const btnActivate = document.getElementById('btnActivateEvents');
+
+            progressSection.classList.add('show');
+            successMsg.classList.remove('show');
+            progressBar.classList.remove('done');
+            progressBar.style.width = '0%';
+            btnActivate.disabled = true;
+
+            const params = { value: 0, currency: 'USD', content_id: 'test', content_type: 'product' };
+            const total = TIKTOK_ACTIVATE_EVENTS.length;
+            let completed = 0;
+
+            TIKTOK_ACTIVATE_EVENTS.forEach((eventName, i) => {
+                setTimeout(() => {
+                    try { ttq.track(eventName, params); } catch (e) {}
+                    completed++;
+                    const pct = (completed / total) * 100;
+                    progressBar.style.width = pct + '%';
+                    currentEvent.textContent = eventName;
+                    progressCount.textContent = completed + '/' + total;
+
+                    if (completed === total) {
+                        setTimeout(() => {
+                            progressBar.classList.add('done');
+                            currentEvent.textContent = 'Completado';
+                            successText.textContent = '14 eventos enviados a ' + (window.pixelActivateName || 'TikTok');
+                            successMsg.classList.add('show');
+                            btnActivate.disabled = false;
+                        }, 200);
+                    }
+                }, i * 120);
+            });
+        }
+
         // Initialize app when DOM is ready (solo TikTok)
         function initializeApp() {
+            // Conectar pixel
+            const btnConnect = document.getElementById('btnConnectPixel');
+            if (btnConnect) {
+                btnConnect.addEventListener('click', connectPixel);
+            }
+            var ttInput = document.getElementById('ttPixelId');
+            if (ttInput) ttInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') connectPixel();
+            });
+
+            // Activar 14 eventos
+            const btnActivate = document.getElementById('btnActivateEvents');
+            if (btnActivate) {
+                btnActivate.addEventListener('click', fireAllActivateEvents);
+            }
+
+            // Cargar Pixel ID guardado
+            const saved = localStorage.getItem('ttPixelId');
+            if (saved && ttInput) ttInput.value = saved;
+
             // Generate TikTok Pixel Code
             const generateTtBtn = document.getElementById('generateTtCode');
             if (generateTtBtn) {
