@@ -1685,8 +1685,8 @@
                     
                     if (event === 'CompletePayment') {
                         eventsCode += `
-// Ejemplo con valor:
-// ttq.track('CompletePayment', {value: 99.99, currency: 'USD'});`;
+// Ejemplo con valor (recomendado: incluir email y phone para mejor atribución):
+// ttq.track('CompletePayment', {value: 99.99, currency: 'USD', email: 'cliente@email.com', phone: '+34...'});`;
                     } else if (event === 'ViewContent') {
                         eventsCode += `
 // Ejemplo con datos:
@@ -2090,7 +2090,7 @@
             progressBar.style.width = '0%';
             btnActivate.disabled = true;
 
-            const params = { value: 0, currency: 'USD', content_id: 'test', content_type: 'product' };
+            const params = { value: 0, currency: 'USD', content_id: 'test', content_type: 'product', email: 'test@example.com', phone: '+1234567890' };
             const total = TIKTOK_ACTIVATE_EVENTS.length;
             let completed = 0;
 
@@ -2236,8 +2236,18 @@
             }
         }
 
-        // Instalar TikTok Pixel en la página actual
+        // Instalar TikTok Pixel en la página actual (evita duplicado si ya está cargado)
         function installPixelOnPage(platform, pixelId) {
+            // Si el mismo pixel ya está cargado, solo mostrar la sección de prueba (evita "Duplicate Pixel ID")
+            if (window.currentTestPixelId === pixelId && typeof ttq !== 'undefined') {
+                document.getElementById('testSection').style.display = 'block';
+                document.getElementById('pixelInfo').style.display = 'block';
+                document.getElementById('infoPixelId').textContent = pixelId;
+                document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
+                updatePixelStatus('active', 'Conectado y funcionando');
+                return;
+            }
+
             const oldScript = document.querySelector('script[src*="analytics.tiktok.com"]');
             if (oldScript) {
                 document.querySelectorAll('script[src*="analytics.tiktok.com"]').forEach(s => s.remove());
@@ -2293,7 +2303,7 @@
                 } else if (eventName === 'PlaceAnOrder') {
                     eventData = { value: 99.99, currency: 'USD' };
                 } else if (eventName === 'CompletePayment') {
-                    eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now() };
+                    eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now(), email: 'test@example.com', phone: '+1234567890' };
                 } else if (eventName === 'SubmitForm') {
                     eventData = { content_name: 'Formulario de Contacto' };
                 }
