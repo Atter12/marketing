@@ -719,6 +719,10 @@
         .pixel-display-card.connected .pixel-card-status {
             background: #d1fae5; color: #065f46;
         }
+        .pixel-display-card.loading {
+            opacity: 0.85;
+            pointer-events: none;
+        }
         /* Activar eventos: botón y progreso */
         .btn-activate-events {
             width: 100%;
@@ -1390,6 +1394,9 @@
                                 <i class="fas fa-check-circle"></i>
                                 Verificar Instalación en Esta Página
                             </button>
+                            <p style="grid-column: 1 / -1; font-size: 12px; color: var(--text-medium); margin: 8px 0 0 0;">
+                                <i class="fas fa-info-circle"></i> Este código es para pegar en el <code>&lt;head&gt;</code> de tu <strong>página HTML</strong> o en la plantilla de tu web. <strong>No</strong> lo ejecutes en Node.js ni en un archivo .js.
+                            </p>
                         </div>
 
                         <!-- Verification & Testing Section -->
@@ -1847,7 +1854,7 @@
             'Download', 'CompleteRegistration'
         ];
 
-        // Obtener nombre del pixel desde TikTok (opcional, puede fallar por CORS)
+        // Obtener nombre del pixel desde TikTok (replicado del demo: config.js + fallback si CORS)
         async function fetchPixelInfo(pixelId) {
             try {
                 const res = await fetch(`https://analytics.tiktok.com/i18n/pixel/config.js?sdkid=${pixelId}&verifyDomain=true&lib=ttq&t=${Date.now()}`);
@@ -1861,6 +1868,10 @@
                     if (displayMatch) name = displayMatch[1];
                 }
                 if (!name) {
+                    const advMatch = text.match(/"advertiser_name"\s*:\s*"([^"]+)"/);
+                    if (advMatch) name = advMatch[1];
+                }
+                if (!name) {
                     const anyName = text.match(/"name"\s*:\s*"([^"]+)"/);
                     if (anyName) name = anyName[1];
                 }
@@ -1868,7 +1879,26 @@
                     return { name: name || 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
                 }
             } catch (e) {}
-            return { name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
+            // Fallback como el demo: si config.js falla (CORS), verificar cargando events.js
+            return new Promise(function (resolve) {
+                var script = document.createElement('script');
+                script.src = 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=' + pixelId + '&lib=ttq&t=' + Date.now();
+                var timeout = setTimeout(function () {
+                    script.remove();
+                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
+                }, 3000);
+                script.onload = function () {
+                    clearTimeout(timeout);
+                    script.remove();
+                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
+                };
+                script.onerror = function () {
+                    clearTimeout(timeout);
+                    script.remove();
+                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
+                };
+                document.head.appendChild(script);
+            });
         }
 
         // Conectar pixel: cargar en página y actualizar card
@@ -1891,6 +1921,7 @@
             const btnActivate = document.getElementById('btnActivateEvents');
 
             card.classList.remove('connected');
+            card.classList.add('loading');
             nameEl.textContent = 'Conectando...';
             idEl.textContent = pixelId;
             statusEl.textContent = 'Verificando';
@@ -1899,9 +1930,10 @@
             try {
                 const info = await fetchPixelInfo(pixelId);
 
-                // Quitar pixel anterior
-                const oldScript = document.querySelector('script[src*="analytics.tiktok.com"]');
+                // Quitar pixel anterior (por id como el demo, luego por src)
+                var oldScript = document.getElementById('ttPixelScript');
                 if (oldScript) oldScript.remove();
+                document.querySelectorAll('script[src*="analytics.tiktok.com"]').forEach(function(s) { s.remove(); });
                 if (window.ttq) delete window.ttq;
 
                 // Cargar TikTok Pixel
@@ -1931,6 +1963,7 @@
                 window.currentTestPlatform = 'tiktok';
                 window.pixelActivateName = info.name;
 
+                card.classList.remove('loading');
                 card.classList.add('connected');
                 nameEl.textContent = info.name;
                 idEl.textContent = pixelId;
@@ -1943,6 +1976,7 @@
 
                 localStorage.setItem('ttPixelId', pixelId);
             } catch (err) {
+                card.classList.remove('loading');
                 nameEl.textContent = 'Error de conexión';
                 statusEl.textContent = 'No encontrado';
                 idEl.textContent = pixelId;
@@ -1988,7 +2022,7 @@
                         setTimeout(() => {
                             progressBar.classList.add('done');
                             currentEvent.textContent = 'Completado';
-                            successText.textContent = '14 eventos enviados a ' + (window.pixelActivateName || 'TikTok');
+                            successText.textContent = '14 eventos enviados a ' + (window.pixelActivateName || window.currentTestPixelId || 'TikTok');
                             successMsg.classList.add('show');
                             btnActivate.disabled = false;
                         }, 200);
@@ -2115,6 +2149,9 @@
                     installPixelOnPage('tiktok', pixelId);
                 });
             }
+
+            // Cargar lista de pixels guardados al abrir la página
+            renderSavedPixels();
         }
 
         // Instalar TikTok Pixel en la página actual (evita duplicado si ya está cargado)
@@ -2125,6 +2162,8 @@
                 document.getElementById('pixelInfo').style.display = 'block';
                 document.getElementById('infoPixelId').textContent = pixelId;
                 document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
+                var infoStatusEl = document.getElementById('infoStatus');
+                if (infoStatusEl) { infoStatusEl.textContent = '✅ Activo'; infoStatusEl.style.color = 'var(--accent)'; }
                 updatePixelStatus('active', 'Conectado y funcionando');
                 return;
             }
@@ -2148,6 +2187,8 @@
             document.getElementById('pixelInfo').style.display = 'block';
             document.getElementById('infoPixelId').textContent = pixelId;
             document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
+            var infoStatusEl = document.getElementById('infoStatus');
+            if (infoStatusEl) { infoStatusEl.textContent = '✅ Activo'; infoStatusEl.style.color = 'var(--accent)'; }
 
             setTimeout(() => {
                 verifyPixelStatus();
