@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Activación de Pixel | Configura Facebook, TikTok y Google Ads | EcomTools</title>
-    <meta name="description" content="Activa y configura píxeles de Facebook, TikTok y Google en tus páginas. Genera el código de tracking listo para copiar e implementar.">
+    <title>TikTok Pixel Activator | Genera e instala tu pixel en minutos | EcomTools</title>
+    <meta name="description" content="Activa tu TikTok Pixel: genera el código de tracking, configura eventos (PageView, ViewContent, CompletePayment) y verifica la instalación. Fácil y listo para copiar.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -1034,11 +1034,11 @@
     <section class="hero-section">
         <div class="container">
             <div class="hero-badge">
-                <i class="fas fa-code"></i>
-                Activación de Pixel • Fácil y Rápido
+                <i class="fab fa-tiktok"></i>
+                TikTok Pixel • Fácil y en minutos
             </div>
-            <h1>Activación de <span>Pixel</span></h1>
-            <p>Genera el código de tracking para Facebook, TikTok y Google. Configura eventos de conversión y optimiza tus campañas publicitarias.</p>
+            <h1>TikTok <span>Pixel Activator</span></h1>
+            <p>Genera el código de tu TikTok Pixel, elige los eventos a trackear y cópialo a tu web. Incluye verificación en vivo y lista de pixels guardados.</p>
         </div>
     </section>
 
@@ -1046,100 +1046,11 @@
     <section class="platform-section">
         <div class="container">
             <div class="platform-container">
-                <!-- Platform Tabs -->
-                <div class="platform-tabs">
-                    <button class="platform-tab active" data-platform="facebook">
-                        <i class="fab fa-facebook-f"></i>
-                        Facebook Pixel
-                    </button>
-                    <button class="platform-tab" data-platform="tiktok">
-                        <i class="fab fa-tiktok"></i>
-                        TikTok Pixel
-                    </button>
-                    <button class="platform-tab" data-platform="google">
-                        <i class="fab fa-google"></i>
-                        Google Tag
-                    </button>
-                </div>
-
                 <!-- Config Grid -->
                 <div class="config-grid">
-                    <!-- Configuration Card -->
+                    <!-- Configuration Card - Solo TikTok -->
                     <div class="config-card">
-                        <!-- Facebook Config -->
-                        <div class="platform-content active" id="facebook-content">
-                            <h2>
-                                <i class="fab fa-facebook-f facebook-icon"></i>
-                                Configura Facebook Pixel
-                            </h2>
-
-                            <div class="form-group">
-                                <label for="fbPixelId">Pixel ID</label>
-                                <input type="text" id="fbPixelId" placeholder="123456789012345" maxlength="20">
-                                <small>Encuentra tu Pixel ID en <a href="https://business.facebook.com/events_manager" target="_blank">Meta Events Manager</a> o usa <strong>123456789012345</strong> para pruebas</small>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="fbPixelName">Nombre del Pixel (Opcional)</label>
-                                <input type="text" id="fbPixelName" placeholder="Mi Tienda Online">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Eventos a Trackear</label>
-                                <div class="checkbox-group">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" checked data-event="PageView">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">PageView</span>
-                                            <span class="checkbox-desc">Trackea cada visita a la página</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="ViewContent">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">ViewContent</span>
-                                            <span class="checkbox-desc">Cuando ven un producto o contenido</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="AddToCart">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">AddToCart</span>
-                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="InitiateCheckout">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">InitiateCheckout</span>
-                                            <span class="checkbox-desc">Cuando inician checkout</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="Purchase">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">Purchase</span>
-                                            <span class="checkbox-desc">Cuando completan una compra</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="Lead">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">Lead</span>
-                                            <span class="checkbox-desc">Cuando envían un formulario</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button class="btn-primary" id="generateFbCode">
-                                <i class="fas fa-code"></i>
-                                Generar Código
-                            </button>
-                        </div>
-
-                        <!-- TikTok Config -->
-                        <div class="platform-content" id="tiktok-content">
+                        <div class="platform-content active" id="tiktok-content">
                             <h2>
                                 <i class="fab fa-tiktok tiktok-icon"></i>
                                 Configura TikTok Pixel
@@ -1227,104 +1138,18 @@
                                 <i class="fas fa-code"></i>
                                 Generar Código
                             </button>
-                        </div>
 
-                        <!-- Google Config -->
-                        <div class="platform-content" id="google-content">
-                            <h2>
-                                <i class="fab fa-google google-icon"></i>
-                                Configura Google Tag
-                            </h2>
-
-                            <div class="form-group">
-                                <label for="googleType">Tipo de Tag</label>
-                                <select id="googleType">
-                                    <option value="gtag">Google Analytics 4 (GA4)</option>
-                                    <option value="gtm">Google Tag Manager (GTM)</option>
-                                    <option value="ads">Google Ads Conversion</option>
-                                </select>
+                            <!-- Cómo pedir el pixel a tu supervisor -->
+                            <div class="info-box" style="background: #f0fdf4; border-left: 4px solid var(--accent); margin-top: 24px;">
+                                <h4 style="font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 10px;"><i class="fas fa-handshake" style="color: var(--accent);"></i> ¿Cómo pedir el pixel a mi supervisor?</h4>
+                                <p style="font-size: 13px; color: var(--text-medium); margin-bottom: 12px;">Si no tienes acceso a TikTok Ads Manager, pide a tu supervisor o al administrador de la cuenta:</p>
+                                <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-medium); line-height: 1.8;">
+                                    <li><strong>Acceso a Events Manager</strong> en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: var(--primary); font-weight: 600;">TikTok Events Manager</a> (o que cree el pixel y te comparta el <strong>Pixel ID</strong>).</li>
+                                    <li>El <strong>Pixel ID</strong> tiene formato tipo <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px;">C1234567890ABCDEF</code> (empieza con "C").</li>
+                                    <li>Para pruebas pueden crear un pixel de prueba o darte un ID de desarrollo.</li>
+                                </ol>
+                                <p style="font-size: 12px; color: var(--text-light); margin-top: 12px; margin-bottom: 0;"><strong>Ejemplo de mensaje:</strong> "Hola, necesito el Pixel ID de TikTok (Events Manager) para implementar el tracking en la web. ¿Puedes compartirlo o darme acceso a Events Manager para copiarlo?"</p>
                             </div>
-
-                                <div class="form-group" id="ga4Fields">
-                                <label for="ga4MeasurementId">Measurement ID (GA4)</label>
-                                <input type="text" id="ga4MeasurementId" placeholder="G-XXXXXXXXXX">
-                                <small>Encuentra tu ID en <a href="https://analytics.google.com/" target="_blank">Google Analytics</a> → Admin → Data Streams o usa <strong>G-TEST123456</strong> para pruebas</small>
-                            </div>
-
-                            <div class="form-group" id="gtmFields" style="display: none;">
-                                <label for="gtmContainerId">Container ID (GTM)</label>
-                                <input type="text" id="gtmContainerId" placeholder="GTM-XXXXXXX">
-                                <small>Encuentra tu ID en <a href="https://tagmanager.google.com/" target="_blank">Google Tag Manager</a></small>
-                            </div>
-
-                            <div class="form-group" id="adsFields" style="display: none;">
-                                <label for="adsConversionId">Conversion ID</label>
-                                <input type="text" id="adsConversionId" placeholder="AW-XXXXXXXXX">
-                                <small>Encuentra tu ID en Google Ads → Tools → Conversions</small>
-                            </div>
-
-                            <div class="form-group" id="adsLabelField" style="display: none;">
-                                <label for="adsConversionLabel">Conversion Label (Opcional)</label>
-                                <input type="text" id="adsConversionLabel" placeholder="AbCdEfGhIjK-LmN">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="googlePixelName">Nombre (Opcional)</label>
-                                <input type="text" id="googlePixelName" placeholder="Mi Analytics">
-                            </div>
-
-                            <div class="form-group" id="ga4Events">
-                                <label>Eventos GA4 a Configurar</label>
-                                <div class="checkbox-group">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" checked data-event="page_view">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">page_view</span>
-                                            <span class="checkbox-desc">Trackea cada visita (automático)</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="view_item">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">view_item</span>
-                                            <span class="checkbox-desc">Cuando ven un producto</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="add_to_cart">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">add_to_cart</span>
-                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="begin_checkout">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">begin_checkout</span>
-                                            <span class="checkbox-desc">Cuando inician checkout</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="purchase">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">purchase</span>
-                                            <span class="checkbox-desc">Cuando completan una compra</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="generate_lead">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">generate_lead</span>
-                                            <span class="checkbox-desc">Cuando envían un formulario</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <button class="btn-primary" id="generateGoogleCode">
-                                <i class="fas fa-code"></i>
-                                Generar Código
-                            </button>
                         </div>
 
                         <!-- Instructions -->
@@ -1345,7 +1170,7 @@
                                 </li>
                                 <li>
                                     <span class="step-number">4</span>
-                                    <span class="step-content"><strong>Verifica la instalación</strong> usando las herramientas de debug de cada plataforma (Meta Pixel Helper, TikTok Pixel Helper, Google Tag Assistant).</span>
+                                    <span class="step-content"><strong>Verifica la instalación</strong> con <a href="https://ads.tiktok.com/help/article?aid=10028" target="_blank" style="color: var(--primary); font-weight: 600;">TikTok Pixel Helper</a> (Chrome) o la pestaña "Test Events" en TikTok Events Manager.</span>
                                 </li>
                             </ol>
                         </div>
@@ -1370,7 +1195,7 @@
                             <div class="code-body" id="codeBody">
                                 <div class="code-placeholder">
                                     <i class="fas fa-code"></i>
-                                    <p>Configura tu pixel y haz clic en "Generar Código"</p>
+                                    <p>Ingresa tu Pixel ID de TikTok y haz clic en "Generar Código"</p>
                                 </div>
                             </div>
                         </div>
@@ -1435,14 +1260,12 @@
                                     <div>
                                         <h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0 0 8px 0;">¿Qué significa esto?</h4>
                                         <p style="font-size: 14px; color: var(--text-medium); margin: 0; line-height: 1.6;">
-                                            Cuando instalas el pixel en tu sitio web, cada acción de tus visitantes (ver producto, agregar al carrito, comprar) 
-                                            se envía automáticamente a Facebook/TikTok/Google. Esto permite a estas plataformas:
+                                            Cuando instalas el TikTok Pixel en tu sitio, cada acción (ver producto, agregar al carrito, comprar) se envía a TikTok. Así puedes:
                                         </p>
                                         <ul style="margin: 12px 0 0 0; padding-left: 20px; font-size: 14px; color: var(--text-medium); line-height: 1.8;">
-                                            <li><strong>Optimizar tus anuncios:</strong> Encuentran más personas similares a quienes compraron</li>
-                                            <li><strong>Medir resultados:</strong> Sabes exactamente cuántas ventas vienen de cada campaña</li>
-                                            <li><strong>Crear audiencias:</strong> Puedes mostrar anuncios a quienes visitaron tu sitio</li>
-                                            <li><strong>Retargeting:</strong> Recordar a quienes abandonaron el carrito</li>
+                                            <li><strong>Optimizar anuncios:</strong> TikTok encuentra más usuarios similares a quienes compraron</li>
+                                            <li><strong>Medir conversiones:</strong> Sabes cuántas ventas vienen de cada campaña</li>
+                                            <li><strong>Audiencias y retargeting:</strong> Mostrar anuncios a quienes visitaron tu web o abandonaron el carrito</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -1472,7 +1295,7 @@
                                             </div>
                                         </button>
                                         <div class="event-description" style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: var(--text-medium); display: none;">
-                                            <strong>Cuándo usar:</strong> Cuando alguien ve una página de producto. Ayuda a Facebook a entender qué productos interesan a tus visitantes.
+                                            <strong>Cuándo usar:</strong> En páginas de producto. TikTok usa este evento para optimizar y audiencias.
                                         </div>
                                     </div>
 
@@ -1490,61 +1313,61 @@
                                             </div>
                                         </button>
                                         <div class="event-description" style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: var(--text-medium); display: none;">
-                                            <strong>Cuándo usar:</strong> Cuando alguien agrega un producto al carrito. Permite crear audiencias de "carrito abandonado" para retargeting.
+                                            <strong>Cuándo usar:</strong> Al hacer clic en "Agregar al carrito". Ideal para audiencias de carrito abandonado.
                                         </div>
                                     </div>
 
-                                    <div class="event-card" data-event="InitiateCheckout">
-                                        <button class="test-event-btn" onclick="testPixelEvent('InitiateCheckout')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
+                                    <div class="event-card" data-event="PlaceAnOrder">
+                                        <button class="test-event-btn" onclick="testPixelEvent('PlaceAnOrder')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <div style="width: 40px; height: 40px; background: #ddd6fe; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #8b5cf6;">
                                                     <i class="fas fa-credit-card"></i>
                                                 </div>
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">InitiateCheckout</div>
-                                                    <div style="font-size: 11px; color: var(--text-medium); margin-top: 2px;">Iniciar checkout</div>
+                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">PlaceAnOrder</div>
+                                                    <div style="font-size: 11px; color: var(--text-medium); margin-top: 2px;">Iniciar pedido</div>
                                                 </div>
                                                 <span class="event-success-icon" style="display: none; color: var(--accent); font-size: 18px;">✓</span>
                                             </div>
                                         </button>
                                         <div class="event-description" style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: var(--text-medium); display: none;">
-                                            <strong>Cuándo usar:</strong> Cuando alguien inicia el proceso de pago. Ayuda a optimizar campañas para conversiones de checkout.
+                                            <strong>Cuándo usar:</strong> Cuando el usuario inicia el proceso de checkout en TikTok Ads.
                                         </div>
                                     </div>
 
-                                    <div class="event-card" data-event="Purchase">
-                                        <button class="test-event-btn" onclick="testPixelEvent('Purchase')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
+                                    <div class="event-card" data-event="CompletePayment">
+                                        <button class="test-event-btn" onclick="testPixelEvent('CompletePayment')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <div style="width: 40px; height: 40px; background: #d1fae5; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent);">
                                                     <i class="fas fa-check-circle"></i>
                                                 </div>
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">Purchase</div>
+                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">CompletePayment</div>
                                                     <div style="font-size: 11px; color: var(--text-medium); margin-top: 2px;">Compra completada</div>
                                                 </div>
                                                 <span class="event-success-icon" style="display: none; color: var(--accent); font-size: 18px;">✓</span>
                                             </div>
                                         </button>
                                         <div class="event-description" style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: var(--text-medium); display: none;">
-                                            <strong>Cuándo usar:</strong> Cuando se completa una compra. Es el evento más importante para optimizar campañas y medir ROI.
+                                            <strong>Cuándo usar:</strong> En la página de confirmación de compra. Evento clave para optimización y ROI.
                                         </div>
                                     </div>
 
-                                    <div class="event-card" data-event="Lead">
-                                        <button class="test-event-btn" onclick="testPixelEvent('Lead')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
+                                    <div class="event-card" data-event="SubmitForm">
+                                        <button class="test-event-btn" onclick="testPixelEvent('SubmitForm')" style="width: 100%; padding: 16px; background: white; border: 2px solid var(--border); border-radius: 10px; cursor: pointer; text-align: left; transition: all 0.3s; position: relative;">
                                             <div style="display: flex; align-items: center; gap: 12px;">
                                                 <div style="width: 40px; height: 40px; background: #fce7f3; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #ec4899;">
-                                                    <i class="fas fa-user-plus"></i>
+                                                    <i class="fas fa-file-alt"></i>
                                                 </div>
                                                 <div style="flex: 1;">
-                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">Lead</div>
+                                                    <div style="font-weight: 700; color: var(--text-dark); font-size: 14px;">SubmitForm</div>
                                                     <div style="font-size: 11px; color: var(--text-medium); margin-top: 2px;">Formulario enviado</div>
                                                 </div>
                                                 <span class="event-success-icon" style="display: none; color: var(--accent); font-size: 18px;">✓</span>
                                             </div>
                                         </button>
                                         <div class="event-description" style="margin-top: 8px; padding: 10px; background: #f8f9fa; border-radius: 6px; font-size: 12px; color: var(--text-medium); display: none;">
-                                            <strong>Cuándo usar:</strong> Cuando alguien completa un formulario de contacto, suscripción o descarga. Ideal para negocios B2B o servicios.
+                                            <strong>Cuándo usar:</strong> Cuando envían un formulario (contacto, registro, lead). Muy útil para conversiones.
                                         </div>
                                     </div>
                                 </div>
@@ -1591,28 +1414,28 @@
                                         <ul style="margin-top: 6px; padding-left: 20px;">
                                             <li><code>ViewContent</code> → En páginas de producto</li>
                                             <li><code>AddToCart</code> → Al hacer clic en "Agregar al carrito"</li>
-                                            <li><code>Purchase</code> → En la página de confirmación de compra</li>
-                                            <li><code>Lead</code> → Al enviar formularios</li>
+                                            <li><code>CompletePayment</code> → En la página de confirmación de compra</li>
+                                            <li><code>SubmitForm</code> → Al enviar formularios</li>
                                         </ul>
                                     </li>
                                     <li style="margin-bottom: 12px;">
-                                        <strong style="color: var(--text-dark);">Verifica en tu sitio (opcional):</strong> Instala <a href="https://chrome.google.com/webstore/detail/facebook-pixel-helper/fdgfkebogiimcoedlicjlajpkdmockpc" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">Meta Pixel Helper</a> para ver eventos en tiempo real mientras navegas tu sitio.
+                                        <strong style="color: var(--text-dark);">Verifica en tu sitio:</strong> Usa <a href="https://ads.tiktok.com/help/article?aid=10028" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">TikTok Pixel Helper</a> (Chrome) para ver eventos en tiempo real.
                                     </li>
                                     <li>
-                                        <strong style="color: var(--text-dark);">Monitorea resultados:</strong> Ve a <a href="https://business.facebook.com/events_manager" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">Meta Events Manager</a> → Test Events para verificar que los eventos lleguen correctamente desde tu sitio web.
+                                        <strong style="color: var(--text-dark);">Monitorea resultados:</strong> En <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">TikTok Events Manager</a> → tu pixel → Test Events o Diagnostics.
                                     </li>
                                 </ol>
                             </div>
                         </div>
 
                         <div class="info-box warning" style="margin-top: 20px;">
-                            <p><i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> El código base debe ir en el <code>&lt;head&gt;</code> de tu página. Los eventos específicos se disparan con JavaScript cuando ocurre la acción.</p>
+                            <p><i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> Pega el código base justo después del <code>&lt;head&gt;</code>. Los eventos (ViewContent, CompletePayment, etc.) se disparan con JavaScript en cada acción.</p>
                         </div>
 
                         <!-- Saved Pixels -->
                         <div class="saved-pixels-section" id="savedPixelsSection">
                             <div class="saved-pixels-header">
-                                <h3>Pixels Guardados</h3>
+                                <h3>Pixels TikTok guardados</h3>
                             </div>
                             <div class="pixel-list" id="pixelList">
                                 <div class="empty-pixels">
@@ -1668,57 +1491,10 @@
             
             codeBody.innerHTML = `<div class="code-placeholder">
                 <i class="fas fa-code"></i>
-                <p>Configura tu pixel y haz clic en "Generar Código"</p>
+                <p>Ingresa tu Pixel ID de TikTok y haz clic en "Generar Código"</p>
             </div>`;
             codeActions.style.display = 'none';
             window.currentGeneratedCode = null;
-        }
-
-        // Generate Facebook Pixel Code
-        function generateFacebookPixelCode(pixelId, events) {
-            let eventsCode = '';
-            
-            events.forEach(event => {
-                if (event !== 'PageView') {
-                    eventsCode += `\n// Dispara este evento cuando ocurra la acción correspondiente:
-// fbq('track', '${event}');`;
-                    
-                    if (event === 'Purchase') {
-                        eventsCode += `
-// Ejemplo con valor:
-// fbq('track', 'Purchase', {value: 99.99, currency: 'USD'});`;
-                    } else if (event === 'ViewContent') {
-                        eventsCode += `
-// Ejemplo con datos del producto:
-// fbq('track', 'ViewContent', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
-                    } else if (event === 'AddToCart') {
-                        eventsCode += `
-// Ejemplo:
-// fbq('track', 'AddToCart', {content_name: 'Producto X', content_ids: ['123'], value: 49.99, currency: 'USD'});`;
-                    }
-                }
-            });
-
-            // Código oficial de Facebook Pixel - EXACTO como lo proporciona Meta
-            const baseCode = '<!-- Facebook Pixel Code -->\n' +
-'<' + 'script>\n' +
-'!function(f,b,e,v,n,t,s)\n' +
-'{if(f.fbq)return;n=f.fbq=function(){n.callMethod?\n' +
-'n.callMethod.apply(n,arguments):n.queue.push(arguments)};\n' +
-'if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version=\'2.0\';\n' +
-'n.queue=[];t=b.createElement(e);t.async=!0;\n' +
-'t.src=v;s=b.getElementsByTagName(e)[0];\n' +
-'s.parentNode.insertBefore(t,s)}(window, document,\'script\',\n' +
-'\'https://connect.facebook.net/en_US/fbevents.js\');\n' +
-'fbq(\'init\', \'' + pixelId + '\');\n' +
-'fbq(\'track\', \'PageView\');\n' +
-'</' + 'script>\n' +
-'<noscript><img height="1" width="1" style="display:none"\n' +
-'src="https://www.facebook.com/tr?id=' + pixelId + '&ev=PageView&noscript=1"\n' +
-'/></noscript>\n' +
-'<!-- End Facebook Pixel Code -->';
-            
-            return baseCode + eventsCode;
         }
 
         // Generate TikTok Pixel Code
@@ -1754,93 +1530,7 @@
             return baseCode + eventsCode;
         }
 
-        // Generate GA4 Code
-        function generateGA4Code(measurementId, events) {
-            let eventsCode = '';
-            
-            events.forEach(event => {
-                if (event !== 'page_view') {
-                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
-// gtag('event', '${event}');`;
-                    
-                    if (event === 'purchase') {
-                        eventsCode += `
-// Ejemplo con valor:
-// gtag('event', 'purchase', {
-//   transaction_id: 'T12345',
-//   value: 99.99,
-//   currency: 'USD',
-//   items: [{item_id: '123', item_name: 'Producto X', price: 99.99}]
-// });`;
-                    } else if (event === 'view_item') {
-                        eventsCode += `
-// Ejemplo:
-// gtag('event', 'view_item', {
-//   currency: 'USD',
-//   value: 49.99,
-//   items: [{item_id: '123', item_name: 'Producto X', price: 49.99}]
-// });`;
-                    }
-                }
-            });
-
-            return '<!-- Google Analytics 4 (GA4) -->\n' +
-'<' + 'script async src="https://www.googletagmanager.com/gtag/js?id=' + measurementId + '"></' + 'script>\n' +
-'<' + 'script>\n' +
-'  window.dataLayer = window.dataLayer || [];\n' +
-'  function gtag(){dataLayer.push(arguments);}\n' +
-'  gtag(\'js\', new Date());\n' +
-'  gtag(\'config\', \'' + measurementId + '\');\n' +
-'</' + 'script>\n' +
-'<!-- End Google Analytics 4 -->\n' +
-eventsCode;
-        }
-
-        // Generate GTM Code
-        function generateGTMCode(containerId) {
-            return '<!-- Google Tag Manager -->\n' +
-'<' + 'script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({\'gtm.start\':\n' +
-'new Date().getTime(),event:\'gtm.js\'});var f=d.getElementsByTagName(s)[0],\n' +
-'j=d.createElement(s),dl=l!=\'dataLayer\'?\'&l=\'+l:\'\';j.async=true;j.src=\n' +
-'\'https://www.googletagmanager.com/gtm.js?id=\'+i+dl;f.parentNode.insertBefore(j,f);\n' +
-'})(window,document,\'script\',\'dataLayer\',\'' + containerId + '\');</' + 'script>\n' +
-'<!-- End Google Tag Manager -->\n\n' +
-'<!-- Google Tag Manager (noscript) - Pegar después de <body> -->\n' +
-'<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=' + containerId + '"\n' +
-'height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>\n' +
-'<!-- End Google Tag Manager (noscript) -->\n\n' +
-'// Para disparar eventos personalizados usa dataLayer:\n' +
-'// dataLayer.push({\'event\': \'mi_evento_personalizado\'});';
-        }
-
-        // Generate Google Ads Conversion Code
-        function generateGoogleAdsCode(conversionId, conversionLabel) {
-            let conversionCode = '';
-            
-            if (conversionLabel) {
-                conversionCode = `
-// Dispara la conversión cuando se complete una acción (ej: compra):
-// gtag('event', 'conversion', {
-//   'send_to': '${conversionId}/${conversionLabel}',
-//   'value': 99.99,
-//   'currency': 'USD',
-//   'transaction_id': 'ORDER-123'
-// });`;
-            }
-
-            return '<!-- Google Ads Conversion Tracking -->\n' +
-'<' + 'script async src="https://www.googletagmanager.com/gtag/js?id=' + conversionId + '"></' + 'script>\n' +
-'<' + 'script>\n' +
-'  window.dataLayer = window.dataLayer || [];\n' +
-'  function gtag(){dataLayer.push(arguments);}\n' +
-'  gtag(\'js\', new Date());\n' +
-'  gtag(\'config\', \'' + conversionId + '\');\n' +
-'</' + 'script>\n' +
-'<!-- End Google Ads Conversion Tracking -->\n' +
-conversionCode;
-        }
-
-        // Save pixel to Supabase
+        // Save pixel to Supabase (solo TikTok)
         async function savePixel(platform, pixelId, name, events = []) {
             try {
                 const response = await fetch('/api/pixel-activator/save', {
@@ -1909,7 +1599,7 @@ conversionCode;
             </div>`;
 
             try {
-                const response = await fetch('/api/pixel-activator/list');
+                const response = await fetch('/api/pixel-activator/list?platform=tiktok');
                 const result = await response.json();
 
                 let pixels = [];
@@ -1929,14 +1619,10 @@ conversionCode;
                     return;
                 }
 
-                const platformIcons = {
-                    facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
-                    tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' },
-                    google: { icon: 'fab fa-google', class: 'google-icon' }
-                };
+                const platformIcons = { tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' } };
 
                 pixelList.innerHTML = pixels.map(pixel => {
-                    const iconData = platformIcons[pixel.platform] || { icon: 'fas fa-code', class: '' };
+                    const iconData = platformIcons[pixel.platform] || { icon: 'fab fa-tiktok', class: 'tiktok-icon' };
                     return `<div class="pixel-item" data-id="${pixel.id}">
                         <div class="pixel-item-icon ${iconData.class}">
                             <i class="${iconData.icon}"></i>
@@ -1992,14 +1678,10 @@ conversionCode;
             const pixelList = document.getElementById('pixelList');
             if (!pixelList) return;
 
-            const platformIcons = {
-                facebook: { icon: 'fab fa-facebook-f', class: 'facebook-icon' },
-                tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' },
-                google: { icon: 'fab fa-google', class: 'google-icon' }
-            };
+            const platformIcons = { tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' } };
 
             pixelList.innerHTML = pixels.map(pixel => {
-                const iconData = platformIcons[pixel.platform] || { icon: 'fas fa-code', class: '' };
+                const iconData = platformIcons[pixel.platform] || { icon: 'fab fa-tiktok', class: 'tiktok-icon' };
                 return `<div class="pixel-item" data-id="${pixel.id}">
                     <div class="pixel-item-icon ${iconData.class}">
                         <i class="${iconData.icon}"></i>
@@ -2057,51 +1739,11 @@ conversionCode;
                     }
                 }
 
-                // Switch to correct tab
-                const tab = document.querySelector(`.platform-tab[data-platform="${pixel.platform}"]`);
-                if (tab) tab.click();
-
-                // Fill in the pixel ID
-                setTimeout(() => {
-                    switch(pixel.platform) {
-                        case 'facebook':
-                            const fbId = document.getElementById('fbPixelId');
-                            const fbName = document.getElementById('fbPixelName');
-                            if (fbId) fbId.value = pixel.pixelId;
-                            if (fbName) fbName.value = pixel.name || '';
-                            break;
-                        case 'tiktok':
-                            const ttId = document.getElementById('ttPixelId');
-                            const ttName = document.getElementById('ttPixelName');
-                            if (ttId) ttId.value = pixel.pixelId;
-                            if (ttName) ttName.value = pixel.name || '';
-                            break;
-                        case 'google':
-                            const googleType = document.getElementById('googleType');
-                            if (googleType) {
-                                // Detect type from pixel ID
-                                if (pixel.pixelId.startsWith('G-')) {
-                                    googleType.value = 'gtag';
-                                    googleType.dispatchEvent(new Event('change'));
-                                    const ga4Id = document.getElementById('ga4MeasurementId');
-                                    if (ga4Id) ga4Id.value = pixel.pixelId;
-                                } else if (pixel.pixelId.startsWith('GTM-')) {
-                                    googleType.value = 'gtm';
-                                    googleType.dispatchEvent(new Event('change'));
-                                    const gtmId = document.getElementById('gtmContainerId');
-                                    if (gtmId) gtmId.value = pixel.pixelId;
-                                } else if (pixel.pixelId.startsWith('AW-')) {
-                                    googleType.value = 'ads';
-                                    googleType.dispatchEvent(new Event('change'));
-                                    const adsId = document.getElementById('adsConversionId');
-                                    if (adsId) adsId.value = pixel.pixelId;
-                                }
-                            }
-                            const googleName = document.getElementById('googlePixelName');
-                            if (googleName) googleName.value = pixel.name || '';
-                            break;
-                    }
-                }, 100);
+                // Rellenar formulario TikTok
+                const ttId = document.getElementById('ttPixelId');
+                const ttName = document.getElementById('ttPixelName');
+                if (ttId) ttId.value = pixel.pixelId;
+                if (ttName) ttName.value = pixel.name || '';
             } catch (error) {
                 console.error('Error loading pixel:', error);
                 alert('Error al cargar el pixel');
@@ -2139,80 +1781,8 @@ conversionCode;
             }
         }
 
-        // Initialize app when DOM is ready
+        // Initialize app when DOM is ready (solo TikTok)
         function initializeApp() {
-            // Platform tab switching
-            const platformTabs = document.querySelectorAll('.platform-tab');
-            const platformContents = document.querySelectorAll('.platform-content');
-
-            platformTabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const platform = this.dataset.platform;
-
-                    // Update tabs
-                    platformTabs.forEach(t => t.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Update content
-                    platformContents.forEach(c => c.classList.remove('active'));
-                    const targetContent = document.getElementById(platform + '-content');
-                    if (targetContent) {
-                        targetContent.classList.add('active');
-                    }
-
-                    // Clear code preview
-                    clearCodePreview();
-                });
-            });
-
-            // Google type switching
-            const googleType = document.getElementById('googleType');
-            if (googleType) {
-                const ga4Fields = document.getElementById('ga4Fields');
-                const gtmFields = document.getElementById('gtmFields');
-                const adsFields = document.getElementById('adsFields');
-                const adsLabelField = document.getElementById('adsLabelField');
-                const ga4Events = document.getElementById('ga4Events');
-
-                googleType.addEventListener('change', function() {
-                    const type = this.value;
-                    
-                    if (ga4Fields) ga4Fields.style.display = type === 'gtag' ? 'block' : 'none';
-                    if (gtmFields) gtmFields.style.display = type === 'gtm' ? 'block' : 'none';
-                    if (adsFields) adsFields.style.display = type === 'ads' ? 'block' : 'none';
-                    if (adsLabelField) adsLabelField.style.display = type === 'ads' ? 'block' : 'none';
-                    if (ga4Events) ga4Events.style.display = type === 'gtag' ? 'block' : 'none';
-                });
-            }
-
-            // Generate Facebook Pixel Code
-            const generateFbBtn = document.getElementById('generateFbCode');
-            if (generateFbBtn) {
-                generateFbBtn.addEventListener('click', function() {
-                    let pixelId = document.getElementById('fbPixelId').value.trim();
-                    
-                    if (!pixelId) {
-                        alert('Por favor, ingresa tu Pixel ID de Facebook\n\n💡 Tip: Puedes obtenerlo en:\nhttps://business.facebook.com/events_manager\n\nO usa un ID de prueba: 123456789012345');
-                        return;
-                    }
-
-                    // Permitir IDs de prueba comunes
-                    const testIds = ['123456789012345', '1234567890123456', 'test123456789012'];
-                    const isTestId = testIds.includes(pixelId);
-                    
-                    if (!isTestId && !/^\d{15,16}$/.test(pixelId)) {
-                        alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos\n\n💡 Tip: Puedes obtenerlo en:\nhttps://business.facebook.com/events_manager');
-                        return;
-                    }
-
-                    const events = getSelectedEvents('#facebook-content');
-                    const code = generateFacebookPixelCode(pixelId, events);
-                    
-                    displayCode(code, 'facebook-pixel.html');
-                    savePixel('facebook', pixelId, document.getElementById('fbPixelName').value || 'Facebook Pixel');
-                });
-            }
-
             // Generate TikTok Pixel Code
             const generateTtBtn = document.getElementById('generateTtCode');
             if (generateTtBtn) {
@@ -2236,68 +1806,6 @@ conversionCode;
                     displayCode(code, 'tiktok-pixel.html');
                     const pixelName = document.getElementById('ttPixelName').value || 'TikTok Pixel';
                     savePixel('tiktok', pixelId, pixelName, events);
-                });
-            }
-
-            // Generate Google Code
-            const generateGoogleBtn = document.getElementById('generateGoogleCode');
-            if (generateGoogleBtn) {
-                generateGoogleBtn.addEventListener('click', function() {
-                    const type = googleType.value;
-                    let code = '';
-                    let pixelId = '';
-                    let filename = '';
-
-                    switch(type) {
-                        case 'gtag':
-                            pixelId = document.getElementById('ga4MeasurementId').value.trim();
-                            if (!pixelId) {
-                                alert('Por favor, ingresa tu Measurement ID de GA4');
-                                return;
-                            }
-                            if (!/^G-[A-Z0-9]+$/i.test(pixelId)) {
-                                alert('El Measurement ID debe tener el formato G-XXXXXXXXXX');
-                                return;
-                            }
-                            const ga4Events = getSelectedEvents('#google-content');
-                            code = generateGA4Code(pixelId, ga4Events);
-                            filename = 'ga4-tag.html';
-                            break;
-                        
-                        case 'gtm':
-                            pixelId = document.getElementById('gtmContainerId').value.trim();
-                            if (!pixelId) {
-                                alert('Por favor, ingresa tu Container ID de GTM');
-                                return;
-                            }
-                            if (!/^GTM-[A-Z0-9]+$/i.test(pixelId)) {
-                                alert('El Container ID debe tener el formato GTM-XXXXXXX');
-                                return;
-                            }
-                            code = generateGTMCode(pixelId);
-                            filename = 'gtm-tag.html';
-                            break;
-                        
-                        case 'ads':
-                            pixelId = document.getElementById('adsConversionId').value.trim();
-                            const conversionLabel = document.getElementById('adsConversionLabel').value.trim();
-                            if (!pixelId) {
-                                alert('Por favor, ingresa tu Conversion ID de Google Ads');
-                                return;
-                            }
-                            if (!/^AW-\d+$/i.test(pixelId)) {
-                                alert('El Conversion ID debe tener el formato AW-XXXXXXXXX');
-                                return;
-                            }
-                            code = generateGoogleAdsCode(pixelId, conversionLabel);
-                            filename = 'google-ads-tag.html';
-                            break;
-                    }
-
-                    displayCode(code, filename);
-                    const pixelName = document.getElementById('googlePixelName').value || 'Google Tag';
-                    const events = type === 'gtag' ? getSelectedEvents('#google-content') : [];
-                    savePixel('google', pixelId, pixelName, events);
                 });
             }
 
@@ -2355,202 +1863,57 @@ conversionCode;
                 });
             }
 
-            // Test pixel button - Instalar pixel en esta página
+            // Test pixel button - Instalar TikTok Pixel en esta página
             const testPixelBtn = document.getElementById('testPixelBtn');
             if (testPixelBtn) {
                 testPixelBtn.addEventListener('click', function() {
-                    // Obtener el Pixel ID actual según la plataforma activa
-                    let pixelId = '';
-                    let platform = '';
-                    const activeTab = document.querySelector('.platform-tab.active');
-                    
-                    if (activeTab) {
-                        platform = activeTab.dataset.platform;
-                        switch(platform) {
-                            case 'facebook':
-                                pixelId = document.getElementById('fbPixelId').value.trim();
-                                break;
-                            case 'tiktok':
-                                pixelId = document.getElementById('ttPixelId').value.trim();
-                                break;
-                            case 'google':
-                                const googleType = document.getElementById('googleType').value;
-                                if (googleType === 'gtag') {
-                                    pixelId = document.getElementById('ga4MeasurementId').value.trim();
-                                } else if (googleType === 'gtm') {
-                                    pixelId = document.getElementById('gtmContainerId').value.trim();
-                                } else if (googleType === 'ads') {
-                                    pixelId = document.getElementById('adsConversionId').value.trim();
-                                }
-                                break;
-                        }
-                    }
-
+                    const pixelId = document.getElementById('ttPixelId').value.trim();
                     if (!pixelId) {
-                        alert('Por favor, ingresa un Pixel ID primero y genera el código para poder verificar la instalación');
+                        alert('Ingresa tu Pixel ID de TikTok y genera el código para verificar la instalación.');
                         return;
                     }
-
-                    // Validar según plataforma
-                    if (platform === 'facebook' && !/^\d{15,16}$/.test(pixelId)) {
-                        alert('El Pixel ID de Facebook debe ser un número de 15-16 dígitos');
+                    if (pixelId.length < 5) {
+                        alert('El Pixel ID parece inválido. Verifica que sea correcto (formato tipo C1234567890ABCDEF).');
                         return;
                     }
-
-                    // Instalar pixel en esta página
-                    installPixelOnPage(platform, pixelId);
+                    installPixelOnPage('tiktok', pixelId);
                 });
             }
         }
 
-        // Instalar pixel en la página actual
+        // Instalar TikTok Pixel en la página actual
         function installPixelOnPage(platform, pixelId) {
-            // Remover pixel anterior si existe
-            const oldScript = document.querySelector('script[src*="fbevents.js"], script[src*="analytics.tiktok.com"], script[src*="googletagmanager.com"]');
+            const oldScript = document.querySelector('script[src*="analytics.tiktok.com"]');
             if (oldScript) {
-                const scripts = document.querySelectorAll('script[src*="fbevents.js"], script[src*="analytics.tiktok.com"], script[src*="googletagmanager.com"]');
-                scripts.forEach(s => s.remove());
+                document.querySelectorAll('script[src*="analytics.tiktok.com"]').forEach(s => s.remove());
             }
-            const oldNoscript = document.querySelector('noscript img[src*="facebook.com/tr"], noscript iframe[src*="googletagmanager.com"]');
-            if (oldNoscript) oldNoscript.parentElement.remove();
 
-            if (platform === 'facebook') {
-                // Instalar Facebook Pixel
-                (function(f,b,e,v,n,t,s){
-                    if(f.fbq)return;
-                    n=f.fbq=function(){
-                        n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)
-                    };
-                    if(!f._fbq)f._fbq=n;
-                    n.push=n;
-                    n.loaded=!0;
-                    n.version='2.0';
-                    n.queue=[];
-                    t=b.createElement(e);
-                    t.async=!0;
-                    t.src=v;
-                    s=b.getElementsByTagName(e)[0];
-                    s.parentNode.insertBefore(t,s)
-                })(window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
-                
-                fbq('init', pixelId);
-                fbq('track', 'PageView');
+            // Instalar TikTok Pixel
+            !function (w, d, t) {
+                w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
+                ttq.load(pixelId);
+                ttq.page();
+            }(window, document, 'ttq');
 
-                // Noscript fallback
-                const noscript = document.createElement('noscript');
-                const img = document.createElement('img');
-                img.height = 1;
-                img.width = 1;
-                img.style.display = 'none';
-                img.src = 'https://www.facebook.com/tr?id=' + pixelId + '&ev=PageView&noscript=1';
-                noscript.appendChild(img);
-                document.head.appendChild(noscript);
+            window.currentTestPixelId = pixelId;
+            window.currentTestPlatform = 'tiktok';
 
-                window.currentTestPixelId = pixelId;
-                window.currentTestPlatform = 'facebook';
-                
-                // Mostrar sección de prueba
-                document.getElementById('testSection').style.display = 'block';
-                document.getElementById('pixelInfo').style.display = 'block';
-                document.getElementById('infoPixelId').textContent = pixelId;
-                document.getElementById('infoPlatform').textContent = 'Facebook Pixel';
-                
-                // Verificar estado del pixel
-                setTimeout(() => {
-                    verifyPixelStatus();
-                    // Verificar periódicamente
-                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
-                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
-                }, 1000);
-                
-                addEventToLog('PageView', { pixelId: pixelId, message: 'Pixel instalado y funcionando' }, 'success');
-                updatePixelStatus('active', 'Conectado y funcionando');
-                
-            } else if (platform === 'tiktok') {
-                // Instalar TikTok Pixel
-                !function (w, d, t) {
-                    w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-                    ttq.load(pixelId);
-                    ttq.page();
-                }(window, document, 'ttq');
+            document.getElementById('testSection').style.display = 'block';
+            document.getElementById('pixelInfo').style.display = 'block';
+            document.getElementById('infoPixelId').textContent = pixelId;
+            document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
 
-                window.currentTestPixelId = pixelId;
-                window.currentTestPlatform = 'tiktok';
-                
-                document.getElementById('testSection').style.display = 'block';
-                document.getElementById('pixelInfo').style.display = 'block';
-                document.getElementById('infoPixelId').textContent = pixelId;
-                document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
-                
-                setTimeout(() => {
-                    verifyPixelStatus();
-                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
-                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
-                }, 1000);
-                
-                addEventToLog('PageView', { pixelId: pixelId, message: 'Pixel instalado y funcionando' }, 'success');
-                updatePixelStatus('active', 'Conectado y funcionando');
-                
-            } else if (platform === 'google') {
-                // Instalar Google Tag (GA4, GTM o Ads)
-                const googleType = document.getElementById('googleType').value;
-                
-                if (googleType === 'gtag' || googleType === 'ads') {
-                    // GA4 o Google Ads
-                    const script1 = document.createElement('script');
-                    script1.async = true;
-                    script1.src = 'https://www.googletagmanager.com/gtag/js?id=' + pixelId;
-                    document.head.appendChild(script1);
+            setTimeout(() => {
+                verifyPixelStatus();
+                if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
+                window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
+            }, 1000);
 
-                    const script2 = document.createElement('script');
-                    script2.innerHTML = `
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){dataLayer.push(arguments);}
-                        gtag('js', new Date());
-                        gtag('config', '${pixelId}');
-                    `;
-                    document.head.appendChild(script2);
-                } else if (googleType === 'gtm') {
-                    // Google Tag Manager
-                    const script1 = document.createElement('script');
-                    script1.innerHTML = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','${pixelId}');`;
-                    document.head.appendChild(script1);
-
-                    const noscript = document.createElement('noscript');
-                    const iframe = document.createElement('iframe');
-                    iframe.src = 'https://www.googletagmanager.com/ns.html?id=' + pixelId;
-                    iframe.height = 0;
-                    iframe.width = 0;
-                    iframe.style.display = 'none';
-                    iframe.style.visibility = 'hidden';
-                    noscript.appendChild(iframe);
-                    document.body.insertBefore(noscript, document.body.firstChild);
-                }
-
-                window.currentTestPixelId = pixelId;
-                window.currentTestPlatform = 'google';
-                
-                document.getElementById('testSection').style.display = 'block';
-                document.getElementById('pixelInfo').style.display = 'block';
-                document.getElementById('infoPixelId').textContent = pixelId;
-                document.getElementById('infoPlatform').textContent = 'Google Tag';
-                
-                setTimeout(() => {
-                    verifyPixelStatus();
-                    if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
-                    window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
-                }, 1000);
-                
-                addEventToLog('PageView', { pixelId: pixelId, message: 'Pixel instalado y funcionando' }, 'success');
-                updatePixelStatus('active', 'Conectado y funcionando');
-            }
+            addEventToLog('PageView', { pixelId: pixelId, message: 'Pixel instalado y funcionando' }, 'success');
+            updatePixelStatus('active', 'Conectado y funcionando');
         }
 
-        // Función para disparar eventos de prueba
+        // Disparar eventos de prueba (solo TikTok)
         function testPixelEvent(eventName) {
             const platform = window.currentTestPlatform;
             const pixelId = window.currentTestPixelId;
@@ -2561,133 +1924,45 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             }
 
             try {
-                if (platform === 'facebook' && typeof fbq !== 'undefined') {
-                    let eventData = {};
-                    
-                    if (eventName === 'ViewContent') {
-                        eventData = { content_name: 'Producto de Prueba', content_ids: ['TEST123'], value: 49.99, currency: 'USD' };
-                    } else if (eventName === 'AddToCart') {
-                        eventData = { content_name: 'Producto de Prueba', content_ids: ['TEST123'], value: 49.99, currency: 'USD' };
-                    } else if (eventName === 'InitiateCheckout') {
-                        eventData = { value: 99.99, currency: 'USD' };
-                    } else if (eventName === 'Purchase') {
-                        eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now() };
-                    } else if (eventName === 'Lead') {
-                        eventData = { content_name: 'Formulario de Contacto', value: 0, currency: 'USD' };
-                    }
-
-                    fbq('track', eventName, eventData);
-                    
-                    // Feedback visual
-                    const eventCard = document.querySelector(`.event-card[data-event="${eventName}"]`);
-                    const btn = eventCard ? eventCard.querySelector('.test-event-btn') : null;
-                    if (btn) {
-                        btn.classList.add('success');
-                        const icon = btn.querySelector('.event-success-icon');
-                        if (icon) {
-                            icon.style.display = 'block';
-                            icon.style.animation = 'checkmark 0.5s';
-                        }
-                        setTimeout(() => {
-                            btn.classList.remove('success');
-                            if (icon) icon.style.display = 'none';
-                        }, 3000);
-                    }
-                    
-                    addEventToLog(eventName, eventData, 'success');
-                    updatePixelStatus('active', 'Eventos enviándose correctamente');
-                    console.log('✅ Facebook Pixel Event enviado:', eventName, eventData);
-                    
-                } else if (platform === 'tiktok' && typeof ttq !== 'undefined') {
-                    let eventData = {};
-                    let tiktokEventName = eventName; // Guardar nombre original para el botón
-                    
-                    if (eventName === 'ViewContent') {
-                        eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
-                    } else if (eventName === 'AddToCart') {
-                        eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
-                    } else if (eventName === 'InitiateCheckout') {
-                        tiktokEventName = 'PlaceAnOrder';
-                        eventData = { value: 99.99, currency: 'USD' };
-                    } else if (eventName === 'Purchase') {
-                        tiktokEventName = 'CompletePayment';
-                        eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now() };
-                    } else if (eventName === 'Lead') {
-                        tiktokEventName = 'SubmitForm';
-                        eventData = { content_name: 'Formulario de Contacto' };
-                    }
-
-                    ttq.track(tiktokEventName, eventData);
-                    
-                    // Usar el nombre original del evento para encontrar el botón
-                    const eventCard = document.querySelector(`.event-card[data-event="${eventName}"]`);
-                    const btn = eventCard ? eventCard.querySelector('.test-event-btn') : null;
-                    if (btn) {
-                        btn.classList.add('success');
-                        const icon = btn.querySelector('.event-success-icon');
-                        if (icon) {
-                            icon.style.display = 'block';
-                            icon.style.animation = 'checkmark 0.5s';
-                        }
-                        setTimeout(() => {
-                            btn.classList.remove('success');
-                            if (icon) icon.style.display = 'none';
-                        }, 3000);
-                    }
-                    
-                    addEventToLog(tiktokEventName, eventData, 'success');
-                    updatePixelStatus('active', 'Eventos enviándose correctamente');
-                    console.log('✅ TikTok Pixel Event enviado:', tiktokEventName, eventData);
-                    
-                } else if (platform === 'google') {
-                    if (typeof gtag !== 'undefined') {
-                        let eventData = {};
-                        
-                        if (eventName === 'ViewContent') {
-                            eventName = 'view_item';
-                            eventData = { currency: 'USD', value: 49.99, items: [{item_id: 'TEST123', item_name: 'Producto de Prueba', price: 49.99}] };
-                        } else if (eventName === 'AddToCart') {
-                            eventName = 'add_to_cart';
-                            eventData = { currency: 'USD', value: 49.99, items: [{item_id: 'TEST123', item_name: 'Producto de Prueba', price: 49.99}] };
-                        } else if (eventName === 'InitiateCheckout') {
-                            eventName = 'begin_checkout';
-                            eventData = { currency: 'USD', value: 99.99 };
-                        } else if (eventName === 'Purchase') {
-                            eventName = 'purchase';
-                            eventData = { transaction_id: 'TEST-' + Date.now(), value: 99.99, currency: 'USD', items: [{item_id: 'TEST123', item_name: 'Producto de Prueba', price: 99.99}] };
-                        } else if (eventName === 'Lead') {
-                            eventName = 'generate_lead';
-                            eventData = { currency: 'USD', value: 0 };
-                        }
-
-                        gtag('event', eventName, eventData);
-                        
-                        const btn = document.querySelector(`.test-event-btn[data-event="${eventName}"]`);
-                        if (btn) {
-                            btn.classList.add('success');
-                            const icon = btn.querySelector('.event-success-icon');
-                            if (icon) icon.style.display = 'inline-block';
-                            setTimeout(() => {
-                                btn.classList.remove('success');
-                                if (icon) icon.style.display = 'none';
-                            }, 2000);
-                        }
-                        
-                        addEventToLog(eventName, eventData, 'success');
-                        updatePixelStatus('active', 'Eventos enviándose correctamente');
-                        console.log('✅ Google Tag Event enviado:', eventName, eventData);
-                    } else if (typeof dataLayer !== 'undefined') {
-                        // GTM
-                        dataLayer.push({ 'event': eventName.toLowerCase().replace(/([A-Z])/g, '_$1').toLowerCase() });
-                        showTestResult('success', `✅ Evento disparado en dataLayer. Verifica en Google Tag Manager.`);
-                    } else {
-                        addEventToLog(eventName, { error: 'Google Tag no cargado' }, 'error');
-                        updatePixelStatus('error', 'Tag no detectado');
-                    }
-                } else {
-                    addEventToLog(eventName, { error: 'Pixel no cargado' }, 'error');
+                if (typeof ttq === 'undefined') {
+                    addEventToLog(eventName, { error: 'TikTok Pixel no cargado' }, 'error');
                     updatePixelStatus('error', 'Pixel no detectado');
+                    return;
                 }
+
+                let eventData = {};
+                if (eventName === 'ViewContent') {
+                    eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
+                } else if (eventName === 'AddToCart') {
+                    eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
+                } else if (eventName === 'PlaceAnOrder') {
+                    eventData = { value: 99.99, currency: 'USD' };
+                } else if (eventName === 'CompletePayment') {
+                    eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now() };
+                } else if (eventName === 'SubmitForm') {
+                    eventData = { content_name: 'Formulario de Contacto' };
+                }
+
+                ttq.track(eventName, eventData);
+
+                const eventCard = document.querySelector(`.event-card[data-event="${eventName}"]`);
+                const btn = eventCard ? eventCard.querySelector('.test-event-btn') : null;
+                if (btn) {
+                    btn.classList.add('success');
+                    const icon = btn.querySelector('.event-success-icon');
+                    if (icon) {
+                        icon.style.display = 'block';
+                        icon.style.animation = 'checkmark 0.5s';
+                    }
+                    setTimeout(() => {
+                        btn.classList.remove('success');
+                        if (icon) icon.style.display = 'none';
+                    }, 3000);
+                }
+
+                addEventToLog(eventName, eventData, 'success');
+                updatePixelStatus('active', 'Eventos enviándose correctamente');
+                console.log('✅ TikTok Pixel Event enviado:', eventName, eventData);
             } catch (error) {
                 addEventToLog(eventName, { error: error.message }, 'error');
                 updatePixelStatus('error', 'Error al disparar evento');
@@ -2722,15 +1997,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             const logItem = document.createElement('div');
             logItem.className = `event-log-item ${type}`;
             
-            // Icono según tipo de evento
+            // Icono según tipo de evento (TikTok)
             let eventIcon = '📊';
             const eventIcons = {
                 'PageView': '👁️',
                 'ViewContent': '👀',
                 'AddToCart': '🛒',
-                'InitiateCheckout': '💳',
-                'Purchase': '✅',
-                'Lead': '📝'
+                'PlaceAnOrder': '💳',
+                'CompletePayment': '✅',
+                'SubmitForm': '📝'
             };
             if (eventIcons[eventName]) eventIcon = eventIcons[eventName];
             
@@ -2763,28 +2038,16 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
             }
         }
 
-        // Verificar estado del pixel
+        // Verificar estado del TikTok Pixel
         function verifyPixelStatus() {
-            const platform = window.currentTestPlatform;
             const statusIcon = document.getElementById('pixelStatusIcon');
             const statusText = document.getElementById('pixelStatusText');
             const infoStatus = document.getElementById('infoStatus');
 
             if (!statusIcon || !statusText) return;
 
-            let isActive = false;
-            let message = '';
-
-            if (platform === 'facebook') {
-                isActive = typeof fbq !== 'undefined' && typeof window.fbq !== 'undefined';
-                message = isActive ? 'Conectado - Eventos enviándose' : 'No detectado - Verifica la instalación';
-            } else if (platform === 'tiktok') {
-                isActive = typeof ttq !== 'undefined' && typeof window.ttq !== 'undefined';
-                message = isActive ? 'Conectado - Eventos enviándose' : 'No detectado - Verifica la instalación';
-            } else if (platform === 'google') {
-                isActive = typeof gtag !== 'undefined' || typeof dataLayer !== 'undefined';
-                message = isActive ? 'Conectado - Eventos enviándose' : 'No detectado - Verifica la instalación';
-            }
+            const isActive = typeof ttq !== 'undefined' && typeof window.ttq !== 'undefined';
+            const message = isActive ? 'Conectado - Eventos enviándose' : 'No detectado - Verifica la instalación';
 
             updatePixelStatus(isActive ? 'active' : 'error', message);
             if (infoStatus) {
