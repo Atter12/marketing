@@ -239,6 +239,65 @@ export default async function handler(req, res) {
   }
 }
 
+// Helper: extraer cookies de cabeceras Set-Cookie (compatible con fetch/undici)
+function getCookieStringFromResponse(response) {
+  try {
+    const setCookies = response.headers.getSetCookie ? response.headers.getSetCookie() : [];
+    const fallback = response.headers.get('set-cookie');
+    const list = (setCookies && setCookies.length) ? setCookies : (fallback ? [fallback] : []);
+    return list.map(c => String(c).split(';')[0].trim()).filter(Boolean).join('; ');
+  } catch (e) {
+    return '';
+  }
+}
+
+// Helper: intentar resolver el challenge __rd_verify de Facebook (POST + re-GET con cookies)
+async function tryChallengeThenFetch(targetUrl, challengeResponse, bodyText) {
+  const verifyPathMatch = bodyText && bodyText.match(/['"](\/__rd_verify_[^'"]+)['"]/);
+  if (!verifyPathMatch || !verifyPathMatch[1]) {
+    console.log('[tryChallengeThenFetch] No __rd_verify path found in response');
+    return null;
+  }
+  const verifyPath = verifyPathMatch[1];
+  const verifyUrl = 'https://www.facebook.com' + verifyPath;
+  console.log('[tryChallengeThenFetch] Found verify URL:', verifyUrl);
+
+  let cookieStr = getCookieStringFromResponse(challengeResponse);
+  const baseHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+    'Referer': 'https://www.facebook.com/ads/library/',
+    'Origin': 'https://www.facebook.com',
+  };
+  if (cookieStr) baseHeaders['Cookie'] = cookieStr;
+
+  try {
+    const postRes = await fetch(verifyUrl, {
+      method: 'POST',
+      headers: { ...baseHeaders, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': '0' },
+      redirect: 'follow'
+    });
+    const newCookies = getCookieStringFromResponse(postRes);
+    if (newCookies) cookieStr = cookieStr ? (cookieStr + '; ' + newCookies) : newCookies;
+    console.log('[tryChallengeThenFetch] POST verify status:', postRes.status, 'cookies now:', cookieStr ? 'yes' : 'no');
+
+    const getHeaders = { ...baseHeaders };
+    if (cookieStr) getHeaders['Cookie'] = cookieStr;
+    getHeaders['Sec-Fetch-Site'] = 'same-origin';
+    getHeaders['Sec-Fetch-Mode'] = 'navigate';
+    getHeaders['Sec-Fetch-Dest'] = 'document';
+    getHeaders['Sec-Fetch-User'] = '?1';
+
+    const getRes = await fetch(targetUrl, { headers: getHeaders, redirect: 'follow' });
+    console.log('[tryChallengeThenFetch] Re-GET status:', getRes.status);
+    return getRes;
+  } catch (e) {
+    console.log('[tryChallengeThenFetch] Error:', e.message);
+    return null;
+  }
+}
+
 // Función para obtener el anuncio de Facebook Ads Library
 // Similar al enfoque de TikTok: obtener HTML y parsear datos JSON embebidos
 async function fetchFacebookAd(url, adId, type) {
@@ -353,6 +412,19 @@ async function fetchFacebookAd(url, adId, type) {
             return result;
           }
         }
+        // Si 403 y hay challenge __rd_verify: intentar resolver (POST verify + re-GET con cookies)
+        if (response1.status === 403 && errorText && errorText.includes('__rd_verify_')) {
+          console.log('[fetchFacebookAd] Strategy 1 - 403 with challenge, trying challenge flow...');
+          const retryRes = await tryChallengeThenFetch(simpleUrl, response1, errorText);
+          if (retryRes && retryRes.ok) {
+            const html = await retryRes.text();
+            const result = parseHtmlForAdData(html, adId);
+            if (result) {
+              console.log('[fetchFacebookAd] Strategy 1 - SUCCESS after challenge flow!');
+              return result;
+            }
+          }
+        }
       }
     } catch (err1) {
       console.log('[fetchFacebookAd] Strategy 1 - Error:', err1.message);
@@ -405,9 +477,97 @@ async function fetchFacebookAd(url, adId, type) {
             return result;
           }
         }
+        if (response2.status === 403 && errorText && errorText.includes('__rd_verify_')) {
+          console.log('[fetchFacebookAd] Strategy 2 - 403 with challenge, trying challenge flow...');
+          const retryRes = await tryChallengeThenFetch(url, response2, errorText);
+          if (retryRes && retryRes.ok) {
+            const html = await retryRes.text();
+            const result = parseHtmlForAdData(html, adId);
+            if (result) {
+              console.log('[fetchFacebookAd] Strategy 2 - SUCCESS after challenge flow!');
+              return result;
+            }
+          }
+        }
       }
     } catch (err2) {
       console.log('[fetchFacebookAd] Strategy 2 - Error:', err2.message);
+    }
+
+    // Estrategia 2b: Rotar User-Agent (Chrome, Firefox, Safari, Edge, móvil) — a veces el bloqueo es por fingerprint
+    const userAgentSets = [
+      { name: 'Chrome Win', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8' },
+      { name: 'Firefox Win', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8' },
+      { name: 'Safari Mac', 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_2_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' },
+      { name: 'Edge Win', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8' },
+      { name: 'Chrome Android', 'User-Agent': 'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36', 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8' },
+    ];
+    for (let u = 0; u < userAgentSets.length; u++) {
+      const uaSet = userAgentSets[u];
+      console.log('[fetchFacebookAd] Strategy 2b: Trying User-Agent:', uaSet.name);
+      try {
+        const resUa = await fetch(simpleUrl, {
+          headers: {
+            ...uaSet,
+            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+            'Referer': 'https://www.facebook.com/ads/library/',
+            'Origin': 'https://www.facebook.com',
+            'Sec-Fetch-Site': 'same-origin',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-User': '?1',
+            'Upgrade-Insecure-Requests': '1',
+          },
+          redirect: 'follow'
+        });
+        if (resUa.ok) {
+          const html = await resUa.text();
+          const result = parseHtmlForAdData(html, adId);
+          if (result) {
+            console.log('[fetchFacebookAd] Strategy 2b - SUCCESS with', uaSet.name);
+            return result;
+          }
+        } else if (resUa.status === 403) {
+          const errBody = await resUa.text().catch(() => '');
+          if (errBody && errBody.includes('__rd_verify_')) {
+            const retryRes = await tryChallengeThenFetch(simpleUrl, resUa, errBody);
+            if (retryRes && retryRes.ok) {
+              const html = await retryRes.text();
+              const result = parseHtmlForAdData(html, adId);
+              if (result) {
+                console.log('[fetchFacebookAd] Strategy 2b - SUCCESS after challenge with', uaSet.name);
+                return result;
+              }
+            }
+          }
+        }
+      } catch (eUa) {
+        console.log('[fetchFacebookAd] Strategy 2b -', uaSet.name, 'Error:', eUa.message);
+      }
+    }
+
+    // Estrategia 2c: Headers mínimos (sin Sec-Fetch) — algunos anti-bot solo bloquean con Sec-* presentes
+    console.log('[fetchFacebookAd] Strategy 2c: Minimal headers (no Sec-Fetch)...');
+    try {
+      const resMin = await fetch(simpleUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+          'Referer': 'https://www.facebook.com/',
+        },
+        redirect: 'follow'
+      });
+      if (resMin.ok) {
+        const html = await resMin.text();
+        const result = parseHtmlForAdData(html, adId);
+        if (result) {
+          console.log('[fetchFacebookAd] Strategy 2c - SUCCESS with minimal headers');
+          return result;
+        }
+      }
+    } catch (eMin) {
+      console.log('[fetchFacebookAd] Strategy 2c - Error:', eMin.message);
     }
 
     // Estrategia 3: Intentar primero obtener cookies de la página principal y luego usar esas cookies
