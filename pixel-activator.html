@@ -3,72 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>TikTok Pixel Activator | Genera e instala tu pixel en minutos | EcomTools</title>
-    <meta name="description" content="TikTok Pixel Activator: conecta tu pixel con el ID, actívalo enviando los 14 eventos de prueba y genera el código para tu web. Fácil y en minutos.">
+    <title>TikTok Pixel Activator | EcomTools</title>
+    <meta name="description" content="Conecta tu TikTok Pixel y activa los 14 eventos. Directo y en segundos.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
             --primary: #ff6b4a;
-            --primary-light: #ff8a6a;
-            --primary-dark: #e85a3a;
             --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
-            --secondary: #6366f1;
             --accent: #10b981;
             --text-dark: #1f2937;
             --text-medium: #6b7280;
             --text-light: #9ca3af;
-            --bg-white: #ffffff;
-            --bg-cream: #fffbf8;
-            --bg-gray: #f8f9fa;
+            --bg: #fafafa;
+            --bg-card: #ffffff;
             --border: #e5e7eb;
-            --shadow: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.15);
             --radius: 16px;
-            
-            /* Platform Colors */
-            --facebook: #1877f2;
-            --tiktok: #000000;
-            --google: #4285f4;
-            --google-ads: #fbbc04;
+            --radius-sm: 12px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 40px rgba(255, 107, 74, 0.12);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-white);
+            background: var(--bg);
             color: var(--text-dark);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
+            min-height: 100vh;
         }
 
         /* Header */
         header {
-            background: var(--bg-white);
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 100;
-            box-shadow: var(--shadow);
         }
-
         nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
         }
-
         .logo {
             display: flex;
             align-items: center;
@@ -78,7 +56,6 @@
             color: var(--text-dark);
             text-decoration: none;
         }
-
         .logo-icon {
             width: 36px;
             height: 36px;
@@ -90,11 +67,7 @@
             color: white;
             font-size: 16px;
         }
-
-        .logo span {
-            color: var(--primary);
-        }
-
+        .logo span { color: var(--primary); }
         .back-link {
             display: inline-flex;
             align-items: center;
@@ -103,723 +76,254 @@
             text-decoration: none;
             font-size: 14px;
             font-weight: 600;
-            transition: color 0.2s;
-            white-space: nowrap;
         }
+        .back-link:hover { color: var(--primary); }
 
-        .back-link:hover {
-            color: var(--primary);
+        /* Main: centrado, una columna */
+        .main {
+            max-width: 440px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
         }
-
-        .back-link span {
-            display: inline;
-        }
-
-        /* Hero Section */
-        .hero-section {
-            padding: 60px 24px 40px;
+        .hero {
             text-align: center;
-            background: linear-gradient(180deg, var(--bg-cream) 0%, var(--bg-white) 100%);
+            margin-bottom: 40px;
         }
-
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: white;
-            border: 1px solid var(--border);
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-medium);
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-        }
-
-        .hero-badge i {
-            color: var(--primary);
-        }
-
-        .hero-section h1 {
-            font-size: clamp(32px, 5vw, 48px);
+        .hero h1 {
+            font-size: 28px;
             font-weight: 800;
             color: var(--text-dark);
-            margin-bottom: 16px;
-            line-height: 1.2;
+            margin-bottom: 8px;
         }
-
-        .hero-section h1 span {
+        .hero h1 span {
             background: var(--primary-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
-        .hero-section p {
-            font-size: 18px;
-            color: var(--text-medium);
-            max-width: 700px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-
-        /* Platform Selector */
-        .platform-section {
-            padding: 40px 24px 80px;
-            background: var(--bg-white);
-        }
-
-        .platform-container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
-
-        .platform-tabs {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .platform-tab {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 16px 28px;
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            font-family: inherit;
+        .hero p {
             font-size: 15px;
-            font-weight: 700;
-            color: var(--text-dark);
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .platform-tab:hover {
-            border-color: var(--text-light);
-            transform: translateY(-2px);
-        }
-
-        .platform-tab.active {
-            border-color: var(--platform-color, var(--primary));
-            background: var(--platform-bg, #fff0ed);
-            color: var(--platform-color, var(--primary));
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .platform-tab i {
-            font-size: 20px;
-        }
-
-        .platform-tab[data-platform="facebook"] {
-            --platform-color: var(--facebook);
-            --platform-bg: #e7f3ff;
-        }
-
-        .platform-tab[data-platform="tiktok"] {
-            --platform-color: var(--tiktok);
-            --platform-bg: #f5f5f5;
-        }
-
-        .platform-tab[data-platform="google"] {
-            --platform-color: var(--google);
-            --platform-bg: #e8f0fe;
-        }
-
-        /* Config Cards */
-        .config-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            align-items: start;
-        }
-
-        .config-card {
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 24px;
-            padding: 36px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-        }
-
-        .config-card h2 {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--text-dark);
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .config-card h2 i {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-        }
-
-        .facebook-icon { background: #e7f3ff; color: var(--facebook); }
-        .tiktok-icon { background: #f5f5f5; color: var(--tiktok); }
-        .google-icon { background: #e8f0fe; color: var(--google); }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 15px;
-            color: var(--text-dark);
-            transition: all 0.3s;
-            outline: none;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
-        }
-
-        .form-group input::placeholder {
-            color: var(--text-light);
-        }
-
-        .form-group small {
-            display: block;
-            margin-top: 6px;
-            font-size: 12px;
-            color: var(--text-light);
-        }
-
-        .form-group small a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        .form-group small a:hover {
-            text-decoration: underline;
-        }
-
-        /* Checkboxes */
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 8px;
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 12px 16px;
-            background: var(--bg-gray);
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .checkbox-item:hover {
-            background: var(--border);
-        }
-
-        .checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin: 0;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
-
-        .checkbox-item .checkbox-content {
-            flex: 1;
-        }
-
-        .checkbox-item .checkbox-label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-dark);
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .checkbox-item .checkbox-desc {
-            font-size: 12px;
             color: var(--text-medium);
         }
 
-        /* Buttons */
-        .btn-primary {
-            width: 100%;
-            padding: 16px;
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 107, 74, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 107, 74, 0.4);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* Code Preview */
-        .code-card {
-            background: white;
-            border: 2px solid var(--border);
-            border-radius: 24px;
-            padding: 36px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.08);
-            position: sticky;
-            top: 100px;
-        }
-
-        .code-card h2 {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--text-dark);
+        /* Card estado pixel */
+        .pixel-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
             margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .pixel-card.connected {
+            border-left: 4px solid var(--accent);
+            box-shadow: 0 4px 24px rgba(16, 185, 129, 0.08);
+        }
+        .pixel-card.loading {
+            opacity: 0.9;
+            pointer-events: none;
+        }
+        .pixel-card .row {
             display: flex;
             align-items: center;
             gap: 12px;
+            margin-bottom: 12px;
         }
-
-        .code-preview {
-            background: #1e1e1e;
-            border-radius: 14px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .code-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            background: #2d2d2d;
-            border-bottom: 1px solid #3d3d3d;
-        }
-
-        .code-header span {
-            font-size: 12px;
-            font-weight: 600;
-            color: #9ca3af;
-        }
-
-        .code-dots {
-            display: flex;
-            gap: 6px;
-        }
-
-        .code-dots span {
+        .pixel-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
+            background: var(--text-light);
         }
-
-        .code-dots span:nth-child(1) { background: #ff5f57; }
-        .code-dots span:nth-child(2) { background: #ffbd2e; }
-        .code-dots span:nth-child(3) { background: #28c840; }
-
-        .code-body {
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .code-body pre {
-            margin: 0;
-            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            color: #e4e4e7;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .code-body .comment { color: #6b7280; }
-        .code-body .tag { color: #f472b6; }
-        .code-body .attr { color: #34d399; }
-        .code-body .string { color: #fbbf24; }
-        .code-body .function { color: #60a5fa; }
-
-        .code-placeholder {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-light);
-        }
-
-        .code-placeholder i {
-            font-size: 48px;
-            margin-bottom: 16px;
-            opacity: 0.5;
-        }
-
-        .code-placeholder p {
-            font-size: 14px;
-        }
-
-        /* Action Buttons */
-        .action-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .btn-secondary {
-            padding: 14px;
-            background: var(--bg-gray);
-            color: var(--text-dark);
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            font-family: inherit;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: var(--border);
-            border-color: var(--text-medium);
-        }
-
-        .btn-secondary.copied {
-            background: #dcfce7;
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        /* Info Box */
-        .info-box {
-            background: var(--bg-gray);
-            border-left: 4px solid var(--primary);
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 20px;
-        }
-
-        .info-box p {
-            font-size: 13px;
-            color: var(--text-medium);
-            line-height: 1.6;
-        }
-
-        .info-box i {
-            color: var(--primary);
-            margin-right: 8px;
-        }
-
-        .info-box.warning {
-            border-left-color: #f59e0b;
-        }
-
-        .info-box.warning i {
-            color: #f59e0b;
-        }
-
-        .info-box.success {
-            border-left-color: var(--accent);
-        }
-
-        .info-box.success i {
-            color: var(--accent);
-        }
-
-        /* Pixel Status Styles */
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #999;
-            display: inline-block;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.active {
+        .pixel-card.connected .pixel-dot {
             background: var(--accent);
-            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
         }
-
-        .status-dot.error {
-            background: #ef4444;
-            animation: none;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .test-event-btn {
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .test-event-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-color: var(--accent) !important;
-        }
-
-        .test-event-btn.success {
-            border-color: var(--accent) !important;
-            background: #f0fdf4 !important;
-            animation: successPulse 0.5s;
-        }
-
-        .event-card:hover .event-description {
-            display: block !important;
-        }
-
-        @keyframes successPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        .event-success-icon {
-            display: inline-block;
-            animation: checkmark 0.5s;
-        }
-
-        @keyframes checkmark {
-            0% { transform: translateY(-50%) scale(0); }
-            50% { transform: translateY(-50%) scale(1.2); }
-            100% { transform: translateY(-50%) scale(1); }
-        }
-
-        .event-log-item {
-            padding: 12px;
-            margin-bottom: 8px;
-            background: #2a2a2a;
-            border-radius: 6px;
-            border-left: 3px solid var(--accent);
-            animation: slideIn 0.3s;
-        }
-
-        .event-log-item.error {
-            border-left-color: #ef4444;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .event-log-time {
-            color: #888;
+        .pixel-label {
             font-size: 11px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .pixel-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
             margin-bottom: 4px;
         }
-
-        .event-log-name {
-            color: var(--accent);
+        .pixel-id {
+            font-size: 13px;
+            color: var(--text-medium);
+            font-family: ui-monospace, monospace;
+        }
+        .pixel-status {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
             font-weight: 600;
-            margin-bottom: 6px;
+            background: #f3f4f6;
+            color: var(--text-medium);
+        }
+        .pixel-card.connected .pixel-status {
+            background: #d1fae5;
+            color: #065f46;
         }
 
-        .event-log-data {
-            color: #b0b0b0;
-            font-size: 11px;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        /* Pixel Display Card (estado Conectado / No conectado) */
-        .pixel-display-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-            border: 2px solid var(--border);
-            border-radius: 14px;
+        /* Input + Conectar */
+        .input-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
             padding: 20px;
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         }
-        .pixel-display-card.connected {
-            border-left: 4px solid var(--accent);
-            background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%);
+        .input-row {
+            display: flex;
+            gap: 12px;
         }
-        .pixel-display-card .pixel-card-header {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+        .input-row input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-dark);
+            transition: border-color 0.2s;
         }
-        .pixel-display-card .pixel-dot {
-            width: 10px; height: 10px; border-radius: 50%; background: #d1d5db;
+        .input-row input:focus {
+            outline: none;
+            border-color: var(--primary);
         }
-        .pixel-display-card.connected .pixel-dot {
-            background: var(--accent); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        .input-row input::placeholder {
+            color: var(--text-light);
         }
-        .pixel-display-card .pixel-card-label {
-            font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;
+        .btn-connect {
+            padding: 14px 24px;
+            background: var(--text-dark);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
         }
-        .pixel-display-card .pixel-card-name {
-            font-size: 18px; font-weight: 700; color: var(--text-dark); margin-bottom: 4px;
+        .btn-connect:hover {
+            background: #374151;
         }
-        .pixel-display-card .pixel-card-id {
-            font-size: 13px; color: var(--text-medium); font-family: monospace;
+        .btn-connect:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
         }
-        .pixel-display-card .pixel-card-status {
-            display: inline-block; margin-top: 10px; padding: 6px 12px; background: #f3f4f6; border-radius: 8px; font-size: 12px; font-weight: 600; color: var(--text-medium);
-        }
-        .pixel-display-card.connected .pixel-card-status {
-            background: #d1fae5; color: #065f46;
-        }
-        .pixel-display-card.loading {
-            opacity: 0.85;
-            pointer-events: none;
-        }
-        /* Activar eventos: botón y progreso */
-        .btn-activate-events {
+
+        /* Activar 14 eventos */
+        .btn-activate {
             width: 100%;
             padding: 18px;
             background: var(--primary-gradient);
-            color: #fff;
+            color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: var(--radius);
+            font-family: inherit;
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.35);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-top: 16px;
-            box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
         }
-        .btn-activate-events:hover:not(:disabled) {
+        .btn-activate:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+            box-shadow: var(--shadow-hover);
         }
-        .btn-activate-events:disabled {
+        .btn-activate:disabled {
             background: #e5e7eb;
-            color: #9ca3af;
+            color: var(--text-light);
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-        .progress-activate-section {
-            background: #fff;
-            border: 2px solid var(--border);
-            border-radius: 14px;
-            padding: 20px;
-            margin-top: 20px;
+
+        /* Progress */
+        .progress-wrap {
+            margin-top: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
             opacity: 0;
-            transform: translateY(8px);
-            transition: all 0.3s ease;
+            transform: translateY(10px);
+            transition: all 0.35s ease;
             pointer-events: none;
         }
-        .progress-activate-section.show {
+        .progress-wrap.show {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
         }
-        .progress-activate-section .progress-row {
+        .progress-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
-        .progress-activate-section .progress-event-name {
+        .progress-event {
             font-size: 14px;
             font-weight: 600;
             color: var(--text-dark);
         }
-        .progress-activate-section .progress-count {
+        .progress-count {
             font-size: 13px;
             color: var(--text-medium);
         }
-        .progress-activate-section .progress-track {
+        .progress-track {
             height: 6px;
             background: #f3f4f6;
             border-radius: 3px;
             overflow: hidden;
         }
-        .progress-activate-section .progress-bar-fill {
+        .progress-bar {
             height: 100%;
             background: var(--primary);
             border-radius: 3px;
             width: 0%;
             transition: width 0.25s ease-out;
         }
-        .progress-activate-section .progress-bar-fill.done {
+        .progress-bar.done {
             background: var(--accent);
         }
-        .progress-activate-section .success-activate-msg {
+        .success-msg {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-top: 16px;
-            padding: 14px;
+            gap: 12px;
+            margin-top: 20px;
+            padding: 16px;
             background: #f0fdf4;
-            border-radius: 10px;
-            border: 1px solid var(--accent);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(16, 185, 129, 0.3);
             opacity: 0;
             transform: scale(0.98);
             transition: all 0.3s ease;
         }
-        .progress-activate-section .success-activate-msg.show {
+        .success-msg.show {
             opacity: 1;
             transform: scale(1);
         }
-        .progress-activate-section .success-activate-msg .success-check {
-            width: 24px;
-            height: 24px;
+        .success-msg .icon {
+            width: 28px;
+            height: 28px;
             background: var(--accent);
             border-radius: 50%;
             display: flex;
@@ -828,1202 +332,215 @@
             color: white;
             flex-shrink: 0;
         }
-        .progress-activate-section .success-activate-msg .success-activate-text {
+        .success-msg .text {
             font-size: 14px;
             font-weight: 600;
             color: #065f46;
         }
-        .btn-load-connect:hover {
-            background: #374151 !important;
-        }
-        .btn-load-connect:disabled {
-            background: #9ca3af !important;
-            cursor: not-allowed;
-        }
 
-        /* Platform Content */
-        .platform-content {
-            display: none;
-        }
-
-        .platform-content.active {
-            display: block;
-        }
-
-        /* Instructions Section */
-        .instructions-section {
-            margin-top: 24px;
-            padding-top: 24px;
-            border-top: 2px solid var(--border);
-        }
-
-        .instructions-section h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .instructions-list {
-            list-style: none;
-        }
-
-        .instructions-list li {
-            display: flex;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .instructions-list li:last-child {
-            border-bottom: none;
-        }
-
-        .step-number {
-            width: 28px;
-            height: 28px;
-            background: var(--primary-gradient);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .step-content {
-            font-size: 14px;
-            color: var(--text-medium);
-            line-height: 1.6;
-        }
-
-        .step-content strong {
-            color: var(--text-dark);
-        }
-
-        /* Saved Pixels Section */
-        .saved-pixels-section {
-            margin-top: 40px;
-            padding-top: 40px;
-            border-top: 2px solid var(--border);
-        }
-
-        .saved-pixels-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .saved-pixels-header h3 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-dark);
-        }
-
-        .pixel-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .pixel-item {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background: var(--bg-gray);
-            border-radius: 12px;
-            transition: all 0.2s;
-        }
-
-        .pixel-item:hover {
-            background: var(--border);
-        }
-
-        .pixel-item-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .pixel-item-info {
-            flex: 1;
-        }
-
-        .pixel-item-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-dark);
-            margin-bottom: 2px;
-        }
-
-        .pixel-item-id {
-            font-size: 12px;
-            color: var(--text-medium);
-            font-family: monospace;
-        }
-
-        .pixel-item-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .pixel-item-btn {
-            width: 36px;
-            height: 36px;
-            border: none;
-            border-radius: 8px;
-            background: white;
-            color: var(--text-medium);
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .pixel-item-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .pixel-item-btn.delete:hover {
-            background: #dc2626;
-        }
-
-        .empty-pixels {
+        /* Footer */
+        .footer {
             text-align: center;
-            padding: 40px 20px;
+            margin-top: 32px;
+            font-size: 13px;
             color: var(--text-light);
         }
-
-        .empty-pixels i {
-            font-size: 40px;
-            margin-bottom: 12px;
-            opacity: 0.5;
+        .footer a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
         }
-
-        .empty-pixels p {
-            font-size: 14px;
-        }
-
-        /* Responsive */
-        @media (max-width: 1024px) {
-            .config-grid {
-                gap: 24px;
-            }
-        }
-
-        @media (max-width: 968px) {
-            .config-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .code-card {
-                position: static;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 16px;
-            }
-
-            nav {
-                padding: 12px 0;
-            }
-
-            .logo {
-                font-size: 18px;
-            }
-
-            .logo-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 14px;
-            }
-
-            .back-link {
-                font-size: 13px;
-            }
-
-            .hero-section {
-                padding: 40px 16px 30px;
-            }
-
-            .hero-badge {
-                font-size: 12px;
-                padding: 6px 14px;
-                margin-bottom: 16px;
-            }
-
-            .hero-section h1 {
-                font-size: 32px;
-                margin-bottom: 12px;
-            }
-
-            .hero-section p {
-                font-size: 16px;
-            }
-
-            .platform-section {
-                padding: 24px 16px 50px;
-            }
-
-            .platform-tabs {
-                gap: 8px;
-                margin-bottom: 24px;
-            }
-
-            .platform-tab {
-                padding: 12px 18px;
-                font-size: 14px;
-            }
-
-            .platform-tab i {
-                font-size: 18px;
-            }
-
-            .config-card,
-            .code-card {
-                padding: 24px 20px;
-                border-radius: 20px;
-            }
-
-            .config-card h2,
-            .code-card h2 {
-                font-size: 18px;
-                margin-bottom: 20px;
-            }
-
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
-
-            .code-body {
-                max-height: 300px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 0 12px;
-            }
-
-            .back-link span {
-                display: none;
-            }
-
-            .hero-section {
-                padding: 30px 12px 24px;
-            }
-
-            .hero-section h1 {
-                font-size: 26px;
-            }
-
-            .hero-section p {
-                font-size: 15px;
-            }
-
-            .platform-section {
-                padding: 20px 12px 40px;
-            }
-
-            .platform-tabs {
-                flex-direction: column;
-            }
-
-            .platform-tab {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .config-card,
-            .code-card {
-                padding: 20px 16px;
-            }
-
-            .form-group input,
-            .form-group select {
-                padding: 12px 14px;
-                font-size: 14px;
-            }
-
-            .checkbox-item {
-                padding: 10px 12px;
-            }
-
-            .code-body pre {
-                font-size: 11px;
-            }
-        }
+        .footer a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <header>
-        <div class="container">
-            <nav>
-                <a href="index.html" class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    Ecom<span>Tools</span>
-                </a>
-                <a href="index.html" class="back-link">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Volver a herramientas</span>
-                </a>
-            </nav>
-        </div>
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                Ecom<span>Tools</span>
+            </a>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                Volver
+            </a>
+        </nav>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero-section">
-        <div class="container">
-            <div class="hero-badge">
-                <i class="fab fa-tiktok"></i>
-                TikTok Pixel • Fácil y en minutos
-            </div>
+    <main class="main">
+        <div class="hero">
             <h1>TikTok <span>Pixel Activator</span></h1>
-            <p><strong>Conecta</strong> tu pixel con el ID, luego <strong>actívalo</strong> enviando todos los eventos de prueba a TikTok. Así el pixel queda listo y puedes copiar el código para tu web.</p>
+            <p>Conecta tu pixel y activa los 14 eventos. Sin pasos extra.</p>
         </div>
-    </section>
 
-    <!-- Platform Section -->
-    <section class="platform-section">
-        <div class="container">
-            <div class="platform-container">
-                <!-- Config Grid -->
-                <div class="config-grid">
-                    <!-- Configuration Card - Solo TikTok -->
-                    <div class="config-card">
-                        <div class="platform-content active" id="tiktok-content">
-                            <h2>
-                                <i class="fab fa-tiktok tiktok-icon"></i>
-                                Configura TikTok Pixel
-                            </h2>
+        <div class="pixel-card" id="pixelCard">
+            <div class="row">
+                <div class="pixel-dot"></div>
+                <span class="pixel-label">Pixel</span>
+            </div>
+            <div class="pixel-name" id="pixelName">No conectado</div>
+            <div class="pixel-id" id="pixelIdText">—</div>
+            <div class="pixel-status" id="pixelStatus">Sin conexión</div>
+        </div>
 
-                            <!-- Card estado: No conectado / Conectado (como el demo) -->
-                            <div class="pixel-display-card" id="pixelDisplayCard">
-                                <div class="pixel-card-header">
-                                    <div class="pixel-dot"></div>
-                                    <span class="pixel-card-label">Pixel</span>
-                                </div>
-                                <div class="pixel-card-name" id="pixelDisplayName">No conectado</div>
-                                <div class="pixel-card-id" id="pixelDisplayId">—</div>
-                                <div class="pixel-card-status" id="pixelDisplayStatus">Sin conexión</div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ttPixelId">Pixel ID</label>
-                                <div style="display: flex; gap: 10px; align-items: stretch;">
-                                    <input type="text" id="ttPixelId" placeholder="C1234567890ABCDEF" maxlength="25" style="flex: 1;">
-                                    <button type="button" class="btn-load-connect" id="btnConnectPixel" style="padding: 12px 20px; background: var(--text-dark); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; white-space: nowrap;">Conectar</button>
-                                </div>
-                                <div class="info-box" style="background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 14px; margin-top: 12px; font-size: 13px;">
-                                    <div style="display: flex; gap: 10px; align-items: flex-start;">
-                                        <i class="fas fa-info-circle" style="color: #0ea5e9; margin-top: 2px; flex-shrink: 0;"></i>
-                                        <div style="flex: 1;">
-                                            <strong style="color: var(--text-dark); display: block; margin-bottom: 8px;">¿Dónde encuentro mi Pixel ID de TikTok?</strong>
-                                            <ol style="margin: 0; padding-left: 20px; color: var(--text-medium); line-height: 1.8;">
-                                                <li>Ve a <a href="https://ads.tiktok.com/" target="_blank" style="color: #0ea5e9; text-decoration: underline; font-weight: 600;">TikTok Ads Manager</a> e inicia sesión</li>
-                                                <li>En el menú lateral izquierdo, haz clic en <strong>"Assets"</strong> (Recursos)</li>
-                                                <li>Luego selecciona <strong>"Events"</strong> (Eventos)</li>
-                                                <li>Verás una lista de tus pixels. Haz clic en el pixel que quieres usar</li>
-                                                <li>En la página del pixel, busca la sección <strong>"Pixel Code"</strong> o <strong>"Pixel ID"</strong></li>
-                                                <li>El Pixel ID tiene formato: <code style="background: #e0f2fe; padding: 2px 6px; border-radius: 4px; font-family: monospace;">C1234567890ABCDEF</code> (empieza con "C" seguido de letras y números)</li>
-                                                <li>Copia ese ID completo y pégalo en el campo de arriba</li>
-                                            </ol>
-                                            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #bae6fd;">
-                                                <strong style="color: var(--text-dark);">💡 Tip:</strong> Si no tienes un pixel, puedes crear uno nuevo desde <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: #0ea5e9; text-decoration: underline; font-weight: 600;">TikTok Events Manager</a> → "Create Pixel"
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="ttPixelName">Nombre del Pixel (Opcional)</label>
-                                <input type="text" id="ttPixelName" placeholder="Mi Tienda TikTok">
-                            </div>
-
-                            <div class="form-group">
-                                <label>Eventos a Trackear</label>
-                                <div class="checkbox-group">
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" checked data-event="PageView">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">PageView</span>
-                                            <span class="checkbox-desc">Trackea cada visita a la página</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="ViewContent">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">ViewContent</span>
-                                            <span class="checkbox-desc">Cuando ven un producto</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="AddToCart">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">AddToCart</span>
-                                            <span class="checkbox-desc">Cuando agregan al carrito</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="PlaceAnOrder">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">PlaceAnOrder</span>
-                                            <span class="checkbox-desc">Cuando inician checkout</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="CompletePayment">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">CompletePayment</span>
-                                            <span class="checkbox-desc">Cuando completan una compra</span>
-                                        </div>
-                                    </label>
-                                    <label class="checkbox-item">
-                                        <input type="checkbox" data-event="SubmitForm">
-                                        <div class="checkbox-content">
-                                            <span class="checkbox-label">SubmitForm</span>
-                                            <span class="checkbox-desc">Cuando envían un formulario</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Activar eventos (como el demo: disparar todos en secuencia) -->
-                            <p style="font-size: 13px; color: var(--text-medium); margin-top: 8px; margin-bottom: 4px;">Después de conectar, activa el pixel enviando todos los eventos de prueba a TikTok:</p>
-                            <button class="btn-activate-events" id="btnActivateEvents" type="button" disabled>
-                                <i class="fas fa-bolt"></i>
-                                Activar 14 eventos
-                            </button>
-                            <div class="progress-activate-section" id="progressActivateSection">
-                                <div class="progress-row">
-                                    <span class="progress-event-name" id="currentActivateEvent">—</span>
-                                    <span class="progress-count" id="progressActivateCount">0/14</span>
-                                </div>
-                                <div class="progress-track">
-                                    <div class="progress-bar-fill" id="progressActivateBar"></div>
-                                </div>
-                                <div class="success-activate-msg" id="successActivateMsg">
-                                    <div class="success-check"><i class="fas fa-check"></i></div>
-                                    <span class="success-activate-text" id="successActivateText">14 eventos enviados a TikTok</span>
-                                </div>
-                            </div>
-
-                            <button class="btn-primary" id="generateTtCode">
-                                <i class="fas fa-code"></i>
-                                Generar Código
-                            </button>
-                        </div>
-
-                        <!-- Instructions -->
-                        <div class="instructions-section">
-                            <h3><i class="fas fa-book"></i> Instrucciones de Instalación</h3>
-                            <ol class="instructions-list">
-                                <li>
-                                    <span class="step-number">1</span>
-                                    <span class="step-content"><strong>Genera el código</strong> ingresando tu Pixel ID y seleccionando los eventos que deseas trackear.</span>
-                                </li>
-                                <li>
-                                    <span class="step-number">2</span>
-                                    <span class="step-content"><strong>Copia el código base</strong> y pégalo justo después de la etiqueta <code>&lt;head&gt;</code> en todas tus páginas.</span>
-                                </li>
-                                <li>
-                                    <span class="step-number">3</span>
-                                    <span class="step-content"><strong>Dispara eventos</strong> llamando a las funciones correspondientes cuando ocurra cada acción (clic en botón, envío de formulario, etc.).</span>
-                                </li>
-                                <li>
-                                    <span class="step-number">4</span>
-                                    <span class="step-content"><strong>Verifica la instalación</strong> con <a href="https://ads.tiktok.com/help/article?aid=10028" target="_blank" style="color: var(--primary); font-weight: 600;">TikTok Pixel Helper</a> (Chrome) o la pestaña "Test Events" en TikTok Events Manager.</span>
-                                </li>
-                            </ol>
-                        </div>
-                    </div>
-
-                    <!-- Code Preview Card -->
-                    <div class="code-card">
-                        <h2>
-                            <i class="fas fa-terminal" style="color: var(--primary);"></i>
-                            Código Generado
-                        </h2>
-
-                        <div class="code-preview">
-                            <div class="code-header">
-                                <div class="code-dots">
-                                    <span></span>
-                                    <span></span>
-                                    <span></span>
-                                </div>
-                                <span id="codeFileName">pixel-code.html</span>
-                            </div>
-                            <div class="code-body" id="codeBody">
-                                <div class="code-placeholder">
-                                    <i class="fas fa-code"></i>
-                                    <p>Ingresa tu Pixel ID de TikTok y haz clic en "Generar Código"</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="action-buttons" id="codeActions" style="display: none;">
-                            <button class="btn-secondary" id="copyCodeBtn">
-                                <i class="fas fa-copy"></i>
-                                Copiar Código
-                            </button>
-                            <button class="btn-secondary" id="downloadCodeBtn">
-                                <i class="fas fa-download"></i>
-                                Descargar
-                            </button>
-                            <button class="btn-secondary" id="testPixelBtn" style="grid-column: 1 / -1; background: var(--accent); color: white; border-color: var(--accent); font-weight: 600;">
-                                <i class="fas fa-check-circle"></i>
-                                Verificar Instalación en Esta Página
-                            </button>
-                            <p style="grid-column: 1 / -1; font-size: 12px; color: var(--text-medium); margin: 8px 0 0 0;">
-                                <i class="fas fa-info-circle"></i> Este código es para pegar en el <code>&lt;head&gt;</code> de tu <strong>página HTML</strong> o en la plantilla de tu web. <strong>No</strong> lo ejecutes en Node.js ni en un archivo .js.
-                            </p>
-                        </div>
-
-                        <!-- Verification & Testing Section -->
-                        <div id="testSection" style="display: none; margin-top: 32px; padding-top: 32px; border-top: 2px solid var(--border);">
-                            <!-- Header with Status -->
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
-                                <div>
-                                    <h3 style="font-size: 22px; font-weight: 800; color: var(--text-dark); margin: 0 0 8px 0;">
-                                        <i class="fas fa-check-circle" style="color: var(--accent);"></i> Verificación de Instalación
-                                    </h3>
-                                    <p style="font-size: 14px; color: var(--text-medium); margin: 0;">
-                                        Valida que tu pixel esté funcionando correctamente y envía eventos a la plataforma
-                                    </p>
-                                </div>
-                                <div id="pixelStatus" style="display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: white; border: 2px solid var(--border); border-radius: 12px; font-size: 14px; font-weight: 600;">
-                                    <span id="pixelStatusIcon" class="status-dot"></span>
-                                    <span id="pixelStatusText">Verificando conexión...</span>
-                                </div>
-                            </div>
-
-                            <!-- Pixel Info Card -->
-                            <div id="pixelInfo" style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); display: none;">
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
-                                    <div>
-                                        <div style="font-size: 12px; font-weight: 600; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Pixel ID</div>
-                                        <div style="font-family: monospace; color: var(--text-dark); font-size: 16px; font-weight: 700;" id="infoPixelId">-</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; font-weight: 600; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Plataforma</div>
-                                        <div style="color: var(--text-dark); font-size: 16px; font-weight: 600;" id="infoPlatform">-</div>
-                                    </div>
-                                    <div>
-                                        <div style="font-size: 12px; font-weight: 600; color: var(--text-medium); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Estado de Conexión</div>
-                                        <div style="color: var(--text-dark); font-size: 16px; font-weight: 600;" id="infoStatus">-</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- What This Means Section -->
-                            <div class="info-box" style="background: #f0f9ff; border-left: 4px solid #0ea5e9; margin-bottom: 24px; padding: 20px;">
-                                <div style="display: flex; gap: 12px;">
-                                    <div style="flex-shrink: 0;">
-                                        <i class="fas fa-lightbulb" style="color: #0ea5e9; font-size: 20px;"></i>
-                                    </div>
-                                    <div>
-                                        <h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0 0 8px 0;">¿Qué significa esto?</h4>
-                                        <p style="font-size: 14px; color: var(--text-medium); margin: 0; line-height: 1.6;">
-                                            Cuando instalas el TikTok Pixel en tu sitio, cada acción (ver producto, agregar al carrito, comprar) se envía a TikTok. Así puedes:
-                                        </p>
-                                        <ul style="margin: 12px 0 0 0; padding-left: 20px; font-size: 14px; color: var(--text-medium); line-height: 1.8;">
-                                            <li><strong>Optimizar anuncios:</strong> TikTok encuentra más usuarios similares a quienes compraron</li>
-                                            <li><strong>Medir conversiones:</strong> Sabes cuántas ventas vienen de cada campaña</li>
-                                            <li><strong>Audiencias y retargeting:</strong> Mostrar anuncios a quienes visitaron tu web o abandonaron el carrito</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <p style="font-size: 14px; color: var(--text-medium); margin-bottom: 20px;">
-                                Los eventos reales se envían a TikTok con el botón <strong>«Activar 14 eventos»</strong> (arriba). Verifica en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: var(--primary); font-weight: 600;">TikTok Events Manager</a> → Test Events.
-                            </p>
-
-                            <!-- Next Steps -->
-                            <div class="info-box" style="background: #f0fdf4; border-left: 4px solid var(--accent); padding: 20px;">
-                                <h4 style="font-size: 16px; font-weight: 700; color: var(--text-dark); margin: 0 0 12px 0;">
-                                    <i class="fas fa-arrow-right" style="color: var(--accent);"></i> Próximos Pasos para Tu Sitio Web
-                                </h4>
-                                <div style="background: white; padding: 12px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--accent);">
-                                    <p style="margin: 0; font-size: 13px; color: var(--text-dark); font-weight: 600;">
-                                        <i class="fas fa-info-circle" style="color: var(--accent);"></i> 
-                                        <strong>Nota:</strong> La verificación en esta página confirma que el código funciona. Ahora necesitas instalarlo en tu sitio web real.
-                                    </p>
-                                </div>
-                                <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-medium); line-height: 1.8;">
-                                    <li style="margin-bottom: 12px;">
-                                        <strong style="color: var(--text-dark);">Copia el código base:</strong> Arriba tienes el código completo. Cópialo y pégalo justo después de la etiqueta <code>&lt;head&gt;</code> en <strong>todas</strong> las páginas de tu sitio web.
-                                    </li>
-                                    <li style="margin-bottom: 12px;">
-                                        <strong style="color: var(--text-dark);">Implementa eventos específicos:</strong> Los comentarios en el código muestran cómo disparar cada evento. Agrega esos códigos JavaScript en las acciones correspondientes:
-                                        <ul style="margin-top: 6px; padding-left: 20px;">
-                                            <li><code>ViewContent</code> → En páginas de producto</li>
-                                            <li><code>AddToCart</code> → Al hacer clic en "Agregar al carrito"</li>
-                                            <li><code>CompletePayment</code> → En la página de confirmación de compra</li>
-                                            <li><code>SubmitForm</code> → Al enviar formularios</li>
-                                        </ul>
-                                    </li>
-                                    <li style="margin-bottom: 12px;">
-                                        <strong style="color: var(--text-dark);">Verifica en tu sitio:</strong> Usa <a href="https://ads.tiktok.com/help/article?aid=10028" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">TikTok Pixel Helper</a> (Chrome) para ver eventos en tiempo real.
-                                    </li>
-                                    <li>
-                                        <strong style="color: var(--text-dark);">Monitorea resultados:</strong> En <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" style="color: var(--accent); text-decoration: underline; font-weight: 600;">TikTok Events Manager</a> → tu pixel → Test Events o Diagnostics.
-                                    </li>
-                                </ol>
-                            </div>
-                        </div>
-
-                        <div class="info-box warning" style="margin-top: 20px;">
-                            <p><i class="fas fa-exclamation-triangle"></i> <strong>Importante:</strong> Pega el código base justo después del <code>&lt;head&gt;</code>. Los eventos (ViewContent, CompletePayment, etc.) se disparan con JavaScript en cada acción.</p>
-                        </div>
-
-                        <!-- Saved Pixels -->
-                        <div class="saved-pixels-section" id="savedPixelsSection">
-                            <div class="saved-pixels-header">
-                                <h3>Pixels TikTok guardados</h3>
-                            </div>
-                            <div class="pixel-list" id="pixelList">
-                                <div class="empty-pixels">
-                                    <i class="fas fa-database"></i>
-                                    <p>No hay pixels guardados aún</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="input-card">
+            <div class="input-row">
+                <input type="text" id="pixelInput" placeholder="Pixel ID (ej. D60H1BRC77UD675I18NG)" autocomplete="off">
+                <button type="button" class="btn-connect" id="btnConnect">Conectar</button>
             </div>
         </div>
-    </section>
+
+        <button type="button" class="btn-activate" id="btnActivate" disabled>
+            <i class="fas fa-bolt"></i>
+            Activar 14 eventos
+        </button>
+
+        <div class="progress-wrap" id="progressWrap">
+            <div class="progress-top">
+                <span class="progress-event" id="currentEvent">—</span>
+                <span class="progress-count" id="progressCount">0/14</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="success-msg" id="successMsg">
+                <div class="icon"><i class="fas fa-check"></i></div>
+                <span class="text" id="successText">14 eventos enviados</span>
+            </div>
+        </div>
+
+        <p class="footer">
+            Verificar en <a href="https://ads.tiktok.com/i18n/events_manager" target="_blank" rel="noopener">TikTok Events Manager</a> → Test Events
+        </p>
+    </main>
 
     <script>
-        // Utility Functions - Defined first
-        function getSelectedEvents(containerId) {
-            const checkboxes = document.querySelectorAll(`${containerId} input[type="checkbox"]:checked`);
-            return Array.from(checkboxes).map(cb => cb.dataset.event);
-        }
+        var pixelLoaded = false;
+        var pixelInfo = { name: '', id: '' };
 
-        function displayCode(code, filename) {
-            const codeBody = document.getElementById('codeBody');
-            const codeActions = document.getElementById('codeActions');
-            
-            if (!codeBody || !codeActions) return;
-            
-            // Syntax highlight
-            const highlightedCode = code
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
-                .replace(/('https?:\/\/[^']+')|(https:\/\/[^\s<]+)/g, '<span class="string">$&</span>')
-                .replace(/('G-[A-Z0-9]+'|'\d{15,16}'|'GTM-[A-Z0-9]+'|'AW-\d+'|'[A-Z0-9]{10,}')/gi, '<span class="string">$1</span>')
-                .replace(/(function|var|let|const|return|if|else|for|while)/g, '<span class="function">$1</span>');
-
-            codeBody.innerHTML = `<pre>${highlightedCode}</pre>`;
-            const fileNameEl = document.getElementById('codeFileName');
-            if (fileNameEl) fileNameEl.textContent = filename;
-            codeActions.style.display = 'grid';
-
-            // Store current code for copy/download
-            window.currentGeneratedCode = code;
-            window.currentCodeFilename = filename;
-        }
-
-        function clearCodePreview() {
-            const codeBody = document.getElementById('codeBody');
-            const codeActions = document.getElementById('codeActions');
-            
-            if (!codeBody || !codeActions) return;
-            
-            codeBody.innerHTML = `<div class="code-placeholder">
-                <i class="fas fa-code"></i>
-                <p>Ingresa tu Pixel ID de TikTok y haz clic en "Generar Código"</p>
-            </div>`;
-            codeActions.style.display = 'none';
-            window.currentGeneratedCode = null;
-        }
-
-        // Generate TikTok Pixel Code
-        function generateTikTokPixelCode(pixelId, events) {
-            let eventsCode = '';
-            
-            events.forEach(event => {
-                if (event !== 'PageView') {
-                    eventsCode += `\n// Dispara este evento cuando ocurra la acción:
-// ttq.track('${event}');`;
-                    
-                    if (event === 'CompletePayment') {
-                        eventsCode += `
-// Ejemplo con valor (recomendado: incluir email y phone para mejor atribución):
-// ttq.track('CompletePayment', {value: 99.99, currency: 'USD', email: 'cliente@email.com', phone: '+34...'});`;
-                    } else if (event === 'ViewContent') {
-                        eventsCode += `
-// Ejemplo con datos:
-// ttq.track('ViewContent', {content_id: '123', content_name: 'Producto X', value: 49.99, currency: 'USD'});`;
-                    }
-                }
-            });
-
-            const baseCode = '<!-- TikTok Pixel Code -->\n<' + 'script>\n' +
-'!function (w, d, t) {\n' +
-'  w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};\n\n' +
-'  ttq.load(\'' + pixelId + '\');\n' +
-'  ttq.page();\n' +
-'}(window, document, \'ttq\');\n' +
-'</' + 'script>\n' +
-'<!-- End TikTok Pixel Code -->';
-            
-            return baseCode + eventsCode;
-        }
-
-        // Save pixel to Supabase (solo TikTok)
-        async function savePixel(platform, pixelId, name, events = []) {
-            try {
-                const response = await fetch('/api/pixel-activator/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        platform,
-                        pixelId,
-                        name,
-                        metadata: { events }
-                    })
-                });
-
-                const result = await response.json();
-
-                if (!result.success) {
-                    console.error('Error saving pixel:', result.error);
-                    // Fallback a localStorage si falla la API
-                    savePixelLocalStorage(platform, pixelId, name);
-                    return;
-                }
-
-                // Recargar la lista de pixels
-                await renderSavedPixels();
-            } catch (error) {
-                console.error('Error saving pixel:', error);
-                // Fallback a localStorage si falla la API
-                savePixelLocalStorage(platform, pixelId, name);
-            }
-        }
-
-        // Fallback: Save pixel to local storage
-        function savePixelLocalStorage(platform, pixelId, name) {
-            const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-            const existingIndex = pixels.findIndex(p => p.platform === platform && p.pixelId === pixelId);
-            
-            if (existingIndex >= 0) {
-                pixels[existingIndex].name = name;
-                pixels[existingIndex].updatedAt = new Date().toISOString();
-            } else {
-                pixels.push({
-                    id: Date.now().toString(),
-                    platform,
-                    pixelId,
-                    name,
-                    createdAt: new Date().toISOString()
-                });
-            }
-            
-            localStorage.setItem('savedPixels', JSON.stringify(pixels));
-            renderSavedPixels();
-        }
-
-        // Render saved pixels from API
-        async function renderSavedPixels() {
-            const pixelList = document.getElementById('pixelList');
-            
-            if (!pixelList) return;
-
-            // Mostrar loading
-            pixelList.innerHTML = `<div class="empty-pixels">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Cargando pixels...</p>
-            </div>`;
-
-            try {
-                const response = await fetch('/api/pixel-activator/list?platform=tiktok');
-                const result = await response.json();
-
-                let pixels = [];
-
-                if (result.success && result.data) {
-                    pixels = result.data;
-                } else {
-                    // Fallback a localStorage si falla la API
-                    pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-                }
-
-                if (pixels.length === 0) {
-                    pixelList.innerHTML = `<div class="empty-pixels">
-                        <i class="fas fa-database"></i>
-                        <p>No hay pixels guardados aún</p>
-                    </div>`;
-                    return;
-                }
-
-                const platformIcons = { tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' } };
-
-                pixelList.innerHTML = pixels.map(pixel => {
-                    const iconData = platformIcons[pixel.platform] || { icon: 'fab fa-tiktok', class: 'tiktok-icon' };
-                    return `<div class="pixel-item" data-id="${pixel.id}">
-                        <div class="pixel-item-icon ${iconData.class}">
-                            <i class="${iconData.icon}"></i>
-                        </div>
-                        <div class="pixel-item-info">
-                            <div class="pixel-item-name">${pixel.name || pixel.pixelId}</div>
-                            <div class="pixel-item-id">${pixel.pixelId}</div>
-                        </div>
-                        <div class="pixel-item-actions">
-                            <button class="pixel-item-btn load-pixel" title="Cargar">
-                                <i class="fas fa-upload"></i>
-                            </button>
-                            <button class="pixel-item-btn delete" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>`;
-                }).join('');
-
-                // Add event listeners
-                pixelList.querySelectorAll('.load-pixel').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const item = this.closest('.pixel-item');
-                        const pixelId = item.dataset.id;
-                        loadPixel(pixelId);
-                    });
-                });
-
-                pixelList.querySelectorAll('.delete').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const item = this.closest('.pixel-item');
-                        const pixelId = item.dataset.id;
-                        deletePixel(pixelId);
-                    });
-                });
-            } catch (error) {
-                console.error('Error loading pixels:', error);
-                // Fallback a localStorage
-                const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-                if (pixels.length === 0) {
-                    pixelList.innerHTML = `<div class="empty-pixels">
-                        <i class="fas fa-database"></i>
-                        <p>No hay pixels guardados aún</p>
-                    </div>`;
-                } else {
-                    renderSavedPixelsFromLocalStorage(pixels);
-                }
-            }
-        }
-
-        // Fallback: Render from localStorage
-        function renderSavedPixelsFromLocalStorage(pixels) {
-            const pixelList = document.getElementById('pixelList');
-            if (!pixelList) return;
-
-            const platformIcons = { tiktok: { icon: 'fab fa-tiktok', class: 'tiktok-icon' } };
-
-            pixelList.innerHTML = pixels.map(pixel => {
-                const iconData = platformIcons[pixel.platform] || { icon: 'fab fa-tiktok', class: 'tiktok-icon' };
-                return `<div class="pixel-item" data-id="${pixel.id}">
-                    <div class="pixel-item-icon ${iconData.class}">
-                        <i class="${iconData.icon}"></i>
-                    </div>
-                    <div class="pixel-item-info">
-                        <div class="pixel-item-name">${pixel.name || pixel.pixelId}</div>
-                        <div class="pixel-item-id">${pixel.pixelId}</div>
-                    </div>
-                    <div class="pixel-item-actions">
-                        <button class="pixel-item-btn load-pixel" title="Cargar">
-                            <i class="fas fa-upload"></i>
-                        </button>
-                        <button class="pixel-item-btn delete" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>`;
-            }).join('');
-
-            // Add event listeners
-            pixelList.querySelectorAll('.load-pixel').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const item = this.closest('.pixel-item');
-                    const pixelId = item.dataset.id;
-                    loadPixel(pixelId);
-                });
-            });
-
-            pixelList.querySelectorAll('.delete').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const item = this.closest('.pixel-item');
-                    const pixelId = item.dataset.id;
-                    deletePixel(pixelId);
-                });
-            });
-        }
-
-        // Load pixel from API
-        async function loadPixel(id) {
-            try {
-                const response = await fetch(`/api/pixel-activator/get?id=${encodeURIComponent(id)}`);
-                const result = await response.json();
-
-                let pixel;
-
-                if (result.success && result.data) {
-                    pixel = result.data;
-                } else {
-                    // Fallback a localStorage
-                    const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-                    pixel = pixels.find(p => p.id === id);
-                    if (!pixel) {
-                        alert('Pixel no encontrado');
-                        return;
-                    }
-                }
-
-                // Rellenar formulario TikTok
-                const ttId = document.getElementById('ttPixelId');
-                const ttName = document.getElementById('ttPixelName');
-                if (ttId) ttId.value = pixel.pixelId;
-                if (ttName) ttName.value = pixel.name || '';
-            } catch (error) {
-                console.error('Error loading pixel:', error);
-                alert('Error al cargar el pixel');
-            }
-        }
-
-        // Delete pixel from API
-        async function deletePixel(id) {
-            if (!confirm('¿Estás seguro de eliminar este pixel guardado?')) return;
-
-            try {
-                const response = await fetch(`/api/pixel-activator/delete?id=${encodeURIComponent(id)}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Recargar la lista
-                    await renderSavedPixels();
-                } else {
-                    // Fallback a localStorage
-                    const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-                    const filtered = pixels.filter(p => p.id !== id);
-                    localStorage.setItem('savedPixels', JSON.stringify(filtered));
-                    renderSavedPixelsFromLocalStorage(filtered);
-                }
-            } catch (error) {
-                console.error('Error deleting pixel:', error);
-                // Fallback a localStorage
-                const pixels = JSON.parse(localStorage.getItem('savedPixels') || '[]');
-                const filtered = pixels.filter(p => p.id !== id);
-                localStorage.setItem('savedPixels', JSON.stringify(filtered));
-                renderSavedPixelsFromLocalStorage(filtered);
-            }
-        }
-
-        // Lista de 14 eventos TikTok (como el demo "activar")
-        const TIKTOK_ACTIVATE_EVENTS = [
+        var TIKTOK_EVENTS = [
             'ViewContent', 'ClickButton', 'Search', 'AddToWishlist',
             'AddToCart', 'InitiateCheckout', 'AddPaymentInfo', 'PlaceAnOrder',
             'CompletePayment', 'Subscribe', 'Contact', 'SubmitForm',
             'Download', 'CompleteRegistration'
         ];
 
-        // Obtener nombre del pixel desde TikTok (replicado del demo: config.js + fallback si CORS)
-        async function fetchPixelInfo(pixelId) {
-            try {
-                const res = await fetch(`https://analytics.tiktok.com/i18n/pixel/config.js?sdkid=${pixelId}&verifyDomain=true&lib=ttq&t=${Date.now()}`);
-                if (!res.ok) throw new Error('Not found');
-                const text = await res.text();
-                let name = null;
-                const nameMatch = text.match(/"pixel_name"\s*:\s*"([^"]+)"/);
-                if (nameMatch) name = nameMatch[1];
-                if (!name) {
-                    const displayMatch = text.match(/"display_name"\s*:\s*"([^"]+)"/);
-                    if (displayMatch) name = displayMatch[1];
-                }
-                if (!name) {
-                    const advMatch = text.match(/"advertiser_name"\s*:\s*"([^"]+)"/);
-                    if (advMatch) name = advMatch[1];
-                }
-                if (!name) {
-                    const anyName = text.match(/"name"\s*:\s*"([^"]+)"/);
-                    if (anyName) name = anyName[1];
-                }
-                if (text.includes(pixelId) || text.length > 200) {
-                    return { name: name || 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
-                }
-            } catch (e) {}
-            // Fallback como el demo: si config.js falla (CORS), verificar cargando events.js
-            return new Promise(function (resolve) {
-                var script = document.createElement('script');
-                script.src = 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=' + pixelId + '&lib=ttq&t=' + Date.now();
-                var timeout = setTimeout(function () {
-                    script.remove();
-                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
-                }, 3000);
-                script.onload = function () {
-                    clearTimeout(timeout);
-                    script.remove();
-                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
-                };
-                script.onerror = function () {
-                    clearTimeout(timeout);
-                    script.remove();
-                    resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId });
-                };
-                document.head.appendChild(script);
-            });
+        function fetchPixelInfo(pixelId) {
+            return fetch('https://analytics.tiktok.com/i18n/pixel/config.js?sdkid=' + encodeURIComponent(pixelId) + '&verifyDomain=true&lib=ttq&t=' + Date.now())
+                .then(function(res) { return res.ok ? res.text() : Promise.reject(new Error('Not found')); })
+                .then(function(text) {
+                    var name = null;
+                    var m = text.match(/"pixel_name"\s*:\s*"([^"]+)"/);
+                    if (m) name = m[1];
+                    if (!name) { m = text.match(/"display_name"\s*:\s*"([^"]+)"/); if (m) name = m[1]; }
+                    if (!name) { m = text.match(/"advertiser_name"\s*:\s*"([^"]+)"/); if (m) name = m[1]; }
+                    if (!name) { m = text.match(/"name"\s*:\s*"([^"]+)"/); if (m) name = m[1]; }
+                    if (text.indexOf(pixelId) !== -1 || text.length > 200) {
+                        return { name: name || 'Pixel ' + pixelId.substring(0, 8), id: pixelId };
+                    }
+                    return Promise.reject(new Error('Invalid'));
+                })
+                .catch(function() {
+                    return new Promise(function(resolve) {
+                        var script = document.createElement('script');
+                        script.src = 'https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=' + encodeURIComponent(pixelId) + '&lib=ttq&t=' + Date.now();
+                        var t = setTimeout(function() { script.remove(); resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId }); }, 3000);
+                        script.onload = function() { clearTimeout(t); script.remove(); resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId }); };
+                        script.onerror = function() { clearTimeout(t); script.remove(); resolve({ name: 'Pixel ' + pixelId.substring(0, 8), id: pixelId }); };
+                        document.head.appendChild(script);
+                    });
+                });
         }
 
-        // Conectar pixel: cargar en página y actualizar card
-        async function connectPixel() {
-            const pixelId = document.getElementById('ttPixelId').value.trim();
-            if (!pixelId) {
-                alert('Ingresa tu Pixel ID de TikTok (ej: C1234567890ABCDEF).');
-                return;
-            }
-            if (pixelId.length < 5) {
-                alert('El Pixel ID parece inválido. Verifica que sea correcto.');
-                return;
-            }
+        function loadPixel() {
+            var pixelId = document.getElementById('pixelInput').value.trim();
+            if (!pixelId) return;
 
-            const card = document.getElementById('pixelDisplayCard');
-            const nameEl = document.getElementById('pixelDisplayName');
-            const idEl = document.getElementById('pixelDisplayId');
-            const statusEl = document.getElementById('pixelDisplayStatus');
-            const btnConnect = document.getElementById('btnConnectPixel');
-            const btnActivate = document.getElementById('btnActivateEvents');
+            var card = document.getElementById('pixelCard');
+            var nameEl = document.getElementById('pixelName');
+            var idEl = document.getElementById('pixelIdText');
+            var statusEl = document.getElementById('pixelStatus');
+            var btnConnect = document.getElementById('btnConnect');
+            var btnActivate = document.getElementById('btnActivate');
 
             card.classList.remove('connected');
             card.classList.add('loading');
             nameEl.textContent = 'Conectando...';
             idEl.textContent = pixelId;
             statusEl.textContent = 'Verificando';
-            if (btnConnect) btnConnect.disabled = true;
+            btnConnect.disabled = true;
 
-            try {
-                const info = await fetchPixelInfo(pixelId);
-
-                // Quitar pixel anterior (por id como el demo, luego por src)
+            fetchPixelInfo(pixelId).then(function(info) {
                 var oldScript = document.getElementById('ttPixelScript');
                 if (oldScript) oldScript.remove();
                 document.querySelectorAll('script[src*="analytics.tiktok.com"]').forEach(function(s) { s.remove(); });
                 if (window.ttq) delete window.ttq;
 
-                // Cargar TikTok Pixel
-                !function (w, d, t) {
-                    w.TiktokAnalyticsObject = t;
-                    var ttq = w[t] = w[t] || [];
-                    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
-                    ttq.setAndDefer = function (t, e) { t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } };
-                    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-                    ttq.instance = function (t) { for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]); return e };
-                    ttq.load = function (e, n) {
-                        var i = "https://analytics.tiktok.com/i18n/pixel/events.js";
-                        ttq._i = ttq._i || {}; ttq._i[e] = []; ttq._i[e]._u = i;
-                        ttq._t = ttq._t || {}; ttq._t[e] = +new Date;
-                        ttq._o = ttq._o || {}; ttq._o[e] = n || {};
-                        var o = document.createElement("script");
-                        o.type = "text/javascript"; o.async = !0; o.id = "ttPixelScript";
-                        o.src = i + "?sdkid=" + e + "&lib=" + t;
-                        var a = document.getElementsByTagName("script")[0];
-                        a.parentNode.insertBefore(o, a);
-                    };
-                    ttq.load(pixelId);
-                    ttq.page();
-                }(window, document, 'ttq');
+                !function(w,d,t){
+                    w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;ttq._o=ttq._o||{};ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript";o.async=!0;o.id="ttPixelScript";o.src=i+"?sdkid="+e+"&lib="+t;var a=d.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load(pixelId);ttq.page();
+                }(window,document,'ttq');
 
-                window.currentTestPixelId = pixelId;
-                window.currentTestPlatform = 'tiktok';
-                window.pixelActivateName = info.name;
+                pixelLoaded = true;
+                pixelInfo = { name: info.name, id: pixelId };
 
                 card.classList.remove('loading');
                 card.classList.add('connected');
                 nameEl.textContent = info.name;
-                idEl.textContent = pixelId;
                 statusEl.textContent = 'Conectado';
-                if (btnActivate) btnActivate.disabled = false;
-                document.getElementById('progressActivateSection').classList.remove('show');
-                document.getElementById('successActivateMsg').classList.remove('show');
-                document.getElementById('progressActivateBar').style.width = '0%';
-                document.getElementById('progressActivateBar').classList.remove('done');
+                btnActivate.disabled = false;
 
-                localStorage.setItem('ttPixelId', pixelId);
-            } catch (err) {
+                document.getElementById('progressWrap').classList.remove('show');
+                document.getElementById('successMsg').classList.remove('show');
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressBar').classList.remove('done');
+
+                try { localStorage.setItem('ttPixelId', pixelId); } catch (e) {}
+            }).catch(function() {
                 card.classList.remove('loading');
                 nameEl.textContent = 'Error de conexión';
                 statusEl.textContent = 'No encontrado';
                 idEl.textContent = pixelId;
-            }
-            if (btnConnect) btnConnect.disabled = false;
+            }).then(function() {
+                btnConnect.disabled = false;
+            });
         }
 
-        // Activar 14 eventos en secuencia (como el demo)
-        function fireAllActivateEvents() {
-            if (!window.currentTestPixelId || typeof ttq === 'undefined') {
-                alert('Primero conecta el pixel con el botón "Conectar".');
-                return;
-            }
+        function fireAllEvents() {
+            if (!pixelLoaded || typeof ttq === 'undefined') return;
 
-            const progressSection = document.getElementById('progressActivateSection');
-            const progressBar = document.getElementById('progressActivateBar');
-            const currentEvent = document.getElementById('currentActivateEvent');
-            const progressCount = document.getElementById('progressActivateCount');
-            const successMsg = document.getElementById('successActivateMsg');
-            const successText = document.getElementById('successActivateText');
-            const btnActivate = document.getElementById('btnActivateEvents');
+            var params = { value: 0, currency: 'USD', content_id: 'test', content_type: 'product', email: 'test@example.com', phone: '+1234567890' };
 
-            progressSection.classList.add('show');
-            successMsg.classList.remove('show');
-            progressBar.classList.remove('done');
-            progressBar.style.width = '0%';
+            var wrap = document.getElementById('progressWrap');
+            var bar = document.getElementById('progressBar');
+            var currentEl = document.getElementById('currentEvent');
+            var countEl = document.getElementById('progressCount');
+            var successEl = document.getElementById('successMsg');
+            var textEl = document.getElementById('successText');
+            var btnActivate = document.getElementById('btnActivate');
+
+            wrap.classList.add('show');
+            successEl.classList.remove('show');
+            bar.classList.remove('done');
+            bar.style.width = '0%';
             btnActivate.disabled = true;
 
-            const params = { value: 0, currency: 'USD', content_id: 'test', content_type: 'product', email: 'test@example.com', phone: '+1234567890' };
-            const total = TIKTOK_ACTIVATE_EVENTS.length;
-            let completed = 0;
+            var completed = 0;
+            var total = TIKTOK_EVENTS.length;
 
-            TIKTOK_ACTIVATE_EVENTS.forEach((eventName, i) => {
-                setTimeout(() => {
+            TIKTOK_EVENTS.forEach(function(eventName, i) {
+                setTimeout(function() {
                     try { ttq.track(eventName, params); } catch (e) {}
                     completed++;
-                    const pct = (completed / total) * 100;
-                    progressBar.style.width = pct + '%';
-                    currentEvent.textContent = eventName;
-                    progressCount.textContent = completed + '/' + total;
+                    bar.style.width = (completed / total) * 100 + '%';
+                    currentEl.textContent = eventName;
+                    countEl.textContent = completed + '/' + total;
 
                     if (completed === total) {
-                        setTimeout(() => {
-                            progressBar.classList.add('done');
-                            currentEvent.textContent = 'Completado';
-                            successText.textContent = '14 eventos enviados a ' + (window.pixelActivateName || window.currentTestPixelId || 'TikTok');
-                            successMsg.classList.add('show');
+                        setTimeout(function() {
+                            bar.classList.add('done');
+                            currentEl.textContent = 'Completado';
+                            textEl.textContent = '14 eventos enviados a ' + pixelInfo.name;
+                            successEl.classList.add('show');
                             btnActivate.disabled = false;
                         }, 200);
                     }
@@ -2031,358 +548,14 @@
             });
         }
 
-        // Initialize app when DOM is ready (solo TikTok)
-        function initializeApp() {
-            // Conectar pixel
-            const btnConnect = document.getElementById('btnConnectPixel');
-            if (btnConnect) {
-                btnConnect.addEventListener('click', connectPixel);
-            }
-            var ttInput = document.getElementById('ttPixelId');
-            if (ttInput) ttInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') connectPixel();
-            });
-
-            // Activar 14 eventos
-            const btnActivate = document.getElementById('btnActivateEvents');
-            if (btnActivate) {
-                btnActivate.addEventListener('click', fireAllActivateEvents);
-            }
-
-            // Cargar Pixel ID guardado
-            const saved = localStorage.getItem('ttPixelId');
-            if (saved && ttInput) ttInput.value = saved;
-
-            // Generate TikTok Pixel Code
-            const generateTtBtn = document.getElementById('generateTtCode');
-            if (generateTtBtn) {
-                generateTtBtn.addEventListener('click', function() {
-                    const pixelId = document.getElementById('ttPixelId').value.trim();
-                    
-                    if (!pixelId) {
-                        alert('Por favor, ingresa tu Pixel ID de TikTok');
-                        return;
-                    }
-
-                    // TikTok Pixel ID puede tener diferentes formatos, solo validamos que no esté vacío
-                    if (pixelId.length < 5) {
-                        alert('El Pixel ID de TikTok parece ser inválido. Verifica que sea correcto.');
-                        return;
-                    }
-
-                    const events = getSelectedEvents('#tiktok-content');
-                    const code = generateTikTokPixelCode(pixelId, events);
-                    
-                    displayCode(code, 'tiktok-pixel.html');
-                    const pixelName = document.getElementById('ttPixelName').value || 'TikTok Pixel';
-                    savePixel('tiktok', pixelId, pixelName, events);
-                });
-            }
-
-            // Copy code to clipboard
-            const copyCodeBtn = document.getElementById('copyCodeBtn');
-            if (copyCodeBtn) {
-                copyCodeBtn.addEventListener('click', function() {
-                    if (!window.currentGeneratedCode) return;
-
-                    navigator.clipboard.writeText(window.currentGeneratedCode).then(() => {
-                        const btn = this;
-                        const originalHTML = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                        btn.classList.add('copied');
-                        
-                        setTimeout(() => {
-                            btn.innerHTML = originalHTML;
-                            btn.classList.remove('copied');
-                        }, 2000);
-                    }).catch(err => {
-                        // Fallback
-                        const textarea = document.createElement('textarea');
-                        textarea.value = window.currentGeneratedCode;
-                        document.body.appendChild(textarea);
-                        textarea.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(textarea);
-                        
-                        const btn = this;
-                        const originalHTML = btn.innerHTML;
-                        btn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!';
-                        btn.classList.add('copied');
-                        
-                        setTimeout(() => {
-                            btn.innerHTML = originalHTML;
-                            btn.classList.remove('copied');
-                        }, 2000);
-                    });
-                });
-            }
-
-            // Download code as file
-            const downloadCodeBtn = document.getElementById('downloadCodeBtn');
-            if (downloadCodeBtn) {
-                downloadCodeBtn.addEventListener('click', function() {
-                    if (!window.currentGeneratedCode) return;
-
-                    const blob = new Blob([window.currentGeneratedCode], { type: 'text/html' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = window.currentCodeFilename || 'pixel-code.html';
-                    link.click();
-                    URL.revokeObjectURL(url);
-                });
-            }
-
-            // Test pixel button - Instalar TikTok Pixel en esta página
-            const testPixelBtn = document.getElementById('testPixelBtn');
-            if (testPixelBtn) {
-                testPixelBtn.addEventListener('click', function() {
-                    const pixelId = document.getElementById('ttPixelId').value.trim();
-                    if (!pixelId) {
-                        alert('Ingresa tu Pixel ID de TikTok y genera el código para verificar la instalación.');
-                        return;
-                    }
-                    if (pixelId.length < 5) {
-                        alert('El Pixel ID parece inválido. Verifica que sea correcto (formato tipo C1234567890ABCDEF).');
-                        return;
-                    }
-                    installPixelOnPage('tiktok', pixelId);
-                });
-            }
-
-            // Cargar lista de pixels guardados al abrir la página
-            renderSavedPixels();
-        }
-
-        // Instalar TikTok Pixel en la página actual (evita duplicado si ya está cargado)
-        function installPixelOnPage(platform, pixelId) {
-            // Si el mismo pixel ya está cargado, solo mostrar la sección de prueba (evita "Duplicate Pixel ID")
-            if (window.currentTestPixelId === pixelId && typeof ttq !== 'undefined') {
-                document.getElementById('testSection').style.display = 'block';
-                document.getElementById('pixelInfo').style.display = 'block';
-                document.getElementById('infoPixelId').textContent = pixelId;
-                document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
-                var infoStatusEl = document.getElementById('infoStatus');
-                if (infoStatusEl) { infoStatusEl.textContent = '✅ Activo'; infoStatusEl.style.color = 'var(--accent)'; }
-                updatePixelStatus('active', 'Conectado y funcionando');
-                return;
-            }
-
-            const oldScript = document.querySelector('script[src*="analytics.tiktok.com"]');
-            if (oldScript) {
-                document.querySelectorAll('script[src*="analytics.tiktok.com"]').forEach(s => s.remove());
-            }
-
-            // Instalar TikTok Pixel
-            !function (w, d, t) {
-                w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};
-                ttq.load(pixelId);
-                ttq.page();
-            }(window, document, 'ttq');
-
-            window.currentTestPixelId = pixelId;
-            window.currentTestPlatform = 'tiktok';
-
-            document.getElementById('testSection').style.display = 'block';
-            document.getElementById('pixelInfo').style.display = 'block';
-            document.getElementById('infoPixelId').textContent = pixelId;
-            document.getElementById('infoPlatform').textContent = 'TikTok Pixel';
-            var infoStatusEl = document.getElementById('infoStatus');
-            if (infoStatusEl) { infoStatusEl.textContent = '✅ Activo'; infoStatusEl.style.color = 'var(--accent)'; }
-
-            setTimeout(() => {
-                verifyPixelStatus();
-                if (window.pixelStatusInterval) clearInterval(window.pixelStatusInterval);
-                window.pixelStatusInterval = setInterval(verifyPixelStatus, 5000);
-            }, 1000);
-
-            addEventToLog('PageView', { pixelId: pixelId, message: 'Pixel instalado y funcionando' }, 'success');
-            updatePixelStatus('active', 'Conectado y funcionando');
-        }
-
-        // Disparar eventos de prueba (solo TikTok)
-        function testPixelEvent(eventName) {
-            const platform = window.currentTestPlatform;
-            const pixelId = window.currentTestPixelId;
-
-            if (!platform || !pixelId) {
-                addEventToLog('Error', { message: 'Pixel no instalado. Haz clic en "Verificar Instalación en Esta Página" primero.' }, 'error');
-                return;
-            }
-
-            try {
-                if (typeof ttq === 'undefined') {
-                    addEventToLog(eventName, { error: 'TikTok Pixel no cargado' }, 'error');
-                    updatePixelStatus('error', 'Pixel no detectado');
-                    return;
-                }
-
-                let eventData = {};
-                if (eventName === 'ViewContent') {
-                    eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
-                } else if (eventName === 'AddToCart') {
-                    eventData = { content_id: 'TEST123', content_name: 'Producto de Prueba', value: 49.99, currency: 'USD' };
-                } else if (eventName === 'PlaceAnOrder') {
-                    eventData = { value: 99.99, currency: 'USD' };
-                } else if (eventName === 'CompletePayment') {
-                    eventData = { value: 99.99, currency: 'USD', transaction_id: 'TEST-' + Date.now(), email: 'test@example.com', phone: '+1234567890' };
-                } else if (eventName === 'SubmitForm') {
-                    eventData = { content_name: 'Formulario de Contacto' };
-                }
-
-                ttq.track(eventName, eventData);
-
-                const eventCard = document.querySelector(`.event-card[data-event="${eventName}"]`);
-                const btn = eventCard ? eventCard.querySelector('.test-event-btn') : null;
-                if (btn) {
-                    btn.classList.add('success');
-                    const icon = btn.querySelector('.event-success-icon');
-                    if (icon) {
-                        icon.style.display = 'block';
-                        icon.style.animation = 'checkmark 0.5s';
-                    }
-                    setTimeout(() => {
-                        btn.classList.remove('success');
-                        if (icon) icon.style.display = 'none';
-                    }, 3000);
-                }
-
-                addEventToLog(eventName, eventData, 'success');
-                updatePixelStatus('active', 'Eventos enviándose correctamente');
-                console.log('✅ TikTok Pixel Event enviado:', eventName, eventData);
-            } catch (error) {
-                addEventToLog(eventName, { error: error.message }, 'error');
-                updatePixelStatus('error', 'Error al disparar evento');
-                console.error('Error disparando evento:', error);
-            }
-        }
-
-        function showTestResult(type, message) {
-            const resultDiv = document.getElementById('testResult');
-            if (resultDiv) {
-                const className = type === 'success' ? 'info-box success' : 'info-box';
-                resultDiv.innerHTML = `<div class="${className}" style="border-left-color: ${type === 'success' ? 'var(--accent)' : '#dc3545'};"><p>${message}</p></div>`;
-                
-                setTimeout(() => {
-                    resultDiv.innerHTML = '';
-                }, 5000);
-            }
-        }
-
-        // Agregar evento al log
-        function addEventToLog(eventName, eventData, type = 'success') {
-            const eventLog = document.getElementById('eventLog');
-            if (!eventLog) return;
-
-            // Remover mensaje vacío si existe
-            const emptyMsg = eventLog.querySelector('div[style*="text-align: center"]');
-            if (emptyMsg) emptyMsg.remove();
-
-            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const dataStr = JSON.stringify(eventData, null, 2);
-            
-            const logItem = document.createElement('div');
-            logItem.className = `event-log-item ${type}`;
-            
-            // Icono según tipo de evento (TikTok)
-            let eventIcon = '📊';
-            const eventIcons = {
-                'PageView': '👁️',
-                'ViewContent': '👀',
-                'AddToCart': '🛒',
-                'PlaceAnOrder': '💳',
-                'CompletePayment': '✅',
-                'SubmitForm': '📝'
-            };
-            if (eventIcons[eventName]) eventIcon = eventIcons[eventName];
-            
-            logItem.innerHTML = `
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                    <span style="font-size: 16px;">${eventIcon}</span>
-                    <div style="flex: 1;">
-                        <div class="event-log-name" style="display: inline-block; margin-right: 8px;">${eventName}</div>
-                        <div class="event-log-time" style="display: inline-block;">${time}</div>
-                    </div>
-                    ${type === 'success' ? '<span style="color: var(--accent);">✓ Enviado</span>' : '<span style="color: #ef4444;">✗ Error</span>'}
-                </div>
-                <div class="event-log-data">${dataStr}</div>
-            `;
-
-            eventLog.insertBefore(logItem, eventLog.firstChild);
-
-            // Limitar a 20 eventos
-            const items = eventLog.querySelectorAll('.event-log-item');
-            if (items.length > 20) {
-                items[items.length - 1].remove();
-            }
-        }
-
-        // Limpiar log de eventos
-        function clearEventLog() {
-            const eventLog = document.getElementById('eventLog');
-            if (eventLog) {
-                eventLog.innerHTML = '<div style="color: #666; padding: 20px; text-align: center; font-style: italic; border: 1px dashed #444; border-radius: 6px;"><i class="fas fa-inbox" style="font-size: 24px; margin-bottom: 8px; display: block; opacity: 0.5;"></i>Los eventos aparecerán aquí cuando los simules</div>';
-            }
-        }
-
-        // Verificar estado del TikTok Pixel
-        function verifyPixelStatus() {
-            const statusIcon = document.getElementById('pixelStatusIcon');
-            const statusText = document.getElementById('pixelStatusText');
-            const infoStatus = document.getElementById('infoStatus');
-
-            if (!statusIcon || !statusText) return;
-
-            const isActive = typeof ttq !== 'undefined' && typeof window.ttq !== 'undefined';
-            const message = isActive ? 'Conectado - Eventos enviándose' : 'No detectado - Verifica la instalación';
-
-            updatePixelStatus(isActive ? 'active' : 'error', message);
-            if (infoStatus) {
-                infoStatus.textContent = isActive ? '✅ Activo' : '❌ No detectado';
-                infoStatus.style.color = isActive ? 'var(--accent)' : '#ef4444';
-            }
-        }
-
-        // Actualizar estado visual del pixel
-        function updatePixelStatus(status, message) {
-            const statusIcon = document.getElementById('pixelStatusIcon');
-            const statusText = document.getElementById('pixelStatusText');
-
-            if (!statusIcon || !statusText) return;
-
-            statusIcon.className = 'status-dot';
-            
-            if (status === 'active') {
-                statusIcon.classList.add('active');
-                statusText.textContent = '✅ ' + message;
-                statusText.style.color = 'var(--accent)';
-                if (document.getElementById('pixelStatus')) {
-                    document.getElementById('pixelStatus').style.borderColor = 'var(--accent)';
-                    document.getElementById('pixelStatus').style.background = '#f0fdf4';
-                }
-            } else if (status === 'error') {
-                statusIcon.classList.add('error');
-                statusText.textContent = '⚠️ ' + message;
-                statusText.style.color = '#ef4444';
-                if (document.getElementById('pixelStatus')) {
-                    document.getElementById('pixelStatus').style.borderColor = '#ef4444';
-                    document.getElementById('pixelStatus').style.background = '#fef2f2';
-                }
-            } else {
-                statusText.textContent = '⏳ ' + message;
-                statusText.style.color = '#999';
-                if (document.getElementById('pixelStatus')) {
-                    document.getElementById('pixelStatus').style.borderColor = 'var(--border)';
-                    document.getElementById('pixelStatus').style.background = 'white';
-                }
-            }
-        }
-
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+        document.getElementById('btnConnect').addEventListener('click', loadPixel);
+        document.getElementById('btnActivate').addEventListener('click', fireAllEvents);
+        document.getElementById('pixelInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') loadPixel();
         });
 
+        var saved = localStorage.getItem('ttPixelId');
+        if (saved) document.getElementById('pixelInput').value = saved;
     </script>
 </body>
 </html>
