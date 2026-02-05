@@ -552,18 +552,7 @@ async function fetchFacebookAd(url, adId, type) {
         }
       }
 
-      console.log('[fetchFacebookAd] Strategy 4 - Response status:', response4.status);
-      
-      if (response4.ok) {
-        const html = await response4.text();
-        console.log('[fetchFacebookAd] Strategy 4 - HTML received, length:', html.length);
-        
-        const result = parseHtmlForAdData(html, adId);
-        if (result) {
-          console.log('[fetchFacebookAd] Strategy 4 - SUCCESS!');
-          return result;
-        }
-      }
+      // Si llegamos aquí, ninguna URL de la estrategia 4 funcionó (response4 solo existe dentro del loop)
     } catch (err4) {
       console.log('[fetchFacebookAd] Strategy 4 - Error:', err4.message);
     }
