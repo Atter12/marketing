@@ -557,15 +557,36 @@ async function fetchFacebookAd(url, adId, type) {
       console.log('[fetchFacebookAd] Strategy 4 - Error:', err4.message);
     }
 
-    // Si llegamos aquí, todas las estrategias fallaron
-    console.log('[fetchFacebookAd] All strategies failed - Response status was likely 400 (Bad Request)');
-    console.log('[fetchFacebookAd] This indicates Facebook is blocking automated requests');
+    // Estrategia 5 (opcional): ScraperAPI si está configurado — evita el bloqueo 403 de Facebook
+    const scraperApiKey = process.env.SCRAPER_API_KEY;
+    if (scraperApiKey) {
+      console.log('[fetchFacebookAd] Strategy 5: Trying ScraperAPI (external browser)...');
+      try {
+        const scraperUrl = `https://api.scraperapi.com?api_key=${scraperApiKey}&url=${encodeURIComponent(url)}`;
+        const resScraper = await fetch(scraperUrl, { redirect: 'follow' });
+        console.log('[fetchFacebookAd] Strategy 5 - ScraperAPI response status:', resScraper.status);
+        if (resScraper.ok) {
+          const html = await resScraper.text();
+          if (html && html.length > 500) {
+            const result = parseHtmlForAdData(html, adId);
+            if (result) {
+              console.log('[fetchFacebookAd] Strategy 5 - SUCCESS with ScraperAPI!');
+              return result;
+            }
+          }
+        }
+      } catch (e5) {
+        console.log('[fetchFacebookAd] Strategy 5 - Error:', e5.message);
+      }
+    }
 
     // Si llegamos aquí, todas las estrategias fallaron
+    console.log('[fetchFacebookAd] All strategies failed - Facebook is blocking automated requests (403)');
     console.log('[fetchFacebookAd] All strategies and parsing methods failed');
+    const suggestScraper = scraperApiKey ? '' : ' Para intentar evitar el bloqueo, configura la variable de entorno SCRAPER_API_KEY (ej. en Vercel) con una API key de scraperapi.com.';
     return {
       success: false,
-      error: 'No se pudo obtener el anuncio. Por favor, verifica que la URL sea válida e intenta de nuevo. Nota: Facebook Ads Library puede requerir que el anuncio esté público y activo.'
+      error: 'No se pudo obtener el anuncio: Facebook está bloqueando las peticiones automáticas (403). Verifica que la URL sea válida y que el anuncio sea público.' + suggestScraper
     };
 
   } catch (outerError) {
