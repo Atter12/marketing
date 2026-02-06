@@ -2772,6 +2772,7 @@
                 html.push('                }');
                 html.push('                if (countdown <= 0) {');
                 html.push('                    clearInterval(interval);');
+                html.push('                    safeRedirect(destinationUrl);');
                 html.push('                }');
                 html.push('            }, 1000);');
                 html.push('        }');
