@@ -148,9 +148,15 @@
     </div>
 
     <script>
-        // Obtener parámetros de la URL
+        // Obtener URL de destino: formato corto landing.html/dominio.com o clásico ?url=...
         const urlParams = new URLSearchParams(window.location.search);
-        const destinationUrl = urlParams.get('url') || '';
+        let destinationUrl = urlParams.get('url') || '';
+        const pathname = window.location.pathname || '';
+        const pathMatch = pathname.match(/landing\.html\/(.+)/);
+        if (!destinationUrl && pathMatch && pathMatch[1]) {
+            const shortPath = decodeURIComponent(pathMatch[1].replace(/\/+$/, ''));
+            destinationUrl = shortPath.match(/^https?:\/\//i) ? shortPath : ('https://' + shortPath);
+        }
         const waitSeconds = parseInt(urlParams.get('wait')) || 5;
         
         // Obtener parámetros personalizados del editor
@@ -173,7 +179,8 @@
                 if (titleElement) {
                     const locationSpan = titleElement.querySelector('.location-highlight');
                     if (locationSpan) {
-                        titleElement.innerHTML = escapeHtml(popupTitle) + ' <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(popupLocationColor) + ';">Detectando...</span><span class="blinking-cursor">|</span>';
+                        var initialText = popupDefaultLocation || 'Detectando...';
+                titleElement.innerHTML = escapeHtml(popupTitle) + ' <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(popupLocationColor) + ';">' + escapeHtml(initialText) + '</span><span class="blinking-cursor">|</span>';
                     }
                 }
                 
@@ -207,8 +214,8 @@
             // Aplicar personalizaciones inmediatamente
             applyCustomizations();
             
-            // Geolocalización automática: al abrir la URL se detecta el lugar real del visitante
-            var detectedLocation = '';
+            // Geolocalización automática: al abrir la URL se detecta el lugar real del visitante (si viene defaultLocation en la URL, se muestra hasta que se detecte)
+            var detectedLocation = popupDefaultLocation || '';
             var locationOfferOverlay = document.getElementById("locationOfferOverlay");
             var locationElement = document.getElementById("detectedLocation");
             

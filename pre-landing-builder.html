@@ -2123,13 +2123,23 @@
         }
         
         function generateShareableUrl(destinationUrl, waitSeconds) {
-            // URL corta: solo dominio + url + wait (el resto usa valores por defecto en landing.html)
             const baseUrl = window.location.origin + window.location.pathname.replace('pre-landing-builder.html', '') + 'landing.html';
-            const params = new URLSearchParams({
-                url: destinationUrl,
-                wait: Math.max(1, Math.min(30, parseInt(waitSeconds, 10) || 5)).toString()
-            });
-            const shareableUrl = baseUrl + '?' + params.toString();
+            var shareableUrl;
+            try {
+                var u = destinationUrl.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+                if (!u) { shareableUrl = baseUrl + '?url=' + encodeURIComponent(destinationUrl); }
+                else {
+                    shareableUrl = baseUrl + '/' + u;
+                    var wait = Math.max(1, Math.min(30, parseInt(waitSeconds, 10) || 5));
+                    var defaultLoc = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
+                    var q = [];
+                    if (wait !== 5) q.push('wait=' + wait);
+                    if (defaultLoc) q.push('defaultLocation=' + encodeURIComponent(defaultLoc));
+                    if (q.length) shareableUrl += '?' + q.join('&');
+                }
+            } catch (e) {
+                shareableUrl = baseUrl + '?url=' + encodeURIComponent(destinationUrl);
+            }
             
             // Mostrar modal con la URL
             const modal = document.createElement('div');
