@@ -132,7 +132,7 @@
             </div>
             <h2 class="location-offer-title">
                 ¡Espera! Oferta especial para 
-                <span class="location-highlight" id="detectedLocation">Lima</span>
+                <span class="location-highlight" id="detectedLocation">...</span>
                 <span class="blinking-cursor">|</span>
             </h2>
             <p class="location-offer-subtitle">¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!</p>
@@ -160,7 +160,8 @@
         const popupGradientStart = urlParams.get('gradientStart') || '#8b5cf6';
         const popupGradientEnd = urlParams.get('gradientEnd') || '#ec4899';
         const popupLocationColor = urlParams.get('locationColor') || '#dc2626';
-        const popupDefaultLocation = urlParams.get('defaultLocation') || 'Lima';
+        const popupDefaultLocationParam = urlParams.get('defaultLocation') || '';
+        const popupDefaultLocation = popupDefaultLocationParam.trim() || null;
         
         if (!destinationUrl) {
             document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h1>Error</h1><p>URL de destino no especificada</p></div>';
@@ -172,7 +173,7 @@
                 if (titleElement) {
                     const locationSpan = titleElement.querySelector('.location-highlight');
                     if (locationSpan) {
-                        titleElement.innerHTML = escapeHtml(popupTitle) + ' <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(popupLocationColor) + ';">' + escapeHtml(popupDefaultLocation) + '</span><span class="blinking-cursor">|</span>';
+                        titleElement.innerHTML = escapeHtml(popupTitle) + ' <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(popupLocationColor) + ';">Detectando...</span><span class="blinking-cursor">|</span>';
                     }
                 }
                 
@@ -206,8 +207,8 @@
             // Aplicar personalizaciones inmediatamente
             applyCustomizations();
             
-            // Geolocalización automática
-            var detectedLocation = popupDefaultLocation;
+            // Geolocalización automática: al abrir la URL se detecta el lugar real del visitante
+            var detectedLocation = '';
             var locationOfferOverlay = document.getElementById("locationOfferOverlay");
             var locationElement = document.getElementById("detectedLocation");
             
@@ -270,66 +271,61 @@
                 }
             }
             
-            // Función usando múltiples APIs basadas en IP (fallback)
+            // Función usando múltiples APIs por IP (mejor precisión en Perú: ciudad + región/departamento)
+            function applyDetectedLocation(name, city, region, countryCode) {
+                var loc = '';
+                if (countryCode === 'PE' && (region || city)) {
+                    if (city && region && city !== region) loc = city + ', ' + region;
+                    else loc = city || region;
+                } else {
+                    loc = city || region;
+                }
+                if (loc) {
+                    detectedLocation = loc;
+                    updateLocationText(detectedLocation);
+                    debugLog('Ubicación desde ' + name + ':', detectedLocation);
+                    return true;
+                }
+                return false;
+            }
             function useIPLocation() {
                 debugLog('Usando API basada en IP...');
-                
-                // Intentar múltiples APIs en paralelo
-                const apis = [
-                    { url: 'https://ipapi.co/json/', name: 'ipapi.co' },
-                    { url: 'https://ip-api.com/json/?lang=es', name: 'ip-api.com' },
-                    { url: 'https://api.ipify.org?format=json', name: 'ipify' }
-                ];
-                
-                // Intentar primera API
-                fetch(apis[0].url)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Response not ok');
-                        return response.json();
-                    })
-                    .then(data => {
-                        debugLog('Datos de ' + apis[0].name + ':', data);
-                        if (data.city) {
-                            detectedLocation = data.city;
-                            updateLocationText(detectedLocation);
-                            debugLog('Ubicación actualizada desde IP:', detectedLocation);
-                        } else if (data.region) {
-                            detectedLocation = data.region;
-                            updateLocationText(detectedLocation);
-                            debugLog('Ubicación actualizada desde IP (región):', detectedLocation);
-                        } else if (data.query) {
-                            // ip-api.com usa 'query' para la IP
-                            trySecondAPI();
-                        }
-                    })
-                    .catch(function(error) {
-                        debugLog('Error con ' + apis[0].name + ':', error);
-                        trySecondAPI();
-                    });
-                
-                function trySecondAPI() {
-                    fetch(apis[1].url)
-                        .then(response => {
-                            if (!response.ok) throw new Error('Response not ok');
-                            return response.json();
-                        })
-                        .then(data => {
-                            debugLog('Datos de ' + apis[1].name + ':', data);
-                            if (data.city) {
-                                detectedLocation = data.city;
-                                updateLocationText(detectedLocation);
-                                debugLog('Ubicación actualizada desde IP (API 2):', detectedLocation);
-                            } else if (data.regionName) {
-                                detectedLocation = data.regionName;
-                                updateLocationText(detectedLocation);
-                                debugLog('Ubicación actualizada desde IP (región API 2):', detectedLocation);
-                            }
-                        })
-                        .catch(function(error) {
-                            debugLog('Error con ' + apis[1].name + ':', error);
-                            debugLog('Usando ubicación por defecto: Lima');
-                        });
+                function fallbackDefault() {
+                    detectedLocation = popupDefaultLocation || 'tu zona';
+                    updateLocationText(detectedLocation);
+                    debugLog('Usando ubicación por defecto:', detectedLocation);
                 }
+                fetch('https://ipapi.co/json/')
+                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                    .then(function(data) {
+                        debugLog('Datos ipapi.co:', data);
+                        if (applyDetectedLocation('ipapi.co', data.city, data.region, data.country_code)) return;
+                        fetch('https://ip-api.com/json/?lang=es&fields=city,regionName,countryCode')
+                            .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                            .then(function(d) {
+                                debugLog('Datos ip-api.com:', d);
+                                if (applyDetectedLocation('ip-api.com', d.city, d.regionName, d.countryCode)) return;
+                                return fetch('https://ipinfo.io/json');
+                            })
+                            .then(function(r) { return r && r.ok ? r.json() : null; })
+                            .then(function(d) {
+                                if (!d) { fallbackDefault(); return; }
+                                debugLog('Datos ipinfo.io:', d);
+                                if (applyDetectedLocation('ipinfo.io', d.city, d.region, d.country)) return;
+                                fallbackDefault();
+                            })
+                            .catch(function() { fallbackDefault(); });
+                    })
+                    .catch(function(err) {
+                        debugLog('Error ipapi.co:', err);
+                        fetch('https://ip-api.com/json/?lang=es&fields=city,regionName,countryCode')
+                            .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                            .then(function(d) {
+                                if (applyDetectedLocation('ip-api.com', d.city, d.regionName, d.countryCode)) return;
+                                fallbackDefault();
+                            })
+                            .catch(function() { fallbackDefault(); });
+                    });
             }
             
             // Ejecutar detección de ubicación

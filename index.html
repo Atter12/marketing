@@ -53,15 +53,21 @@
             line-height: 1.6;
         }
 
-        /* Top Banner - TikTok Offer */
+        /* Top Banner - TikTok Offer (sticky al hacer scroll) */
         .top-banner {
             background: var(--primary-gradient);
             color: #fff;
             padding: 12px 24px;
             text-align: center;
-            position: relative;
+            position: sticky;
+            top: 0;
             z-index: 101;
-            box-shadow: 0 2px 8px rgba(255, 107, 74, 0.25);
+            box-shadow: 0 2px 12px rgba(255, 107, 74, 0.2);
+            transition: box-shadow 0.3s ease, padding 0.3s ease;
+        }
+        .top-banner.is-scrolled {
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.25);
+            padding: 10px 24px;
         }
         .top-banner a {
             display: flex;
@@ -99,6 +105,9 @@
         @media (max-width: 640px) {
             .top-banner {
                 padding: 10px 16px;
+            }
+            .top-banner.is-scrolled {
+                padding: 8px 16px;
             }
             .top-banner .banner-text {
                 font-size: 13px;
@@ -1942,6 +1951,31 @@
     </div>
 
     <script>
+        // Banner sticky: efecto elegante al hacer scroll (más compacto y sombra suave)
+        (function() {
+            var banner = document.querySelector('.top-banner');
+            if (!banner) return;
+            var scrollThreshold = 40;
+            var ticking = false;
+            function updateBanner() {
+                var scrolled = window.scrollY || document.documentElement.scrollTop;
+                if (scrolled > scrollThreshold) {
+                    banner.classList.add('is-scrolled');
+                } else {
+                    banner.classList.remove('is-scrolled');
+                }
+                ticking = false;
+            }
+            function onScroll() {
+                if (!ticking) {
+                    requestAnimationFrame(updateBanner);
+                    ticking = true;
+                }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            updateBanner();
+        })();
+
         // Mobile CTA: show only on mobile
         (function() {
             var bar = document.getElementById('mobileCtaBar');

@@ -1487,8 +1487,8 @@
                             </div>
                             <div class="property-group">
                                 <label class="property-label">Ubicación por Defecto</label>
-                                <input type="text" id="popupDefaultLocation" class="property-input" value="Lima" placeholder="Ciudad por defecto">
-                                <small>Se usará si no se detecta la ubicación</small>
+                                <input type="text" id="popupDefaultLocation" class="property-input" value="" placeholder="Detectando...">
+                                <small>Se rellena automáticamente con tu zona. Se usará si no se detecta la del visitante.</small>
                             </div>
                         </div>
                     </div>
@@ -1608,7 +1608,7 @@
                         subtitle: '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!',
                         cta: 'CLICK AQUÍ PARA CONTINUAR',
                         discount: '50%',
-                        location: 'Lima' // Se detectará automáticamente
+                        location: 'tu zona' // Se detectará automáticamente
                     } }
                 ]
             }
@@ -1625,6 +1625,7 @@
                 initializePixelInputs();
                 initializeUrlValidation();
                 initializeVisualEditor();
+                detectUserLocationForBuilder();
                 // Renderizar preview inicial si hay URL
                 renderPreview();
                 console.log('[Pre-Landing Builder] Inicialización completa');
@@ -1707,6 +1708,10 @@
             return defaults[type] || {};
         }
 
+        function updateLivePreview() {
+            // Sincroniza vista previa si fuera necesario (placeholder para evitar ReferenceError)
+        }
+
             // Render Preview
         function renderPreview() {
             console.log('[Pre-Landing Builder] Renderizando preview, componentes:', components.length);
@@ -1730,7 +1735,8 @@
                 const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
                 const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
-                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                const popupDefaultLocationRaw = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
+                const popupDefaultLocation = popupDefaultLocationRaw || 'tu zona';
                 
                 const locationOfferData = {
                     title: popupTitle,
@@ -1880,7 +1886,7 @@
                                 </div>
                                 <h2 class="location-offer-title">
                                     ${escapeHtml(data.title || '¡Espera! Oferta especial para')} 
-                                    <span class="location-highlight">${escapeHtml(data.location || 'Lima')}</span>
+                                    <span class="location-highlight">${escapeHtml(data.location || 'tu zona')}</span>
                                     <span class="blinking-cursor">|</span>
                                 </h2>
                                 <p class="location-offer-subtitle">${escapeHtml(data.subtitle || '¡Aprovecha un descuento exclusivo solo por hoy para los habitantes de tu zona!')}</p>
@@ -2117,32 +2123,12 @@
         }
         
         function generateShareableUrl(destinationUrl, waitSeconds) {
-            // Obtener valores del editor visual
-            const popupTitle = document.getElementById('popupTitle') ? encodeURIComponent(document.getElementById('popupTitle').value.trim()) : '';
-            const popupSubtitle = document.getElementById('popupSubtitle') ? encodeURIComponent(document.getElementById('popupSubtitle').value.trim()) : '';
-            const popupButtonText = document.getElementById('popupButtonText') ? encodeURIComponent(document.getElementById('popupButtonText').value.trim()) : '';
-            const popupGradientStart = document.getElementById('popupGradientStart') ? encodeURIComponent(document.getElementById('popupGradientStart').value) : '';
-            const popupGradientEnd = document.getElementById('popupGradientEnd') ? encodeURIComponent(document.getElementById('popupGradientEnd').value) : '';
-            const popupLocationColor = document.getElementById('popupLocationColor') ? encodeURIComponent(document.getElementById('popupLocationColor').value) : '';
-            const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? encodeURIComponent(document.getElementById('popupDefaultLocation').value.trim()) : '';
-            
-            // Codificar parámetros en la URL
+            // URL corta: solo dominio + url + wait (el resto usa valores por defecto en landing.html)
+            const baseUrl = window.location.origin + window.location.pathname.replace('pre-landing-builder.html', '') + 'landing.html';
             const params = new URLSearchParams({
                 url: destinationUrl,
-                wait: waitSeconds.toString()
+                wait: Math.max(1, Math.min(30, parseInt(waitSeconds, 10) || 5)).toString()
             });
-            
-            // Agregar parámetros personalizados si tienen valores
-            if (popupTitle) params.set('title', decodeURIComponent(popupTitle));
-            if (popupSubtitle) params.set('subtitle', decodeURIComponent(popupSubtitle));
-            if (popupButtonText) params.set('button', decodeURIComponent(popupButtonText));
-            if (popupGradientStart) params.set('gradientStart', decodeURIComponent(popupGradientStart));
-            if (popupGradientEnd) params.set('gradientEnd', decodeURIComponent(popupGradientEnd));
-            if (popupLocationColor) params.set('locationColor', decodeURIComponent(popupLocationColor));
-            if (popupDefaultLocation) params.set('defaultLocation', decodeURIComponent(popupDefaultLocation));
-            
-            // Obtener la URL base (dominio actual)
-            const baseUrl = window.location.origin + window.location.pathname.replace('pre-landing-builder.html', '') + 'landing.html';
             const shareableUrl = baseUrl + '?' + params.toString();
             
             // Mostrar modal con la URL
@@ -2168,7 +2154,7 @@
                             </button>
                         </div>
                         <small style="display: block; margin-top: 8px; color: var(--text-medium);">
-                            <i class="fas fa-info-circle"></i> Comparte esta URL directamente. El popup se generará automáticamente con todas tus personalizaciones.
+                            <i class="fas fa-info-circle"></i> URL corta y limpia. El popup detectará la ubicación del visitante y redirigirá a tu URL.
                         </small>
                     </div>
                     <div class="property-group" style="margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
@@ -2178,7 +2164,7 @@
                         </p>
                         <ul style="font-size: 13px; color: var(--text-medium); margin-top: 12px; padding-left: 20px; line-height: 1.8;">
                             <li>📍 Detecta la ubicación del visitante automáticamente</li>
-                            <li>🎨 Muestra el popup personalizado con tus textos y colores</li>
+                            <li>🎨 Muestra el popup de oferta (textos y colores por defecto)</li>
                             <li>⏱️ Espera el tiempo configurado (${waitSeconds} segundos)</li>
                             <li>🚀 Redirige automáticamente a tu URL de destino</li>
                         </ul>
@@ -2460,7 +2446,7 @@
                 const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
                 const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
-                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
                 
                 const locationOfferData = {
                     title: popupTitle,
@@ -2479,7 +2465,7 @@
                 html.push('            </div>');
                 html.push('            <h2 class="location-offer-title">');
                 html.push('                ' + escapeHtml(locationOfferData.title) + ' ');
-                html.push('                <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(locationOfferData.locationColor) + ';">' + escapeHtml(locationOfferData.location) + '</span>');
+                html.push('                <span class="location-highlight" id="detectedLocation" style="color: ' + escapeHtml(locationOfferData.locationColor) + ';">Detectando...</span>');
                 html.push('                <span class="blinking-cursor">|</span>');
                 html.push('            </h2>');
                 html.push('            <p class="location-offer-subtitle">' + escapeHtml(locationOfferData.subtitle) + '</p>');
@@ -2501,11 +2487,12 @@
             // Script de geolocalización si hay popup de oferta
             if (hasLocationOffer) {
                 // Obtener valores del editor visual
-                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : 'Lima';
+                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
                 
-                html.push('        // Geolocalización automática');
-                html.push('        var detectedLocation = "' + escapeHtml(popupDefaultLocation) + '";');
+                html.push('        // Geolocalización automática: al abrir la URL se detecta el lugar real del visitante');
+                html.push('        var detectedLocation = "";');
+                html.push('        var defaultLocationFallback = "' + escapeHtml(popupDefaultLocation || 'tu zona') + '";');
                 html.push('        var locationColor = "' + escapeHtml(popupLocationColor) + '";');
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
@@ -2611,7 +2598,9 @@
                 html.push('                            }');
                 html.push('                        })');
                 html.push('                        .catch(function() {');
-                html.push('                            debugLog("Usando ubicación por defecto: Lima");');
+                html.push('                            detectedLocation = defaultLocationFallback;');
+                html.push('                            updateLocationText(detectedLocation);');
+                html.push('                            debugLog("Usando ubicación por defecto:", detectedLocation);');
                 html.push('                        });');
                 html.push('                });');
                 html.push('        }');
@@ -3131,6 +3120,51 @@
             });
         }
         
+        // Detectar ubicación del usuario para "Ubicación por defecto" (varias APIs para mejor precisión en Perú)
+        function detectUserLocationForBuilder() {
+            var input = document.getElementById('popupDefaultLocation');
+            if (!input) return;
+            input.setAttribute('placeholder', 'Detectando...');
+            function setLocation(text) {
+                if (input && !input.value.trim()) {
+                    input.value = text;
+                    input.setAttribute('placeholder', 'Ciudad por defecto');
+                    renderPreview();
+                }
+            }
+            function tryApis() {
+                fetch('https://ipapi.co/json/')
+                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                    .then(function(data) {
+                        var loc = (data.city && data.region) ? (data.city + ', ' + data.region) : (data.city || data.region || '');
+                        if (loc) { setLocation(loc); return; }
+                        tryFallback();
+                    })
+                    .catch(function() { tryFallback(); });
+            }
+            function tryFallback() {
+                fetch('https://ip-api.com/json/?lang=es&fields=city,regionName')
+                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                    .then(function(data) {
+                        var loc = data.city || data.regionName || '';
+                        if (loc) { setLocation(loc); return; }
+                        tryIpinfo();
+                    })
+                    .catch(function() { tryIpinfo(); });
+            }
+            function tryIpinfo() {
+                fetch('https://ipinfo.io/json')
+                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+                    .then(function(data) {
+                        var loc = data.city || data.region || '';
+                        if (loc) setLocation(loc);
+                        else input.setAttribute('placeholder', 'Ej: Lima (opcional)');
+                    })
+                    .catch(function() { input.setAttribute('placeholder', 'Ej: Lima (opcional)'); });
+            }
+            tryApis();
+        }
+
         // Close modal on outside click
     </script>
 </body>
