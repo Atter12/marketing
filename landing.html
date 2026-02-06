@@ -148,14 +148,13 @@
     </div>
 
     <script>
-        // Obtener URL de destino: formato corto landing.html/dominio.com o clásico ?url=...
+        // Obtener URL de destino: formato corto landing.html#dominio.com (evita 404) o clásico ?url=...
         const urlParams = new URLSearchParams(window.location.search);
         let destinationUrl = urlParams.get('url') || '';
-        const pathname = window.location.pathname || '';
-        const pathMatch = pathname.match(/landing\.html\/(.+)/);
-        if (!destinationUrl && pathMatch && pathMatch[1]) {
-            const shortPath = decodeURIComponent(pathMatch[1].replace(/\/+$/, ''));
-            destinationUrl = shortPath.match(/^https?:\/\//i) ? shortPath : ('https://' + shortPath);
+        const hash = (window.location.hash || '').replace(/^#/, '').trim();
+        if (!destinationUrl && hash) {
+            const shortPath = decodeURIComponent(hash).split('?')[0].replace(/\/+$/, '');
+            if (shortPath) destinationUrl = shortPath.match(/^https?:\/\//i) ? shortPath : ('https://' + shortPath);
         }
         const waitSeconds = parseInt(urlParams.get('wait')) || 5;
         
@@ -166,8 +165,8 @@
         const popupGradientStart = urlParams.get('gradientStart') || '#8b5cf6';
         const popupGradientEnd = urlParams.get('gradientEnd') || '#ec4899';
         const popupLocationColor = urlParams.get('locationColor') || '#dc2626';
-        const popupDefaultLocationParam = urlParams.get('defaultLocation') || '';
-        const popupDefaultLocation = popupDefaultLocationParam.trim() || null;
+        const popupDefaultLocationParam = (urlParams.get('defaultLocation') || '').replace(/\s*(Department|Region|Province|State|County|Región|Departamento|Provincia)\s*$/gi, '').trim();
+        const popupDefaultLocation = popupDefaultLocationParam || null;
         
         if (!destinationUrl) {
             document.body.innerHTML = '<div style="padding: 40px; text-align: center;"><h1>Error</h1><p>URL de destino no especificada</p></div>';
@@ -250,14 +249,12 @@
                                     .then(response => response.json())
                                     .then(data => {
                                         debugLog('Datos de geocodificación:', data);
-                                        if (data.city) {
-                                            detectedLocation = data.city;
+                                        if (data.city || data.principalSubdivision) {
+                                            var gpsCity = (data.city || '').replace(/\s*(Department|Region|Province|State|County|Región|Departamento|Provincia)\s*$/gi, '').trim();
+                                            var gpsRegion = (data.principalSubdivision || '').replace(/\s*(Department|Region|Province|State|County|Región|Departamento|Provincia)\s*$/gi, '').trim();
+                                            detectedLocation = gpsCity && gpsRegion && gpsCity !== gpsRegion ? gpsCity + ', ' + gpsRegion : (gpsCity || gpsRegion);
                                             updateLocationText(detectedLocation);
                                             debugLog('Ubicación actualizada desde GPS:', detectedLocation);
-                                        } else if (data.principalSubdivision) {
-                                            detectedLocation = data.principalSubdivision;
-                                            updateLocationText(detectedLocation);
-                                            debugLog('Ubicación actualizada desde GPS (región):', detectedLocation);
                                         }
                                     })
                                     .catch(function(error) { 
@@ -278,8 +275,14 @@
                 }
             }
             
-            // Función usando múltiples APIs por IP (mejor precisión en Perú: ciudad + región/departamento)
+            // Limpiar etiquetas tipo "Department", "Region", etc. para mostrar solo "Huánuco, Huánuco"
+            function cleanLocationLabel(s) {
+                if (!s || typeof s !== 'string') return '';
+                return s.replace(/\s*(Department|Region|Province|State|County|Región|Departamento|Provincia)\s*$/gi, '').trim();
+            }
             function applyDetectedLocation(name, city, region, countryCode) {
+                city = cleanLocationLabel(city || '');
+                region = cleanLocationLabel(region || '');
                 var loc = '';
                 if (countryCode === 'PE' && (region || city)) {
                     if (city && region && city !== region) loc = city + ', ' + region;

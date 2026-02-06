@@ -1486,9 +1486,10 @@
                                 </div>
                             </div>
                             <div class="property-group">
-                                <label class="property-label">Ubicación por Defecto</label>
-                                <input type="text" id="popupDefaultLocation" class="property-input" value="" placeholder="Detectando...">
-                                <small>Se rellena automáticamente con tu zona. Se usará si no se detecta la del visitante.</small>
+                                <p class="property-label" style="margin-bottom: 0; font-weight: 600; color: var(--text-medium);">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--primary); margin-right: 6px;"></i>
+                                    La ubicación se mostrará automáticamente según quien abra el enlace.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -1625,7 +1626,6 @@
                 initializePixelInputs();
                 initializeUrlValidation();
                 initializeVisualEditor();
-                detectUserLocationForBuilder();
                 // Renderizar preview inicial si hay URL
                 renderPreview();
                 console.log('[Pre-Landing Builder] Inicialización completa');
@@ -1735,14 +1735,11 @@
                 const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
                 const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
-                const popupDefaultLocationRaw = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
-                const popupDefaultLocation = popupDefaultLocationRaw || 'tu zona';
-                
                 const locationOfferData = {
                     title: popupTitle,
                     subtitle: popupSubtitle,
                     cta: popupButtonText,
-                    location: popupDefaultLocation,
+                    location: 'tu zona',
                     gradientStart: popupGradientStart,
                     gradientEnd: popupGradientEnd,
                     locationColor: popupLocationColor
@@ -2129,13 +2126,9 @@
                 var u = destinationUrl.replace(/^https?:\/\//i, '').replace(/\/+$/, '');
                 if (!u) { shareableUrl = baseUrl + '?url=' + encodeURIComponent(destinationUrl); }
                 else {
-                    shareableUrl = baseUrl + '/' + u;
                     var wait = Math.max(1, Math.min(30, parseInt(waitSeconds, 10) || 5));
-                    var defaultLoc = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
-                    var q = [];
-                    if (wait !== 5) q.push('wait=' + wait);
-                    if (defaultLoc) q.push('defaultLocation=' + encodeURIComponent(defaultLoc));
-                    if (q.length) shareableUrl += '?' + q.join('&');
+                    var query = wait !== 5 ? '?wait=' + wait : '';
+                    shareableUrl = baseUrl + query + '#' + u;
                 }
             } catch (e) {
                 shareableUrl = baseUrl + '?url=' + encodeURIComponent(destinationUrl);
@@ -2456,13 +2449,11 @@
                 const popupGradientStart = document.getElementById('popupGradientStart') ? document.getElementById('popupGradientStart').value : '#8b5cf6';
                 const popupGradientEnd = document.getElementById('popupGradientEnd') ? document.getElementById('popupGradientEnd').value : '#ec4899';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
-                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
-                
                 const locationOfferData = {
                     title: popupTitle,
                     subtitle: popupSubtitle,
                     cta: popupButtonText,
-                    location: popupDefaultLocation,
+                    location: 'tu zona',
                     gradientStart: popupGradientStart,
                     gradientEnd: popupGradientEnd,
                     locationColor: popupLocationColor
@@ -2497,12 +2488,11 @@
             // Script de geolocalización si hay popup de oferta
             if (hasLocationOffer) {
                 // Obtener valores del editor visual
-                const popupDefaultLocation = document.getElementById('popupDefaultLocation') ? document.getElementById('popupDefaultLocation').value.trim() : '';
                 const popupLocationColor = document.getElementById('popupLocationColor') ? document.getElementById('popupLocationColor').value : '#dc2626';
                 
                 html.push('        // Geolocalización automática: al abrir la URL se detecta el lugar real del visitante');
                 html.push('        var detectedLocation = "";');
-                html.push('        var defaultLocationFallback = "' + escapeHtml(popupDefaultLocation || 'tu zona') + '";');
+                html.push('        var defaultLocationFallback = "tu zona";');
                 html.push('        var locationColor = "' + escapeHtml(popupLocationColor) + '";');
                 html.push('        var locationOfferOverlay = document.getElementById("locationOfferOverlay");');
                 html.push('        var locationElement = document.getElementById("detectedLocation");');
@@ -2513,6 +2503,10 @@
                 html.push('                locationElement.textContent = location;');
                 html.push('                locationElement.style.color = locationColor;');
                 html.push('            }');
+                html.push('        }');
+                html.push('        function cleanLocationLabel(s) {');
+                html.push('            if (!s || typeof s !== "string") return "";');
+                html.push('            return s.replace(/\\s*(Department|Region|Province|State|County|Región|Departamento|Provincia)\\s*$/gi, "").trim();');
                 html.push('        }');
                 html.push('        ');
                 html.push('        // Sistema de logging para debug');
@@ -2538,14 +2532,12 @@
                 html.push('                                .then(response => response.json())');
                 html.push('                                .then(data => {');
                 html.push('                                    debugLog("Datos de geocodificación:", data);');
-                html.push('                                    if (data.city) {');
-                html.push('                                        detectedLocation = data.city;');
+                html.push('                                    if (data.city || data.principalSubdivision) {');
+                html.push('                                        var c = cleanLocationLabel(data.city || "");');
+                html.push('                                        var r = cleanLocationLabel(data.principalSubdivision || "");');
+                html.push('                                        detectedLocation = c && r && c !== r ? c + ", " + r : (c || r);');
                 html.push('                                        updateLocationText(detectedLocation);');
                 html.push('                                        debugLog("Ubicación actualizada desde GPS:", detectedLocation);');
-                html.push('                                    } else if (data.principalSubdivision) {');
-                html.push('                                        detectedLocation = data.principalSubdivision;');
-                html.push('                                        updateLocationText(detectedLocation);');
-                html.push('                                        debugLog("Ubicación actualizada desde GPS (región):", detectedLocation);');
                 html.push('                                    }');
                 html.push('                                })');
                 html.push('                                .catch(function(error) { ');
@@ -2577,14 +2569,12 @@
                 html.push('                })');
                 html.push('                .then(data => {');
                 html.push('                    debugLog("Datos de ipapi.co:", data);');
-                html.push('                    if (data.city) {');
-                html.push('                        detectedLocation = data.city;');
+                html.push('                    if (data.city || data.region) {');
+                html.push('                        var c = cleanLocationLabel(data.city || "");');
+                html.push('                        var r = cleanLocationLabel(data.region || "");');
+                html.push('                        detectedLocation = c && r && c !== r ? c + ", " + r : (c || r);');
                 html.push('                        updateLocationText(detectedLocation);');
                 html.push('                        debugLog("Ubicación actualizada desde IP:", detectedLocation);');
-                html.push('                    } else if (data.region) {');
-                html.push('                        detectedLocation = data.region;');
-                html.push('                        updateLocationText(detectedLocation);');
-                html.push('                        debugLog("Ubicación actualizada desde IP (región):", detectedLocation);');
                 html.push('                    }');
                 html.push('                })');
                 html.push('                .catch(function(error) {');
@@ -2597,14 +2587,12 @@
                 html.push('                        })');
                 html.push('                        .then(data => {');
                 html.push('                            debugLog("Datos de ip-api.com:", data);');
-                html.push('                            if (data.city) {');
-                html.push('                                detectedLocation = data.city;');
+                html.push('                            if (data.city || data.regionName) {');
+                html.push('                                var c = cleanLocationLabel(data.city || "");');
+                html.push('                                var r = cleanLocationLabel(data.regionName || "");');
+                html.push('                                detectedLocation = c && r && c !== r ? c + ", " + r : (c || r);');
                 html.push('                                updateLocationText(detectedLocation);');
                 html.push('                                debugLog("Ubicación actualizada desde IP (API 2):", detectedLocation);');
-                html.push('                            } else if (data.regionName) {');
-                html.push('                                detectedLocation = data.regionName;');
-                html.push('                                updateLocationText(detectedLocation);');
-                html.push('                                debugLog("Ubicación actualizada desde IP (región API 2):", detectedLocation);');
                 html.push('                            }');
                 html.push('                        })');
                 html.push('                        .catch(function() {');
@@ -3119,7 +3107,7 @@
             }
             
             // Agregar listeners a todos los campos del editor
-            const editorFields = ['popupTitle', 'popupSubtitle', 'popupButtonText', 'popupDefaultLocation'];
+            const editorFields = ['popupTitle', 'popupSubtitle', 'popupButtonText'];
             editorFields.forEach(fieldId => {
                 const field = document.getElementById(fieldId);
                 if (field) {
@@ -3130,51 +3118,6 @@
             });
         }
         
-        // Detectar ubicación del usuario para "Ubicación por defecto" (varias APIs para mejor precisión en Perú)
-        function detectUserLocationForBuilder() {
-            var input = document.getElementById('popupDefaultLocation');
-            if (!input) return;
-            input.setAttribute('placeholder', 'Detectando...');
-            function setLocation(text) {
-                if (input && !input.value.trim()) {
-                    input.value = text;
-                    input.setAttribute('placeholder', 'Ciudad por defecto');
-                    renderPreview();
-                }
-            }
-            function tryApis() {
-                fetch('https://ipapi.co/json/')
-                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
-                    .then(function(data) {
-                        var loc = (data.city && data.region) ? (data.city + ', ' + data.region) : (data.city || data.region || '');
-                        if (loc) { setLocation(loc); return; }
-                        tryFallback();
-                    })
-                    .catch(function() { tryFallback(); });
-            }
-            function tryFallback() {
-                fetch('https://ip-api.com/json/?lang=es&fields=city,regionName')
-                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
-                    .then(function(data) {
-                        var loc = data.city || data.regionName || '';
-                        if (loc) { setLocation(loc); return; }
-                        tryIpinfo();
-                    })
-                    .catch(function() { tryIpinfo(); });
-            }
-            function tryIpinfo() {
-                fetch('https://ipinfo.io/json')
-                    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
-                    .then(function(data) {
-                        var loc = data.city || data.region || '';
-                        if (loc) setLocation(loc);
-                        else input.setAttribute('placeholder', 'Ej: Lima (opcional)');
-                    })
-                    .catch(function() { input.setAttribute('placeholder', 'Ej: Lima (opcional)'); });
-            }
-            tryApis();
-        }
-
         // Close modal on outside click
     </script>
 </body>
