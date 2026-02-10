@@ -76,6 +76,14 @@
       "dest": "/profit-calculator.html"
     },
     {
+      "src": "/performance-analyzer",
+      "dest": "/performance-analyzer.html"
+    },
+    {
+      "src": "/performance-analyzer.html",
+      "dest": "/performance-analyzer.html"
+    },
+    {
       "src": "/copy-ia",
       "dest": "/copy-ia.html"
     },
