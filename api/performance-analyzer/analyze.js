@@ -43,13 +43,25 @@ function extractLighthouse(result) {
     finalScreenshot = typeof d === 'string' && d.indexOf('data:') === 0 ? d : 'data:image/jpeg;base64,' + d;
   }
 
+  let performanceScore = getScore('performance');
+  if (performanceScore == null && result.loadingExperience && result.loadingExperience.metrics) {
+    const m = result.loadingExperience.metrics;
+    const fcp = m.FIRST_CONTENTFUL_PAINT_MS && m.FIRST_CONTENTFUL_PAINT_MS.percentile;
+    const lcp = m.LARGEST_CONTENTFUL_PAINT_MS && m.LARGEST_CONTENTFUL_PAINT_MS.percentile;
+    if (typeof fcp === 'number' || typeof lcp === 'number') {
+      const fcpOk = fcp == null || fcp < 1800;
+      const lcpOk = lcp == null || lcp < 2500;
+      performanceScore = (fcpOk && lcpOk) ? 75 : (fcpOk || lcpOk) ? 50 : 25;
+    }
+  }
+
   return {
     requestedUrl: lh.requestedUrl || null,
     finalUrl: lh.finalUrl || null,
     fetchTime: lh.fetchTime || null,
     finalScreenshot: finalScreenshot || null,
     categories: {
-      performance: getScore('performance'),
+      performance: performanceScore,
       accessibility: getScore('accessibility'),
       'best-practices': getScore('best-practices'),
       seo: getScore('seo'),

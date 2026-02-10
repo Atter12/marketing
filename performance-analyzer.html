@@ -240,6 +240,24 @@
 
         .msg.success { color: var(--accent); }
 
+        .analyzing-status {
+            margin-top: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--primary);
+            display: none;
+        }
+        .analyzing-status.visible { display: flex; align-items: center; gap: 8px; }
+        .analyzing-status .analyzing-dots span {
+            animation: blink-dot 0.6s ease-in-out infinite;
+        }
+        .analyzing-status .analyzing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .analyzing-status .analyzing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink-dot {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
         .results-wrap {
             display: none;
             margin-top: 8px;
@@ -434,6 +452,10 @@
             background: #e5e7eb;
             color: var(--text-dark);
         }
+        .report-score-item .circle.circle-error {
+            background: var(--accent-red);
+            color: white;
+        }
 
         .report-gauge-section {
             background: var(--bg-white);
@@ -564,7 +586,9 @@
         .metrics-list .metric-dot.bad { background: var(--accent-red); }
 
         .metrics-list .metric-label { font-size: 13px; font-weight: 600; color: var(--text-dark); flex: 1; }
+        .metrics-list .metric-hint { font-size: 11px; color: var(--text-light); font-weight: 400; display: block; margin-top: 2px; }
         .metrics-list .metric-value { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .metrics-list .metric-value.bad-value { color: var(--accent-red); }
         .metrics-list.expanded .metric-value { font-size: 16px; }
         .metrics-list.expanded li { padding: 14px 0; }
 
@@ -681,6 +705,10 @@
                 </div>
                 <p class="msg hint" style="margin-top:10px;font-size:13px;color:var(--text-light);"><i class="fas fa-info-circle"></i> El análisis puede tardar 30–60 segundos.</p>
                 <div class="msg" id="msg" role="alert" aria-live="polite"></div>
+                <div class="analyzing-status" id="analyzingStatus" aria-live="polite">
+                    <span class="analyzing-text">Analizando web</span>
+                    <span class="analyzing-dots"><span>.</span><span>.</span><span>.</span></span>
+                </div>
             </div>
 
             <div class="results-wrap" id="resultsWrap">
@@ -783,10 +811,15 @@
                     const score = data.categories[id];
                     const label = categoryLabels[id] || id;
                     const cls = scoreClass(score);
-                    const value = score != null ? score : '—';
+                    let value = score != null ? score : '—';
+                    let valueCls = '';
+                    if (score == null && id === 'performance') {
+                        value = 'Error';
+                        valueCls = ' circle-error';
+                    }
                     return '<div class="report-score-item">' +
                         '<h4>' + escapeHtml(label) + '</h4>' +
-                        '<div class="circle ' + cls + '">' + value + '</div>' +
+                        '<div class="circle ' + cls + valueCls + '">' + value + '</div>' +
                         '</div>';
                 });
                 container.innerHTML = html.join('');
@@ -799,9 +832,10 @@
                 }
                 const perf = data.categories.performance;
                 const cls = scoreClass(perf);
-                const value = perf != null ? perf : '—';
+                const value = perf != null ? perf : 'Error';
+                const isError = perf == null;
                 container.innerHTML =
-                    '<div class="big-gauge ' + cls + '">' + value + '<span class="small">Rendimiento</span></div>' +
+                    '<div class="big-gauge ' + cls + (isError ? ' bad' : '') + '">' + value + '<span class="small">Rendimiento</span></div>' +
                     '<p class="report-gauge-desc">Los valores son estimados y pueden variar. La medición del rendimiento se calcula directamente a partir de estas métricas.</p>' +
                     '<div class="report-legend">' +
                     '<span><span class="dot red"></span> 0–49</span>' +
@@ -811,21 +845,75 @@
             }
 
             const auditLabels = {
-                'first-contentful-paint': 'First Contentful Paint (FCP)',
-                'largest-contentful-paint': 'Largest Contentful Paint (LCP)',
-                'cumulative-layout-shift': 'Cumulative Layout Shift (CLS)',
-                'total-blocking-time': 'Total Blocking Time (TBT)',
-                'speed-index': 'Índice de velocidad',
-                'interactive': 'Interactivo (TTI)',
-                'max-potential-fid': 'FID'
+                'first-contentful-paint': { name: 'Primera pintura (FCP)', hint: 'Cuándo se ve el primer contenido' },
+                'largest-contentful-paint': { name: 'Elemento más grande (LCP)', hint: 'Cuándo se carga el bloque principal' },
+                'cumulative-layout-shift': { name: 'Saltos de diseño (CLS)', hint: 'Estabilidad visual (0 = sin saltos)' },
+                'total-blocking-time': { name: 'Tiempo bloqueante (TBT)', hint: 'Tiempo que la página no responde' },
+                'speed-index': { name: 'Índice de velocidad', hint: 'Qué tan rápido se pinta todo' },
+                'interactive': { name: 'Listo para usar (TTI)', hint: 'Cuándo puedes hacer clic con normalidad' },
+                'max-potential-fid': { name: 'Respuesta al primer toque (FID)', hint: 'Retraso al primer clic o toque' }
             };
 
-            function metricDotClass(audit) {
-                if (!audit || audit.score == null) return 'medium';
-                const s = audit.score;
-                if (s >= 0.9) return 'good';
-                if (s >= 0.5) return 'medium';
-                return 'bad';
+            function parseMsFromDisplay(str) {
+                if (!str || typeof str !== 'string') return null;
+                var clean = str.replace(/\s/g, '').replace(/,/g, '');
+                var m = clean.match(/([\d.]+)\s*ms/i);
+                return m ? parseFloat(m[1]) : null;
+            }
+            function parseSecFromDisplay(str) {
+                if (!str || typeof str !== 'string') return null;
+                var m = str.replace(/\s/g, '').replace(',', '.').match(/([\d.]+)\s*s/i);
+                return m ? parseFloat(m[1]) : null;
+            }
+            function parseClsFromDisplay(str) {
+                if (!str || typeof str !== 'string') return null;
+                var m = str.replace(/\s/g, '').replace(',', '.').match(/^([\d.]+)/);
+                return m ? parseFloat(m[1]) : null;
+            }
+
+            function metricDotClass(id, audit) {
+                var s = audit && audit.score != null ? audit.score : null;
+                if (typeof s === 'number') {
+                    var v = s <= 1 ? s * 100 : s;
+                    if (v >= 90) return 'good';
+                    if (v >= 50) return 'medium';
+                    return 'bad';
+                }
+                var raw = audit && audit.displayValue ? audit.displayValue : '';
+                if (id === 'max-potential-fid') {
+                    var ms = parseMsFromDisplay(raw);
+                    if (ms != null) {
+                        if (ms <= 100) return 'good';
+                        if (ms <= 300) return 'medium';
+                        return 'bad';
+                    }
+                }
+                if (id === 'largest-contentful-paint' || id === 'first-contentful-paint') {
+                    var sec = parseSecFromDisplay(raw);
+                    if (sec != null) {
+                        if (id === 'largest-contentful-paint') {
+                            if (sec <= 2.5) return 'good';
+                            if (sec <= 4) return 'medium';
+                            return 'bad';
+                        }
+                        if (sec <= 1.8) return 'good';
+                        if (sec <= 3) return 'medium';
+                        return 'bad';
+                    }
+                }
+                if (id === 'cumulative-layout-shift') {
+                    var clsVal = parseClsFromDisplay(raw);
+                    if (clsVal != null) {
+                        if (clsVal <= 0.1) return 'good';
+                        if (clsVal <= 0.25) return 'medium';
+                        return 'bad';
+                    }
+                }
+                return 'medium';
+            }
+
+            function isBadValue(id, audit) {
+                return metricDotClass(id, audit) === 'bad';
             }
 
             function renderMetricsList(container, data) {
@@ -837,10 +925,14 @@
                 const html = order.map(function (id) {
                     const audit = data.audits[id];
                     if (!audit) return '';
-                    const label = auditLabels[id] || id;
+                    const meta = auditLabels[id] || { name: id, hint: '' };
                     const value = audit.displayValue || (audit.score != null ? audit.score + '%' : '—');
-                    const dotCls = metricDotClass(audit);
-                    return '<li><span class="metric-dot ' + dotCls + '"></span><span class="metric-label">' + escapeHtml(label) + '</span><span class="metric-value">' + escapeHtml(String(value)) + '</span></li>';
+                    const dotCls = metricDotClass(id, audit);
+                    const valueCls = isBadValue(id, audit) ? ' bad-value' : '';
+                    return '<li><span class="metric-dot ' + dotCls + '"></span><span class="metric-label">' +
+                        escapeHtml(meta.name) +
+                        (meta.hint ? '<span class="metric-hint">' + escapeHtml(meta.hint) + '</span>' : '') +
+                        '</span><span class="metric-value' + valueCls + '">' + escapeHtml(String(value)) + '</span></li>';
                 }).filter(Boolean);
                 container.innerHTML = html.join('');
             }
@@ -861,16 +953,23 @@
                 }
             }
 
+            var analyzingStatusEl = document.getElementById('analyzingStatus');
             function setLoading(loading) {
                 btnAnalyze.disabled = loading;
                 if (loading) {
                     btnIcon.className = 'spinner';
                     btnIcon.style.display = 'block';
                     btnText.textContent = 'Analizando…';
+                    if (analyzingStatusEl) {
+                        analyzingStatusEl.classList.add('visible');
+                        var t = analyzingStatusEl.querySelector('.analyzing-text');
+                        if (t) t.textContent = 'Analizando web';
+                    }
                 } else {
                     btnIcon.className = 'fas fa-play';
                     btnIcon.style.display = 'inline-block';
                     btnText.textContent = 'Analizar';
+                    if (analyzingStatusEl) analyzingStatusEl.classList.remove('visible');
                 }
             }
 
