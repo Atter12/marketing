@@ -8,6 +8,9 @@
     "api/facebook/download.js": {
       "maxDuration": 30,
       "memory": 1024
+    },
+    "api/performance-analyzer/analyze.js": {
+      "maxDuration": 60
     }
   },
   "routes": [

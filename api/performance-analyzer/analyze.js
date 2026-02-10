@@ -87,12 +87,24 @@ export default async function handler(req, res) {
       fetch(query('desktop')),
     ]);
 
-    if (!mobileRes.ok || !desktopRes.ok) {
-      const msg = !mobileRes.ok ? await mobileRes.text() : await desktopRes.text();
-      console.error('PSI error:', mobileRes.status, desktopRes.status, msg);
-      return res.status(502).json({
+    const status = mobileRes.status || desktopRes.status;
+    if (status === 429) {
+      const hasKey = !!apiKey;
+      return res.status(200).json({
         success: false,
-        error: 'No se pudo analizar la URL. Intenta de nuevo en unos segundos.',
+        error: hasKey
+          ? 'Límite diario de análisis alcanzado. Vuelve a intentar mañana.'
+          : 'Límite diario de análisis alcanzado. Añade GOOGLE_PSI_API_KEY en Vercel (Google Cloud, PageSpeed Insights API) para tener cuota propia, o intenta mañana.',
+      });
+    }
+
+    if (!mobileRes.ok || !desktopRes.ok) {
+      const resToRead = !mobileRes.ok ? mobileRes : desktopRes;
+      const msg = await resToRead.text();
+      console.error('PSI error:', mobileRes.status, desktopRes.status, msg);
+      return res.status(200).json({
+        success: false,
+        error: 'No se pudo analizar la URL. Comprueba que la web esté accesible e inténtalo de nuevo.',
       });
     }
 
