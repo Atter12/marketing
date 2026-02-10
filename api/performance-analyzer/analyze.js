@@ -23,10 +23,18 @@ function extractLighthouse(result) {
     };
   };
 
+  const finalScreenshotAudit = audits['final-screenshot'];
+  let finalScreenshot = null;
+  if (finalScreenshotAudit && finalScreenshotAudit.details && finalScreenshotAudit.details.data) {
+    const d = finalScreenshotAudit.details.data;
+    finalScreenshot = typeof d === 'string' && d.indexOf('data:') === 0 ? d : 'data:image/jpeg;base64,' + d;
+  }
+
   return {
     requestedUrl: lh.requestedUrl || null,
     finalUrl: lh.finalUrl || null,
     fetchTime: lh.fetchTime || null,
+    finalScreenshot: finalScreenshot || null,
     categories: {
       performance: getScore('performance'),
       accessibility: getScore('accessibility'),

@@ -381,10 +381,252 @@
 
         .analyzed-url strong { color: var(--text-dark); }
 
+        /* Report layout tipo referencia: gauge central + leyenda + métricas + preview */
+        .report-layout {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .report-main { min-width: 0; }
+
+        .report-scores-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .report-score-item {
+            text-align: center;
+            padding: 16px 10px;
+            background: var(--bg-gray);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .report-score-item h4 {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+        }
+
+        .report-score-item .circle {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .report-gauge-section {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .report-gauge-section .big-gauge {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .report-gauge-section .big-gauge span.small {
+            font-size: 14px;
+            font-weight: 700;
+            opacity: 0.95;
+        }
+
+        .report-gauge-desc {
+            font-size: 13px;
+            color: var(--text-medium);
+            text-align: center;
+            max-width: 520px;
+            margin: 0 auto 20px;
+            line-height: 1.5;
+        }
+
+        .report-legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+
+        .report-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .report-legend .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .report-legend .dot.red { background: var(--accent-red); }
+        .report-legend .dot.orange { background: var(--accent-amber); }
+        .report-legend .dot.green { background: var(--accent); }
+
+        .report-metrics-section {
+            background: var(--bg-white);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .report-metrics-section .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .report-metrics-section .section-head h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .report-metrics-section .expand-btn {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .report-metrics-section .expand-btn:hover { text-decoration: underline; }
+
+        .metrics-list { list-style: none; }
+
+        .metrics-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metrics-list li:last-child { border-bottom: none; }
+
+        .metrics-list .metric-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .metrics-list .metric-dot.good { background: var(--accent); }
+        .metrics-list .metric-dot.medium { background: var(--accent-amber); }
+        .metrics-list .metric-dot.bad { background: var(--accent-red); }
+
+        .metrics-list .metric-label { font-size: 13px; font-weight: 600; color: var(--text-dark); flex: 1; }
+        .metrics-list .metric-value { font-size: 14px; font-weight: 700; color: var(--text-dark); }
+        .metrics-list.expanded .metric-value { font-size: 16px; }
+        .metrics-list.expanded li { padding: 14px 0; }
+
+        .report-preview-panel {
+            position: sticky;
+            top: 100px;
+            background: var(--bg-gray);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .report-preview-panel h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .report-preview-panel .preview-img-wrap {
+            background: #fff;
+            padding: 12px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .report-preview-panel .preview-img-wrap img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .report-preview-panel .preview-placeholder {
+            font-size: 13px;
+            color: var(--text-light);
+            padding: 24px;
+            text-align: center;
+        }
+
+        .report-preview-panel .open-site-link {
+            display: block;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            text-align: center;
+            text-decoration: none;
+            border-top: 1px solid var(--border);
+            background: white;
+        }
+
+        .report-preview-panel .open-site-link:hover { background: var(--bg-cream); }
+
+        .device-tab i { margin-right: 6px; }
+
+        @media (max-width: 900px) {
+            .report-layout { grid-template-columns: 1fr; }
+            .report-preview-panel { position: static; }
+        }
+
         @media (max-width: 640px) {
             .input-row { flex-direction: column; }
             .input-row input { min-width: 100%; }
             .scores-grid { grid-template-columns: repeat(2, 1fr); }
+            .report-scores-row { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -434,7 +676,7 @@
                 <p class="analyzed-url">Analizando: <strong id="analyzedUrl"></strong></p>
                 <div class="device-tabs">
                     <button type="button" class="device-tab active" data-device="mobile">
-                        <i class="fas fa-mobile-alt"></i> Móvil
+                        <i class="fas fa-mobile-alt"></i> Celulares
                     </button>
                     <button type="button" class="device-tab" data-device="desktop">
                         <i class="fas fa-laptop"></i> Escritorio
@@ -442,18 +684,48 @@
                 </div>
 
                 <div class="result-panel active" id="panelMobile">
-                    <div class="scores-grid" id="scoresMobile"></div>
-                    <div class="vitals-card">
-                        <h3><i class="fas fa-heartbeat"></i> Métricas principales</h3>
-                        <div class="vitals-grid" id="vitalsMobile"></div>
+                    <div class="report-layout">
+                        <div class="report-main">
+                            <div class="report-scores-row" id="scoresRowMobile"></div>
+                            <div class="report-gauge-section" id="gaugeSectionMobile"></div>
+                            <div class="report-metrics-section" id="metricsSectionMobile">
+                                <div class="section-head">
+                                    <h3>Métricas</h3>
+                                    <button type="button" class="expand-btn" data-panel="mobile">Expandir vista</button>
+                                </div>
+                                <ul class="metrics-list" id="metricsListMobile"></ul>
+                            </div>
+                        </div>
+                        <div class="report-preview-panel">
+                            <h3>Vista previa del sitio</h3>
+                            <div class="preview-img-wrap" id="previewMobile">
+                                <span class="preview-placeholder">Cargando…</span>
+                            </div>
+                            <a href="#" target="_blank" rel="noopener" class="open-site-link" id="openSiteMobile">Abrir sitio</a>
+                        </div>
                     </div>
                 </div>
 
                 <div class="result-panel" id="panelDesktop">
-                    <div class="scores-grid" id="scoresDesktop"></div>
-                    <div class="vitals-card">
-                        <h3><i class="fas fa-heartbeat"></i> Métricas principales</h3>
-                        <div class="vitals-grid" id="vitalsDesktop"></div>
+                    <div class="report-layout">
+                        <div class="report-main">
+                            <div class="report-scores-row" id="scoresRowDesktop"></div>
+                            <div class="report-gauge-section" id="gaugeSectionDesktop"></div>
+                            <div class="report-metrics-section" id="metricsSectionDesktop">
+                                <div class="section-head">
+                                    <h3>Métricas</h3>
+                                    <button type="button" class="expand-btn" data-panel="desktop">Expandir vista</button>
+                                </div>
+                                <ul class="metrics-list" id="metricsListDesktop"></ul>
+                            </div>
+                        </div>
+                        <div class="report-preview-panel">
+                            <h3>Vista previa del sitio</h3>
+                            <div class="preview-img-wrap" id="previewDesktop">
+                                <span class="preview-placeholder">Cargando…</span>
+                            </div>
+                            <a href="#" target="_blank" rel="noopener" class="open-site-link" id="openSiteDesktop">Abrir sitio</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -469,15 +741,11 @@
             const msg = document.getElementById('msg');
             const resultsWrap = document.getElementById('resultsWrap');
             const analyzedUrlEl = document.getElementById('analyzedUrl');
-            const scoresMobile = document.getElementById('scoresMobile');
-            const scoresDesktop = document.getElementById('scoresDesktop');
-            const vitalsMobile = document.getElementById('vitalsMobile');
-            const vitalsDesktop = document.getElementById('vitalsDesktop');
 
             const categoryLabels = {
                 performance: 'Rendimiento',
                 accessibility: 'Accesibilidad',
-                'best-practices': 'Buenas prácticas',
+                'best-practices': 'Recomendaciones',
                 seo: 'SEO'
             };
 
@@ -488,60 +756,98 @@
                 return 'bad';
             }
 
-            function renderScores(container, data) {
+            function escapeHtml(s) {
+                const div = document.createElement('div');
+                div.textContent = s;
+                return div.innerHTML;
+            }
+
+            function renderScoresRow(container, data) {
                 if (!data || !data.categories) {
-                    container.innerHTML = '<p style="color: var(--text-medium);">Sin datos</p>';
+                    container.innerHTML = '<p style="color: var(--text-medium); grid-column: 1/-1;">Sin datos</p>';
                     return;
                 }
-                const html = [];
-                for (const [id, score] of Object.entries(data.categories)) {
+                const order = ['performance', 'accessibility', 'best-practices', 'seo'];
+                const html = order.map(function (id) {
+                    const score = data.categories[id];
                     const label = categoryLabels[id] || id;
                     const cls = scoreClass(score);
                     const value = score != null ? score : '—';
-                    html.push(
-                        '<div class="score-circle-wrap">',
-                        '<h3>' + escapeHtml(label) + '</h3>',
-                        '<div class="score-circle ' + cls + '">' + value + '</div>',
-                        '</div>'
-                    );
-                }
+                    return '<div class="report-score-item">' +
+                        '<h4>' + escapeHtml(label) + '</h4>' +
+                        '<div class="circle ' + cls + '">' + value + '</div>' +
+                        '</div>';
+                });
                 container.innerHTML = html.join('');
             }
 
+            function renderGaugeSection(container, data) {
+                if (!data || !data.categories) {
+                    container.innerHTML = '';
+                    return;
+                }
+                const perf = data.categories.performance;
+                const cls = scoreClass(perf);
+                const value = perf != null ? perf : '—';
+                container.innerHTML =
+                    '<div class="big-gauge ' + cls + '">' + value + '<span class="small">Rendimiento</span></div>' +
+                    '<p class="report-gauge-desc">Los valores son estimados y pueden variar. La medición del rendimiento se calcula directamente a partir de estas métricas.</p>' +
+                    '<div class="report-legend">' +
+                    '<span><span class="dot red"></span> 0–49</span>' +
+                    '<span><span class="dot orange"></span> 50–89</span>' +
+                    '<span><span class="dot green"></span> 90–100</span>' +
+                    '</div>';
+            }
+
             const auditLabels = {
-                'first-contentful-paint': 'Primera pintura (FCP)',
-                'largest-contentful-paint': 'Mayor pintura (LCP)',
-                'cumulative-layout-shift': 'Cambio de diseño (CLS)',
-                'total-blocking-time': 'Tiempo bloqueante (TBT)',
+                'first-contentful-paint': 'First Contentful Paint (FCP)',
+                'largest-contentful-paint': 'Largest Contentful Paint (LCP)',
+                'cumulative-layout-shift': 'Cumulative Layout Shift (CLS)',
+                'total-blocking-time': 'Total Blocking Time (TBT)',
                 'speed-index': 'Índice de velocidad',
                 'interactive': 'Interactivo (TTI)',
                 'max-potential-fid': 'FID'
             };
 
-            function renderVitals(container, data) {
+            function metricDotClass(audit) {
+                if (!audit || audit.score == null) return 'medium';
+                const s = audit.score;
+                if (s >= 0.9) return 'good';
+                if (s >= 0.5) return 'medium';
+                return 'bad';
+            }
+
+            function renderMetricsList(container, data) {
                 if (!data || !data.audits) {
-                    container.innerHTML = '<p style="color: var(--text-medium);">Sin métricas</p>';
+                    container.innerHTML = '<li style="color: var(--text-medium);">Sin métricas</li>';
                     return;
                 }
-                const html = [];
-                for (const [id, audit] of Object.entries(data.audits)) {
-                    if (!audit) continue;
+                const order = ['first-contentful-paint', 'largest-contentful-paint', 'total-blocking-time', 'cumulative-layout-shift', 'speed-index', 'interactive', 'max-potential-fid'];
+                const html = order.map(function (id) {
+                    const audit = data.audits[id];
+                    if (!audit) return '';
                     const label = auditLabels[id] || id;
                     const value = audit.displayValue || (audit.score != null ? audit.score + '%' : '—');
-                    html.push(
-                        '<div class="vital-item">',
-                        '<div class="label">' + escapeHtml(label) + '</div>',
-                        '<div class="value">' + escapeHtml(String(value)) + '</div>',
-                        '</div>'
-                    );
-                }
+                    const dotCls = metricDotClass(audit);
+                    return '<li><span class="metric-dot ' + dotCls + '"></span><span class="metric-label">' + escapeHtml(label) + '</span><span class="metric-value">' + escapeHtml(String(value)) + '</span></li>';
+                }).filter(Boolean);
                 container.innerHTML = html.join('');
             }
 
-            function escapeHtml(s) {
-                const div = document.createElement('div');
-                div.textContent = s;
-                return div.innerHTML;
+            function setPreview(wrapEl, screenshot, openLinkEl, url) {
+                openLinkEl.href = url || '#';
+                wrapEl.innerHTML = '';
+                if (screenshot) {
+                    var img = document.createElement('img');
+                    img.src = screenshot;
+                    img.alt = 'Vista previa del sitio';
+                    wrapEl.appendChild(img);
+                } else {
+                    var span = document.createElement('span');
+                    span.className = 'preview-placeholder';
+                    span.textContent = 'Vista previa no disponible';
+                    wrapEl.appendChild(span);
+                }
             }
 
             function setLoading(loading) {
@@ -569,6 +875,15 @@
                     tab.classList.add('active');
                     var device = tab.getAttribute('data-device');
                     document.getElementById('panel' + (device === 'mobile' ? 'Mobile' : 'Desktop')).classList.add('active');
+                });
+            });
+
+            document.querySelectorAll('.expand-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var section = btn.closest('.report-metrics-section');
+                    var list = section.querySelector('.metrics-list');
+                    var isExpanded = list.classList.toggle('expanded');
+                    btn.textContent = isExpanded ? 'Contraer vista' : 'Expandir vista';
                 });
             });
 
@@ -607,11 +922,20 @@
                     .then(function (body) {
                         if (!body.success || !body.data) throw new Error('Respuesta inválida');
                         var data = body.data;
-                        analyzedUrlEl.textContent = data.url || url.href;
-                        renderScores(scoresMobile, data.mobile);
-                        renderScores(scoresDesktop, data.desktop);
-                        renderVitals(vitalsMobile, data.mobile);
-                        renderVitals(vitalsDesktop, data.desktop);
+                        var reportUrl = data.url || url.href;
+
+                        analyzedUrlEl.textContent = reportUrl;
+
+                        renderScoresRow(document.getElementById('scoresRowMobile'), data.mobile);
+                        renderScoresRow(document.getElementById('scoresRowDesktop'), data.desktop);
+                        renderGaugeSection(document.getElementById('gaugeSectionMobile'), data.mobile);
+                        renderGaugeSection(document.getElementById('gaugeSectionDesktop'), data.desktop);
+                        renderMetricsList(document.getElementById('metricsListMobile'), data.mobile);
+                        renderMetricsList(document.getElementById('metricsListDesktop'), data.desktop);
+
+                        setPreview(document.getElementById('previewMobile'), data.mobile && data.mobile.finalScreenshot, document.getElementById('openSiteMobile'), reportUrl);
+                        setPreview(document.getElementById('previewDesktop'), data.desktop && data.desktop.finalScreenshot, document.getElementById('openSiteDesktop'), reportUrl);
+
                         resultsWrap.classList.add('visible');
                         showMsg('Análisis completado.', false);
                     })
