@@ -10,8 +10,21 @@ function extractLighthouse(result) {
   const categories = lh.categories;
   const audits = lh.audits || {};
   const getScore = (id) => {
-    const c = categories[id];
-    return c && typeof c.score === 'number' ? Math.round(c.score * 100) : null;
+    let c = categories[id];
+    if (!c && typeof categories === 'object') {
+      const idLower = id.toLowerCase().replace(/\s+/g, '-');
+      for (const k of Object.keys(categories)) {
+        if (k.toLowerCase().replace(/\s+/g, '-') === idLower) {
+          c = categories[k];
+          break;
+        }
+      }
+    }
+    if (!c) return null;
+    const score = c.score;
+    if (typeof score !== 'number') return null;
+    const normalized = score <= 1 ? score * 100 : score;
+    return Math.round(normalized);
   };
   const getAudit = (id) => {
     const a = audits[id];
@@ -86,6 +99,7 @@ export default async function handler(req, res) {
     const apiKey = process.env.GOOGLE_PSI_API_KEY || '';
     const query = (strategy) => {
       const params = new URLSearchParams({ url, strategy });
+      ['performance', 'accessibility', 'best-practices', 'seo'].forEach((cat) => params.append('category', cat));
       if (apiKey) params.set('key', apiKey);
       return `${PSI_BASE}?${params.toString()}`;
     };
