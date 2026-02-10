@@ -48,6 +48,25 @@
             padding: 0 24px;
         }
 
+        .top-banner {
+            background: var(--primary-gradient);
+            color: #fff;
+            padding: 12px 24px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 101;
+            box-shadow: 0 2px 12px rgba(255, 107, 74, 0.2);
+            transition: box-shadow 0.3s ease, padding 0.3s ease;
+        }
+        .top-banner.is-scrolled { box-shadow: 0 4px 20px rgba(255, 107, 74, 0.25); padding: 10px 24px; }
+        .top-banner a { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; text-decoration: none; color: inherit; max-width: 900px; margin: 0 auto; }
+        .top-banner .banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .top-banner .banner-text { font-size: 14px; font-weight: 600; line-height: 1.4; }
+        .top-banner .banner-cta { font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+        .top-banner a:hover { opacity: 0.95; }
+        @media (max-width: 640px) { .top-banner { padding: 10px 16px; } .top-banner .banner-text, .top-banner .banner-cta { font-size: 13px; } }
+
         /* Header */
         header {
             background: var(--bg-white);
@@ -1406,6 +1425,13 @@
     </style>
 </head>
 <body>
+    <div class="top-banner">
+        <a href="http://getstartedtiktok.pxf.io/victorminas28" target="_blank" rel="noopener noreferrer">
+            <span class="banner-icon" aria-hidden="true">🎉</span>
+            <span class="banner-text">Activa tu 50% OFF en TikTok Ads y recibe hasta USD 6,000 en cupones</span>
+            <span class="banner-cta">Saber más</span>
+        </a>
+    </div>
     <!-- Header -->
     <header>
         <div class="container">
@@ -1551,6 +1577,15 @@
     <!-- Export Modal -->
 
     <script>
+        (function() {
+            var banner = document.querySelector('.top-banner');
+            if (!banner) return;
+            var th = 40, ticking = false;
+            function up() { var s = window.scrollY || document.documentElement.scrollTop; banner.classList.toggle('is-scrolled', s > th); ticking = false; }
+            function onScroll() { if (!ticking) { requestAnimationFrame(up); ticking = true; } }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            up();
+        })();
         // State Management
         let currentTemplate = null;
         let selectedComponent = null;
@@ -2391,11 +2426,25 @@
                 html.push('            .location-offer-cta { padding: 14px 20px; font-size: 13px; letter-spacing: 0.5px; }');
                 html.push('        }');
             }
-            
+            html.push('        .top-banner { background: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%); color: #fff; padding: 12px 24px; text-align: center; position: sticky; top: 0; z-index: 9999; box-shadow: 0 2px 12px rgba(255, 107, 74, 0.2); transition: box-shadow 0.3s ease, padding 0.3s ease; }');
+            html.push('        .top-banner.is-scrolled { box-shadow: 0 4px 20px rgba(255, 107, 74, 0.25); padding: 10px 24px; }');
+            html.push('        .top-banner a { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; text-decoration: none; color: inherit; max-width: 900px; margin: 0 auto; }');
+            html.push('        .top-banner .banner-icon { font-size: 1.1rem; flex-shrink: 0; }');
+            html.push('        .top-banner .banner-text { font-size: 14px; font-weight: 600; line-height: 1.4; }');
+            html.push('        .top-banner .banner-cta { font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }');
+            html.push('        .top-banner a:hover { opacity: 0.95; }');
+            html.push('        @media (max-width: 640px) { .top-banner { padding: 10px 16px; } .top-banner .banner-text, .top-banner .banner-cta { font-size: 13px; } }');
             html.push('        @media (max-width: 768px) { .hero-component h1 { font-size: 32px; } }');
             html.push('    </style>');
             html.push('</head>');
             html.push('<body>');
+            html.push('    <div class="top-banner">');
+            html.push('        <a href="http://getstartedtiktok.pxf.io/victorminas28" target="_blank" rel="noopener noreferrer">');
+            html.push('            <span class="banner-icon" aria-hidden="true">🎉</span>');
+            html.push('            <span class="banner-text">Activa tu 50% OFF en TikTok Ads y recibe hasta USD 6,000 en cupones</span>');
+            html.push('            <span class="banner-cta">Saber más</span>');
+            html.push('        </a>');
+            html.push('    </div>');
             
             // Componentes
             console.log('[Pre-Landing Builder] Generando', components.length, 'componentes...');
@@ -2777,6 +2826,7 @@
                 html.push('            }, 1000);');
                 html.push('        }');
             }
+            html.push('        (function(){ var b=document.querySelector(".top-banner"); if(!b)return; var th=40,tick=false; function up(){ var s=window.scrollY||document.documentElement.scrollTop; b.classList.toggle("is-scrolled",s>th); tick=false; } window.addEventListener("scroll",function(){ if(!tick){ requestAnimationFrame(up); tick=true; } },{passive:true}); up(); })();');
             html.push('        ');
             html.push('        // Tracking script');
             html.push('        document.querySelectorAll("form").forEach(function(form) {');
