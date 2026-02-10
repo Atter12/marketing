@@ -1,0 +1,529 @@
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent } from "lucide-react";
+
+/* ═══════ STORAGE ═══════ */
+const S = {
+  g: (k) => { try { return JSON.parse(localStorage.getItem("hm_" + k)) || []; } catch { return []; } },
+  s: (k, v) => localStorage.setItem("hm_" + k, JSON.stringify(v)),
+};
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmt = (n) => parseFloat(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtK = (n) => { const v = parseFloat(n || 0); if (v >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M"; if (v >= 1e3) return "$" + (v / 1e3).toFixed(1) + "K"; return "$" + fmt(v); };
+const td = () => new Date().toISOString().slice(0, 10);
+const tm = () => new Date().toISOString().slice(0, 7);
+const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
+const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
+const COLORS = ["#0055ff", "#0d9f6e", "#d97706", "#dc2640", "#7c3aed", "#e1306c", "#0891b2", "#c2410c"];
+const PC = { "Mercury Bank": "#5542f6", BCP: "#ff6200", Interbank: "#00a651", Binance: "#f0b90b", Efectivo: "#94a3b8", Stripe: "#635bff", Yape: "#6c2cb2", Plin: "#00d4aa" };
+const PI = { "Mercury Bank": "🏦", BCP: "🟠", Interbank: "🟢", Binance: "💛", Efectivo: "💵", Stripe: "💳", Yape: "💜", Plin: "💚" };
+const PM = ["Mercury Bank", "BCP", "Interbank", "Binance", "Efectivo", "Stripe", "Yape", "Plin"];
+const GT = ["Cuenta TikTok", "Business Center", "Dispositivo", "Documento ID", "Contrato Firmado", "Depósito", "Otro"];
+const clr = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return COLORS[Math.abs(h) % COLORS.length]; };
+const ini = (n) => n.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
+const gTotal = (g) => parseFloat(g.gasto || 0) * (1 + parseFloat(g.fee || 0) / 100);
+const gFee = (g) => parseFloat(g.gasto || 0) * (parseFloat(g.fee || 0) / 100);
+
+function getMonths(n = 6) {
+  const r = [], now = new Date();
+  for (let i = n - 1; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); r.push({ key: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"), label: d.toLocaleDateString("es-PE", { month: "short", year: "2-digit" }) }); }
+  return r;
+}
+
+/* ═══════ UI COMPONENTS ═══════ */
+const Av = ({ name, size = 34 }) => { const c = clr(name); return <div style={{ width: size, height: size, borderRadius: size > 40 ? 14 : 8, background: c + "14", color: c, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.36, flexShrink: 0, letterSpacing: -0.3 }}>{ini(name)}</div>; };
+
+const Bdg = ({ type = "n", children }) => {
+  const m = { ok: ["#eafaf4", "#0d9f6e"], err: ["#fdf0f2", "#dc2640"], warn: ["#fef9ec", "#d97706"], acc: ["#edf2ff", "#0055ff"], n: ["#f4f5f7", "#5f6577"], gar: ["#f0eefe", "#7c3aed"] };
+  const [bg, fg] = m[type] || m.n;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap" }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0 }} />{children}</span>;
+};
+
+const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 600, background: (PC[method] || "#94a3b8") + "18", color: PC[method] || "#64748b" }}>{PI[method] || "💰"} {method}</span>;
+
+const Stat = ({ icon, value, label, color, sub }) => (
+  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
+    <div style={{ width: 38, height: 38, borderRadius: 10, background: color + "14", color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>{icon}</div>
+    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: color || "#1a1d26", marginBottom: 4 }}>{value}</div>
+    <div style={{ fontSize: 12.5, color: "#9498a8", fontWeight: 500 }}>{label}</div>
+    {sub && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>{sub}</div>}
+  </div>
+);
+
+const Mdl = ({ open, onClose, title, children, footer }) => {
+  if (!open) return null;
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,17,26,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 50, overflowY: "auto" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.15)", marginBottom: 40 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 16px" }}>
+          <h3 style={{ fontSize: 17, fontWeight: 700 }}>{title}</h3>
+          <button onClick={onClose} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#f4f5f7", color: "#9498a8", borderRadius: 8, cursor: "pointer", fontSize: 16 }}>✕</button>
+        </div>
+        <div style={{ padding: "0 24px 8px" }}>{children}</div>
+        {footer && <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "16px 24px 20px", borderTop: "1px solid #eff0f3" }}>{footer}</div>}
+      </div>
+    </div>
+  );
+};
+
+const Inp = ({ label, hint, ...p }) => (
+  <div style={{ marginBottom: 14 }}>
+    {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
+    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", resize: "vertical", minHeight: 60, ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 32, ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", ...(p.style || {}) }} />}
+    {hint && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{hint}</div>}
+  </div>
+);
+
+const Btn = ({ variant = "primary", size, children, ...p }) => {
+  const vs = { primary: { bg: "#1b2559", color: "#fff", border: "none" }, accent: { bg: "#0055ff", color: "#fff", border: "none" }, outline: { bg: "#fff", color: "#1a1d26", border: "1px solid #e2e4e9" }, ghost: { bg: "transparent", color: "#9498a8", border: "none" }, danger: { bg: "#fdf0f2", color: "#dc2640", border: "none" } };
+  const s = vs[variant] || vs.primary;
+  return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: size === "sm" ? "6px 12px" : "8px 18px", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 12 : 13, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s", ...(p.style || {}) }}>{children}</button>;
+};
+
+const Multi = ({ values, onChange, placeholder, type = "text" }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    {values.map((v, i) => (
+      <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none" }} />
+        <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2640", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
+      </div>
+    ))}
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#0055ff", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
+  </div>
+);
+
+const IBtn = ({ onClick, icon, danger }) => <button onClick={onClick} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", background: "#fff", borderRadius: 6, cursor: "pointer", color: danger ? "#dc2640" : "#9498a8", transition: "all .15s" }}>{icon}</button>;
+
+const Empty = ({ cols, msg }) => <tr><td colSpan={cols} style={{ textAlign: "center", padding: 48, color: "#9498a8", fontSize: 13.5 }}>{msg}</td></tr>;
+
+/* ═══════ TABLE STYLES ═══════ */
+const TH = { textAlign: "left", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.8, background: "#f8f9fb", borderBottom: "1px solid #e2e4e9" };
+const TD = { padding: "12px 18px", fontSize: 13.5, borderBottom: "1px solid #eff0f3", verticalAlign: "middle" };
+const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 600 };
+
+/* ═══════ MAIN APP ═══════ */
+export default function App() {
+  const [page, setPage] = useState(() => (typeof window !== "undefined" && window.location.pathname === "/credito" ? "credito" : "dashboard"));
+  const [clients, setClients] = useState(() => S.g("clients"));
+  const [gastos, setGastos] = useState(() => S.g("gastos"));
+  const [cobros, setCobros] = useState(() => S.g("cobros"));
+  const [garantias, setGarantias] = useState(() => S.g("garantias"));
+  const [manual, setManual] = useState(() => S.g("manual"));
+  const [curCl, setCurCl] = useState(null);
+  const [modal, setModal] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [search, setSearch] = useState("");
+  // FIXED: tab state at top level to avoid hooks-in-conditional bug
+  const [detailTab, setDetailTab] = useState("gastos");
+  const [repCl, setRepCl] = useState("all");
+  const [repPer, setRepPer] = useState(tm());
+
+  // Form states
+  const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "" };
+  const emptyGf = { clientId: "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "" };
+  const emptyCof = { gastoId: "", monto: "", fecha: td(), metodo: "", notas: "" };
+  const emptyGaf = { clientId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
+  const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
+
+  const [cf, setCf] = useState(emptyCf);
+  const [gf, setGf] = useState(emptyGf);
+  const [cof, setCof] = useState(emptyCof);
+  const [gaf, setGaf] = useState(emptyGaf);
+  const [mf, setMf] = useState(emptyMf);
+
+  useEffect(() => { S.s("clients", clients); }, [clients]);
+  useEffect(() => { S.s("gastos", gastos); }, [gastos]);
+  useEffect(() => { S.s("cobros", cobros); }, [cobros]);
+  useEffect(() => { S.s("garantias", garantias); }, [garantias]);
+  useEffect(() => { S.s("manual", manual); }, [manual]);
+
+  /* Synced gastos with computed fields */
+  const sGastos = useMemo(() => gastos.map((g) => {
+    const t = gTotal(g), f = gFee(g), p = cobros.filter((c) => c.gastoId === g.id).reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    return { ...g, _t: t, _f: f, _p: p, _pend: Math.max(0, t - p), _st: p >= t ? "Pagado" : p > 0 ? "Parcial" : "Pendiente" };
+  }), [gastos, cobros]);
+
+  /* Client aggregate data */
+  const cData = useCallback((cid) => {
+    const gs = sGastos.filter((g) => g.clientId === cid);
+    const tG = gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
+    const tF = gs.reduce((a, g) => a + g._f, 0);
+    const tP = gs.reduce((a, g) => a + g._p, 0);
+    const tGar = garantias.filter((g) => g.clientId === cid && g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    const gross = tG + tF - tP;
+    return { tG, tF, tP, tGar, gross, net: Math.max(0, gross - tGar) };
+  }, [sGastos, garantias]);
+
+  /* Totals */
+  const tots = useMemo(() => {
+    const tG = sGastos.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
+    const tF = sGastos.reduce((a, g) => a + g._f, 0);
+    const tP = cobros.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const tGar = garantias.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    return { tG, tF, tP, tGar, net: Math.max(0, tG + tF - tP - tGar) };
+  }, [sGastos, cobros, garantias]);
+
+  const pendN = sGastos.filter((g) => g._st !== "Pagado").length;
+  const months = getMonths(6);
+
+  /* Months available */
+  const allMonths = useMemo(() => {
+    const s = new Set(gastos.map((g) => g.mes).filter(Boolean));
+    const now = new Date(); for (let i = 0; i < 12; i++) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); s.add(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }
+    return [...s].sort().reverse();
+  }, [gastos]);
+
+  /* ═══ REPORT DATA (garantías deducted per client) ═══ */
+  const repData = useMemo(() => {
+    let gs = sGastos;
+    if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
+
+    const bc = {};
+    gs.forEach((g) => {
+      if (!bc[g.clientId]) bc[g.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
+      bc[g.clientId].ads += parseFloat(g.gasto || 0);
+      bc[g.clientId].fee += g._f;
+      bc[g.clientId].total += g._t;
+      bc[g.clientId].paid += g._p;
+    });
+
+    const rows = Object.entries(bc).map(([cid, d]) => {
+      const gar = garantias.filter((g) => g.clientId === cid && g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+      const pend = Math.max(0, d.total - d.paid);
+      const netPend = Math.max(0, pend - gar);
+      return { cid, name: clients.find((c) => c.id === cid)?.name || "—", ...d, gar, pending: pend, netPending: netPend };
+    });
+    const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
+
+    return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
+  }, [sGastos, repCl, repPer, clients, garantias]);
+
+  /* Dashboard charts */
+  const dCharts = useMemo(() => ({
+    monthly: months.map((m) => {
+      const gs = sGastos.filter((g) => g.mes === m.key);
+      const cs = cobros.filter((c) => c.fecha?.slice(0, 7) === m.key);
+      return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0), cobrado: cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0) };
+    }),
+    methods: (() => { const m = {}; cobros.forEach((c) => { m[c.metodo] = (m[c.metodo] || 0) + parseFloat(c.monto || 0); }); return Object.entries(m).map(([n, v]) => ({ name: n, value: v, color: PC[n] || "#94a3b8" })); })(),
+    debt: clients.map((c) => ({ name: c.name, debt: cData(c.id).net })).filter((c) => c.debt > 0).sort((a, b) => b.debt - a.debt).slice(0, 6),
+  }), [sGastos, cobros, clients, months, cData]);
+
+  /* Client charts */
+  const cCharts = useMemo(() => {
+    if (!curCl) return { m: [], co: [] };
+    const gids = gastos.filter((g) => g.clientId === curCl).map((g) => g.id);
+    return {
+      m: months.map((m) => { const gs = sGastos.filter((g) => g.clientId === curCl && g.mes === m.key); return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0) }; }),
+      co: months.map((m) => ({ name: m.label, cobrado: cobros.filter((c) => gids.includes(c.gastoId) && c.fecha?.slice(0, 7) === m.key).reduce((a, c) => a + parseFloat(c.monto || 0), 0) })),
+    };
+  }, [curCl, sGastos, cobros, gastos, months]);
+
+  /* ═══ MODALS ═══ */
+  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); };
+
+  useEffect(() => {
+    if (!modal) return;
+    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "" }); }
+    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "" }); }
+    if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
+    if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
+  }, [modal, editId]);
+
+  /* ═══ CRUD ═══ */
+  const saveClient = () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || uid(), ...cf, phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), created: editId ? (clients.find((x) => x.id === editId)?.created || td()) : td() }; setClients((p) => editId ? p.map((x) => x.id === editId ? c : x) : [...p, c]); closeMdl(); };
+  const delClient = (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; const gids = gastos.filter((g) => g.clientId === id).map((g) => g.id); setClients((p) => p.filter((x) => x.id !== id)); setGastos((p) => p.filter((g) => g.clientId !== id)); setCobros((p) => p.filter((c) => !gids.includes(c.gastoId))); setGarantias((p) => p.filter((g) => g.clientId !== id)); setManual((p) => p.filter((m) => m.clientId !== id)); };
+
+  const saveGasto = () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, mes y gasto"); const g = { id: editId || uid(), ...gf }; setGastos((p) => editId ? p.map((x) => x.id === editId ? g : x) : [...p, g]); closeMdl(); };
+  const delGasto = (id) => { if (!confirm("¿Eliminar gasto?")) return; setGastos((p) => p.filter((x) => x.id !== id)); setCobros((p) => p.filter((c) => c.gastoId !== id)); };
+
+  const saveCobro = () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); setCobros((p) => [...p, { id: uid(), ...cof }]); closeMdl(); };
+  const delCobro = (id) => { if (!confirm("¿Eliminar?")) return; setCobros((p) => p.filter((x) => x.id !== id)); };
+
+  const saveGar = () => { if (!gaf.clientId) return alert("Selecciona cliente"); setGarantias((p) => [...p, { id: uid(), ...gaf }]); closeMdl(); };
+  const delGar = (id) => { if (!confirm("¿Eliminar?")) return; setGarantias((p) => p.filter((x) => x.id !== id)); };
+
+  const saveMan = () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); setManual((p) => [...p, { id: uid(), clientId: curCl, ...mf }]); setMf(emptyMf); };
+
+  const goTo = (p, cid = null) => { setPage(p); if (cid) setCurCl(cid); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); };
+
+  const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+    if (percent < 0.03) return null;
+    const R = Math.PI / 180, r = innerRadius + (outerRadius - innerRadius) * 1.5;
+    return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="#5f6577" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>{(percent * 100).toFixed(1)}%</text>;
+  };
+
+  /* ═══ CURRENT CLIENT DATA ═══ */
+  const curC = curCl ? clients.find((x) => x.id === curCl) : null;
+  const curD = curCl ? cData(curCl) : null;
+  const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (b.mes || "").localeCompare(a.mes || "")) : [];
+  const curGids = curCl ? gastos.filter((g) => g.clientId === curCl).map((g) => g.id) : [];
+  const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
+  const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
+  const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
+
+  /* NAV */
+  const nav = [
+    { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
+    { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
+    { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
+    { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
+    { id: "reportes", icon: <FileText size={18} />, label: "Reportes", section: "Finanzas" },
+    { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
+  ];
+
+  const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
+
+  /* ═══ CRÉDITO LANDING ═══ */
+  if (page === "credito") {
+    return (
+      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');`}</style>
+        <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "60px 24px 80px", textAlign: "center" }}>
+          <div style={{ maxWidth: 640, margin: "0 auto" }}>
+            <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 800, letterSpacing: -0.5, marginBottom: 16 }}>Crédito</h1>
+            <p style={{ fontSize: 18, opacity: 0.9, lineHeight: 1.6 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
+            <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 28, padding: "14px 28px", background: "#fff", color: "#1b2559", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
+          </div>
+        </div>
+        <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px" }}>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 16, padding: 32, textAlign: "center", color: "#5f6577", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap'); .stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);transform:translateY(-1px)} table{width:100%;border-collapse:collapse} tbody tr:hover{background:#fafbfc} tbody tr:last-child td{border-bottom:none}`}</style>
+
+      {/* ═══ SIDEBAR ═══ */}
+      <aside style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
+        <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 38, height: 38, background: "linear-gradient(135deg, #1b2559, #0055ff)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: -0.5 }}>H</div>
+            <div><div style={{ fontSize: 16, fontWeight: 700, color: "#1b2559", letterSpacing: -0.3 }}>Holistic</div><div style={{ fontSize: 11, fontWeight: 600, color: "#0055ff", letterSpacing: 1, textTransform: "uppercase", marginTop: -1 }}>Marketing</div></div>
+          </div>
+        </div>
+        <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px" }}>General</div>
+          {nav.map((it) => (
+            <div key={it.id}>
+              {it.section && <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px", marginTop: 12 }}>{it.section}</div>}
+              <div onClick={() => goTo(it.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#1b2559" : "#5f6577", background: page === it.id ? "#eef0f8" : "transparent", cursor: "pointer", margin: "1px 0" }}>
+                {it.icon}<span>{it.label}</span>
+                {it.badge > 0 && <span style={{ marginLeft: "auto", background: "#dc2640", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{it.badge}</span>}
+              </div>
+            </div>
+          ))}
+        </nav>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid #eff0f3", fontSize: 11, color: "#b4b8c4" }}>Holistic Marketing © 2025</div>
+      </aside>
+
+      {/* ═══ MAIN ═══ */}
+      <main style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
+
+        {/* ══ DASHBOARD ══ */}
+        {page === "dashboard" && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Dashboard</h2>
+            <div style={{ display: "flex", gap: 8 }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+          </div>
+          <div style={{ padding: "28px 36px 40px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+              <Stat icon={<DollarSign size={20} />} value={`$${fmt(tots.tG)}`} label="Gasto Total Ads" color="#1b2559" />
+              <Stat icon={<TrendingUp size={20} />} value={`$${fmt(tots.tF)}`} label="Fees Generados" color="#0055ff" />
+              <Stat icon={<Check size={20} />} value={`$${fmt(tots.tP)}`} label="Total Cobrado" color="#0d9f6e" />
+              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(tots.net)}`} label="Deuda Neta" color="#dc2640" sub={tots.tGar > 0 ? `Garantías descontadas: -$${fmt(tots.tGar)}` : ""} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Inversión + fees por mes</p>
+                <ResponsiveContainer width="100%" height={220}><BarChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
+              </div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Métodos de Cobro</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Distribución por medio de pago</p>
+                <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={dCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Evolución mensual</p>
+                <ResponsiveContainer width="100%" height={220}><LineChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
+              </div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Incluye descuento de garantías</p>
+                <ResponsiveContainer width="100%" height={220}><BarChart data={dCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis type="number" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9498a8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="#dc264088" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
+              </div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+              <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
+              <table><thead><tr>{["Cliente", "Mes", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (a.mes || "z").localeCompare(b.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+                {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table>
+            </div>
+          </div>
+        </div>)}
+
+        {/* ══ REPORTES ══ */}
+        {page === "reportes" && (<div>
+          <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
+              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}>Dashboard Financiero — Holistic Marketing</p></div>
+            </div>
+          </div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end" }}>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 160, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
+          </div>
+          <div style={{ padding: "28px 36px 40px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+              <Stat icon={<DollarSign size={20} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#1b2559" />
+              <Stat icon={<Percent size={20} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#0055ff" />
+              <Stat icon={<Check size={20} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#0d9f6e" />
+              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#dc2640" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+                <div style={{ padding: "16px 20px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Desglose por Usuario</h3></div>
+                <table><thead><tr>{["Usuario", "ADS", "FEE", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {repData.rows.map((r) => <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{fmt(r.fee)}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>)}
+                    <tr style={{ background: "#f8f9fb" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+                    {!repData.rows.length && <Empty cols={7} msg="Sin datos para este período" />}
+                  </tbody></table>
+              </div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, alignSelf: "flex-start" }}>Composición de Cuentas</h4>
+                <ResponsiveContainer width="100%" height={240}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 11.5 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 30, fontWeight: 700, marginTop: 4 }}>{fmtK(repData.t.total)}</div>
+                <div style={{ fontSize: 12, color: "#9498a8" }}>Total General</div>
+              </div>
+            </div>
+          </div>
+        </div>)}
+
+        {/* ══ CLIENTES ══ */}
+        {page === "clientes" && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Clientes</h2>
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}><div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." style={{ padding: "8px 12px 8px 34px", width: 200, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div><Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn></div>
+          </div>
+          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table>
+          </div></div>
+        </div>)}
+
+        {/* ══ CLIENT DETAIL ══ */}
+        {page === "client-detail" && curC && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <div style={{ fontSize: 13, color: "#9498a8" }}><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › <span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span></div>
+            <div style={{ display: "flex", gap: 8 }}><Btn variant="outline" size="sm" onClick={() => openMdl("client", curCl)}><Edit3 size={14} /> Editar</Btn><Btn size="sm" onClick={() => openMdl("gasto")}><Plus size={14} /> Gasto</Btn><Btn variant="accent" size="sm" onClick={() => openMdl("cobro")}><CreditCard size={14} /> Cobro</Btn></div>
+          </div>
+          <div style={{ padding: "28px 36px 40px" }}>
+            <div onClick={() => goTo("clientes")} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9498a8", cursor: "pointer", marginBottom: 18 }}><ChevronLeft size={16} /> Volver</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28 }}><Av name={curC.name} size={56} /><div><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2><div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div></div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Cobrado</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: Math.min(100, pct) + "%", transition: "width .5s" }} /></div></div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div>{curD.tGar > 0 && <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 6 }}>🛡️ Garantías: -${fmt(curD.tGar)}</div>}</div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Gasto Mensual</h4><ResponsiveContainer width="100%" height={200}><BarChart data={cCharts.m}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="gasto" name="Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Cobros Recibidos</h4><ResponsiveContainer width="100%" height={200}><LineChart data={cCharts.co}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2.5} dot={{ r: 5, fill: "#0d9f6e" }} /></LineChart></ResponsiveContainer></div>
+            </div>
+
+            <div style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 22 }}>
+              {[["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"], ["manual", "Datos Manuales"]].map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: detailTab === k ? "#fff" : "transparent", color: detailTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: detailTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
+            </div>
+
+            {detailTab === "gastos" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGastos.map((g) => <tr key={g.id}><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>)}{!curGastos.length && <Empty cols={9} msg="Sin gastos" />}</tbody></table></div>}
+
+            {detailTab === "cobros" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Fecha", "Ref.", "Monto", "Método", "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curCobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{g ? fmtM(g.mes) : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td></tr>; })}{!curCobros.length && <Empty cols={5} msg="Sin cobros" />}</tbody></table></div>}
+
+            {detailTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td></tr>)}{!curGars.length && <Empty cols={4} msg="Sin garantías" />}</tbody></table></div>}
+
+            {detailTab === "manual" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td><td style={TD}><IBtn onClick={() => setManual((p) => p.filter((x) => x.id !== m.id))} icon={<Trash2 size={13} />} danger /></td></tr>)}{!curMan.length && <Empty cols={6} msg="Sin registros" />}</tbody></table>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
+                <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+                <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+                <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+                <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
+                <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
+              </div>
+            </div>}
+          </div>
+        </div>)}
+
+        {/* ══ GASTOS ══ */}
+        {page === "gastos" && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <table><thead><tr>{["Cliente", "Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!gastos.length && <Empty cols={11} msg="Sin gastos registrados" />}</tbody></table>
+          </div></div>
+        </div>)}
+
+        {/* ══ COBROS ══ */}
+        {page === "cobros" && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
+          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <table><thead><tr>{["Fecha", "Cliente", "Ref.", "Monto", "Método", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{cobros.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!cobros.length && <Empty cols={7} msg="Sin cobros" />}</tbody></table>
+          </div></div>
+        </div>)}
+
+        {/* ══ GARANTÍAS ══ */}
+        {page === "garantias" && (<div>
+          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2><Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn></div>
+          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!garantias.length && <Empty cols={6} msg="Sin garantías" />}</tbody></table>
+          </div></div>
+        </div>)}
+      </main>
+
+      {/* ═══ MODALS ═══ */}
+      <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario" /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Teléfonos / WhatsApp</label><Multi values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} placeholder="+51 999 999 999" /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
+        <Inp label="Negocio" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce..." />
+        <Inp label="Notas" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional..." />
+      </Mdl>
+
+      <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
+        <Inp label="Cliente *" type="select" value={gf.clientId} onChange={(e) => setGf({ ...gf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Mes *" type="month" value={gf.mes} onChange={(e) => setGf({ ...gf, mes: e.target.value })} /><Inp label="Campaña" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Campaña Dic" /></div>
+        <Inp label="Gasto Publicitario ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Monto invertido en TikTok Ads" />
+        <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} />
+        <div style={{ background: "#eef0f8", padding: "10px 14px", borderRadius: 8, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, textAlign: "center", marginBottom: 14, color: "#1b2559" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))} → Total a cobrar: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</div>
+        <Inp label="Notas" type="textarea" value={gf.notas} onChange={(e) => setGf({ ...gf, notas: e.target.value })} placeholder="Detalles..." />
+      </Mdl>
+
+      <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro}>Registrar</Btn></>}>
+        <Inp label="Gasto *" type="select" value={cof.gastoId} onChange={(e) => { const g = sGastos.find((x) => x.id === e.target.value); setCof({ ...cof, gastoId: e.target.value, monto: g ? g._pend.toFixed(2) : "" }); }}><option value="">Seleccionar...</option>{sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return <option key={g.id} value={g.id}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)})</option>; })}</Inp>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Monto ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
+        <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
+        <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
+      </Mdl>
+
+      <Mdl open={modal === "garantia"} onClose={closeMdl} title="Nueva Garantía" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGar}>Guardar</Btn></>}>
+        <Inp label="Cliente *" type="select" value={gaf.clientId} onChange={(e) => setGaf({ ...gaf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <Inp label="Tipo" type="select" value={gaf.tipo} onChange={(e) => setGaf({ ...gaf, tipo: e.target.value })}>{GT.map((t) => <option key={t}>{t}</option>)}</Inp>
+          <Inp label="Valor ($)" type="number" step="0.01" min="0" value={gaf.valor} onChange={(e) => setGaf({ ...gaf, valor: e.target.value })} placeholder="0.00" />
+        </div>
+        <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
+        <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
+      </Mdl>
+    </div>
+  );
+}
