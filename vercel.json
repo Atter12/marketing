@@ -63,10 +63,6 @@
       "dest": "/pixel-activator.html"
     },
     {
-      "src": "/pixel-activator",
-      "dest": "/pixel-activator.html"
-    },
-    {
       "src": "/pixel-activator.html",
       "dest": "/pixel-activator.html"
     },
@@ -117,6 +113,14 @@
     {
       "src": "/landing.html",
       "dest": "/landing.html"
+    },
+    {
+      "src": "/credito",
+      "dest": "/credito.html"
+    },
+    {
+      "src": "/credito.html",
+      "dest": "/credito.html"
     },
     {
       "src": "^/([a-zA-Z0-9-_]+)$",
