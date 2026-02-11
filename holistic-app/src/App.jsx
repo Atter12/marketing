@@ -375,7 +375,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
             </div>
           </div>
-          <button onClick={() => supabase?.auth?.signOut()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#5f6577", fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}><LogOut size={14} /> Cerrar sesión</button>
+          <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#5f6577", fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}><LogOut size={14} /> Cerrar sesión</button>
         </div>
       </aside>
 

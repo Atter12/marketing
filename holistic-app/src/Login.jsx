@@ -79,7 +79,10 @@ export default function Login({ onSuccess, supabase }) {
     try {
       const { data, error: signError } = await supabase.auth.signUp({ email: email.trim(), password });
       if (signError) {
-        setError(signError.message === "User already registered" ? "Ese correo ya tiene cuenta. Inicia sesión." : signError.message);
+        const msg = signError.message === "User already registered" || signError.status === 422
+          ? "Ese correo ya tiene cuenta. Inicia sesión."
+          : (signError.message || "Datos no válidos. Revisa correo y contraseña.");
+        setError(msg);
         setLoading(false);
         return;
       }
@@ -89,9 +92,9 @@ export default function Login({ onSuccess, supabase }) {
           p_email: email.trim().toLowerCase(),
         });
         if (rpcError) console.error("[Login] crear_cliente_desde_registro:", rpcError);
-        const result = await tryEnter(data);
+        const result = rpcError ? null : await tryEnter(data);
         if (result) {
-          onSuccess(result);
+          onSuccess({ ...result, userEmail: data.user?.email ?? email.trim() });
           setLoading(false);
           return;
         }
