@@ -108,6 +108,7 @@ const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
   const sb = useSupabaseData(role, clientId);
   const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, mutations, uid: uidGen } = sb;
+  const isCliente = role === "cliente";
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (userEmail ? (userEmail.split("@")[0] || userEmail) : "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
 
@@ -133,7 +134,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gaf, setGaf] = useState(emptyGaf);
   const [mf, setMf] = useState(emptyMf);
 
-  const isCliente = role === "cliente";
   if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
 
