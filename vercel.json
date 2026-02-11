@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "echo 'No build required'",
+  "buildCommand": "npm run build",
   "outputDirectory": ".",
-  "installCommand": "npm install",
+  "installCommand": "npm install && cd holistic-app && npm install",
   "framework": null,
   "functions": {
     "api/facebook/download.js": {
