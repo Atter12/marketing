@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu } from "lucide-react";
+import ClientDetailView from "./ClientDetailView";
 
 /* ═══════ STORAGE ═══════ */
 const S = {
@@ -53,8 +54,8 @@ const Stat = ({ icon, value, label, color, sub }) => (
 const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,17,26,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 50, overflowY: "auto" }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.15)", marginBottom: 40 }}>
+    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,17,26,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 50, overflowY: "auto" }}>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.15)", marginBottom: 40 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px 16px" }}>
           <h3 style={{ fontSize: 17, fontWeight: 700 }}>{title}</h3>
           <button onClick={onClose} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#f4f5f7", color: "#9498a8", borderRadius: 8, cursor: "pointer", fontSize: 16 }}>✕</button>
@@ -117,6 +118,7 @@ export default function App() {
   const [detailTab, setDetailTab] = useState("gastos");
   const [repCl, setRepCl] = useState("all");
   const [repPer, setRepPer] = useState(tm());
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Form states
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "" };
@@ -247,7 +249,7 @@ export default function App() {
 
   const saveMan = () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); setManual((p) => [...p, { id: uid(), clientId: curCl, ...mf }]); setMf(emptyMf); };
 
-  const goTo = (p, cid = null) => { setPage(p); if (cid) setCurCl(cid); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); };
+  const goTo = (p, cid = null) => { setPage(p); if (cid) setCurCl(cid); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); setMenuOpen(false); };
 
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
@@ -277,12 +279,68 @@ export default function App() {
 
   const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
 
+  const pageTitles = { credito: "Crédito", dashboard: "Dashboard", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
+
+  const manualTabContent = detailTab === "manual" ? (
+    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+      <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td><td style={TD}><IBtn onClick={() => setManual((p) => p.filter((x) => x.id !== m.id))} icon={<Trash2 size={13} />} danger /></td></tr>)}{!curMan.length && <Empty cols={6} msg="Sin registros" />}</tbody></table></div>
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
+        <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
+        <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
+      </div>
+    </div>
+  ) : null;
+
   return (
-    <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap'); .stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);transform:translateY(-1px)} table{width:100%;border-collapse:collapse} tbody tr:hover{background:#fafbfc} tbody tr:last-child td{border-bottom:none}`}</style>
+    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+.stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);transform:translateY(-1px)} table{width:100%;border-collapse:collapse;min-width:600px} tbody tr:hover{background:#fafbfc} tbody tr:last-child td{border-bottom:none}
+@media (max-width:768px){
+  .hm-sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:200;box-shadow:4px 0 20px rgba(0,0,0,.08)}
+  .hm-app.menu-open .hm-sidebar{transform:translateX(0)}
+  .hm-sidebar-overlay{display:block}
+  .hm-app.menu-open .hm-sidebar-overlay{opacity:1;pointer-events:auto}
+  .hm-main{margin-left:0!important;padding-top:56px!important}
+  .hm-mobile-header{display:flex!important}
+  .hm-page-header{top:56px!important;padding:0 16px!important;flex-wrap:wrap;gap:8px!important;min-height:auto!important;height:auto!important;padding:12px 16px!important}
+  .hm-page-content{padding:16px 12px!important}
+  .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+  .hm-charts-grid-2{grid-template-columns:1fr!important}
+  .hm-charts-grid-2-1{grid-template-columns:1fr!important}
+  .hm-report-grid{grid-template-columns:1fr!important}
+  .hm-credito-hero{padding:32px 20px 40px!important}
+  .hm-credito-content{padding:24px 16px!important}
+  .hm-detail-stats{grid-template-columns:repeat(2,1fr)!important}
+  .hm-detail-charts{grid-template-columns:1fr!important}
+  .hm-detail-tabs{flex-wrap:wrap;width:100%!important}
+  .hm-detail-tabs button{padding:6px 12px;font-size:11.5px}
+  .hm-modal-outer{padding:16px 12px 24px!important;align-items:flex-start!important}
+  .hm-modal-box{width:100%!important;max-width:none!important;margin-bottom:20px!important}
+}
+@media (max-width:480px){
+  .hm-stats-grid{grid-template-columns:1fr!important}
+  .hm-detail-stats{grid-template-columns:1fr!important}
+}
+.hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,17,26,.4);z-index:150;opacity:0;pointer-events:none;transition:opacity .2s}
+.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#fff;border-bottom:1px solid #e2e4e9;align-items:center;padding:0 16px;z-index:101;gap:12px}
+.hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
+@media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
+`}</style>
+
+      {/* Overlay móvil al abrir menú */}
+      <div className="hm-sidebar-overlay" onClick={() => setMenuOpen(false)} aria-hidden="true" />
+
+      {/* Cabecera móvil */}
+      <header className="hm-mobile-header">
+        <button onClick={() => setMenuOpen(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#f4f5f7", borderRadius: 10, color: "#1b2559", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1d26" }}>{pageTitles[page] || "Holistic"}</span>
+      </header>
 
       {/* ═══ SIDEBAR ═══ */}
-      <aside style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
+      <aside className="hm-sidebar" style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 38, height: 38, background: "linear-gradient(135deg, #1b2559, #0055ff)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: -0.5 }}>H</div>
@@ -305,19 +363,19 @@ export default function App() {
       </aside>
 
       {/* ═══ MAIN ═══ */}
-      <main style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
+      <main className="hm-main" style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
 
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
           <div>
-            <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "48px 36px 56px", textAlign: "center" }}>
+            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "48px 36px 56px", textAlign: "center" }}>
               <div style={{ maxWidth: 640, margin: "0 auto" }}>
                 <h1 style={{ fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 800, letterSpacing: -0.5, marginBottom: 12 }}>Crédito</h1>
                 <p style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
                 <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 24, padding: "12px 24px", background: "#fff", color: "#1b2559", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
               </div>
             </div>
-            <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
+            <div className="hm-credito-content" style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 16, padding: 32, textAlign: "center", color: "#5f6577", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
             </div>
           </div>
@@ -325,18 +383,18 @@ export default function App() {
 
         {/* ══ DASHBOARD ══ */}
         {page === "dashboard" && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Dashboard</h2>
-            <div style={{ display: "flex", gap: 8 }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
           </div>
-          <div style={{ padding: "28px 36px 40px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+          <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
+            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
               <Stat icon={<DollarSign size={20} />} value={`$${fmt(tots.tG)}`} label="Gasto Total Ads" color="#1b2559" />
               <Stat icon={<TrendingUp size={20} />} value={`$${fmt(tots.tF)}`} label="Fees Generados" color="#0055ff" />
               <Stat icon={<Check size={20} />} value={`$${fmt(tots.tP)}`} label="Total Cobrado" color="#0d9f6e" />
               <Stat icon={<AlertCircle size={20} />} value={`$${fmt(tots.net)}`} label="Deuda Neta" color="#dc2640" sub={tots.tGar > 0 ? `Garantías descontadas: -$${fmt(tots.tGar)}` : ""} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
+            <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Inversión + fees por mes</p>
                 <ResponsiveContainer width="100%" height={220}><BarChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
@@ -346,7 +404,7 @@ export default function App() {
                 <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={dCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
               </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
+            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Evolución mensual</p>
                 <ResponsiveContainer width="100%" height={220}><LineChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
@@ -358,9 +416,9 @@ export default function App() {
             </div>
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
-              <table><thead><tr>{["Cliente", "Mes", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Mes", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                 <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (a.mes || "z").localeCompare(b.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
-                {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table>
+                {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table></div>
             </div>
           </div>
         </div>)}
@@ -368,31 +426,31 @@ export default function App() {
         {/* ══ REPORTES ══ */}
         {page === "reportes" && (<div>
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
               <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.6, marginTop: 2 }}>Dashboard Financiero — Holistic Marketing</p></div>
             </div>
           </div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end" }}>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 160, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
           </div>
-          <div style={{ padding: "28px 36px 40px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
+          <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
+            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
               <Stat icon={<DollarSign size={20} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#1b2559" />
               <Stat icon={<Percent size={20} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#0055ff" />
               <Stat icon={<Check size={20} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#0d9f6e" />
               <Stat icon={<AlertCircle size={20} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#dc2640" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
+            <div className="hm-report-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
                 <div style={{ padding: "16px 20px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Desglose por Usuario</h3></div>
-                <table><thead><tr>{["Usuario", "ADS", "FEE", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                <div className="hm-table-wrap"><table><thead><tr>{["Usuario", "ADS", "FEE", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
                     {repData.rows.map((r) => <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{fmt(r.fee)}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>)}
                     <tr style={{ background: "#f8f9fb" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
                     {!repData.rows.length && <Empty cols={7} msg="Sin datos para este período" />}
-                  </tbody></table>
+                  </tbody></table></div>
               </div>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, alignSelf: "flex-start" }}>Composición de Cuentas</h4>
@@ -406,84 +464,72 @@ export default function App() {
 
         {/* ══ CLIENTES ══ */}
         {page === "clientes" && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Clientes</h2>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}><div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." style={{ padding: "8px 12px 8px 34px", width: 200, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div><Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn></div>
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}><div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." style={{ padding: "8px 12px 8px 34px", width: 200, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div><Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn></div>
           </div>
-          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table>
+          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
         {/* ══ CLIENT DETAIL ══ */}
-        {page === "client-detail" && curC && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-            <div style={{ fontSize: 13, color: "#9498a8" }}><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › <span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span></div>
-            <div style={{ display: "flex", gap: 8 }}><Btn variant="outline" size="sm" onClick={() => openMdl("client", curCl)}><Edit3 size={14} /> Editar</Btn><Btn size="sm" onClick={() => openMdl("gasto")}><Plus size={14} /> Gasto</Btn><Btn variant="accent" size="sm" onClick={() => openMdl("cobro")}><CreditCard size={14} /> Cobro</Btn></div>
-          </div>
-          <div style={{ padding: "28px 36px 40px" }}>
-            <div onClick={() => goTo("clientes")} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9498a8", cursor: "pointer", marginBottom: 18 }}><ChevronLeft size={16} /> Volver</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28 }}><Av name={curC.name} size={56} /><div><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2><div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div></div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Cobrado</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: Math.min(100, pct) + "%", transition: "width .5s" }} /></div></div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div>{curD.tGar > 0 && <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 6 }}>🛡️ Garantías: -${fmt(curD.tGar)}</div>}</div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Gasto Mensual</h4><ResponsiveContainer width="100%" height={200}><BarChart data={cCharts.m}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="gasto" name="Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Cobros Recibidos</h4><ResponsiveContainer width="100%" height={200}><LineChart data={cCharts.co}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2.5} dot={{ r: 5, fill: "#0d9f6e" }} /></LineChart></ResponsiveContainer></div>
-            </div>
-
-            <div style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 22 }}>
-              {[["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"], ["manual", "Datos Manuales"]].map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: detailTab === k ? "#fff" : "transparent", color: detailTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: detailTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
-            </div>
-
-            {detailTab === "gastos" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGastos.map((g) => <tr key={g.id}><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>)}{!curGastos.length && <Empty cols={9} msg="Sin gastos" />}</tbody></table></div>}
-
-            {detailTab === "cobros" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Fecha", "Ref.", "Monto", "Método", "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curCobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{g ? fmtM(g.mes) : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td></tr>; })}{!curCobros.length && <Empty cols={5} msg="Sin cobros" />}</tbody></table></div>}
-
-            {detailTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td></tr>)}{!curGars.length && <Empty cols={4} msg="Sin garantías" />}</tbody></table></div>}
-
-            {detailTab === "manual" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td><td style={TD}><IBtn onClick={() => setManual((p) => p.filter((x) => x.id !== m.id))} icon={<Trash2 size={13} />} danger /></td></tr>)}{!curMan.length && <Empty cols={6} msg="Sin registros" />}</tbody></table>
-              <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
-                <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-                <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-                <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-                <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
-                <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
-              </div>
-            </div>}
-          </div>
-        </div>)}
+        {page === "client-detail" && curC && (
+          <ClientDetailView
+            curC={curC}
+            curD={curD}
+            pct={pct}
+            detailTab={detailTab}
+            setDetailTab={setDetailTab}
+            curGastos={curGastos}
+            curCobros={curCobros}
+            curGars={curGars}
+            manualTabContent={manualTabContent}
+            cCharts={cCharts}
+            goTo={goTo}
+            openMdl={openMdl}
+            curCl={curCl}
+            gastos={gastos}
+            Av={Av}
+            Bdg={Bdg}
+            Btn={Btn}
+            PayB={PayB}
+            IBtn={IBtn}
+            Empty={Empty}
+            TH={TH}
+            TD={TD}
+            MN={MN}
+            fmt={fmt}
+            fmtD={fmtD}
+            fmtM={fmtM}
+          />
+        )}
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
-          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <table><thead><tr>{["Cliente", "Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!gastos.length && <Empty cols={11} msg="Sin gastos registrados" />}</tbody></table>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!gastos.length && <Empty cols={11} msg="Sin gastos registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
         {/* ══ COBROS ══ */}
         {page === "cobros" && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
-          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <table><thead><tr>{["Fecha", "Cliente", "Ref.", "Monto", "Método", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{cobros.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!cobros.length && <Empty cols={7} msg="Sin cobros" />}</tbody></table>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
+          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Cliente", "Ref.", "Monto", "Método", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{cobros.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!cobros.length && <Empty cols={7} msg="Sin cobros" />}</tbody></table></div>
           </div></div>
         </div>)}
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
-          <div style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2><Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn></div>
-          <div style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!garantias.length && <Empty cols={6} msg="Sin garantías" />}</tbody></table>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2><Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn></div>
+          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!garantias.length && <Empty cols={6} msg="Sin garantías" />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
