@@ -266,6 +266,7 @@ export default function App() {
 
   /* NAV */
   const nav = [
+    { id: "credito", icon: <CreditCard size={18} />, label: "Crédito" },
     { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
     { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
     { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
@@ -275,25 +276,6 @@ export default function App() {
   ];
 
   const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
-
-  /* ═══ CRÉDITO LANDING ═══ */
-  if (page === "credito") {
-    return (
-      <div style={{ minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap');`}</style>
-        <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "60px 24px 80px", textAlign: "center" }}>
-          <div style={{ maxWidth: 640, margin: "0 auto" }}>
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 44px)", fontWeight: 800, letterSpacing: -0.5, marginBottom: 16 }}>Crédito</h1>
-            <p style={{ fontSize: 18, opacity: 0.9, lineHeight: 1.6 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
-            <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 28, padding: "14px 28px", background: "#fff", color: "#1b2559", borderRadius: 10, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
-          </div>
-        </div>
-        <div style={{ maxWidth: 800, margin: "0 auto", padding: "48px 24px" }}>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 16, padding: 32, textAlign: "center", color: "#5f6577", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
@@ -324,6 +306,22 @@ export default function App() {
 
       {/* ═══ MAIN ═══ */}
       <main style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
+
+        {/* ══ CRÉDITO ══ */}
+        {page === "credito" && (
+          <div>
+            <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "48px 36px 56px", textAlign: "center" }}>
+              <div style={{ maxWidth: 640, margin: "0 auto" }}>
+                <h1 style={{ fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 800, letterSpacing: -0.5, marginBottom: 12 }}>Crédito</h1>
+                <p style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
+                <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 24, padding: "12px 24px", background: "#fff", color: "#1b2559", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
+              </div>
+            </div>
+            <div style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
+              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 16, padding: 32, textAlign: "center", color: "#5f6577", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
+            </div>
+          </div>
+        )}
 
         {/* ══ DASHBOARD ══ */}
         {page === "dashboard" && (<div>

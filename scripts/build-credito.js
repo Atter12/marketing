@@ -20,18 +20,26 @@ if (!fs.existsSync(dist)) {
   process.exit(1);
 }
 
-// credito-app/assets
+// credito-app/ (bundle con nombre fijo: credito-app.js)
 if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+const jsFile = path.join(dist, 'credito-app.js');
+if (fs.existsSync(jsFile)) {
+  fs.copyFileSync(jsFile, path.join(outDir, 'credito-app.js'));
+  console.log('Copied credito-app/credito-app.js');
+}
+// por si en el futuro hay assets/
 const assetsSrc = path.join(dist, 'assets');
 const assetsDest = path.join(outDir, 'assets');
-if (fs.existsSync(assetsDest)) fs.rmSync(assetsDest, { recursive: true });
 if (fs.existsSync(assetsSrc)) {
+  if (fs.existsSync(assetsDest)) fs.rmSync(assetsDest, { recursive: true });
   fs.cpSync(assetsSrc, assetsDest, { recursive: true });
   console.log('Copied credito-app/assets');
 }
 
-// credito.html from built index (script already points to /credito-app/assets/...)
+// credito.html: script fijo /credito-app/credito-app.js para que el deploy siempre lo encuentre
+const scriptPath = '/credito-app/credito-app.js';
 let html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+html = html.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>/, `<script type="module" crossorigin src="${scriptPath}"></script>`);
 html = html.replace(/<title>.*?<\/title>/, '<title>Crédito | Holistic Marketing</title>');
 fs.writeFileSync(path.join(root, 'credito.html'), html, 'utf8');
 console.log('Generated credito.html');
