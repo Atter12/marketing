@@ -134,10 +134,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gaf, setGaf] = useState(emptyGaf);
   const [mf, setMf] = useState(emptyMf);
 
-  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
-  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
-
-  /* Synced gastos with computed fields */
+  /* Synced gastos with computed fields — hooks must run before any early return */
   const sGastos = useMemo(() => gastos.map((g) => {
     const t = gTotal(g), f = gFee(g), p = cobros.filter((c) => c.gastoId === g.id).reduce((a, c) => a + parseFloat(c.monto || 0), 0);
     return { ...g, _t: t, _f: f, _p: p, _pend: Math.max(0, t - p), _st: p >= t ? "Pagado" : p > 0 ? "Parcial" : "Pendiente" };
@@ -231,6 +228,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
   }, [modal, editId]);
+
+  /* Early returns only after all hooks have run */
+  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "" }; await mutations.saveClient(c); closeMdl(); };
