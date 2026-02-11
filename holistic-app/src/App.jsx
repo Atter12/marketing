@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
+import { useSupabaseData } from "./useSupabaseData";
+import { supabase } from "./supabase";
 
 /* ═══════ STORAGE ═══════ */
 const S = {
@@ -103,28 +105,26 @@ const TD = { padding: "12px 18px", fontSize: 13.5, borderBottom: "1px solid #eff
 const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 600 };
 
 /* ═══════ MAIN APP ═══════ */
-export default function App() {
-  const [page, setPage] = useState(() => (typeof window !== "undefined" && window.location.pathname === "/credito" ? "credito" : "dashboard"));
-  const [clients, setClients] = useState(() => S.g("clients"));
-  const [gastos, setGastos] = useState(() => S.g("gastos"));
-  const [cobros, setCobros] = useState(() => S.g("cobros"));
-  const [garantias, setGarantias] = useState(() => S.g("garantias"));
-  const [manual, setManual] = useState(() => S.g("manual"));
-  const [curCl, setCurCl] = useState(null);
+export default function App({ role = "gerente", clientId = null, userEmail = null }) {
+  const sb = useSupabaseData(role, clientId);
+  const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, mutations, uid: uidGen } = sb;
+  const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (userEmail ? (userEmail.split("@")[0] || userEmail) : "Gerente");
+  const subLabel = isCliente ? (userEmail || null) : "Gerente";
+
+  const [page, setPage] = useState(() => (role === "cliente" ? "dashboard" : (typeof window !== "undefined" && window.location.pathname === "/credito" ? "credito" : "dashboard")));
+  const [curCl, setCurCl] = useState(() => (role === "cliente" && clientId ? clientId : null));
   const [modal, setModal] = useState(null);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
-  // FIXED: tab state at top level to avoid hooks-in-conditional bug
   const [detailTab, setDetailTab] = useState("gastos");
-  const [repCl, setRepCl] = useState("all");
+  const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // Form states
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "" };
-  const emptyGf = { clientId: "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "" };
+  const emptyGf = { clientId: clientId || "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "" };
   const emptyCof = { gastoId: "", monto: "", fecha: td(), metodo: "", notas: "" };
-  const emptyGaf = { clientId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
+  const emptyGaf = { clientId: clientId || "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
   const [cf, setCf] = useState(emptyCf);
@@ -133,11 +133,9 @@ export default function App() {
   const [gaf, setGaf] = useState(emptyGaf);
   const [mf, setMf] = useState(emptyMf);
 
-  useEffect(() => { S.s("clients", clients); }, [clients]);
-  useEffect(() => { S.s("gastos", gastos); }, [gastos]);
-  useEffect(() => { S.s("cobros", cobros); }, [cobros]);
-  useEffect(() => { S.s("garantias", garantias); }, [garantias]);
-  useEffect(() => { S.s("manual", manual); }, [manual]);
+  const isCliente = role === "cliente";
+  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
 
   /* Synced gastos with computed fields */
   const sGastos = useMemo(() => gastos.map((g) => {
@@ -234,22 +232,22 @@ export default function App() {
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
   }, [modal, editId]);
 
-  /* ═══ CRUD ═══ */
-  const saveClient = () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || uid(), ...cf, phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), created: editId ? (clients.find((x) => x.id === editId)?.created || td()) : td() }; setClients((p) => editId ? p.map((x) => x.id === editId ? c : x) : [...p, c]); closeMdl(); };
-  const delClient = (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; const gids = gastos.filter((g) => g.clientId === id).map((g) => g.id); setClients((p) => p.filter((x) => x.id !== id)); setGastos((p) => p.filter((g) => g.clientId !== id)); setCobros((p) => p.filter((c) => !gids.includes(c.gastoId))); setGarantias((p) => p.filter((g) => g.clientId !== id)); setManual((p) => p.filter((m) => m.clientId !== id)); };
+  /* ═══ CRUD (Supabase mutations) ═══ */
+  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "" }; await mutations.saveClient(c); closeMdl(); };
+  const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
 
-  const saveGasto = () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, mes y gasto"); const g = { id: editId || uid(), ...gf }; setGastos((p) => editId ? p.map((x) => x.id === editId ? g : x) : [...p, g]); closeMdl(); };
-  const delGasto = (id) => { if (!confirm("¿Eliminar gasto?")) return; setGastos((p) => p.filter((x) => x.id !== id)); setCobros((p) => p.filter((c) => c.gastoId !== id)); };
+  const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, mes y gasto"); const g = { id: editId || undefined, clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "" }; await mutations.saveGasto(g); closeMdl(); };
+  const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
 
-  const saveCobro = () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); setCobros((p) => [...p, { id: uid(), ...cof }]); closeMdl(); };
-  const delCobro = (id) => { if (!confirm("¿Eliminar?")) return; setCobros((p) => p.filter((x) => x.id !== id)); };
+  const saveCobro = async () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); await mutations.saveCobro(cof); closeMdl(); };
+  const delCobro = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delCobro(id); };
 
-  const saveGar = () => { if (!gaf.clientId) return alert("Selecciona cliente"); setGarantias((p) => [...p, { id: uid(), ...gaf }]); closeMdl(); };
-  const delGar = (id) => { if (!confirm("¿Eliminar?")) return; setGarantias((p) => p.filter((x) => x.id !== id)); };
+  const saveGar = async () => { if (!gaf.clientId) return alert("Selecciona cliente"); await mutations.saveGarantia({ id: undefined, clientId: gaf.clientId, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado }); closeMdl(); };
+  const delGar = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delGarantia(id); };
 
-  const saveMan = () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); setManual((p) => [...p, { id: uid(), clientId: curCl, ...mf }]); setMf(emptyMf); };
+  const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
 
-  const goTo = (p, cid = null) => { setPage(p); if (cid) setCurCl(cid); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); setMenuOpen(false); };
+  const goTo = (p, cid = null) => { setPage(p); if (cid != null) setCurCl(cid); if (p === "client-detail" && isCliente && clientId) setCurCl(clientId); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); setMenuOpen(false); };
 
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
@@ -266,16 +264,25 @@ export default function App() {
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
 
-  /* NAV */
-  const nav = [
-    { id: "credito", icon: <CreditCard size={18} />, label: "Crédito" },
-    { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
-    { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
-    { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
-    { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
-    { id: "reportes", icon: <FileText size={18} />, label: "Reportes", section: "Finanzas" },
-    { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
-  ];
+  /* NAV: gerente = todo; cliente = Mi cuenta, Dashboard, Gastos, Cobros, Reportes, Garantías */
+  const nav = isCliente
+    ? [
+        { id: "client-detail", icon: <Users size={18} />, label: "Mi cuenta" },
+        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
+        { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
+        { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
+        { id: "reportes", icon: <FileText size={18} />, label: "Reportes" },
+        { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
+      ]
+    : [
+        { id: "credito", icon: <CreditCard size={18} />, label: "Crédito" },
+        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
+        { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
+        { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
+        { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
+        { id: "reportes", icon: <FileText size={18} />, label: "Reportes", section: "Finanzas" },
+        { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
+      ];
 
   const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
 
@@ -283,14 +290,14 @@ export default function App() {
 
   const manualTabContent = detailTab === "manual" ? (
     <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-      <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td><td style={TD}><IBtn onClick={() => setManual((p) => p.filter((x) => x.id !== m.id))} icon={<Trash2 size={13} />} danger /></td></tr>)}{!curMan.length && <Empty cols={6} msg="Sin registros" />}</tbody></table></div>
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
+      <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td>{!isCliente && <td style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curMan.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
+      {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
         <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
         <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
         <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
         <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
         <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
-      </div>
+      </div>}
     </div>
   ) : null;
 
@@ -359,7 +366,16 @@ export default function App() {
             </div>
           ))}
         </nav>
-        <div style={{ padding: "14px 20px", borderTop: "1px solid #eff0f3", fontSize: 11, color: "#b4b8c4" }}>Holistic Marketing © 2025</div>
+        <div style={{ padding: "14px 20px", borderTop: "1px solid #eff0f3" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div>
+              {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
+            </div>
+          </div>
+          <button onClick={() => supabase?.auth?.signOut()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#5f6577", fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}><LogOut size={14} /> Cerrar sesión</button>
+        </div>
       </aside>
 
       {/* ═══ MAIN ═══ */}
@@ -385,7 +401,7 @@ export default function App() {
         {page === "dashboard" && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Dashboard</h2>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
             <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
@@ -432,7 +448,7 @@ export default function App() {
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
-            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            {!isCliente && <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 160, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
@@ -462,8 +478,8 @@ export default function App() {
           </div>
         </div>)}
 
-        {/* ══ CLIENTES ══ */}
-        {page === "clientes" && (<div>
+        {/* ══ CLIENTES (solo gerente) ══ */}
+        {page === "clientes" && !isCliente && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Clientes</h2>
             <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}><div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." style={{ padding: "8px 12px 8px 34px", width: 200, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div><Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn></div>
@@ -503,15 +519,16 @@ export default function App() {
             fmt={fmt}
             fmtD={fmtD}
             fmtM={fmtM}
+            isCliente={isCliente}
           />
         )}
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2><Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn></div>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!gastos.length && <Empty cols={11} msg="Sin gastos registrados" />}</tbody></table></div>
+              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td></tr>; })}{!gastos.length && <Empty cols={11} msg="Sin gastos registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -520,16 +537,16 @@ export default function App() {
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Cliente", "Ref.", "Monto", "Método", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{cobros.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!cobros.length && <Empty cols={7} msg="Sin cobros" />}</tbody></table></div>
+              <tbody>{cobros.sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")).map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!cobros.length && <Empty cols={7} msg="Sin cobros" />}</tbody></table></div>
           </div></div>
         </div>)}
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2><Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn></div>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>{!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></td></tr>; })}{!garantias.length && <Empty cols={6} msg="Sin garantías" />}</tbody></table></div>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={6} msg="Sin garantías" />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
