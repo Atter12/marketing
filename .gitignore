@@ -4,7 +4,6 @@ node_modules/
 .DS_Store
 *.log
 holistic-app/dist/
-credito-app/
 
 
 
