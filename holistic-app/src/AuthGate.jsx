@@ -30,6 +30,7 @@ export default function AuthGate() {
         setStatus(statuses.app);
         return;
       }
+      console.warn("[AuthGate] Usuario no está en gerentes, cerrando sesión.");
       await supabase.auth.signOut();
       setStatus(statuses.unauthorized);
     };

@@ -12,6 +12,7 @@ export async function isGerente() {
   if (!supabase) return false;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return false;
-  const { data, error } = await supabase.from("gerentes").select("email").eq("email", user.email).maybeSingle();
+  const { data, error } = await supabase.from("gerentes").select("email").ilike("email", user.email).maybeSingle();
+  if (error) console.error("[isGerente]", error);
   return !error && data != null;
 }

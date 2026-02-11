@@ -19,16 +19,31 @@ export default function Login({ onSuccess, supabase }) {
       const { data, error: signError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (signError) {
         setError(signError.message === "Invalid login credentials" ? "Correo o contraseña incorrectos." : signError.message);
+        setLoading(false);
         return;
       }
-      const { data: gerente } = await supabase.from("gerentes").select("email").eq("email", data.user?.email).maybeSingle();
+      const userEmail = data.user?.email ?? "";
+      const { data: gerente, error: gerenteError } = await supabase
+        .from("gerentes")
+        .select("email")
+        .ilike("email", userEmail)
+        .maybeSingle();
+      if (gerenteError) {
+        console.error("[Login] Error al verificar gerente:", gerenteError);
+        await supabase.auth.signOut();
+        setError("Error al verificar acceso. Revisa la consola (F12).");
+        setLoading(false);
+        return;
+      }
       if (!gerente) {
         await supabase.auth.signOut();
         setError("No autorizado. Solo el gerente puede acceder.");
+        setLoading(false);
         return;
       }
       onSuccess();
     } catch (err) {
+      console.error("[Login] Error:", err);
       setError(err?.message || "Error al iniciar sesión.");
     } finally {
       setLoading(false);

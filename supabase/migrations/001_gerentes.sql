@@ -13,10 +13,11 @@ create table if not exists public.gerentes (
 -- RLS: cada usuario solo puede ver si SU email está en la lista (no ve el listado completo)
 alter table public.gerentes enable row level security;
 
+-- Email en JWT puede venir en distinto caso; comparar en minúsculas
 drop policy if exists "Users can check if they are gerente" on public.gerentes;
 create policy "Users can check if they are gerente"
   on public.gerentes for select
-  using (auth.jwt()->>'email' = email);
+  using (lower(trim(auth.jwt()->>'email')) = lower(trim(email)));
 
 -- ═══ INSERTAR AL GERENTE ═══
 -- Reemplaza 'tu-email@dominio.com' por el email del dueño/gerente.
