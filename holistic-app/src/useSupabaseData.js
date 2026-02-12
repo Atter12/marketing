@@ -22,7 +22,7 @@ function mapGasto(r) {
 
 function mapCobro(r) {
   if (!r) return r;
-  return { id: r.id, gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, metodo: r.metodo ?? "", notas: r.notas ?? "" };
+  return { id: r.id, gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null };
 }
 
 function mapGarantia(r) {
@@ -53,7 +53,7 @@ export function useSupabaseData(role, clientId) {
         const [cRes, gRes, coRes, garRes, mRes] = await Promise.all([
           supabase.from("clientes").select("*").order("created_at", { ascending: false }),
           supabase.from("gastos").select("*").order("mes", { ascending: false }),
-          supabase.from("cobros").select("*").order("fecha", { ascending: false }),
+          supabase.from("cobros").select("*").order("created_at", { ascending: false }),
           supabase.from("garantias").select("*"),
           supabase.from("manual").select("*").order("fecha", { ascending: false }),
         ]);
@@ -81,7 +81,7 @@ export function useSupabaseData(role, clientId) {
         const gIds = (gRes.data || []).map((x) => x.id);
         let coRes = { data: [] };
         if (gIds.length > 0) {
-          coRes = await supabase.from("cobros").select("*").in("gasto_id", gIds).order("fecha", { ascending: false });
+          coRes = await supabase.from("cobros").select("*").in("gasto_id", gIds).order("created_at", { ascending: false });
           if (coRes.error) throw coRes.error;
         }
         const gFullRes = await supabase.from("gastos").select("*").eq("client_id", clientId).order("mes", { ascending: false });
@@ -155,8 +155,14 @@ export function useSupabaseData(role, clientId) {
       await fetchAll();
     },
     saveCobro: async (payload) => {
-      const { gastoId, monto, fecha, metodo, notas } = payload;
-      const row = { gasto_id: gastoId, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null };
+      if (role !== "gerente") return;
+      const { gastoId, monto, fecha, hora, metodo, notas } = payload;
+      let created_by = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) created_by = user.email;
+      } catch (_) {}
+      const row = { gasto_id: gastoId, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
       const { error: e } = await supabase.from("cobros").insert(row);
       if (e) throw e;
       await fetchAll();

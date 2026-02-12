@@ -123,6 +123,14 @@
       "dest": "/credito.html"
     },
     {
+      "src": "/backup-dashboard",
+      "dest": "/backup-dashboard/index.html"
+    },
+    {
+      "src": "/backup-dashboard/",
+      "dest": "/backup-dashboard/index.html"
+    },
+    {
       "src": "^/([a-zA-Z0-9-_]+)$",
       "dest": "/api/url-shortener/redirect?alias=$1",
       "check": true

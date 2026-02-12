@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Copia de seguridad — Base de datos Holistic</title>
+  <style>
+    :root { --bg: #0f111a; --card: #1a1d26; --text: #f4f5f7; --muted: #9498a8; --accent: #0055ff; --ok: #0d9f6e; --warn: #d97706; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; min-height: 100vh; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+    .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
+    .bar label { color: var(--muted); font-size: 0.85rem; }
+    .bar input[type=date] { padding: 10px 14px; border: 1px solid #2d3142; border-radius: 8px; background: var(--card); color: var(--text); font-size: 1rem; }
+    .bar .meta { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+    .card { background: var(--card); border: 1px solid #2d3142; border-radius: 12px; padding: 20px; margin-bottom: 20px; overflow-x: auto; }
+    .card h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
+    .card table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .card th { text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; border-bottom: 1px solid #2d3142; }
+    .card td { padding: 10px 12px; border-bottom: 1px solid #252830; }
+    .card tr:hover td { background: rgba(255,255,255,0.03); }
+    .num { font-variant-numeric: tabular-nums; }
+    .empty { color: var(--muted); padding: 24px; text-align: center; }
+    .resumen { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .resumen .chip { background: var(--card); border: 1px solid #2d3142; border-radius: 10px; padding: 16px 20px; min-width: 140px; }
+    .resumen .chip .n { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+    .resumen .chip .l { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+    .gate { max-width: 360px; margin: 80px auto; text-align: center; padding: 40px 24px; background: var(--card); border-radius: 16px; border: 1px solid #2d3142; }
+    .gate input { width: 100%; padding: 12px 16px; margin: 16px 0; border: 1px solid #2d3142; border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; }
+    .gate button { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
+    .gate .err { color: #dc2640; font-size: 0.9rem; margin-top: 8px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div id="gate" class="gate">
+    <h1>Copia de seguridad</h1>
+    <p class="sub">Base de datos empresa — acceso restringido</p>
+    <input type="password" id="claveIn" placeholder="Clave de acceso" autocomplete="off" />
+    <button type="button" id="btnEntrar">Entrar</button>
+    <p id="gateErr" class="err hidden"></p>
+  </div>
+
+  <div id="app" class="wrap hidden">
+    <h1>Copia de seguridad — Base de datos Holistic</h1>
+    <p class="sub">Movimientos por fecha. Los datos provienen de la última exportación diaria.</p>
+    <div class="bar">
+      <label for="fecha">Ver movimientos del día:</label>
+      <input type="date" id="fecha" />
+      <span class="meta" id="metaExport">—</span>
+    </div>
+    <div id="resumen" class="resumen"></div>
+    <div id="panels"></div>
+  </div>
+
+  <script>
+    (function() {
+      var CLAVE_ESPERADA = 'holistic2025';
+      var STORAGE_KEY = 'backup_dashboard_clave';
+      var data = { exportedAt: null, clientes: [], gastos: [], cobros: [], garantias: [], manual: [], gerentes: [] };
+
+      function checkClave() {
+        var stored = sessionStorage.getItem(STORAGE_KEY);
+        var urlClave = (new URLSearchParams(window.location.search)).get('clave');
+        if (urlClave && urlClave === CLAVE_ESPERADA) { sessionStorage.setItem(STORAGE_KEY, urlClave); return true; }
+        return stored === CLAVE_ESPERADA;
+      }
+
+      function showGate() {
+        document.getElementById('gate').classList.remove('hidden');
+        document.getElementById('app').classList.add('hidden');
+      }
+      function showApp() {
+        document.getElementById('gate').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+      }
+
+      document.getElementById('btnEntrar').onclick = function() {
+        var v = document.getElementById('claveIn').value.trim();
+        if (v !== CLAVE_ESPERADA) {
+          document.getElementById('gateErr').textContent = 'Clave incorrecta';
+          document.getElementById('gateErr').classList.remove('hidden');
+          return;
+        }
+        sessionStorage.setItem(STORAGE_KEY, v);
+        document.getElementById('gateErr').classList.add('hidden');
+        showApp();
+        loadData();
+      };
+
+      if (checkClave()) {
+        showApp();
+        loadData();
+      } else {
+        showGate();
+      }
+
+      function loadData() {
+        var base = window.location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '') || '.';
+        var url = base + '/data/backup.json';
+        fetch(url)
+          .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('No se pudo cargar backup.json')); })
+          .then(function(json) {
+            data = json;
+            if (data.exportedAt) {
+              var d = new Date(data.exportedAt);
+              document.getElementById('metaExport').textContent = 'Última exportación: ' + d.toLocaleString('es-PE');
+            }
+            var fd = document.getElementById('fecha');
+            if (!fd.value) fd.value = new Date().toISOString().slice(0, 10);
+            render();
+          })
+          .catch(function(e) {
+            document.getElementById('metaExport').textContent = 'Error: ' + e.message;
+            document.getElementById('resumen').innerHTML = '<p class="empty">No hay datos. Ejecute el script de exportación y suba data/backup.json</p>';
+            document.getElementById('panels').innerHTML = '';
+          });
+      }
+
+      function dateStr(iso) { return iso ? String(iso).slice(0, 10) : ''; }
+      function filterByDate(arr, date, dateField) {
+        if (!date || !arr.length) return [];
+        return arr.filter(function(r) {
+          var d = dateField === 'fecha' ? (r.fecha && dateStr(r.fecha)) : dateStr(r.created_at);
+          return d === date;
+        });
+      }
+
+      function render() {
+        var date = document.getElementById('fecha').value;
+        if (!date) return;
+
+        var cobrosD = filterByDate(data.cobros || [], date, 'fecha');
+        var cobrosD2 = filterByDate(data.cobros || [], date, 'created_at');
+        var cobrosDay = cobrosD.length ? cobrosD : cobrosD2;
+        var gastosDay = filterByDate(data.gastos || [], date, 'created_at');
+        var clientesDay = filterByDate(data.clientes || [], date, 'created_at');
+        var garantiasDay = filterByDate(data.garantias || [], date, 'created_at');
+        var manualDay = filterByDate(data.manual || [], date, 'fecha');
+        var manualDay2 = filterByDate(data.manual || [], date, 'created_at');
+        manualDay = manualDay.length ? manualDay : manualDay2;
+        var gerentesDay = filterByDate(data.gerentes || [], date, 'created_at');
+
+        document.getElementById('resumen').innerHTML = [
+          { n: cobrosDay.length, l: 'Cobros' },
+          { n: gastosDay.length, l: 'Gastos' },
+          { n: clientesDay.length, l: 'Clientes (altas)' },
+          { n: garantiasDay.length, l: 'Garantías' },
+          { n: manualDay.length, l: 'Manual' },
+          { n: gerentesDay.length, l: 'Gerentes' }
+        ].map(function(c) {
+          return '<div class="chip"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+        }).join('');
+
+        var clientesMap = {};
+        (data.clientes || []).forEach(function(c) { clientesMap[c.id] = c.name; });
+        var gastosMap = {};
+        (data.gastos || []).forEach(function(g) { gastosMap[g.id] = g; });
+
+        function tbl(titulo, filas, cols) {
+          if (!filas.length) return '<div class="card"><h2>' + titulo + '</h2><p class="empty">Sin movimientos este día</p></div>';
+          var th = cols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('');
+          var trs = filas.map(function(r) { return '<tr>' + cols.map(function(c) { return '<td>' + (c.fn ? c.fn(r) : (r[c.key] ?? '—')) + '</td>'; }).join('') + '</tr>'; }).join('');
+          return '<div class="card"><h2>' + titulo + '</h2><table><thead><tr>' + th + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
+        }
+
+        document.getElementById('panels').innerHTML =
+          tbl('Cobros (' + cobrosDay.length + ')', cobrosDay, [
+            { label: 'Fecha', key: 'fecha' },
+            { label: 'Hora', fn: function(r) { return r.hora ? String(r.hora).slice(0, 5) : '—'; } },
+            { label: 'Cliente', fn: function(r) { var g = gastosMap[r.gasto_id]; return g ? (clientesMap[g.client_id] || '—') : '—'; } },
+            { label: 'Monto', fn: function(r) { return '$' + Number(r.monto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Método', key: 'metodo' },
+            { label: 'Registrado por', key: 'created_by' },
+            { label: 'Notas', key: 'notas' }
+          ]) +
+          tbl('Gastos (' + gastosDay.length + ')', gastosDay, [
+            { label: 'Cliente', fn: function(r) { return clientesMap[r.client_id] || '—'; } },
+            { label: 'Mes', key: 'mes' },
+            { label: 'Campaña', key: 'camp' },
+            { label: 'Gasto', fn: function(r) { return '$' + Number(r.gasto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Fee %', key: 'fee' },
+            { label: 'Notas', key: 'notas' }
+          ]) +
+          tbl('Clientes (altas) (' + clientesDay.length + ')', clientesDay, [
+            { label: 'Nombre', key: 'name' },
+            { label: 'Instagram', key: 'ig' },
+            { label: 'Negocio', key: 'biz' },
+            { label: 'Notas', key: 'notes' }
+          ]) +
+          tbl('Garantías (' + garantiasDay.length + ')', garantiasDay, [
+            { label: 'Cliente', fn: function(r) { return clientesMap[r.client_id] || '—'; } },
+            { label: 'Tipo', key: 'tipo' },
+            { label: 'Descripción', key: 'descripcion' },
+            { label: 'Valor', fn: function(r) { return '$' + Number(r.valor).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Estado', key: 'estado' }
+          ]) +
+          tbl('Manual (' + manualDay.length + ')', manualDay, [
+            { label: 'Fecha', key: 'fecha' },
+            { label: 'Concepto', key: 'conc' },
+            { label: 'Monto', fn: function(r) { return '$' + Number(r.monto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Tipo', key: 'tipo' },
+            { label: 'Nota', key: 'nota' }
+          ]) +
+          (gerentesDay.length ? tbl('Gerentes (' + gerentesDay.length + ')', gerentesDay, [
+            { label: 'Email', key: 'email' }
+          ]) : '');
+      }
+
+      document.getElementById('fecha').addEventListener('change', render);
+    })();
+  </script>
+</body>
+</html>
