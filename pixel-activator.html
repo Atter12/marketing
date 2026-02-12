@@ -6,8 +6,10 @@
     <title>Pixel Activator — TikTok</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
+            --primary-gradient: linear-gradient(135deg, #ff6b4a 0%, #ff8f6a 100%);
             --bg: #050507;
             --surface: rgba(255,255,255,0.022);
             --glass: rgba(255,255,255,0.032);
@@ -732,20 +734,20 @@
             .cta { padding:14px; font-size:13.5px; }
             .prog-num { font-size:24px; }
         }
-        /* Top banner oferta */
+        /* Top banner + header (como qr-generator.html) */
         .top-banner {
-            background: linear-gradient(135deg, var(--red), #d6234a);
+            background: var(--primary-gradient);
             color: #fff;
             padding: 12px 24px;
             text-align: center;
             position: sticky;
             top: 0;
             z-index: 101;
-            box-shadow: 0 2px 12px rgba(254,44,85,.25);
-            transition: box-shadow .3s ease, padding .3s ease;
+            box-shadow: 0 2px 12px rgba(255, 107, 74, 0.2);
+            transition: box-shadow 0.3s ease, padding 0.3s ease;
         }
         .top-banner.is-scrolled {
-            box-shadow: 0 4px 20px rgba(254,44,85,.3);
+            box-shadow: 0 4px 20px rgba(255, 107, 74, 0.25);
             padding: 10px 24px;
         }
         .top-banner a {
@@ -762,11 +764,64 @@
         .top-banner .banner-icon { font-size: 1.1rem; flex-shrink: 0; }
         .top-banner .banner-text { font-size: 14px; font-weight: 600; line-height: 1.4; }
         .top-banner .banner-cta { font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
-        .top-banner a:hover { opacity: .95; }
+        .top-banner a:hover { opacity: 0.95; }
         @media (max-width: 640px) {
             .top-banner { padding: 10px 16px; }
             .top-banner .banner-text, .top-banner .banner-cta { font-size: 13px; }
         }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        .top-header {
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--glass-b);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .top-header nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+        }
+        .top-header .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .top-header .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+        .top-header .logo span { color: #ff8f6a; }
+        .top-header .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-2);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: color 0.2s;
+            white-space: nowrap;
+        }
+        .top-header .back-link:hover { color: var(--cyan); }
 
         /* Adapter: pixel-activator script usa .connected y .done */
         #pixelCard.connected { border-color: rgba(34,197,94,.12); }
@@ -786,6 +841,21 @@
         <span class="banner-cta">Saber más</span>
     </a>
 </div>
+
+<header class="top-header">
+    <div class="nav-container">
+        <nav>
+            <a href="index.html" class="logo">
+                <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+                Ecom<span>Tools</span>
+            </a>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver a herramientas</span>
+            </a>
+        </nav>
+    </div>
+</header>
 
 <canvas id="bg"></canvas>
 <canvas id="fx"></canvas>
