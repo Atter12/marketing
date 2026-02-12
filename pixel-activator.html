@@ -732,6 +732,42 @@
             .cta { padding:14px; font-size:13.5px; }
             .prog-num { font-size:24px; }
         }
+        /* Top banner oferta */
+        .top-banner {
+            background: linear-gradient(135deg, var(--red), #d6234a);
+            color: #fff;
+            padding: 12px 24px;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 101;
+            box-shadow: 0 2px 12px rgba(254,44,85,.25);
+            transition: box-shadow .3s ease, padding .3s ease;
+        }
+        .top-banner.is-scrolled {
+            box-shadow: 0 4px 20px rgba(254,44,85,.3);
+            padding: 10px 24px;
+        }
+        .top-banner a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            text-decoration: none;
+            color: inherit;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .top-banner .banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+        .top-banner .banner-text { font-size: 14px; font-weight: 600; line-height: 1.4; }
+        .top-banner .banner-cta { font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+        .top-banner a:hover { opacity: .95; }
+        @media (max-width: 640px) {
+            .top-banner { padding: 10px 16px; }
+            .top-banner .banner-text, .top-banner .banner-cta { font-size: 13px; }
+        }
+
         /* Adapter: pixel-activator script usa .connected y .done */
         #pixelCard.connected { border-color: rgba(34,197,94,.12); }
         #pixelCard.connected .sts-orb { border-color:rgba(34,197,94,.2); }
@@ -742,6 +778,14 @@
     </style>
 </head>
 <body>
+
+<div class="top-banner">
+    <a href="http://getstartedtiktok.pxf.io/victorminas28" target="_blank" rel="noopener noreferrer">
+        <span class="banner-icon" aria-hidden="true">🎉</span>
+        <span class="banner-text">Activa tu 50% OFF en TikTok Ads y recibe hasta USD 6,000 en cupones</span>
+        <span class="banner-cta">Saber más</span>
+    </a>
+</div>
 
 <canvas id="bg"></canvas>
 <canvas id="fx"></canvas>
@@ -1150,6 +1194,21 @@ document.querySelectorAll('.btn').forEach(b=>{
         r.onanimationend=()=>r.remove();
     });
 });
+
+(function(){
+    var b = document.querySelector('.top-banner');
+    if (!b) return;
+    var th = 40, tick = false;
+    function up() {
+        var s = window.scrollY || document.documentElement.scrollTop;
+        b.classList.toggle('is-scrolled', s > th);
+        tick = false;
+    }
+    window.addEventListener('scroll', function() {
+        if (!tick) { requestAnimationFrame(up); tick = true; }
+    }, { passive: true });
+    up();
+})();
 
 })();
 </script>
