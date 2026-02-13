@@ -1,1 +1,1 @@
-Copia aquí favicon.png desde holistic-app/favicon/favicon.png para que el favicon se vea en la app.
+Para que el favicon se vea: pon favicon.png en holistic-app/favicon/ y ejecuta en la raíz del proyecto: npm run copy-assets

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { CreditCard, Plus, ChevronLeft, Edit3, Camera } from "lucide-react";
+import { CreditCard, Plus, ChevronLeft, Edit3, Camera, Trash2 } from "lucide-react";
 
 const Slot = ({ content }) => content;
 
@@ -74,6 +74,19 @@ export default function ClientDetailView(props) {
     }
   };
 
+  const handleRemovePhoto = async () => {
+    if (!updateClientAvatar || !confirm("¿Quitar la foto de perfil?")) return;
+    setSavingPhoto(true);
+    try {
+      await updateClientAvatar(null);
+      setPhotoUrl("");
+    } catch (e) {
+      alert(e?.message || "No se pudo quitar la foto.");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
   return React.createElement("section", null,
     <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ fontSize: 13, color: "#9498a8", minWidth: 0 }}>{!isCliente && <><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › </>}<span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span></div>
@@ -90,8 +103,11 @@ export default function ClientDetailView(props) {
                 {uploadAvatarFile && (
                   <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#1b2559", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: uploadingFile ? "wait" : "pointer" }}>
                     <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={handleFileSelect} disabled={uploadingFile} />
-                    <Camera size={12} /> {uploadingFile ? "Subiendo…" : "Subir foto"}
+                    <Camera size={12} /> {uploadingFile ? "Subiendo…" : "Cambiar foto"}
                   </label>
+                )}
+                {updateClientAvatar && curC.avatar_url && (
+                  <button type="button" onClick={handleRemovePhoto} disabled={savingPhoto} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "#dc2640", background: "#fff", cursor: savingPhoto ? "wait" : "pointer" }}><Trash2 size={12} /> Eliminar foto</button>
                 )}
                 <input type="url" value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="O pega una URL" style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, minWidth: 140, maxWidth: 220 }} />
                 {updateClientAvatar && <button type="button" onClick={handleSavePhoto} disabled={savingPhoto} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#5f6577", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: savingPhoto ? "wait" : "pointer" }}>{savingPhoto ? "Guardando…" : "Guardar URL"}</button>}

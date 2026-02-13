@@ -1,1 +1,1 @@
-Copia aquí logoh.png desde holistic-app/logo/logoh.png para que el logo se vea en el sidebar.
+Para que el logo se vea: pon logoh.png en holistic-app/logo/ y ejecuta en la raíz del proyecto: npm run copy-assets
