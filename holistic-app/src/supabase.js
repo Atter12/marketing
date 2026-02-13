@@ -26,3 +26,19 @@ export async function getClientIdForUser() {
   if (error) console.error("[getClientIdForUser]", error);
   return data?.client_id ?? null;
 }
+
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
+
+/** Sube una imagen como foto de perfil del cliente y devuelve la URL pública. clientId = uuid del cliente. */
+export async function uploadAvatar(clientId, file) {
+  if (!supabase || !clientId) throw new Error("Configuración o cliente no disponible");
+  if (!file || !ALLOWED_AVATAR_TYPES.includes(file.type)) throw new Error("El archivo debe ser imagen (JPG, PNG, WebP o GIF)");
+  if (file.size > MAX_AVATAR_SIZE) throw new Error("La imagen no puede superar 5 MB");
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${clientId}/avatar.${ext}`;
+  const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (uploadError) throw new Error(uploadError.message || "Error al subir la imagen");
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  return data.publicUrl;
+}

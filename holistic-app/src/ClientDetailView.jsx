@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { CreditCard, Plus, ChevronLeft, Edit3 } from "lucide-react";
+import { CreditCard, Plus, ChevronLeft, Edit3, Camera } from "lucide-react";
 
 const Slot = ({ content }) => content;
 
@@ -35,9 +35,44 @@ export default function ClientDetailView(props) {
     fmtT,
     fmtDt,
     isCliente,
+    updateClientAvatar,
+    uploadAvatarFile,
   } = props;
 
+  const [photoUrl, setPhotoUrl] = useState(curC.avatar_url || "");
+  const [savingPhoto, setSavingPhoto] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  useEffect(() => { setPhotoUrl(curC.avatar_url || ""); }, [curC.avatar_url]);
+
   const effectiveTab = isCliente && detailTab === "cobros" ? "gastos" : detailTab;
+
+  const handleSavePhoto = async () => {
+    if (!updateClientAvatar) return;
+    setSavingPhoto(true);
+    try {
+      await updateClientAvatar(photoUrl.trim() || null);
+    } catch (e) {
+      alert(e?.message || "No se pudo actualizar la foto.");
+    } finally {
+      setSavingPhoto(false);
+    }
+  };
+
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !uploadAvatarFile || !updateClientAvatar) return;
+    setUploadingFile(true);
+    try {
+      const url = await uploadAvatarFile(file);
+      await updateClientAvatar(url);
+      setPhotoUrl(url);
+    } catch (err) {
+      alert(err?.message || "Error al subir la imagen.");
+    } finally {
+      setUploadingFile(false);
+      e.target.value = "";
+    }
+  };
 
   return React.createElement("section", null,
     <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
@@ -47,7 +82,24 @@ export default function ClientDetailView(props) {
     React.createElement("div", { className: "hm-page-content", style: { padding: "28px 36px 40px" } },
       React.createElement(React.Fragment, null,
         <div onClick={() => goTo(isCliente ? "dashboard" : "clientes")} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 13, color: "#9498a8", cursor: "pointer", marginBottom: 18 }}><ChevronLeft size={16} /> Volver</div>,
-        <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28, flexWrap: "wrap" }}><Av name={curC.name} size={56} /><div style={{ minWidth: 0 }}><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2><div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div></div>,
+        <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 28, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 10 }}>
+            <Av name={curC.name} size={56} avatarUrl={curC.avatar_url} />
+            {isCliente && (updateClientAvatar || uploadAvatarFile) && (
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, maxWidth: "100%" }}>
+                {uploadAvatarFile && (
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#1b2559", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: uploadingFile ? "wait" : "pointer" }}>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={handleFileSelect} disabled={uploadingFile} />
+                    <Camera size={12} /> {uploadingFile ? "Subiendo…" : "Subir foto"}
+                  </label>
+                )}
+                <input type="url" value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} placeholder="O pega una URL" style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, minWidth: 140, maxWidth: 220 }} />
+                {updateClientAvatar && <button type="button" onClick={handleSavePhoto} disabled={savingPhoto} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: "#5f6577", color: "#fff", border: "none", borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: savingPhoto ? "wait" : "pointer" }}>{savingPhoto ? "Guardando…" : "Guardar URL"}</button>}
+              </div>
+            )}
+          </div>
+          <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2><div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
+        </div>,
         <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>

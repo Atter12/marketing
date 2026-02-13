@@ -11,6 +11,7 @@ function mapCliente(r) {
     emails: Array.isArray(r.emails) ? r.emails : (r.emails ? [r.emails] : [""]),
     biz: r.biz ?? "",
     notes: r.notes ?? "",
+    avatar_url: r.avatar_url ?? "",
     created: r.created_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
   };
 }
@@ -116,8 +117,8 @@ export function useSupabaseData(role, clientId) {
   const mutations = {
     saveClient: async (payload) => {
       if (role !== "gerente") return;
-      const { id, name, ig, phones, emails, biz, notes, created } = payload;
-      const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null };
+      const { id, name, ig, phones, emails, biz, notes, avatar_url } = payload;
+      const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null, avatar_url: avatar_url || null };
       if (id) {
         const { error: e } = await supabase.from("clientes").update(row).eq("id", id);
         if (e) throw e;
@@ -126,6 +127,13 @@ export function useSupabaseData(role, clientId) {
         if (e) throw e;
         if (data) row.id = data.id;
       }
+      await fetchAll();
+    },
+    updateClientAvatar: async (avatarUrl) => {
+      const cid = clientId;
+      if (!cid) return;
+      const { error: e } = await supabase.from("clientes").update({ avatar_url: avatarUrl || null }).eq("id", cid);
+      if (e) throw e;
       await fetchAll();
     },
     delClient: async (id) => {

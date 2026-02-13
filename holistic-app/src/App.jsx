@@ -3,7 +3,9 @@ import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Cart
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
-import { supabase } from "./supabase";
+import { supabase, uploadAvatar } from "./supabase";
+
+const LOGO_URL = import.meta.env.BASE_URL + "logo/logoh.png";
 
 /* ═══════ STORAGE ═══════ */
 const S = {
@@ -36,7 +38,12 @@ function getMonths(n = 6) {
 }
 
 /* ═══════ UI COMPONENTS ═══════ */
-const Av = ({ name, size = 34 }) => { const c = clr(name); return <div style={{ width: size, height: size, borderRadius: size > 40 ? 14 : 8, background: c + "14", color: c, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: size * 0.36, flexShrink: 0, letterSpacing: -0.3 }}>{ini(name)}</div>; };
+const Av = ({ name, size = 34, avatarUrl }) => {
+  const c = clr(name);
+  const style = { width: size, height: size, borderRadius: size > 40 ? 14 : 8, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "14", color: c, fontWeight: 700, fontSize: size * 0.36, letterSpacing: -0.3 };
+  if (avatarUrl && avatarUrl.trim()) return <div style={style}><img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>;
+  return <div style={style}>{ini(name)}</div>;
+};
 
 const Bdg = ({ type = "n", children }) => {
   const m = { ok: ["#eafaf4", "#0d9f6e"], err: ["#fdf0f2", "#dc2640"], warn: ["#fef9ec", "#d97706"], acc: ["#edf2ff", "#0055ff"], n: ["#f4f5f7", "#5f6577"], gar: ["#f0eefe", "#7c3aed"] };
@@ -133,8 +140,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (userEmail ? (userEmail.split("@")[0] || userEmail) : "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
 
-  const [page, setPage] = useState(() => (role === "cliente" ? "dashboard" : (typeof window !== "undefined" && window.location.pathname === "/credito" ? "credito" : "dashboard")));
-  const [curCl, setCurCl] = useState(() => (role === "cliente" && clientId ? clientId : null));
+  const validPages = ["dashboard", "clientes", "gastos", "cobros", "reportes", "garantias", "client-detail"];
+  const getInitialPage = () => {
+    if (typeof window === "undefined") return { page: "dashboard", curCl: null };
+    const hash = window.location.hash.slice(1);
+    const parts = hash.split("-");
+    if (parts[0] === "client" && parts[1] === "detail" && parts[2]) return { page: "client-detail", curCl: parts.slice(2).join("-") };
+    if (validPages.includes(hash)) return { page: hash, curCl: null };
+    return { page: "dashboard", curCl: null };
+  };
+  const ini = getInitialPage();
+  const [page, setPage] = useState(ini.page);
+  const [curCl, setCurCl] = useState(ini.curCl || (role === "cliente" && clientId ? clientId : null));
   const [modal, setModal] = useState(null);
   const [editId, setEditId] = useState(null);
   const [search, setSearch] = useState("");
@@ -142,8 +159,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [menuOpen, setMenuOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "" };
+  const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { codigo: "", clientId: clientId || "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
   const emptyGaf = { clientId: clientId || "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", codigoVerificacion: "" };
@@ -245,7 +263,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   useEffect(() => {
     if (!modal) return;
-    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "" }); }
+    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
@@ -258,7 +276,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
-  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "" }; await mutations.saveClient(c); closeMdl(); };
+  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
 
   const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, fecha de movimiento y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
@@ -272,7 +290,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
 
-  const goTo = (p, cid = null) => { setPage(p); if (cid != null) setCurCl(cid); if (p === "client-detail" && isCliente && clientId) setCurCl(clientId); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); setMenuOpen(false); };
+  const goTo = (p, cid = null) => {
+    setPage(p);
+    if (cid != null) setCurCl(cid);
+    if (p === "client-detail" && isCliente && clientId) setCurCl(clientId);
+    setSearch("");
+    if (p === "client-detail") setDetailTab("gastos");
+    setMenuOpen(false);
+    if (typeof window !== "undefined") {
+      const id = p === "client-detail" ? (cid != null ? cid : curCl) : null;
+      window.location.hash = id ? `client-detail-${id}` : p;
+    }
+  };
 
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
@@ -289,17 +318,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
 
-  /* NAV: gerente = todo; cliente = Mi cuenta, Dashboard, Gastos, Reportes, Garantías (sin Cobros) */
+  /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
   const nav = isCliente
     ? [
         { id: "client-detail", icon: <Users size={18} />, label: "Mi cuenta" },
-        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
+        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Resumen" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
         { id: "reportes", icon: <FileText size={18} />, label: "Reportes" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
       ]
     : [
-        { id: "credito", icon: <CreditCard size={18} />, label: "Crédito" },
         { id: "dashboard", icon: <BarChart3 size={18} />, label: "Dashboard" },
         { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
@@ -311,7 +339,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
 
-  const pageTitles = { credito: "Crédito", dashboard: "Dashboard", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
+  const pageTitles = { dashboard: isCliente ? "Resumen" : "Dashboard", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
     <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
@@ -387,9 +415,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <aside className="hm-sidebar" style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, background: "linear-gradient(135deg, #1b2559, #0055ff)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, letterSpacing: -0.5 }}>H</div>
+            <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "linear-gradient(135deg, #1b2559, #0055ff)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, position: "relative" }}><span style={{ position: "relative", zIndex: 0 }}>H</span><img src={LOGO_URL} alt="Logo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", zIndex: 1 }} onError={(e) => { e.target.style.display = "none"; }} /></div>
             <div><div style={{ fontSize: 16, fontWeight: 700, color: "#1b2559", letterSpacing: -0.3 }}>Holistic</div><div style={{ fontSize: 11, fontWeight: 600, color: "#0055ff", letterSpacing: 1, textTransform: "uppercase", marginTop: -1 }}>Marketing</div></div>
           </div>
+          <img src={LOGO_URL} alt="" style={{ width: "100%", maxWidth: 140, height: "auto", marginTop: 12, objectFit: "contain", display: "block" }} onError={(e) => { e.target.style.display = "none"; }} />
         </div>
         <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px" }}>General</div>
@@ -413,7 +442,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
               {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
             </div>
           </div>
@@ -476,7 +505,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
               <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Fecha de movimiento", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (b.mes || "").localeCompare(a.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (b.mes || "").localeCompare(a.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
                 {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table></div>
             </div>
           </div>
@@ -529,7 +558,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table></div>
+              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -565,6 +594,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             fmtT={fmtT}
             fmtDt={fmtDt}
             isCliente={isCliente}
+            updateClientAvatar={mutations.updateClientAvatar}
+            uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
           />
         )}
 
@@ -573,7 +604,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha de movimiento", "Período (mes y año)", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "✓" : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 14 : 15} msg="Sin gastos registrados" />}</tbody></table></div>
+              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "✓" : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 14 : 15} msg="Sin gastos registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -582,7 +613,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Hora", "Cliente", "Cód. gasto", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{cobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT(co.hora)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g?.codigo || "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!cobros.length && <Empty cols={isCliente ? 9 : 11} msg="Sin cobros" />}</tbody></table></div>
+              <tbody>{cobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT(co.hora)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g?.codigo || "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!cobros.length && <Empty cols={isCliente ? 9 : 11} msg="Sin cobros" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -591,7 +622,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>{!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
@@ -603,6 +634,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
         <Inp label="Negocio" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce..." />
         <Inp label="Notas" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional..." />
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Foto de perfil</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <div style={{ flex: "1 1 200px", minWidth: 0 }}><Inp value={cf.avatar_url} onChange={(e) => setCf({ ...cf, avatar_url: e.target.value })} placeholder="URL (opcional)" /></div>
+            {editId && (
+              <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#f4f5f7", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#1b2559", cursor: "pointer", whiteSpace: "nowrap" }}>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { setUploadingAvatar(true); const url = await uploadAvatar(editId, f); setCf((p) => ({ ...p, avatar_url: url })); } catch (err) { alert(err?.message || "Error al subir"); } finally { setUploadingAvatar(false); e.target.value = ""; }} } />
+                {uploadingAvatar ? "Subiendo…" : "Subir desde archivo"}
+              </label>
+            )}
+          </div>
+        </div>
       </Mdl>
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
