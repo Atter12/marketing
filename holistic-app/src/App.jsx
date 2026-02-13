@@ -39,9 +39,11 @@ function getMonths(n = 6) {
 }
 
 /* ═══════ UI COMPONENTS ═══════ */
+const AVATAR_SIZE_SCALE = 1.35; // fotos de clientes 35% más grandes
 const Av = ({ name, size = 34, avatarUrl }) => {
   const c = clr(name);
-  const style = { width: size, height: size, borderRadius: size > 40 ? 14 : 8, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "14", color: c, fontWeight: 700, fontSize: size * 0.36, letterSpacing: -0.3 };
+  const s = Math.round(size * AVATAR_SIZE_SCALE);
+  const style = { width: s, height: s, borderRadius: s > 40 ? 14 : 8, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "14", color: c, fontWeight: 700, fontSize: s * 0.36, letterSpacing: -0.3 };
   if (avatarUrl && avatarUrl.trim()) return <div style={style}><img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>;
   return <div style={style}>{ini(name)}</div>;
 };
@@ -138,8 +140,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const sb = useSupabaseData(role, clientId);
   const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";
-  const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (userEmail ? (userEmail.split("@")[0] || userEmail) : "Gerente");
+  const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
+  const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (gerenteNombre.trim() || (userEmail ? (userEmail.split("@")[0] || userEmail) : "") || "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
+  const handleEditarNombreGerente = () => {
+    const actual = gerenteNombre.trim() || (userEmail ? userEmail.split("@")[0] : "") || "";
+    const n = prompt("Nombre para mostrar en el panel:", actual);
+    if (n != null) { const v = String(n).trim(); setGerenteNombre(v); S.s("gerente_nombre", v); }
+  };
 
   const validPages = ["dashboard", "clientes", "gastos", "cobros", "reportes", "garantias", "client-detail"];
   const getInitialPage = () => {
@@ -424,6 +432,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
               {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
+              {!isCliente && (
+                <button type="button" onClick={handleEditarNombreGerente} style={{ marginTop: 4, padding: 0, border: "none", background: "none", color: "#0055ff", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}>Cambiar nombre</button>
+              )}
             </div>
           </div>
         </div>

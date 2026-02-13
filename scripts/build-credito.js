@@ -52,9 +52,13 @@ const scriptPath = '/credito-app/credito-app.js';
 let html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 html = html.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>/, `<script type="module" crossorigin src="${scriptPath}"></script>`);
 html = html.replace(/<title>.*?<\/title>/, '<title>Crédito | Holistic Marketing</title>');
-// Favicon con ruta absoluta para que cargue en la pestaña (la página está en /credito, el favicon en /credito-app/favicon/)
-html = html.replace(/<link[^>]+rel="icon"[^>]*>/, '<link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png" />');
+// Favicon: ruta absoluta + ?v= para evitar caché del navegador; dos links por compatibilidad
+const faviconUrl = '/credito-app/favicon/favicon.png?v=2';
+html = html.replace(/<link[^>]*rel=["\']?(?:shortcut )?icon["\']?[^>]*>/gi, '');
+html = html.replace('</head>', `<link rel="icon" type="image/png" href="${faviconUrl}" /><link rel="shortcut icon" type="image/png" href="${faviconUrl}" /></head>`);
 fs.writeFileSync(path.join(root, 'credito.html'), html, 'utf8');
 console.log('Generated credito.html');
 
+console.log('');
 console.log('Done. /credito will load the React app (Crédito view + Dashboard).');
+console.log('Build completado. Ya puedes hacer deploy.');
