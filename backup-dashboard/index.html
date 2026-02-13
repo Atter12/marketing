@@ -3,56 +3,280 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Copia de seguridad — Base de datos Holistic</title>
+  <title>Copia de seguridad — Holistic Marketing</title>
   <style>
-    :root { --bg: #0f111a; --card: #1a1d26; --text: #f4f5f7; --muted: #9498a8; --accent: #0055ff; --ok: #0d9f6e; --warn: #d97706; }
+    :root {
+      --bg: #0c0e14;
+      --card: #161922;
+      --card-border: #252936;
+      --text: #e8eaef;
+      --text-soft: #9ca3b4;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --ok: #10b981;
+      --warn: #f59e0b;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
     * { box-sizing: border-box; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; min-height: 100vh; }
-    .wrap { max-width: 1200px; margin: 0 auto; }
-    h1 { font-size: 1.5rem; margin: 0 0 8px; letter-spacing: -0.02em; }
-    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
-    .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 24px; }
-    .bar label { color: var(--muted); font-size: 0.85rem; }
-    .bar input[type=date] { padding: 10px 14px; border: 1px solid #2d3142; border-radius: 8px; background: var(--card); color: var(--text); font-size: 1rem; }
-    .bar .meta { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
-    .card { background: var(--card); border: 1px solid #2d3142; border-radius: 12px; padding: 20px; margin-bottom: 20px; overflow-x: auto; }
-    .card h2 { font-size: 1.1rem; margin: 0 0 12px; color: var(--text); }
-    .card table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .card th { text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em; border-bottom: 1px solid #2d3142; }
-    .card td { padding: 10px 12px; border-bottom: 1px solid #252830; }
-    .card tr:hover td { background: rgba(255,255,255,0.03); }
-    .num { font-variant-numeric: tabular-nums; }
-    .empty { color: var(--muted); padding: 24px; text-align: center; }
-    .resumen { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
-    .resumen .chip { background: var(--card); border: 1px solid #2d3142; border-radius: 10px; padding: 16px 20px; min-width: 140px; }
-    .resumen .chip .n { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
-    .resumen .chip .l { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
-    .gate { max-width: 360px; margin: 80px auto; text-align: center; padding: 40px 24px; background: var(--card); border-radius: 16px; border: 1px solid #2d3142; }
-    .gate input { width: 100%; padding: 12px 16px; margin: 16px 0; border: 1px solid #2d3142; border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; }
-    .gate button { padding: 12px 24px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem; }
-    .gate .err { color: #dc2640; font-size: 0.9rem; margin-top: 8px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 24px;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+      letter-spacing: -0.02em;
+    }
+    .header .sub {
+      color: var(--text-soft);
+      font-size: 0.9rem;
+      margin: 0;
+    }
+    .header .export-info {
+      margin-top: 12px;
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .header .export-info .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--ok);
+    }
+
+    /* Filtro por rango */
+    .filtro-card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .filtro-card h2 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-soft);
+      margin: 0 0 16px;
+    }
+    .filtro-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+    }
+    .filtro-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filtro-group label {
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      white-space: nowrap;
+    }
+    .filtro-group input[type=date] {
+      padding: 10px 14px;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-left: 8px;
+    }
+    .presets button {
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      color: var(--text-soft);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .presets button:hover {
+      background: var(--card-border);
+      color: var(--text);
+    }
+    .filtro-hint {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-top: 12px;
+    }
+
+    /* Resumen */
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .resumen .chip {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+    }
+    .resumen .chip .n {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .resumen .chip .l {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-top: 4px;
+    }
+    .resumen .chip .total {
+      font-size: 0.85rem;
+      color: var(--ok);
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* Tablas */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 14px;
+      color: var(--text);
+    }
+    .card table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .card th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-soft);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .card td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(37, 41, 54, 0.8);
+    }
+    .card tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .card .empty {
+      color: var(--text-soft);
+      padding: 24px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    /* Gate (login) */
+    .gate {
+      max-width: 380px;
+      margin: 80px auto;
+      text-align: center;
+      padding: 40px 28px;
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--card-border);
+    }
+    .gate h1 { font-size: 1.4rem; margin: 0 0 8px; }
+    .gate .sub { color: var(--text-soft); font-size: 0.9rem; margin-bottom: 24px; }
+    .gate input {
+      width: 100%;
+      padding: 12px 16px;
+      margin: 8px 0 16px;
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+    }
+    .gate button {
+      width: 100%;
+      padding: 12px 24px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .gate button:hover { background: var(--accent-hover); }
+    .gate .err { color: #ef4444; font-size: 0.9rem; margin-top: 10px; }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <div id="gate" class="gate">
     <h1>Copia de seguridad</h1>
-    <p class="sub">Base de datos empresa — acceso restringido</p>
-    <p class="sub" style="margin-top: 4px; font-size: 0.75rem; word-break: break-all;">https://www.marketingconholistic.com/backup-dashboard</p>
+    <p class="sub">Base de datos Holistic — acceso restringido</p>
     <input type="password" id="claveIn" placeholder="Clave de acceso" autocomplete="off" />
     <button type="button" id="btnEntrar">Entrar</button>
     <p id="gateErr" class="err hidden"></p>
   </div>
 
   <div id="app" class="wrap hidden">
-    <h1>Copia de seguridad — Base de datos Holistic</h1>
-    <p class="sub">Movimientos por fecha. Los datos provienen de la última exportación diaria.</p>
-    <p class="sub" style="margin-top: -8px; font-size: 0.8rem;"><a href="https://www.marketingconholistic.com/backup-dashboard" style="color: var(--accent); text-decoration: none;">https://www.marketingconholistic.com/backup-dashboard</a></p>
-    <div class="bar">
-      <label for="fecha">Ver movimientos del día:</label>
-      <input type="date" id="fecha" />
-      <span class="meta" id="metaExport">—</span>
+    <header class="header">
+      <h1>Copia de seguridad — Holistic Marketing</h1>
+      <p class="sub">Consulta movimientos por día o por rango de fechas (ej. del 12 al 14 de un mes). Los datos corresponden a la última exportación diaria.</p>
+      <div class="export-info" id="metaExport"><span class="dot"></span> Cargando…</div>
+    </header>
+
+    <div class="filtro-card">
+      <h2>Rango de fechas</h2>
+      <div class="filtro-row">
+        <div class="filtro-group">
+          <label for="desde">Desde</label>
+          <input type="date" id="desde" />
+        </div>
+        <div class="filtro-group">
+          <label for="hasta">Hasta</label>
+          <input type="date" id="hasta" />
+        </div>
+        <div class="presets">
+          <button type="button" data-preset="hoy">Hoy</button>
+          <button type="button" data-preset="semana">Esta semana</button>
+          <button type="button" data-preset="mes">Este mes</button>
+        </div>
+      </div>
+      <p class="filtro-hint">Elige un solo día (desde = hasta) o un intervalo. Ejemplo: del 12 al 14 de febrero.</p>
     </div>
+
     <div id="resumen" class="resumen"></div>
     <div id="panels"></div>
   </div>
@@ -108,10 +332,9 @@
             data = json;
             if (data.exportedAt) {
               var d = new Date(data.exportedAt);
-              document.getElementById('metaExport').textContent = 'Última exportación: ' + d.toLocaleString('es-PE');
+              document.getElementById('metaExport').innerHTML = '<span class="dot"></span> Última exportación: ' + d.toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
             }
-            var fd = document.getElementById('fecha');
-            if (!fd.value) fd.value = new Date().toISOString().slice(0, 10);
+            setDefaultRange();
             render();
           })
           .catch(function(e) {
@@ -121,39 +344,97 @@
           });
       }
 
+      function todayStr() { return new Date().toISOString().slice(0, 10); }
       function dateStr(iso) { return iso ? String(iso).slice(0, 10) : ''; }
-      function filterByDate(arr, date, dateField) {
-        if (!date || !arr.length) return [];
+
+      function setDefaultRange() {
+        var desde = document.getElementById('desde');
+        var hasta = document.getElementById('hasta');
+        if (!desde.value) desde.value = todayStr();
+        if (!hasta.value) hasta.value = todayStr();
+      }
+
+      function getRange() {
+        var desde = document.getElementById('desde').value;
+        var hasta = document.getElementById('hasta').value;
+        if (!desde || !hasta) return null;
+        if (hasta < desde) { var t = hasta; hasta = desde; desde = t; document.getElementById('hasta').value = hasta; document.getElementById('desde').value = desde; }
+        return { desde: desde, hasta: hasta };
+      }
+
+      function filterByDateRange(arr, desde, hasta, dateField) {
+        if (!arr || !arr.length) return [];
         return arr.filter(function(r) {
-          var d = dateField === 'fecha' ? (r.fecha && dateStr(r.fecha)) : dateStr(r.created_at);
-          return d === date;
+          var d = dateField === 'fecha' ? dateStr(r.fecha) : dateStr(r.created_at);
+          if (!d) return false;
+          return d >= desde && d <= hasta;
         });
       }
 
-      function render() {
-        var date = document.getElementById('fecha').value;
-        if (!date) return;
+      document.querySelectorAll('.presets button').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var today = new Date();
+          var desdeIn = document.getElementById('desde');
+          var hastaIn = document.getElementById('hasta');
+          var preset = this.getAttribute('data-preset');
+          var desde, hasta;
+          if (preset === 'hoy') {
+            desde = hasta = todayStr();
+          } else if (preset === 'semana') {
+            var day = today.getDay();
+            var diff = today.getDate() - day + (day === 0 ? -6 : 1);
+            var lunes = new Date(today);
+            lunes.setDate(diff);
+            desde = lunes.toISOString().slice(0, 10);
+            hasta = todayStr();
+          } else {
+            desde = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-01';
+            hasta = todayStr();
+          }
+          desdeIn.value = desde;
+          hastaIn.value = hasta;
+          render();
+        });
+      });
 
-        var cobrosD = filterByDate(data.cobros || [], date, 'fecha');
-        var cobrosD2 = filterByDate(data.cobros || [], date, 'created_at');
-        var cobrosDay = cobrosD.length ? cobrosD : cobrosD2;
-        var gastosDay = filterByDate(data.gastos || [], date, 'created_at');
-        var clientesDay = filterByDate(data.clientes || [], date, 'created_at');
-        var garantiasDay = filterByDate(data.garantias || [], date, 'created_at');
-        var manualDay = filterByDate(data.manual || [], date, 'fecha');
-        var manualDay2 = filterByDate(data.manual || [], date, 'created_at');
-        manualDay = manualDay.length ? manualDay : manualDay2;
-        var gerentesDay = filterByDate(data.gerentes || [], date, 'created_at');
+      document.getElementById('desde').addEventListener('change', render);
+      document.getElementById('hasta').addEventListener('change', render);
+
+      function render() {
+        var range = getRange();
+        if (!range) return;
+
+        var desde = range.desde;
+        var hasta = range.hasta;
+
+        var cobrosList = data.cobros || [];
+        var cobrosRange = filterByDateRange(cobrosList, desde, hasta, 'fecha');
+        if (!cobrosRange.length) cobrosRange = filterByDateRange(cobrosList, desde, hasta, 'created_at');
+        var gastosRange = filterByDateRange(data.gastos || [], desde, hasta, 'created_at');
+        var clientesRange = filterByDateRange(data.clientes || [], desde, hasta, 'created_at');
+        var garantiasRange = filterByDateRange(data.garantias || [], desde, hasta, 'created_at');
+        var manualList = data.manual || [];
+        var manualRange = filterByDateRange(manualList, desde, hasta, 'fecha');
+        if (!manualRange.length) manualRange = filterByDateRange(manualList, desde, hasta, 'created_at');
+        var gerentesRange = filterByDateRange(data.gerentes || [], desde, hasta, 'created_at');
+
+        var totalCobros = cobrosRange.reduce(function(s, r) { return s + Number(r.monto) || 0; }, 0);
+        var totalGastos = gastosRange.reduce(function(s, r) { return s + Number(r.gasto) || 0; }, 0);
+        var totalGarantias = garantiasRange.reduce(function(s, r) { return s + Number(r.valor) || 0; }, 0);
+        var totalManual = manualRange.reduce(function(s, r) { return s + Number(r.monto) || 0; }, 0);
+
+        var fmt = function(n) { return '$' + Number(n).toLocaleString('es-PE', { minimumFractionDigits: 2 }); };
 
         document.getElementById('resumen').innerHTML = [
-          { n: cobrosDay.length, l: 'Cobros' },
-          { n: gastosDay.length, l: 'Gastos' },
-          { n: clientesDay.length, l: 'Clientes (altas)' },
-          { n: garantiasDay.length, l: 'Garantías' },
-          { n: manualDay.length, l: 'Manual' },
-          { n: gerentesDay.length, l: 'Gerentes' }
+          { n: cobrosRange.length, l: 'Cobros', total: totalCobros },
+          { n: gastosRange.length, l: 'Gastos', total: totalGastos },
+          { n: clientesRange.length, l: 'Clientes (altas)', total: null },
+          { n: garantiasRange.length, l: 'Garantías', total: totalGarantias },
+          { n: manualRange.length, l: 'Manual', total: totalManual },
+          { n: gerentesRange.length, l: 'Gerentes', total: null }
         ].map(function(c) {
-          return '<div class="chip"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div></div>';
+          var totalHtml = c.total != null ? '<div class="total">' + fmt(c.total) + '</div>' : '';
+          return '<div class="chip"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div>' + totalHtml + '</div>';
         }).join('');
 
         var clientesMap = {};
@@ -162,56 +443,56 @@
         (data.gastos || []).forEach(function(g) { gastosMap[g.id] = g; });
 
         function tbl(titulo, filas, cols) {
-          if (!filas.length) return '<div class="card"><h2>' + titulo + '</h2><p class="empty">Sin movimientos este día</p></div>';
+          if (!filas.length) return '<div class="card"><h2>' + titulo + '</h2><p class="empty">Sin movimientos en este rango</p></div>';
           var th = cols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('');
           var trs = filas.map(function(r) { return '<tr>' + cols.map(function(c) { return '<td>' + (c.fn ? c.fn(r) : (r[c.key] ?? '—')) + '</td>'; }).join('') + '</tr>'; }).join('');
           return '<div class="card"><h2>' + titulo + '</h2><table><thead><tr>' + th + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
         }
 
+        var rangoLabel = desde === hasta ? 'del ' + desde : 'del ' + desde + ' al ' + hasta;
+
         document.getElementById('panels').innerHTML =
-          tbl('Cobros (' + cobrosDay.length + ')', cobrosDay, [
+          tbl('Cobros (' + cobrosRange.length + ') — ' + rangoLabel, cobrosRange, [
             { label: 'Fecha', key: 'fecha' },
             { label: 'Hora', fn: function(r) { return r.hora ? String(r.hora).slice(0, 5) : '—'; } },
             { label: 'Cliente', fn: function(r) { var g = gastosMap[r.gasto_id]; return g ? (clientesMap[g.client_id] || '—') : '—'; } },
-            { label: 'Monto', fn: function(r) { return '$' + Number(r.monto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Monto', fn: function(r) { return fmt(r.monto); } },
             { label: 'Método', key: 'metodo' },
             { label: 'Registrado por', key: 'created_by' },
             { label: 'Notas', key: 'notas' }
           ]) +
-          tbl('Gastos (' + gastosDay.length + ')', gastosDay, [
+          tbl('Gastos (' + gastosRange.length + ') — ' + rangoLabel, gastosRange, [
             { label: 'Cliente', fn: function(r) { return clientesMap[r.client_id] || '—'; } },
             { label: 'Mes', key: 'mes' },
             { label: 'Campaña', key: 'camp' },
-            { label: 'Gasto', fn: function(r) { return '$' + Number(r.gasto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Gasto', fn: function(r) { return fmt(r.gasto); } },
             { label: 'Fee %', key: 'fee' },
             { label: 'Notas', key: 'notas' }
           ]) +
-          tbl('Clientes (altas) (' + clientesDay.length + ')', clientesDay, [
+          tbl('Clientes (altas) (' + clientesRange.length + ') — ' + rangoLabel, clientesRange, [
             { label: 'Nombre', key: 'name' },
             { label: 'Instagram', key: 'ig' },
             { label: 'Negocio', key: 'biz' },
             { label: 'Notas', key: 'notes' }
           ]) +
-          tbl('Garantías (' + garantiasDay.length + ')', garantiasDay, [
+          tbl('Garantías (' + garantiasRange.length + ') — ' + rangoLabel, garantiasRange, [
             { label: 'Cliente', fn: function(r) { return clientesMap[r.client_id] || '—'; } },
             { label: 'Tipo', key: 'tipo' },
             { label: 'Descripción', key: 'descripcion' },
-            { label: 'Valor', fn: function(r) { return '$' + Number(r.valor).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Valor', fn: function(r) { return fmt(r.valor); } },
             { label: 'Estado', key: 'estado' }
           ]) +
-          tbl('Manual (' + manualDay.length + ')', manualDay, [
+          tbl('Manual (' + manualRange.length + ') — ' + rangoLabel, manualRange, [
             { label: 'Fecha', key: 'fecha' },
             { label: 'Concepto', key: 'conc' },
-            { label: 'Monto', fn: function(r) { return '$' + Number(r.monto).toLocaleString('es-PE', { minimumFractionDigits: 2 }); } },
+            { label: 'Monto', fn: function(r) { return fmt(r.monto); } },
             { label: 'Tipo', key: 'tipo' },
             { label: 'Nota', key: 'nota' }
           ]) +
-          (gerentesDay.length ? tbl('Gerentes (' + gerentesDay.length + ')', gerentesDay, [
+          (gerentesRange.length ? tbl('Gerentes (' + gerentesRange.length + ') — ' + rangoLabel, gerentesRange, [
             { label: 'Email', key: 'email' }
           ]) : '');
       }
-
-      document.getElementById('fecha').addEventListener('change', render);
     })();
   </script>
 </body>
