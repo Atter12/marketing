@@ -1,0 +1,51 @@
+# Copia de seguridad diaria: exporta Supabase y sube backup.json al repo.
+# El dashboard en marketingconholistic.com/backup-dashboard se actualiza al hacer deploy.
+#
+# Configura en el repo: Settings → Secrets and variables → Actions →
+#   SUPABASE_URL = https://tu-proyecto.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY = tu service_role key
+
+name: Backup diario (dashboard)
+
+on:
+  schedule:
+    # Todos los días a las 6:00 UTC (1:00 AM Perú)
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Permite ejecutar manualmente desde la pestaña Actions
+
+jobs:
+  export-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backup-dashboard/package-lock.json
+
+      - name: Instalar dependencias backup-dashboard
+        run: cd backup-dashboard && npm ci
+
+      - name: Exportar desde Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: cd backup-dashboard && npm run export
+
+      - name: Subir backup.json al repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backup-dashboard/data/backup.json
+          if git diff --staged --quiet; then
+            echo "Sin cambios en backup.json"
+          else
+            git commit -m "backup diario $(date -u +%Y-%m-%d)"
+            git push
+          fi
