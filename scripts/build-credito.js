@@ -52,6 +52,8 @@ const scriptPath = '/credito-app/credito-app.js';
 let html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 html = html.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>/, `<script type="module" crossorigin src="${scriptPath}"></script>`);
 html = html.replace(/<title>.*?<\/title>/, '<title>Crédito | Holistic Marketing</title>');
+// Favicon con ruta absoluta para que cargue en la pestaña (la página está en /credito, el favicon en /credito-app/favicon/)
+html = html.replace(/<link[^>]+rel="icon"[^>]*>/, '<link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png" />');
 fs.writeFileSync(path.join(root, 'credito.html'), html, 'utf8');
 console.log('Generated credito.html');
 
