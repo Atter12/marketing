@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent } from "lucide-react";
 
-/* ═══════ STORAGE ═══════ */
+/* ═══════ STORAGE a═══════ */
 const S = {
   g: (k) => { try { return JSON.parse(localStorage.getItem("hm_" + k)) || []; } catch { return []; } },
   s: (k, v) => localStorage.setItem("hm_" + k, JSON.stringify(v)),

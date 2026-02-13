@@ -7,7 +7,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "copy-assets": "node scripts/copy-assets.js",
-    "postbuild": "node scripts/copy-assets.js"
+    "postbuild": "node scripts/copy-public-to-base.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.0",

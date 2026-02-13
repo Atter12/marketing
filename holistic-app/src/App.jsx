@@ -5,7 +5,8 @@ import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { supabase, uploadAvatar } from "./supabase";
 
-const LOGO_URL = import.meta.env.BASE_URL + "logo/logoh.png";
+// En dev public se sirve en /; en producción usamos BASE_URL (postbuild copia favicon/logo bajo base)
+const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
 
 /* ═══════ STORAGE ═══════ */
 const S = {
