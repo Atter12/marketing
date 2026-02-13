@@ -17,7 +17,7 @@ function mapCliente(r) {
 
 function mapGasto(r) {
   if (!r) return r;
-  return { id: r.id, codigo: r.codigo ?? "", clientId: r.client_id, mes: r.mes, camp: r.camp ?? "", gasto: Number(r.gasto), fee: String(r.fee ?? 10), notas: r.notas ?? "" };
+  return { id: r.id, codigo: r.codigo ?? "", clientId: r.client_id, mes: r.mes, camp: r.camp ?? "", gasto: Number(r.gasto), fee: String(r.fee ?? 10), notas: r.notas ?? "", created_by: r.created_by ?? null, prepago: !!r.prepago };
 }
 
 function mapCobro(r) {
@@ -27,7 +27,7 @@ function mapCobro(r) {
 
 function mapGarantia(r) {
   if (!r) return r;
-  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente" };
+  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "" };
 }
 
 function mapManual(r) {
@@ -136,12 +136,17 @@ export function useSupabaseData(role, clientId) {
     },
     saveGasto: async (payload) => {
       if (role !== "gerente") return;
-      const { id, codigo, clientId, mes, camp, gasto, fee, notas } = payload;
+      const { id, codigo, clientId, mes, camp, gasto, fee, notas, prepago } = payload;
+      let created_by = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) created_by = user.email;
+      } catch (_) {}
       const genCodigo = () => "G-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
-      const row = { client_id: clientId, mes, camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, codigo: (codigo && codigo.trim()) ? codigo.trim() : (id ? undefined : genCodigo()) };
+      const row = { client_id: clientId, mes, camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, codigo: (codigo && codigo.trim()) ? codigo.trim() : (id ? undefined : genCodigo()), created_by: created_by || null, prepago: !!prepago };
       if (id) {
         if (row.codigo !== undefined) { const { error: e } = await supabase.from("gastos").update(row).eq("id", id); if (e) throw e; }
-        else { const { error: e } = await supabase.from("gastos").update({ client_id: row.client_id, mes: row.mes, camp: row.camp, gasto: row.gasto, fee: row.fee, notas: row.notas }).eq("id", id); if (e) throw e; }
+        else { const { error: e } = await supabase.from("gastos").update({ client_id: row.client_id, mes: row.mes, camp: row.camp, gasto: row.gasto, fee: row.fee, notas: row.notas, created_by: created_by || null, prepago: row.prepago }).eq("id", id); if (e) throw e; }
       } else {
         if (!row.codigo) row.codigo = genCodigo();
         const { data, error: e } = await supabase.from("gastos").insert(row).select("id").single();
@@ -178,8 +183,8 @@ export function useSupabaseData(role, clientId) {
     },
     saveGarantia: async (payload) => {
       if (role !== "gerente") return;
-      const { id, clientId, gastoId, tipo, desc, valor, estado } = payload;
-      const row = { client_id: clientId, gasto_id: gastoId || null, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente" };
+      const { id, clientId, tipo, desc, valor, estado, codigoVerificacion } = payload;
+      const row = { client_id: clientId, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente", codigo_verificacion: (codigoVerificacion && codigoVerificacion.trim()) ? codigoVerificacion.trim() : null };
       if (id) {
         const { error: e } = await supabase.from("garantias").update(row).eq("id", id);
         if (e) throw e;

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { supabase } from "./supabase";
@@ -125,9 +125,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [menuOpen, setMenuOpen] = useState(false);
 
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "" };
-  const emptyGf = { codigo: "", clientId: clientId || "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "" };
+  const emptyGf = { codigo: "", clientId: clientId || "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
-  const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
+  const emptyGaf = { clientId: clientId || "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", codigoVerificacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
   const [cf, setCf] = useState(emptyCf);
@@ -227,7 +227,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   useEffect(() => {
     if (!modal) return;
     if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "" }); }
-    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "" }); }
+    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
   }, [modal, editId]);
@@ -242,13 +242,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "" }; await mutations.saveClient(c); closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
 
-  const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, mes y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "" }; await mutations.saveGasto(g); closeMdl(); };
+  const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, fecha de uso y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
 
   const saveCobro = async () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); await mutations.saveCobro({ ...cof, hora: cof.hora || null }); closeMdl(); };
   const delCobro = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delCobro(id); };
 
-  const saveGar = async () => { if (!gaf.clientId) return alert("Selecciona cliente"); await mutations.saveGarantia({ id: undefined, clientId: gaf.clientId, gastoId: gaf.gastoId || null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado }); closeMdl(); };
+  const saveGar = async () => { if (!gaf.clientId) return alert("Selecciona cliente"); await mutations.saveGarantia({ id: undefined, clientId: gaf.clientId, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado, codigoVerificacion: gaf.codigoVerificacion || "" }); closeMdl(); };
   const delGar = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delGarantia(id); };
 
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
@@ -287,6 +287,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
         { id: "reportes", icon: <FileText size={18} />, label: "Reportes", section: "Finanzas" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
+        { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", section: "Sistema" },
       ];
 
   const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
@@ -372,10 +373,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           {nav.map((it) => (
             <div key={it.id}>
               {it.section && <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px", marginTop: 12 }}>{it.section}</div>}
-              <div onClick={() => goTo(it.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#1b2559" : "#5f6577", background: page === it.id ? "#eef0f8" : "transparent", cursor: "pointer", margin: "1px 0" }}>
-                {it.icon}<span>{it.label}</span>
-                {it.badge > 0 && <span style={{ marginLeft: "auto", background: "#dc2640", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{it.badge}</span>}
-              </div>
+              {it.external ? (
+                <a href={it.external} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: 500, color: "#5f6577", background: "transparent", cursor: "pointer", margin: "1px 0", textDecoration: "none" }}>
+                  {it.icon}<span>{it.label}</span><ExternalLink size={12} style={{ marginLeft: "auto", opacity: 0.6 }} />
+                </a>
+              ) : (
+                <div onClick={() => goTo(it.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#1b2559" : "#5f6577", background: page === it.id ? "#eef0f8" : "transparent", cursor: "pointer", margin: "1px 0" }}>
+                  {it.icon}<span>{it.label}</span>
+                  {it.badge > 0 && <span style={{ marginLeft: "auto", background: "#dc2640", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{it.badge}</span>}
+                </div>
+              )}
             </div>
           ))}
         </nav>
@@ -445,8 +452,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
-              <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Mes", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (a.mes || "z").localeCompare(b.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+              <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Fecha de uso", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (b.mes || "").localeCompare(a.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
                 {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table></div>
             </div>
           </div>
@@ -542,8 +549,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         {page === "gastos" && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Mes", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={13} msg="Sin gastos registrados" />}</tbody></table></div>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha de uso", "Campaña (mes y año)", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "✓" : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 14 : 15} msg="Sin gastos registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -560,8 +567,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         {page === "garantias" && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>{!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoRef = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{gastoRef?.codigo || "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
@@ -578,7 +585,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
         <Inp label="Cliente *" type="select" value={gf.clientId} onChange={(e) => setGf({ ...gf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
         <Inp label="Código (opcional)" value={gf.codigo} onChange={(e) => setGf({ ...gf, codigo: e.target.value })} placeholder="Ej. G-202502-001 (se genera solo si se deja vacío)" />
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Mes *" type="month" value={gf.mes} onChange={(e) => setGf({ ...gf, mes: e.target.value })} /><Inp label="Campaña" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb" /></div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Fecha de uso *" type="month" value={gf.mes} onChange={(e) => setGf({ ...gf, mes: e.target.value })} /><Inp label="Campaña (mes y año)" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Feb 2025" /></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#1b2559" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#5f6577", cursor: "pointer" }}>Prepago (recarga) — permite registrar cobro para este gasto</label></div>
         <Inp label="Gasto en Ads ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Inversión en TikTok Ads (u otra red)" />
         <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} hint="Porcentaje sobre el gasto" />
         <div style={{ background: "#eef0f8", padding: "12px 14px", borderRadius: 10, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, textAlign: "center", marginBottom: 16, color: "#1b2559" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))} → Total a cobrar: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</div>
@@ -595,7 +603,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro}>Registrar</Btn></>}>
-        <Inp label="Gasto *" type="select" value={cof.gastoId} onChange={(e) => { const g = sGastos.find((x) => x.id === e.target.value); setCof({ ...cof, gastoId: e.target.value, monto: g ? g._pend.toFixed(2) : "" }); }}><option value="">Seleccionar...</option>{sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return <option key={g.id} value={g.id}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)})</option>; })}</Inp>
+        <Inp label="Gasto * (solo prepago)" type="select" value={cof.gastoId} onChange={(e) => { const g = sGastos.find((x) => x.id === e.target.value); setCof({ ...cof, gastoId: e.target.value, monto: g ? g._pend.toFixed(2) : "" }); }}><option value="">Seleccionar...</option>{sGastos.filter((g) => g._st !== "Pagado" && g.prepago).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <option key={g.id} value={g.id}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)})</option>; })}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Monto ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
@@ -603,8 +611,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title="Nueva Garantía" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGar}>Guardar</Btn></>}>
-        <Inp label="Cliente *" type="select" value={gaf.clientId} onChange={(e) => setGaf({ ...gaf, clientId: e.target.value, gastoId: "" })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
-        <Inp label="Cód. gasto (opcional)" type="select" value={gaf.gastoId} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value })}><option value="">— Sin vincular</option>{gastos.filter((x) => x.clientId === gaf.clientId).map((x) => <option key={x.id} value={x.id}>{x.codigo || x.id} — {fmtM(x.mes)}</option>)}</Inp>
+        <Inp label="Cliente *" type="select" value={gaf.clientId} onChange={(e) => setGaf({ ...gaf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
+        <Inp label="Código de verificación" value={gaf.codigoVerificacion} onChange={(e) => setGaf({ ...gaf, codigoVerificacion: e.target.value })} placeholder="Ej. ABC123 o n.º de operación" />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Inp label="Tipo" type="select" value={gaf.tipo} onChange={(e) => setGaf({ ...gaf, tipo: e.target.value })}>{GT.map((t) => <option key={t}>{t}</option>)}</Inp>
           <Inp label="Valor ($)" type="number" step="0.01" min="0" value={gaf.valor} onChange={(e) => setGaf({ ...gaf, valor: e.target.value })} placeholder="0.00" />
