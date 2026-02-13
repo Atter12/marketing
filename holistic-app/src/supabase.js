@@ -40,5 +40,7 @@ export async function uploadAvatar(clientId, file) {
   const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
   if (uploadError) throw new Error(uploadError.message || "Error al subir la imagen");
   const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-  return data.publicUrl;
+  // Añadir timestamp para que al cambiar la foto el navegador cargue la nueva (misma URL, archivo reemplazado = caché)
+  const sep = data.publicUrl.includes("?") ? "&" : "?";
+  return data.publicUrl + sep + "t=" + Date.now();
 }
