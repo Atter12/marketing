@@ -85,14 +85,33 @@ const Btn = ({ variant = "primary", size, children, ...p }) => {
   return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: size === "sm" ? "6px 12px" : "8px 18px", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 12 : 13, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s", ...(p.style || {}) }}>{children}</button>;
 };
 
+const PREFIXES = [{ c: "+51", l: "PE" }, { c: "+1", l: "US/CA" }, { c: "+52", l: "MX" }, { c: "+57", l: "CO" }, { c: "+34", l: "ES" }, { c: "+54", l: "AR" }, { c: "+55", l: "BR" }, { c: "+56", l: "CL" }, { c: "+58", l: "VE" }, { c: "+593", l: "EC" }, { c: "+598", l: "UY" }, { c: "+595", l: "PY" }, { c: "+591", l: "BO" }, { c: "+507", l: "PA" }, { c: "+506", l: "CR" }, { c: "+502", l: "GT" }, { c: "+503", l: "SV" }, { c: "+504", l: "HN" }, { c: "+505", l: "NI" }];
+const parsePhone = (s) => { if (!s || !s.trim()) return { prefix: "+51", num: "" }; const m = s.trim().match(/^(\+\d{1,3})\s*(.*)$/); if (m) return { prefix: m[1], num: m[2].trim() }; return { prefix: "+51", num: s.trim() }; };
 const Multi = ({ values, onChange, placeholder, type = "text" }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
     {values.map((v, i) => (
       <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none" }} />
+        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
         <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2640", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
       </div>
     ))}
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#0055ff", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
+  </div>
+);
+const MultiPhone = ({ values, onChange }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+    {values.map((v, i) => {
+      const { prefix, num } = parsePhone(v);
+      return (
+        <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
+          <select value={prefix} onChange={(e) => { const n = [...values]; n[i] = (e.target.value + " " + num).trim(); onChange(n); }} style={{ width: 88, flexShrink: 0, padding: "9px 8px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", cursor: "pointer" }}>
+            {PREFIXES.map((p) => <option key={p.c} value={p.c}>{p.c} {p.l}</option>)}
+          </select>
+          <input type="tel" value={num} onChange={(e) => { const n = [...values]; n[i] = (prefix + " " + e.target.value).trim(); onChange(n); }} placeholder="999 999 999" style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2640", borderRadius: 6, cursor: "pointer", fontSize: 16 }}>×</button>
+        </div>
+      );
+    })}
     <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#0055ff", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
   </div>
 );
@@ -580,7 +599,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario" /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Teléfonos / WhatsApp</label><Multi values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} placeholder="+51 999 999 999" /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Teléfonos / WhatsApp</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
         <Inp label="Negocio" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce..." />
         <Inp label="Notas" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional..." />
