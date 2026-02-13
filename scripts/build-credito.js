@@ -36,6 +36,17 @@ if (fs.existsSync(assetsSrc)) {
   console.log('Copied credito-app/assets');
 }
 
+// favicon y logo (postbuild de holistic-app los deja en dist/credito-app/)
+['favicon', 'logo'].forEach((dir) => {
+  const src = path.join(dist, 'credito-app', dir);
+  const dest = path.join(outDir, dir);
+  if (fs.existsSync(src)) {
+    if (fs.existsSync(dest)) fs.rmSync(dest, { recursive: true });
+    fs.cpSync(src, dest, { recursive: true });
+    console.log('Copied credito-app/' + dir);
+  }
+});
+
 // credito.html: script fijo /credito-app/credito-app.js para que el deploy siempre lo encuentre
 const scriptPath = '/credito-app/credito-app.js';
 let html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');

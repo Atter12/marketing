@@ -420,6 +420,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <div><div style={{ fontSize: 16, fontWeight: 700, color: "#1b2559", letterSpacing: -0.3 }}>Holistic</div><div style={{ fontSize: 11, fontWeight: 600, color: "#0055ff", letterSpacing: 1, textTransform: "uppercase", marginTop: -1 }}>Marketing</div></div>
           </div>
           <img src={LOGO_URL} alt="" style={{ width: "100%", maxWidth: 140, height: "auto", marginTop: 12, objectFit: "contain", display: "block" }} onError={(e) => { e.target.style.display = "none"; }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
+              {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
+            </div>
+          </div>
         </div>
         <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px" }}>General</div>
@@ -440,13 +447,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           ))}
         </nav>
         <div style={{ padding: "14px 20px", borderTop: "1px solid #eff0f3" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
-              {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
-            </div>
-          </div>
           <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#5f6577", fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}><LogOut size={14} /> Cerrar sesión</button>
         </div>
       </aside>
