@@ -11,6 +11,15 @@ const { createClient } = require('@supabase/supabase-js');
 const fs = require('fs');
 const path = require('path');
 
+// Cargar .env desde la carpeta del proyecto (backup-dashboard/.env)
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf8').split('\n').forEach((line) => {
+    const m = line.match(/^([^#=]+)=(.*)$/);
+    if (m) process.env[m[1].trim()] = (m[2].trim() || '').replace(/^["']|["']$/g, '');
+  });
+}
+
 const supabaseUrl = process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 
