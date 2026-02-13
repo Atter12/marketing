@@ -232,6 +232,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
   }, [modal, editId]);
 
+  useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
+
   /* Early returns only after all hooks have run */
   if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
@@ -252,8 +254,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
 
   const goTo = (p, cid = null) => { setPage(p); if (cid != null) setCurCl(cid); if (p === "client-detail" && isCliente && clientId) setCurCl(clientId); setSearch(""); if (p === "client-detail") setDetailTab("gastos"); setMenuOpen(false); };
-
-  useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
 
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
