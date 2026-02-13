@@ -59,12 +59,12 @@ const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
     <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,17,26,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 50, overflowY: "auto" }}>
-      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.12)", border: "1px solid #e2e4e9", marginBottom: 40 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", background: "#f8f9fb", borderBottom: "1px solid #e2e4e9", borderRadius: "16px 16px 0 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1b2559", margin: 0 }}>{title}</h3>
-          <button onClick={onClose} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fff", color: "#5f6577", borderRadius: 8, cursor: "pointer", fontSize: 18, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }} aria-label="Cerrar">✕</button>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.12)", border: "1px solid #e2e4e9", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", background: "#f8f9fb", borderBottom: "1px solid #e2e4e9", borderRadius: "16px 16px 0 0", minWidth: 0 }}>
+          <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1b2559", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</h3>
+          <button onClick={onClose} style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fff", color: "#5f6577", borderRadius: 8, cursor: "pointer", fontSize: 18, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }} aria-label="Cerrar">✕</button>
         </div>
-        <div style={{ padding: "20px 24px" }}>{children}</div>
+        <div style={{ padding: "20px 24px", overflowX: "hidden", minWidth: 0, boxSizing: "border-box" }}>{children}</div>
         {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "16px 24px 20px", background: "#f8f9fb", borderTop: "1px solid #e2e4e9", borderRadius: "0 0 16px 16px" }}>{footer}</div>}
       </div>
     </div>
@@ -72,9 +72,9 @@ const Mdl = ({ open, onClose, title, children, footer }) => {
 };
 
 const Inp = ({ label, hint, ...p }) => (
-  <div style={{ marginBottom: 14 }}>
+  <div style={{ marginBottom: 14, minWidth: 0 }}>
     {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
-    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", resize: "vertical", minHeight: 60, ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 32, ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", ...(p.style || {}) }} />}
+    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", resize: "vertical", minHeight: 60, ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 32, ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", ...(p.style || {}) }} />}
     {hint && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{hint}</div>}
   </div>
 );
@@ -311,6 +311,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 .stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);transform:translateY(-1px)} table{width:100%;border-collapse:collapse;min-width:600px} tbody tr:hover{background:#fafbfc} tbody tr:last-child td{border-bottom:none}
+.hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
+.hm-modal-box .hm-form-grid>div{min-width:0}
 @media (max-width:768px){
   .hm-sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:200;box-shadow:4px 0 20px rgba(0,0,0,.08)}
   .hm-app.menu-open .hm-sidebar{transform:translateX(0)}
@@ -330,10 +332,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   .hm-detail-charts{grid-template-columns:1fr!important}
   .hm-detail-tabs{flex-wrap:wrap;width:100%!important}
   .hm-detail-tabs button{padding:6px 12px;font-size:11.5px}
-  .hm-modal-outer{padding:16px 12px 24px!important;align-items:flex-start!important}
-  .hm-modal-box{width:100%!important;max-width:none!important;margin-bottom:20px!important}
+  .hm-modal-outer{padding:12px 12px 24px!important;align-items:flex-start!important}
+  .hm-modal-box{width:100%!important;max-width:100%!important;margin-bottom:20px!important;overflow:hidden!important;box-sizing:border-box!important}
+  .hm-modal-box *{box-sizing:border-box!important}
+  .hm-modal-box .hm-form-grid>div,.hm-modal-box [style*="flex:"]{min-width:0!important}
   .hm-form-grid{grid-template-columns:1fr!important;gap:12px!important}
-  .hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{min-height:44px!important;padding:12px 14px!important;font-size:16px!important}
+  .hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{min-height:44px!important;padding:12px 14px!important;font-size:16px!important;max-width:100%!important}
   .hm-modal-box textarea{min-height:80px!important}
   .hm-modal-box label{font-size:13px!important}
   .hm-modal-box .hm-modal-footer{flex-wrap:wrap;gap:8px!important}
