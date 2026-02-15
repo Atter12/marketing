@@ -5,7 +5,7 @@ import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { supabase, uploadAvatar } from "./supabase";
 
-// En dev public se sirve en /; en producción usamos BASE_URL (postbuild copia favicon/logo bajo base)
+// Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
 const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
 
 /* ═══════ STORAGE ═══════ */
@@ -423,9 +423,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       {/* ═══ SIDEBAR ═══ */}
       <aside className="hm-sidebar" style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, overflow: "hidden", flexShrink: 0, background: "linear-gradient(135deg, #1b2559, #0055ff)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 800, fontSize: 14, position: "relative" }}><span style={{ position: "relative", zIndex: 0 }}>H</span><img src={LOGO_URL} alt="Logo" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", zIndex: 1 }} onError={(e) => { e.target.style.display = "none"; }} /></div>
-            <div><div style={{ fontSize: 16, fontWeight: 700, color: "#1b2559", letterSpacing: -0.3 }}>Holistic</div><div style={{ fontSize: 11, fontWeight: 600, color: "#0055ff", letterSpacing: 1, textTransform: "uppercase", marginTop: -1 }}>Marketing</div></div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 44, width: "auto", maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
