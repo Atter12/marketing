@@ -424,7 +424,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <aside className="hm-sidebar" style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 51, width: "auto", maxWidth: "100%", objectFit: "contain", display: "block" }} />
+            <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 51, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
             <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
