@@ -25,7 +25,7 @@ function mapGasto(r) {
 
 function mapCobro(r) {
   if (!r) return r;
-  return { id: r.id, gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null };
+  return { id: r.id, codigo: r.codigo ?? "", gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null };
 }
 
 function mapGarantia(r) {
@@ -148,7 +148,7 @@ export function useSupabaseData(role, clientId) {
     },
     saveGasto: async (payload) => {
       if (role !== "gerente") return;
-      const { id, codigo, clientId, mes, fechaMovimiento, camp, gasto, fee, notas, prepago } = payload;
+      const { id, clientId, mes, fechaMovimiento, camp, gasto, fee, notas, prepago } = payload;
       let created_by = null;
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -156,12 +156,12 @@ export function useSupabaseData(role, clientId) {
       } catch (_) {}
       const genCodigo = () => "G-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const periodo = mes || (fechaMovimiento ? fechaMovimiento.slice(0, 7) : null);
-      const row = { client_id: clientId, mes: periodo, fecha_movimiento: fechaMovimiento || (periodo ? periodo + "-15" : null), camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, codigo: (codigo && codigo.trim()) ? codigo.trim() : (id ? undefined : genCodigo()), created_by: created_by || null, prepago: !!prepago };
+      const row = { client_id: clientId, mes: periodo, fecha_movimiento: fechaMovimiento || (periodo ? periodo + "-15" : null), camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, created_by: created_by || null, prepago: !!prepago };
       if (id) {
-        if (row.codigo !== undefined) { const { error: e } = await supabase.from("gastos").update(row).eq("id", id); if (e) throw e; }
-        else { const { error: e } = await supabase.from("gastos").update({ client_id: row.client_id, mes: row.mes, fecha_movimiento: row.fecha_movimiento, camp: row.camp, gasto: row.gasto, fee: row.fee, notas: row.notas, created_by: created_by || null, prepago: row.prepago }).eq("id", id); if (e) throw e; }
+        const { error: e } = await supabase.from("gastos").update(row).eq("id", id);
+        if (e) throw e;
       } else {
-        if (!row.codigo) row.codigo = genCodigo();
+        row.codigo = genCodigo();
         const { data, error: e } = await supabase.from("gastos").insert(row).select("id").single();
         if (e) throw e;
         if (data) row.id = data.id;
@@ -182,7 +182,8 @@ export function useSupabaseData(role, clientId) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) created_by = user.email;
       } catch (_) {}
-      const row = { gasto_id: gastoId, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
+      const genCodigo = () => "C-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const row = { gasto_id: gastoId, codigo: genCodigo(), monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
       const { error: e } = await supabase.from("cobros").insert(row);
       if (e) throw e;
       await fetchAll();
@@ -196,12 +197,14 @@ export function useSupabaseData(role, clientId) {
     },
     saveGarantia: async (payload) => {
       if (role !== "gerente") return;
-      const { id, clientId, tipo, desc, valor, estado, codigoVerificacion } = payload;
-      const row = { client_id: clientId, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente", codigo_verificacion: (codigoVerificacion && codigoVerificacion.trim()) ? codigoVerificacion.trim() : null };
+      const { id, clientId, tipo, desc, valor, estado } = payload;
+      const genCodigoVerif = () => "GV-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const row = { client_id: clientId, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente" };
       if (id) {
         const { error: e } = await supabase.from("garantias").update(row).eq("id", id);
         if (e) throw e;
       } else {
+        row.codigo_verificacion = genCodigoVerif();
         const { error: e } = await supabase.from("garantias").insert(row);
         if (e) throw e;
       }
