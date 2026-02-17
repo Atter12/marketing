@@ -84,19 +84,21 @@ Deno.serve(async (req) => {
               return new Response(JSON.stringify({ error: updateErr.message || "Error al actualizar la contraseña" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
             const { error: upsertErr } = await supabase.from("clientes_acceso").upsert(
-              { email: emailAuth, client_id: clientId },
+              { email: emailAuth, client_id: clientId, pin: newPassword },
               { onConflict: "email" }
             );
             if (upsertErr) {
               return new Response(JSON.stringify({ error: upsertErr.message || "Error al vincular" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
             }
             return new Response(
-              JSON.stringify({ ok: true, phone: firstPhone, password: newPassword, regenerated: true }),
+              JSON.stringify({ ok: true, phone: firstPhone, password: newPassword }),
               { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
           }
+          const { data: accesoRow } = await supabase.from("clientes_acceso").select("pin").eq("email", emailAuth).maybeSingle();
+          const storedPin = accesoRow?.pin ?? "";
           return new Response(
-            JSON.stringify({ ok: true, alreadyHadAccess: true, phone: firstPhone }),
+            JSON.stringify({ ok: true, alreadyHadAccess: true, phone: firstPhone, password: storedPin }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -108,7 +110,7 @@ Deno.serve(async (req) => {
     }
 
     const { error: upsertError } = await supabase.from("clientes_acceso").upsert(
-      { email: emailAuth, client_id: clientId },
+      { email: emailAuth, client_id: clientId, pin: password },
       { onConflict: "email" }
     );
     if (upsertError) {
@@ -116,12 +118,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({
-        ok: true,
-        phone: firstPhone,
-        password,
-        message: "Comparte con el cliente: número y contraseña para que entre al panel.",
-      }),
+      JSON.stringify({ ok: true, phone: firstPhone, password }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
