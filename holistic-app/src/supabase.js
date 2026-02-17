@@ -89,13 +89,20 @@ export async function updateGerenteAvatar(email, avatarUrl) {
   }
 }
 
-/** Da acceso al panel a un cliente: crea cuenta (correo + PIN) y vincula en clientes_acceso. Requiere Edge Function dar-acceso-cliente. */
-export async function darAccesoCliente(clientId, email, pin) {
-  if (!supabase || !clientId || !email?.trim()) throw new Error("Datos incompletos");
-  const pinStr = String(pin ?? "").trim();
-  if (pinStr.length < 4 || pinStr.length > 12) throw new Error("El PIN debe tener entre 4 y 12 caracteres");
+/** Convierte un valor de login a email: si es número de celular (solo dígitos/+) usa email sintético. */
+export function loginToEmail(value) {
+  const trimmed = String(value ?? "").trim();
+  if (trimmed.includes("@")) return trimmed;
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length >= 8 && digits.length <= 15) return digits + "@phone.holistic";
+  return trimmed;
+}
+
+/** Da acceso al panel: usa el teléfono del cliente (de la ficha) y genera contraseña. Requiere Edge Function dar-acceso-cliente. */
+export async function darAccesoCliente(clientId) {
+  if (!supabase || !clientId) throw new Error("Cliente no indicado");
   const { data, error } = await supabase.functions.invoke("dar-acceso-cliente", {
-    body: { email: email.trim().toLowerCase(), pin: pinStr, client_id: clientId },
+    body: { client_id: clientId },
   });
   if (error) throw new Error(error.message || "Error al dar acceso");
   const body = data?.data ?? data;

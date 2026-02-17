@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Lock, Mail, AlertCircle, UserPlus, CheckCircle } from "lucide-react";
-import { getClientIdForUser } from "./supabase";
+import { getClientIdForUser, loginToEmail } from "./supabase";
 
 const inputStyle = { width: "100%", padding: "12px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
 
@@ -33,7 +33,8 @@ export default function Login({ onSuccess, supabase }) {
     }
     setLoading(true);
     try {
-      const { data, error: signError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const loginEmail = loginToEmail(email);
+      const { data, error: signError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
       if (signError) {
         setError(signError.message === "Invalid login credentials" ? "Correo o contraseña incorrectos." : signError.message);
         setLoading(false);
@@ -175,10 +176,10 @@ export default function Login({ onSuccess, supabase }) {
               </div>
             )}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Correo</label>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Correo o número de celular</label>
               <div style={{ position: "relative" }}>
                 <Mail size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com" required autoComplete="email" style={{ ...inputStyle, paddingLeft: 44 }} />
+                <input type="text" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com o 51 999 999 999" required autoComplete="username" style={{ ...inputStyle, paddingLeft: 44 }} />
               </div>
             </div>
             <div style={{ marginBottom: 22 }}>
