@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
-import { supabase, uploadAvatar } from "./supabase";
+import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
 const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
@@ -141,8 +141,32 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";
   const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
+  const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
+  const [uploadingGerenteAvatar, setUploadingGerenteAvatar] = useState(false);
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (gerenteNombre.trim() || (userEmail ? (userEmail.split("@")[0] || userEmail) : "") || "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
+
+  useEffect(() => {
+    if (role !== "gerente" || !userEmail) return;
+    let cancelled = false;
+    getGerenteProfile(userEmail).then((p) => { if (!cancelled) setGerenteAvatarUrl(p.avatar_url || ""); });
+    return () => { cancelled = true; };
+  }, [role, userEmail]);
+
+  const handleGerenteAvatarUpload = async (file) => {
+    if (!userEmail || !file) return;
+    try {
+      setUploadingGerenteAvatar(true);
+      const url = await uploadGerenteAvatar(userEmail, file);
+      await updateGerenteAvatar(userEmail, url);
+      setGerenteAvatarUrl(url);
+    } catch (err) {
+      alert(err?.message || "Error al subir la foto.");
+    } finally {
+      setUploadingGerenteAvatar(false);
+    }
+  };
+
   const handleEditarNombreGerente = () => {
     const actual = gerenteNombre.trim() || (userEmail ? userEmail.split("@")[0] : "") || "";
     const n = prompt("Nombre para mostrar en el panel:", actual);
@@ -417,7 +441,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       {/* Cabecera móvil */}
       <header className="hm-mobile-header">
         <button onClick={() => setMenuOpen(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#f4f5f7", borderRadius: 10, color: "#1b2559", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1d26" }}>{pageTitles[page] || "Holistic"}</span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1d26", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
+        {!isCliente && (
+          <div style={{ flexShrink: 0 }}>
+            <Av name={displayName} size={36} avatarUrl={gerenteAvatarUrl} />
+          </div>
+        )}
+        {isCliente && clients[0] && (
+          <div style={{ flexShrink: 0 }}>
+            <Av name={clients[0].name} size={36} avatarUrl={clients[0].avatar_url} />
+          </div>
+        )}
       </header>
 
       {/* ═══ SIDEBAR ═══ */}
@@ -426,8 +460,20 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 51, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: isCliente ? "#0d9f6e18" : "#1b255918", color: isCliente ? "#0d9f6e" : "#1b2559", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{displayName.charAt(0).toUpperCase()}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              {isCliente ? (
+                <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
+              ) : (
+                <>
+                  <Av name={displayName} size={48} avatarUrl={gerenteAvatarUrl} />
+                  <label style={{ position: "absolute", right: -4, bottom: -4, width: 28, height: 28, borderRadius: 8, background: "#1b2559", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: uploadingGerenteAvatar ? "wait" : "pointer", boxShadow: "0 2px 8px rgba(27,37,89,.3)", border: "2px solid #fff" }} title="Cambiar foto">
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleGerenteAvatarUpload(f); e.target.value = ""; }} disabled={uploadingGerenteAvatar} />
+                    <Camera size={14} />
+                  </label>
+                </>
+              )}
+            </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
               {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}

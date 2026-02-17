@@ -44,3 +44,47 @@ export async function uploadAvatar(clientId, file) {
   const sep = data.publicUrl.includes("?") ? "&" : "?";
   return data.publicUrl + sep + "t=" + Date.now();
 }
+
+/** Slug para path de storage del gerente (email estable) */
+function gerenteSlug(email) {
+  if (!email || typeof email !== "string") return "gerente";
+  return "gerente_" + email.trim().toLowerCase().replace(/@/g, "_at_").replace(/\./g, "_");
+}
+
+/** Sube la foto de perfil del gerente y devuelve la URL pública. email = correo del gerente. */
+export async function uploadGerenteAvatar(email, file) {
+  if (!supabase || !email) throw new Error("Configuración o correo no disponible");
+  if (!file || !ALLOWED_AVATAR_TYPES.includes(file.type)) throw new Error("El archivo debe ser imagen (JPG, PNG, WebP o GIF)");
+  if (file.size > MAX_AVATAR_SIZE) throw new Error("La imagen no puede superar 5 MB");
+  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  const path = `${gerenteSlug(email)}/avatar.${ext}`;
+  const { error: uploadError } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
+  if (uploadError) throw new Error(uploadError.message || "Error al subir la imagen");
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const sep = data.publicUrl.includes("?") ? "&" : "?";
+  return data.publicUrl + sep + "t=" + Date.now();
+}
+
+/** Obtiene el perfil del gerente (id, avatar_url) por email. */
+export async function getGerenteProfile(email) {
+  if (!supabase || !email) return { id: null, avatar_url: null };
+  const { data, error } = await supabase.from("gerentes").select("id, avatar_url").ilike("email", email).maybeSingle();
+  if (error) {
+    console.error("[getGerenteProfile]", error);
+    return { id: null, avatar_url: null };
+  }
+  return { id: data?.id ?? null, avatar_url: data?.avatar_url ?? null };
+}
+
+/** Actualiza la foto de perfil del gerente por email (busca por email y actualiza por id si existe). */
+export async function updateGerenteAvatar(email, avatarUrl) {
+  if (!supabase || !email) throw new Error("Configuración o correo no disponible");
+  const { data: row } = await supabase.from("gerentes").select("id").ilike("email", email).maybeSingle();
+  if (row?.id) {
+    const { error } = await supabase.from("gerentes").update({ avatar_url: avatarUrl || null }).eq("id", row.id);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase.from("gerentes").update({ avatar_url: avatarUrl || null }).eq("email", email);
+    if (error) throw error;
+  }
+}
