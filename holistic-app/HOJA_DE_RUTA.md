@@ -67,7 +67,7 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 ## 7. Garantías
 
 - [x] Mostrar **código de verificación** en garantías (columna visible y en export).
-- [ ] Incluir **código de gasto** asociado cuando exista (columna o referencia en detalle/export).
+- [x] Incluir **código de gasto** asociado cuando exista (columna o referencia en detalle/export).
 
 ---
 

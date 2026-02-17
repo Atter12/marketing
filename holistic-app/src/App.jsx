@@ -362,8 +362,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
   const expGarantias = () => {
     let list = [...garantias];
-    const headers = ["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); return [c?.name || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—"]; });
+    const headers = ["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
 
@@ -378,8 +378,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
     const rC = cos.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
     const wsC = XLSX.utils.aoa_to_sheet([hC, ...rC]); XLSX.utils.book_append_sheet(wb, wsC, "Cobros");
-    const hGar = ["Tipo", "Descripción", "Valor", "Estado", "Cód. verificación"];
-    const rGar = curGars.map((g) => [g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—"]);
+    const hGar = ["Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto"];
+    const rGar = curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—"]; });
     const wsGar = XLSX.utils.aoa_to_sheet([hGar, ...rGar]); XLSX.utils.book_append_sheet(wb, wsGar, "Garantías");
     XLSX.writeFile(wb, `cliente_${(curC?.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_")}_${td()}.xlsx`);
   };
@@ -763,8 +763,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={8} msg="Sin garantías" />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
