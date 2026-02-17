@@ -15,13 +15,13 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 **Opción 1 – Correo + PIN (recomendada y más segura):**
 
-- [ ] En la **ficha del cliente**, el gerente tiene un botón/acción **"Dar acceso"**.
-- [ ] Al hacerlo, el gerente ingresa **correo del cliente** y un **PIN** (ej. 4–6 dígitos).
-- [ ] Por detrás: se crea la cuenta (correo + PIN como contraseña) y se vincula ese correo al cliente en `clientes_acceso`.
-- [ ] El cliente entra a la web con **ese correo + PIN** (el PIN es la contraseña) y ve solo sus reportes.
-- [ ] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; el “PIN” es solo la contraseña que el gerente les da.
+- [x] En la **ficha del cliente**, el gerente tiene un botón/acción **"Dar acceso"**.
+- [x] Al hacerlo, el gerente ingresa **correo del cliente** y un **PIN** (ej. 4–12 caracteres).
+- [x] Por detrás: se crea la cuenta (correo + PIN como contraseña) y se vincula ese correo al cliente en `clientes_acceso`.
+- [x] El cliente entra a la web con **ese correo + PIN** (el PIN es la contraseña) y ve solo sus reportes.
+- [x] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; el “PIN” es solo la contraseña que el gerente les da.
 
-*(Requiere backend/Edge Function con service_role para crear el usuario en Auth y registrar en `clientes_acceso`.)*
+*(Implementado: Edge Function `dar-acceso-cliente`; botón en ficha y en lista de clientes; opción “Dar acceso” al crear nuevo cliente.)*
 
 ---
 

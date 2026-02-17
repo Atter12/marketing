@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
-import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar } from "./supabase";
+import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
 const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
@@ -143,6 +143,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
   const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
   const [uploadingGerenteAvatar, setUploadingGerenteAvatar] = useState(false);
+  const [accesoEmail, setAccesoEmail] = useState("");
+  const [accesoPin, setAccesoPin] = useState("");
+  const [savingAcceso, setSavingAcceso] = useState(false);
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (gerenteNombre.trim() || (userEmail ? (userEmail.split("@")[0] || userEmail) : "") || "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
 
@@ -291,16 +294,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoEmail(""); setAccesoPin(""); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
 
   useEffect(() => {
     if (!modal) return;
     if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
+    if (modal === "dar-acceso" && editId) { const c = clients.find((x) => x.id === editId); setAccesoEmail(c?.emails?.[0] || ""); setAccesoPin(""); }
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
-  }, [modal, editId]);
+  }, [modal, editId, clients]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
 
@@ -309,8 +313,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
-  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
+  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; const newId = await mutations.saveClient(c); if (!editId && accesoEmail.trim() && accesoPin.trim() && newId) { try { setSavingAcceso(true); await darAccesoCliente(newId, accesoEmail.trim(), accesoPin); alert("Cliente creado y acceso al panel dado correctamente."); } catch (err) { alert(err?.message || "Cliente guardado, pero no se pudo dar acceso. Puedes usar \"Dar acceso\" en la ficha del cliente."); } finally { setSavingAcceso(false); } } closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
+  const submitDarAcceso = async () => { if (!editId || !accesoEmail.trim()) return alert("Indica el correo del cliente"); const pinStr = accesoPin.trim(); if (pinStr.length < 4 || pinStr.length > 12) return alert("El PIN debe tener entre 4 y 12 caracteres"); try { setSavingAcceso(true); await darAccesoCliente(editId, accesoEmail.trim(), pinStr); alert("Acceso creado. El cliente puede entrar con su correo y PIN."); closeMdl(); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
   const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, fecha de movimiento y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
@@ -614,7 +619,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table></div>
+              <tbody>{clients.filter((c) => !search || c.name.toLowerCase().includes(search.toLowerCase())).map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 13.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 11, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TD, color: "#e1306c", fontWeight: 600, fontSize: 13 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TD}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 7px", background: "#f4f5f7", borderRadius: 4, fontSize: 11 }}>✉ {e}</span>)}</div></td><td style={{ ...TD, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TD}><Bdg type={st}>{stT}</Bdg></td><td style={TD} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={13} />} title="Dar acceso" style={{ color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div></td></tr>; })}{!clients.length && <Empty cols={10} msg="No hay clientes registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -705,6 +710,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             )}
           </div>
         </div>
+        {!editId && (
+          <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid #e2e4e9" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <KeyRound size={18} style={{ color: "#0d9f6e" }} />
+              <span style={{ fontSize: 13.5, fontWeight: 700, color: "#1a1d26" }}>Dar acceso al panel (opcional)</span>
+            </div>
+            <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 12 }}>Si rellenas correo y PIN, al guardar se creará la cuenta para que el cliente entre al panel con ese correo y PIN.</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <Inp label="Correo para acceso" type="email" value={accesoEmail} onChange={(e) => setAccesoEmail(e.target.value)} placeholder="cliente@ejemplo.com" />
+              <Inp label="PIN (4–12 caracteres)" type="password" value={accesoPin} onChange={(e) => setAccesoPin(e.target.value)} placeholder="Ej. 123456" />
+            </div>
+          </div>
+        )}
       </Mdl>
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
@@ -733,6 +751,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
+      </Mdl>
+
+      <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={submitDarAcceso} disabled={savingAcceso}>{savingAcceso ? "Guardando…" : "Dar acceso"}</Btn></>}>
+        {editId && (() => { const ac = clients.find((c) => c.id === editId); return ac ? <p style={{ marginBottom: 14, fontSize: 13, color: "#5f6577" }}>El cliente <strong>{ac.name}</strong> podrá entrar al panel con su correo y PIN (el PIN será su contraseña).</p> : null; })()}
+        <Inp label="Correo del cliente *" type="email" value={accesoEmail} onChange={(e) => setAccesoEmail(e.target.value)} placeholder="cliente@ejemplo.com" />
+        <Inp label="PIN (4–12 caracteres, será la contraseña) *" type="password" value={accesoPin} onChange={(e) => setAccesoPin(e.target.value)} placeholder="Ej. 123456" hint="El cliente usará este PIN como contraseña al iniciar sesión." />
       </Mdl>
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title="Nueva Garantía" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGar}>Guardar</Btn></>}>

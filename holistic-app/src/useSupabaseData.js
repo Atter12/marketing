@@ -122,12 +122,14 @@ export function useSupabaseData(role, clientId) {
       if (id) {
         const { error: e } = await supabase.from("clientes").update(row).eq("id", id);
         if (e) throw e;
+        await fetchAll();
+        return id;
       } else {
         const { data, error: e } = await supabase.from("clientes").insert(row).select("id").single();
         if (e) throw e;
-        if (data) row.id = data.id;
+        await fetchAll();
+        return data?.id ?? null;
       }
-      await fetchAll();
     },
     updateClientAvatar: async (avatarUrl) => {
       const cid = clientId;

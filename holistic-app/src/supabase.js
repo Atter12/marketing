@@ -88,3 +88,17 @@ export async function updateGerenteAvatar(email, avatarUrl) {
     if (error) throw error;
   }
 }
+
+/** Da acceso al panel a un cliente: crea cuenta (correo + PIN) y vincula en clientes_acceso. Requiere Edge Function dar-acceso-cliente. */
+export async function darAccesoCliente(clientId, email, pin) {
+  if (!supabase || !clientId || !email?.trim()) throw new Error("Datos incompletos");
+  const pinStr = String(pin ?? "").trim();
+  if (pinStr.length < 4 || pinStr.length > 12) throw new Error("El PIN debe tener entre 4 y 12 caracteres");
+  const { data, error } = await supabase.functions.invoke("dar-acceso-cliente", {
+    body: { email: email.trim().toLowerCase(), pin: pinStr, client_id: clientId },
+  });
+  if (error) throw new Error(error.message || "Error al dar acceso");
+  const body = data?.data ?? data;
+  if (body?.error) throw new Error(body.error);
+  return body;
+}
