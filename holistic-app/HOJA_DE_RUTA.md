@@ -27,11 +27,11 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ## 3. Fechas y períodos (unificado)
 
-- [ ] **Fecha de movimiento:** Debe ser **fecha completa (día + mes + año)**, mostrada como **dd/mm/aaaa**.
-- [ ] **Período:** Debe ser **solo mes y año (mm/aaaa)**. Lo que hoy se llama "fecha de movimiento" en algunos contextos pasa a ser "período" donde corresponda.
-- [ ] **Calendario/datepicker:** Todas las fechas y períodos deben elegirse con calendario o selectores limitados para evitar errores de tipeo.
-- [ ] **Gastos Ads:** Incluir el **día** en la fecha de movimiento (es decir, fecha completa dd/mm/aaaa); el período (mm/aaaa) como campo aparte.
-- [ ] **Botón "Período":** Incluir selector con **fecha inicio** y **fecha fin** (rango) donde aplique (filtros, reportes, descargas).
+- [x] **Fecha de movimiento:** Debe ser **fecha completa (día + mes + año)**, mostrada como **dd/mm/aaaa**.
+- [x] **Período:** Debe ser **solo mes y año (mm/aaaa)**. Lo que hoy se llama "fecha de movimiento" en algunos contextos pasa a ser "período" donde corresponda.
+- [x] **Calendario/datepicker:** Todas las fechas y períodos deben elegirse con calendario o selectores limitados para evitar errores de tipeo.
+- [x] **Gastos Ads:** Incluir el **día** en la fecha de movimiento (es decir, fecha completa dd/mm/aaaa); el período (mm/aaaa) como campo aparte.
+- [x] **Botón "Período":** Incluir selector con **fecha inicio** y **fecha fin** (rango) donde aplique (filtros, reportes, descargas).
 
 ---
 

@@ -18,7 +18,9 @@ function mapCliente(r) {
 
 function mapGasto(r) {
   if (!r) return r;
-  return { id: r.id, codigo: r.codigo ?? "", clientId: r.client_id, mes: r.mes, camp: r.camp ?? "", gasto: Number(r.gasto), fee: String(r.fee ?? 10), notas: r.notas ?? "", created_by: r.created_by ?? null, prepago: !!r.prepago };
+  const mes = r.mes ?? (r.fecha_movimiento ? r.fecha_movimiento.slice(0, 7) : null);
+  const fechaMov = r.fecha_movimiento ?? (mes ? mes + "-15" : null);
+  return { id: r.id, codigo: r.codigo ?? "", clientId: r.client_id, mes, fechaMovimiento: fechaMov, camp: r.camp ?? "", gasto: Number(r.gasto), fee: String(r.fee ?? 10), notas: r.notas ?? "", created_by: r.created_by ?? null, prepago: !!r.prepago };
 }
 
 function mapCobro(r) {
@@ -146,17 +148,18 @@ export function useSupabaseData(role, clientId) {
     },
     saveGasto: async (payload) => {
       if (role !== "gerente") return;
-      const { id, codigo, clientId, mes, camp, gasto, fee, notas, prepago } = payload;
+      const { id, codigo, clientId, mes, fechaMovimiento, camp, gasto, fee, notas, prepago } = payload;
       let created_by = null;
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.email) created_by = user.email;
       } catch (_) {}
       const genCodigo = () => "G-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
-      const row = { client_id: clientId, mes, camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, codigo: (codigo && codigo.trim()) ? codigo.trim() : (id ? undefined : genCodigo()), created_by: created_by || null, prepago: !!prepago };
+      const periodo = mes || (fechaMovimiento ? fechaMovimiento.slice(0, 7) : null);
+      const row = { client_id: clientId, mes: periodo, fecha_movimiento: fechaMovimiento || (periodo ? periodo + "-15" : null), camp: camp || null, gasto: parseFloat(gasto) || 0, fee: parseFloat(fee) || 10, notas: notas || null, codigo: (codigo && codigo.trim()) ? codigo.trim() : (id ? undefined : genCodigo()), created_by: created_by || null, prepago: !!prepago };
       if (id) {
         if (row.codigo !== undefined) { const { error: e } = await supabase.from("gastos").update(row).eq("id", id); if (e) throw e; }
-        else { const { error: e } = await supabase.from("gastos").update({ client_id: row.client_id, mes: row.mes, camp: row.camp, gasto: row.gasto, fee: row.fee, notas: row.notas, created_by: created_by || null, prepago: row.prepago }).eq("id", id); if (e) throw e; }
+        else { const { error: e } = await supabase.from("gastos").update({ client_id: row.client_id, mes: row.mes, fecha_movimiento: row.fecha_movimiento, camp: row.camp, gasto: row.gasto, fee: row.fee, notas: row.notas, created_by: created_by || null, prepago: row.prepago }).eq("id", id); if (e) throw e; }
       } else {
         if (!row.codigo) row.codigo = genCodigo();
         const { data, error: e } = await supabase.from("gastos").insert(row).select("id").single();

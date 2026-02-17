@@ -20,6 +20,7 @@ const td = () => { const d = new Date(); return d.getFullYear() + "-" + String(d
 const tm = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
+const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
 const fmtDt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return d.toLocaleString("es-PE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); };
 const COLORS = ["#0055ff", "#0d9f6e", "#d97706", "#dc2640", "#7c3aed", "#e1306c", "#0891b2", "#c2410c"];
@@ -193,11 +194,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [detailTab, setDetailTab] = useState("gastos");
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
+  const [repPerInicio, setRepPerInicio] = useState("");
+  const [repPerFin, setRepPerFin] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
-  const emptyGf = { codigo: "", clientId: clientId || "", mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
+  const emptyGf = { codigo: "", clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
   const emptyGaf = { clientId: clientId || "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", codigoVerificacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
@@ -247,7 +250,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   /* ═══ REPORT DATA (garantías deducted per client) ═══ */
   const repData = useMemo(() => {
     let gs = sGastos;
-    if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    if (repPerInicio || repPerFin) {
+      gs = gs.filter((g) => {
+        const m = g.mes || (g.fechaMovimiento ? g.fechaMovimiento.slice(0, 7) : "");
+        if (!m) return false;
+        if (repPerInicio && m < repPerInicio) return false;
+        if (repPerFin && m > repPerFin) return false;
+        return true;
+      });
+    } else if (repPer) gs = gs.filter((g) => g.mes === repPer);
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
     const bc = {};
@@ -300,7 +311,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!modal) return;
     if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
     if (modal === "dar-acceso") setAccesoResultado(null);
-    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, mes: g.mes, camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
+    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ codigo: g.codigo || "", clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia") setGaf((p) => ({ ...p, clientId: curCl || p.clientId }));
   }, [modal, editId, clients]);
@@ -316,7 +327,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
   const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstPhone = (client?.phones || []).filter(Boolean)[0]; if (!firstPhone) { alert("Este cliente no tiene teléfono. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const res = await darAccesoCliente(editId, { regenerate }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
-  const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, fecha de movimiento y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
+  const saveGasto = async () => { if (!gf.clientId || !parseFloat(gf.gasto)) return alert("Completa cliente y gasto"); const periodo = gf.mes || (gf.fechaMovimiento ? gf.fechaMovimiento.slice(0, 7) : tm()); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, fechaMovimiento: gf.fechaMovimiento || periodo + "-15", mes: periodo, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
 
   const saveCobro = async () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); await mutations.saveCobro({ ...cof, hora: cof.hora || null }); closeMdl(); };
@@ -581,7 +592,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
-            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 160, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Rango período</label><div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="month" value={repPerInicio} onChange={(e) => setRepPerInicio(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 12 }}>a</span><input type="month" value={repPerFin} onChange={(e) => setRepPerFin(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div><p style={{ fontSize: 10, color: "#9498a8", marginTop: 4 }}>Fecha inicio y fin (mm/aaaa). Vacíos = sin filtro.</p></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
             <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
@@ -650,6 +662,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             MN={MN}
             fmt={fmt}
             fmtD={fmtD}
+            fmtDD={fmtDD}
             fmtM={fmtM}
             fmtT={fmtT}
             fmtDt={fmtDt}
@@ -663,8 +676,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         {page === "gastos" && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha de movimiento", "Período (mes y año)", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{sGastos.sort((a, b) => (b.mes || "").localeCompare(a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "✓" : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 14 : 15} msg="Sin gastos registrados" />}</tbody></table></div>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <tbody>{sGastos.sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "✓" : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 15 : 16} msg="Sin gastos registrados" />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -714,7 +727,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
         <Inp label="Cliente *" type="select" value={gf.clientId} onChange={(e) => setGf({ ...gf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
         <Inp label="Código (opcional)" value={gf.codigo} onChange={(e) => setGf({ ...gf, codigo: e.target.value })} placeholder="Ej. G-202502-001 (se genera solo si se deja vacío)" />
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Fecha de movimiento *" type="month" value={gf.mes} onChange={(e) => setGf({ ...gf, mes: e.target.value })} /><Inp label="Período (mes y año)" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Feb 2025" /></div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Fecha de movimiento * (dd/mm/aaaa)" type="date" value={gf.fechaMovimiento} onChange={(e) => { const v = e.target.value; setGf({ ...gf, fechaMovimiento: v, mes: v ? v.slice(0, 7) : gf.mes }); }} /><Inp label="Período (mm/aaaa)" type="month" value={gf.mes} onChange={(e) => { const v = e.target.value; setGf({ ...gf, mes: v, fechaMovimiento: v ? v + "-15" : gf.fechaMovimiento }); }} /></div>
+        <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#1b2559" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#5f6577", cursor: "pointer" }}>Prepago (recarga) — permite registrar cobro para este gasto</label></div>
         <Inp label="Gasto en Ads ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Inversión en TikTok Ads (u otra red)" />
         <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} hint="Porcentaje sobre el gasto" />
