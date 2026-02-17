@@ -37,19 +37,19 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ## 4. Códigos (automáticos y visibles)
 
-- [ ] **Código de gasto:** Siempre automático; **quitar** el input para que nadie lo edite. Generado solo por el sistema.
-- [ ] **Código de cobro:** Agregar y mostrar **columna "Código de cobro"** en la tabla de cobros (código único por cobro).
-- [ ] **Código de verificación (garantías):** Que sea automático en todo y que **sí se muestre** en garantías (ahora no sale).
-- [ ] En listados/exportaciones: incluir **código del gasto al que hace referencia** cada cobro y **código de la garantía** cuando aplique.
+- [x] **Código de gasto:** Siempre automático; **quitar** el input para que nadie lo edite. Generado solo por el sistema.
+- [x] **Código de cobro:** Agregar y mostrar **columna "Código de cobro"** en la tabla de cobros (código único por cobro).
+- [x] **Código de verificación (garantías):** Que sea automático en todo y que **sí se muestre** en garantías (ahora no sale).
+- [x] En listados/exportaciones: incluir **código del gasto al que hace referencia** cada cobro y **código de la garantía** cuando aplique.
 
 ---
 
 ## 5. Prepago y cobros
 
-- [ ] **Cobro no solo para prepago:** El registro de cobro debe estar disponible **para todos los gastos**, no solo para los marcados como prepago. Ajustar textos y lógica.
-- [ ] **Etiqueta en el modal:** Revisar el texto "Gasto * (solo prepago)" en "Registrar cobro": o bien se permite para todo y se cambia el texto, o se explica claramente en el dashboard qué hace ese paso.
-- [ ] **Si el gasto es prepago:** Mostrar claramente la opción **"Añadir cobro"** (o similar) y mejorar el flujo para que sea obvio.
-- [ ] **Columna Prepago en gastos:** Mostrar **S** si es prepago y **N** si no (en lugar de solo checkbox o valor poco claro).
+- [x] **Cobro no solo para prepago:** El registro de cobro debe estar disponible **para todos los gastos**, no solo para los marcados como prepago. Ajustar textos y lógica.
+- [x] **Etiqueta en el modal:** Revisar el texto "Gasto * (solo prepago)" en "Registrar cobro": o bien se permite para todo y se cambia el texto, o se explica claramente en el dashboard qué hace ese paso.
+- [x] **Si el gasto es prepago:** Mostrar claramente la opción **"Añadir cobro"** (o similar) y mejorar el flujo para que sea obvio.
+- [x] **Columna Prepago en gastos:** Mostrar **S** si es prepago y **N** si no (en lugar de solo checkbox o valor poco claro).
 
 ---
 
@@ -66,7 +66,7 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ## 7. Garantías
 
-- [ ] Mostrar **código de verificación** en garantías (columna visible y en export).
+- [x] Mostrar **código de verificación** en garantías (columna visible y en export).
 - [ ] Incluir **código de gasto** asociado cuando exista (columna o referencia en detalle/export).
 
 ---
