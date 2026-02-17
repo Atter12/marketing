@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const clientId = body.client_id ?? body.clientId;
+    const regenerate = !!body.regenerate;
     if (!clientId || typeof clientId !== "string") {
       return new Response(JSON.stringify({ error: "ID de cliente obligatorio" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -76,16 +77,32 @@ Deno.serve(async (req) => {
         const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
         const existing = list?.users?.find((u) => u.email?.toLowerCase() === emailAuth);
         if (existing) {
-          const { error: updateErr } = await supabase.auth.admin.updateUserById(existing.id, { password });
-          if (updateErr) {
-            return new Response(JSON.stringify({ error: updateErr.message || "Error al actualizar la contraseña" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          if (regenerate) {
+            const newPassword = generatePassword(8);
+            const { error: updateErr } = await supabase.auth.admin.updateUserById(existing.id, { password: newPassword });
+            if (updateErr) {
+              return new Response(JSON.stringify({ error: updateErr.message || "Error al actualizar la contraseña" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            const { error: upsertErr } = await supabase.from("clientes_acceso").upsert(
+              { email: emailAuth, client_id: clientId },
+              { onConflict: "email" }
+            );
+            if (upsertErr) {
+              return new Response(JSON.stringify({ error: upsertErr.message || "Error al vincular" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            }
+            return new Response(
+              JSON.stringify({ ok: true, phone: firstPhone, password: newPassword, regenerated: true }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
           }
-        } else {
-          return new Response(JSON.stringify({ error: "El número ya está registrado. Contacte soporte." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(
+            JSON.stringify({ ok: true, alreadyHadAccess: true, phone: firstPhone }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
-      } else {
-        return new Response(JSON.stringify({ error: msg || "Error al crear el usuario" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ error: "El número ya está registrado. Contacte soporte." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      return new Response(JSON.stringify({ error: msg || "Error al crear el usuario" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     } else if (!createData?.user) {
       return new Response(JSON.stringify({ error: "No se pudo crear el usuario" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

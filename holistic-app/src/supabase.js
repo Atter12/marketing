@@ -98,11 +98,12 @@ export function loginToEmail(value) {
   return trimmed;
 }
 
-/** Da acceso al panel: usa el teléfono del cliente (de la ficha) y genera contraseña. Requiere Edge Function dar-acceso-cliente. */
-export async function darAccesoCliente(clientId) {
+/** Da acceso al panel: usa el teléfono del cliente (de la ficha). Primera vez genera contraseña; después no la cambia.
+ *  Opciones: { regenerate: true } para generar una nueva contraseña si el cliente ya tenía acceso. */
+export async function darAccesoCliente(clientId, options = {}) {
   if (!supabase || !clientId) throw new Error("Cliente no indicado");
   const { data, error } = await supabase.functions.invoke("dar-acceso-cliente", {
-    body: { client_id: clientId },
+    body: { client_id: clientId, regenerate: !!options.regenerate },
   });
   if (error) throw new Error(error.message || "Error al dar acceso");
   const body = data?.data ?? data;

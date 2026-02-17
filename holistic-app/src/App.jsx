@@ -314,7 +314,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   /* ═══ CRUD (Supabase mutations) ═══ */
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
-  const submitDarAcceso = async () => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstPhone = (client?.phones || []).filter(Boolean)[0]; if (!firstPhone) { alert("Este cliente no tiene teléfono. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const res = await darAccesoCliente(editId); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
+  const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstPhone = (client?.phones || []).filter(Boolean)[0]; if (!firstPhone) { alert("Este cliente no tiene teléfono. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const res = await darAccesoCliente(editId, { regenerate }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
   const saveGasto = async () => { if (!gf.clientId || !gf.mes || !parseFloat(gf.gasto)) return alert("Completa cliente, fecha de movimiento y gasto"); const g = { id: editId || undefined, codigo: gf.codigo || "", clientId: gf.clientId, mes: gf.mes, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
@@ -745,14 +745,26 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           const firstPhone = (ac?.phones || []).filter(Boolean)[0];
           if (!ac) return null;
           if (accesoResultado) {
+            if (accesoResultado.alreadyHadAccess) {
+              return (
+                <div style={{ padding: "16px 0" }}>
+                  <p style={{ fontSize: 13, color: "#5f6577", marginBottom: 12 }}>Este cliente <strong>ya tiene acceso</strong>. Puede entrar cuando quiera con su número y la contraseña que se generó la primera vez.</p>
+                  <div style={{ background: "#eef0f8", borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                    <span style={{ color: "#5f6577", fontSize: 12 }}>Número: </span><strong style={{ color: "#1b2559" }}>{accesoResultado.phone}</strong>
+                  </div>
+                  <p style={{ fontSize: 12, color: "#9498a8", marginBottom: 12 }}>Si el cliente olvidó la contraseña, puedes generar una nueva (la anterior dejará de funcionar).</p>
+                  <Btn variant="outline" size="sm" onClick={() => submitDarAcceso(true)} disabled={savingAcceso}>Regenerar contraseña</Btn>
+                </div>
+              );
+            }
             return (
               <div style={{ padding: "16px 0" }}>
-                <p style={{ fontSize: 13, color: "#0d9f6e", fontWeight: 600, marginBottom: 12 }}>Acceso generado. Comparte con el cliente:</p>
+                <p style={{ fontSize: 13, color: "#0d9f6e", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.regenerated ? "Nueva contraseña generada." : "Acceso generado."} Comparte con el cliente:</p>
                 <div style={{ background: "#f4f5f7", borderRadius: 10, padding: 16, fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }}>
                   <div style={{ marginBottom: 8 }}><span style={{ color: "#5f6577", fontSize: 12 }}>Número (usuario):</span> <strong style={{ color: "#1a1d26" }}>{accesoResultado.phone}</strong></div>
                   <div><span style={{ color: "#5f6577", fontSize: 12 }}>Contraseña:</span> <strong style={{ color: "#1b2559", letterSpacing: 1 }}>{accesoResultado.password}</strong></div>
                 </div>
-                <p style={{ fontSize: 12, color: "#9498a8", marginTop: 12 }}>El cliente entra al panel con ese número y esta contraseña.</p>
+                <p style={{ fontSize: 12, color: "#9498a8", marginTop: 12 }}>El cliente entra al panel con ese número y esta contraseña (válida para siempre{accesoResultado.regenerated ? " hasta que regeneres de nuevo" : ""}).</p>
               </div>
             );
           }
