@@ -55,12 +55,12 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ## 6. Descargas (Excel y por rango)
 
-- [ ] **Botón descargar en formato Excel** para:
-  - [ ] Cobros (con rango de fechas si aplica)
-  - [ ] Gastos (con rango de fechas si aplica)
-  - [ ] Garantías (y demás listados que apliquen)
-- [ ] **Por cliente:** Poder descargar los datos **de un cliente en específico** (sus gastos, cobros, garantías) con opción de rango de fechas.
-- [ ] **Selector de fechas + descargar:** En cada sección (cobros, gastos, garantías, etc.), un espacio para elegir **fechas (inicio/fin)** y un **botón "Descargar Excel"** que exporte solo las filas de ese rango (y filtros activos).
+- [x] **Botón descargar en formato Excel** para:
+  - [x] Cobros (con rango de fechas si aplica)
+  - [x] Gastos (con rango de fechas si aplica)
+  - [x] Garantías (y demás listados que apliquen)
+- [x] **Por cliente:** Poder descargar los datos **de un cliente en específico** (sus gastos, cobros, garantías) con opción de rango de fechas.
+- [x] **Selector de fechas + descargar:** En cada sección (cobros, gastos, garantías, etc.), un espacio para elegir **fechas (inicio/fin)** y un **botón "Descargar Excel"** que exporte solo las filas de ese rango (y filtros activos).
 
 ---
 

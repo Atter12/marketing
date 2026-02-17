@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
+import { exportToExcel } from "./exportExcel";
+import * as XLSX from "xlsx";
 import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
@@ -196,6 +198,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repPer, setRepPer] = useState(tm());
   const [repPerInicio, setRepPerInicio] = useState("");
   const [repPerFin, setRepPerFin] = useState("");
+  const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
+  const [expClientRango, setExpClientRango] = useState({ ini: "", fin: "" });
   const [menuOpen, setMenuOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -338,6 +342,47 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const delGar = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delGarantia(id); };
 
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
+
+  /* ═══ EXPORT EXCEL ═══ */
+  const expGastos = () => {
+    let list = [...sGastos].sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || ""));
+    if (expRango.gastos.ini) list = list.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= expRango.gastos.ini);
+    if (expRango.gastos.fin) list = list.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= expRango.gastos.fin);
+    const headers = ["Cliente", "Código", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", "Prepago"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return [c?.name || "—", g.codigo || "—", fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), fmt(g._pend), g._st, g.prepago ? "S" : "N"]; });
+    exportToExcel("gastos_" + td(), "Gastos", headers, rows);
+  };
+  const expCobros = () => {
+    let list = [...cobros];
+    if (expRango.cobros.ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= expRango.cobros.ini);
+    if (expRango.cobros.fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= expRango.cobros.fin);
+    const headers = ["Fecha", "Hora", "Cliente", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
+    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [fmtD(co.fecha), fmtT(co.hora) || "—", c?.name || "—", co.codigo || "—", g?.codigo || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmt(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
+    exportToExcel("cobros_" + td(), "Cobros", headers, rows);
+  };
+  const expGarantias = () => {
+    let list = [...garantias];
+    const headers = ["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); return [c?.name || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—"]; });
+    exportToExcel("garantias_" + td(), "Garantías", headers, rows);
+  };
+
+  const expClientData = (fechaIni, fechaFin) => {
+    let gs = [...curGastos], cos = [...curCobros];
+    if (fechaIni) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= fechaIni.slice(0, 7)); cos = cos.filter((c) => (c.fecha || "").slice(0, 10) >= fechaIni); }
+    if (fechaFin) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= fechaFin.slice(0, 7)); cos = cos.filter((c) => (c.fecha || "").slice(0, 10) <= fechaFin); }
+    const wb = XLSX.utils.book_new();
+    const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", "Prepago", "Código"];
+    const rG = gs.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), fmt(g._pend), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
+    const wsG = XLSX.utils.aoa_to_sheet([hG, ...rG]); XLSX.utils.book_append_sheet(wb, wsG, "Gastos");
+    const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
+    const rC = cos.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
+    const wsC = XLSX.utils.aoa_to_sheet([hC, ...rC]); XLSX.utils.book_append_sheet(wb, wsC, "Cobros");
+    const hGar = ["Tipo", "Descripción", "Valor", "Estado", "Cód. verificación"];
+    const rGar = curGars.map((g) => [g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—"]);
+    const wsGar = XLSX.utils.aoa_to_sheet([hGar, ...rGar]); XLSX.utils.book_append_sheet(wb, wsGar, "Garantías");
+    XLSX.writeFile(wb, `cliente_${(curC?.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_")}_${td()}.xlsx`);
+  };
 
   const goTo = (p, cid = null) => {
     setPage(p);
@@ -670,12 +715,22 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             isCliente={isCliente}
             updateClientAvatar={mutations.updateClientAvatar}
             uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
+            onExportClient={expClientData}
+            expClientRango={expClientRango}
+            setExpClientRango={setExpClientRango}
           />
         )}
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="month" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="month" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /></div>
+              <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
+              {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
+            </div>
+          </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
               <tbody>{sGastos.sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || "")).map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#0d9f6e" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastos.length && <Empty cols={isCliente ? 15 : 16} msg="Sin gastos registrados" />}</tbody></table></div>
@@ -684,7 +739,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
         {/* ══ COBROS (solo gerente; cliente no ve ni registra cobros) ══ */}
         {page === "cobros" && !isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2><Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn></div>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /></div>
+              <Btn variant="outline" size="sm" onClick={expCobros}><Download size={14} /> Descargar Excel</Btn>
+              <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
+            </div>
+          </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Hora", "Cliente", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
               <tbody>{cobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT(co.hora)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!cobros.length && <Empty cols={isCliente ? 10 : 12} msg="Sin cobros" />}</tbody></table></div>
@@ -693,7 +755,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}><h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>{!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}</div>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
+              {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
+            </div>
+          </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
               <tbody>{garantias.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!garantias.length && <Empty cols={7} msg="Sin garantías" />}</tbody></table></div>
