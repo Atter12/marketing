@@ -98,12 +98,12 @@ export function loginToEmail(value) {
   return trimmed;
 }
 
-/** Da acceso al panel: usa el teléfono del cliente (de la ficha). Primera vez genera contraseña; después no la cambia.
- *  Opciones: { regenerate: true } para generar una nueva contraseña si el cliente ya tenía acceso. */
+/** Da acceso al panel: envía un email al cliente (correo de la ficha) con un link mágico. Al abrirlo entra al panel.
+ *  Opciones: { regenerate: true } para reenviar el link; { redirect_to: url } para la URL de redirección tras el login. */
 export async function darAccesoCliente(clientId, options = {}) {
   if (!supabase || !clientId) throw new Error("Cliente no indicado");
   const { data, error } = await supabase.functions.invoke("dar-acceso-cliente", {
-    body: { client_id: clientId, regenerate: !!options.regenerate },
+    body: { client_id: clientId, regenerate: !!options.regenerate, redirect_to: options.redirect_to || null },
   });
   if (error) throw new Error(error.message || "Error al dar acceso");
   const body = data?.data ?? data;

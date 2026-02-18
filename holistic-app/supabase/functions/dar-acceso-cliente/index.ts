@@ -1,5 +1,5 @@
-// Edge Function: da acceso al cliente usando su número de teléfono (como está en la ficha)
-// y genera una contraseña aleatoria. Crea usuario en Auth con email sintético y vincula en clientes_acceso.
+// Edge Function: da acceso al cliente enviando un email con link mágico (magic link).
+// Usa el correo del cliente (ficha). Genera el link con Supabase Auth y lo envía por Resend.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -8,22 +8,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PHONE_SUFFIX = "@phone.holistic";
-
-function normalizePhone(phone: string): string {
-  const digits = String(phone || "").replace(/\D/g, "");
-  return digits;
+function getAppUrl(): string {
+  const url = Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "";
+  if (url) return url.replace(/\/$/, "");
+  return "https://www.marketingconholistic.com";
 }
 
-function syntheticEmail(phone: string): string {
-  return normalizePhone(phone) + PHONE_SUFFIX;
-}
-
-function generatePassword(length = 8): string {
-  const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < length; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
+async function sendEmailResend(to: string, actionLink: string, clientName: string): Promise<{ ok: boolean; error?: string }> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.warn("[dar-acceso-cliente] RESEND_API_KEY no configurado; no se envía email.");
+    return { ok: false, error: "RESEND_API_KEY no configurado" };
+  }
+  const from = Deno.env.get("RESEND_FROM") || "Holistic Marketing <onboarding@resend.dev>";
+  const subject = "Acceso a tu panel — Holistic Marketing";
+  const html = `
+    <p>Hola${clientName ? ` ${clientName}` : ""},</p>
+    <p>Te enviamos un enlace para entrar a tu panel de Holistic Marketing. Haz clic abajo (el link caduca en 1 hora):</p>
+    <p style="margin: 24px 0;"><a href="${actionLink}" style="display: inline-block; padding: 12px 24px; background: #1b2559; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Entrar al panel</a></p>
+    <p style="color: #666; font-size: 13px;">Si no pediste este acceso, puedes ignorar este correo.</p>
+  `;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = data?.message || data?.error || res.statusText;
+    console.error("[dar-acceso-cliente] Resend error:", err);
+    return { ok: false, error: err };
+  }
+  return { ok: true };
 }
 
 Deno.serve(async (req) => {
@@ -47,78 +66,100 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    const { data: clientRow, error: clientError } = await supabase.from("clientes").select("phones, name").eq("id", clientId).single();
+    const { data: clientRow, error: clientError } = await supabase.from("clientes").select("emails, name").eq("id", clientId).single();
     if (clientError || !clientRow) {
       return new Response(JSON.stringify({ error: "Cliente no encontrado" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const phones = Array.isArray(clientRow.phones) ? clientRow.phones : (clientRow.phones ? [clientRow.phones] : []);
-    const firstPhone = phones.map((p: string) => String(p || "").trim()).find((p: string) => p.length > 0);
-    if (!firstPhone) {
-      return new Response(JSON.stringify({ error: "El cliente no tiene teléfono registrado. Agrega al menos uno en Editar cliente." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const emails = Array.isArray(clientRow.emails) ? clientRow.emails : (clientRow.emails ? [clientRow.emails] : []);
+    const firstEmail = emails.map((e: string) => String(e || "").trim()).find((e: string) => e.length > 0 && e.includes("@"));
+    if (!firstEmail) {
+      return new Response(JSON.stringify({ error: "El cliente no tiene correo registrado. Agrega al menos uno en Editar cliente." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const normalized = normalizePhone(firstPhone);
-    if (normalized.length < 8) {
-      return new Response(JSON.stringify({ error: "El número de teléfono no es válido (mínimo 8 dígitos)." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const appUrl = body.redirect_to || getAppUrl();
+    const redirectTo = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
 
-    const emailAuth = syntheticEmail(firstPhone);
-    const password = generatePassword(8);
-
-    const { data: createData, error: createError } = await supabase.auth.admin.createUser({
-      email: emailAuth,
-      password,
-      email_confirm: true,
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: firstEmail,
+      options: { redirectTo },
     });
-    if (createError) {
-      const msg = createError.message || "";
-      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered") || createError.status === 422) {
-        const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
-        const existing = list?.users?.find((u) => u.email?.toLowerCase() === emailAuth);
-        if (existing) {
-          if (regenerate) {
-            const newPassword = generatePassword(8);
-            const { error: updateErr } = await supabase.auth.admin.updateUserById(existing.id, { password: newPassword });
-            if (updateErr) {
-              return new Response(JSON.stringify({ error: updateErr.message || "Error al actualizar la contraseña" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-            }
-            const { error: upsertErr } = await supabase.from("clientes_acceso").upsert(
-              { email: emailAuth, client_id: clientId, pin: newPassword },
-              { onConflict: "email" }
-            );
-            if (upsertErr) {
-              return new Response(JSON.stringify({ error: upsertErr.message || "Error al vincular" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-            }
+
+    if (linkError) {
+      const msg = linkError.message || "";
+      if (msg.toLowerCase().includes("already") || linkError.status === 422) {
+        if (regenerate) {
+          const { data: linkData2, error: linkError2 } = await supabase.auth.admin.generateLink({
+            type: "magiclink",
+            email: firstEmail,
+            options: { redirectTo },
+          });
+          if (linkError2) {
+            return new Response(JSON.stringify({ error: linkError2.message || "Error al generar el link" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          const actionLink = linkData2?.properties?.action_link;
+          if (!actionLink) {
+            return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          const { error: upsertErr } = await supabase.from("clientes_acceso").upsert(
+            { email: firstEmail, client_id: clientId, pin: null },
+            { onConflict: "email" }
+          );
+          if (upsertErr) {
+            return new Response(JSON.stringify({ error: upsertErr.message || "Error al vincular" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          const sendResult = await sendEmailResend(firstEmail, actionLink, clientRow.name);
+          if (sendResult.ok) {
             return new Response(
-              JSON.stringify({ ok: true, phone: firstPhone, password: newPassword }),
+              JSON.stringify({ ok: true, email: firstEmail, message: "Se reenvió el correo con el link de acceso.", alreadyHadAccess: true }),
               { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
           }
-          const { data: accesoRow } = await supabase.from("clientes_acceso").select("pin").eq("email", emailAuth).maybeSingle();
-          const storedPin = accesoRow?.pin ?? "";
           return new Response(
-            JSON.stringify({ ok: true, alreadyHadAccess: true, phone: firstPhone, password: storedPin }),
+            JSON.stringify({ ok: true, email: firstEmail, message: "Link generado. No se pudo enviar el email; copia el link y compártelo con el cliente.", link: actionLink, alreadyHadAccess: true }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-        return new Response(JSON.stringify({ error: "El número ya está registrado. Contacte soporte." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const { data: accesoRow } = await supabase.from("clientes_acceso").select("email").eq("email", firstEmail).maybeSingle();
+        if (accesoRow) {
+          return new Response(
+            JSON.stringify({ ok: true, alreadyHadAccess: true, email: firstEmail, message: "Este cliente ya tiene acceso. Usa «Reenviar link» para enviar de nuevo el correo." }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
       }
-      return new Response(JSON.stringify({ error: msg || "Error al crear el usuario" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    } else if (!createData?.user) {
-      return new Response(JSON.stringify({ error: "No se pudo crear el usuario" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: msg || "Error al generar el link" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const actionLink = linkData?.properties?.action_link;
+    if (!actionLink) {
+      return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { error: upsertError } = await supabase.from("clientes_acceso").upsert(
-      { email: emailAuth, client_id: clientId, pin: password },
+      { email: firstEmail, client_id: clientId, pin: null },
       { onConflict: "email" }
     );
     if (upsertError) {
       return new Response(JSON.stringify({ error: upsertError.message || "Error al vincular el acceso" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const sendResult = await sendEmailResend(firstEmail, actionLink, clientRow.name);
+    if (sendResult.ok) {
+      return new Response(
+        JSON.stringify({ ok: true, email: firstEmail, message: "Se envió un correo al cliente con el link de acceso. Debe abrirlo para entrar al panel." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ ok: true, phone: firstPhone, password }),
+      JSON.stringify({
+        ok: true,
+        email: firstEmail,
+        message: "Link generado. No se pudo enviar el email automáticamente; copia el link y compártelo con el cliente (por WhatsApp, etc.).",
+        link: actionLink,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

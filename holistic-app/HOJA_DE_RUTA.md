@@ -11,17 +11,17 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ---
 
-## 2. Dar acceso al cliente (Correo + PIN) — recomendado
+## 2. Dar acceso al cliente (email + link mágico)
 
-**Opción 1 – Correo + PIN (recomendada y más segura):**
+**Flujo actual – Email con link (magic link):**
 
 - [x] En la **ficha del cliente**, el gerente tiene un botón/acción **"Dar acceso"**.
-- [x] Al hacerlo, el gerente ingresa **correo del cliente** y un **PIN** (ej. 4–12 caracteres).
-- [x] Por detrás: se crea la cuenta (correo + PIN como contraseña) y se vincula ese correo al cliente en `clientes_acceso`.
-- [x] El cliente entra a la web con **ese correo + PIN** (el PIN es la contraseña) y ve solo sus reportes.
-- [x] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; el “PIN” es solo la contraseña que el gerente les da.
+- [x] Al hacerlo, el sistema usa el **correo del cliente** (el primero de la ficha). Si no tiene correo, se pide agregarlo en Editar cliente.
+- [x] Por detrás: se genera un **link mágico** (Supabase Auth) y se **envía por email** al cliente (vía Resend u otro proveedor).
+- [x] El cliente **abre el link desde su correo** y entra directo al panel (dashboard), sin escribir contraseña.
+- [x] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; experiencia simple (un clic desde el email); el gerente no comparte PIN ni contraseña.
 
-*(Implementado: Edge Function `dar-acceso-cliente`; botón en ficha y en lista de clientes; opción “Dar acceso” al crear nuevo cliente.)*
+*(Implementado: Edge Function `dar-acceso-cliente` con magic link + envío de email; botón en ficha y en lista; cliente debe tener al menos un email en la ficha. Opción "Reenviar link" si ya tenía acceso.)*
 
 ---
 
@@ -82,7 +82,7 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 | Prioridad | Tema                    | Tareas clave |
 |----------|-------------------------|--------------|
-| Alta     | Dar acceso (Correo+PIN) | Botón "Dar acceso" en ficha cliente; correo + PIN; crear cuenta y vincular en clientes_acceso |
+| Alta     | Dar acceso (email + link) | Botón "Dar acceso"; envío de email con link mágico al correo del cliente; vincular en clientes_acceso |
 | Alta     | Fechas y períodos       | dd/mm/aaaa, mm/aaaa, calendarios, día en gastos |
 | Alta     | Códigos                 | Gastos y verificación automáticos; columna código cobro; mostrar códigos en garantías |
 | Alta     | Cobros / prepago        | Cobro para todos; S/N prepago; "Añadir cobro" cuando prepago; texto claro en UI |

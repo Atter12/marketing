@@ -341,7 +341,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   /* ═══ CRUD (Supabase mutations) ═══ */
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
-  const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstPhone = (client?.phones || []).filter(Boolean)[0]; if (!firstPhone) { alert("Este cliente no tiene teléfono. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const res = await darAccesoCliente(editId, { regenerate }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
+  const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstEmail = (client?.emails || []).filter(Boolean)[0]; if (!firstEmail || !String(firstEmail).includes("@")) { alert("Este cliente no tiene correo. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const redirectTo = typeof window !== "undefined" ? window.location.origin : ""; const res = await darAccesoCliente(editId, { regenerate, redirect_to: redirectTo }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
   const saveGasto = async () => { if (!gf.clientId || !parseFloat(gf.gasto)) return alert("Completa cliente y gasto"); const periodo = gf.mes || (gf.fechaMovimiento ? gf.fechaMovimiento.slice(0, 7) : tm()); const g = { id: editId || undefined, clientId: gf.clientId, fechaMovimiento: gf.fechaMovimiento || periodo + "-15", mes: periodo, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
@@ -845,34 +845,38 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
       </Mdl>
 
-      <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={!accesoResultado ? <><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={submitDarAcceso} disabled={savingAcceso}>{savingAcceso ? "Generando…" : "Generar acceso"}</Btn></> : <><Btn onClick={closeMdl}>Cerrar</Btn></>}>
+      <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={!accesoResultado ? <><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={() => submitDarAcceso(false)} disabled={savingAcceso}>{savingAcceso ? "Enviando…" : "Enviar link por email"}</Btn></> : <><Btn variant="outline" onClick={() => { setAccesoResultado(null); }} style={{ display: accesoResultado?.link ? "inline-flex" : "none" }}>Enviar otro</Btn><Btn onClick={closeMdl}>Cerrar</Btn></>}>
         {editId && (() => {
           const ac = clients.find((c) => c.id === editId);
-          const firstPhone = (ac?.phones || []).filter(Boolean)[0];
+          const firstEmail = (ac?.emails || []).filter(Boolean)[0];
           if (!ac) return null;
           if (accesoResultado) {
             return (
               <div style={{ padding: "16px 0" }}>
-                <p style={{ fontSize: 13, color: "#0d9f6e", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.alreadyHadAccess ? "Datos de acceso del cliente:" : "Acceso generado. Comparte con el cliente:"}</p>
-                <div style={{ background: "#f4f5f7", borderRadius: 10, padding: 16, fontFamily: "'IBM Plex Mono', monospace", fontSize: 14 }}>
-                  <div style={{ marginBottom: 8 }}><span style={{ color: "#5f6577", fontSize: 12 }}>Número (usuario):</span> <strong style={{ color: "#1a1d26" }}>{accesoResultado.phone}</strong></div>
-                  <div><span style={{ color: "#5f6577", fontSize: 12 }}>Contraseña:</span> <strong style={{ color: "#1b2559", letterSpacing: 1 }}>{accesoResultado.password || "—"}</strong></div>
+                <p style={{ fontSize: 13, color: "#0d9f6e", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.message}</p>
+                <div style={{ background: "#f4f5f7", borderRadius: 10, padding: 16, fontSize: 14 }}>
+                  <div style={{ marginBottom: 8 }}><span style={{ color: "#5f6577", fontSize: 12 }}>Correo:</span> <strong style={{ color: "#1a1d26" }}>{accesoResultado.email}</strong></div>
+                  {accesoResultado.link && (
+                    <div style={{ marginTop: 12 }}>
+                      <span style={{ fontSize: 12, color: "#5f6577", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
+                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "monospace", background: "#fff" }} />
+                    </div>
+                  )}
                 </div>
-                <p style={{ fontSize: 12, color: "#9498a8", marginTop: 12 }}>El cliente entra siempre con ese número y esta contraseña.</p>
-                {accesoResultado.alreadyHadAccess && (
-                  <p style={{ fontSize: 11, color: "#9498a8", marginTop: 10 }}>Si el cliente olvidó la contraseña: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Regenerar contraseña</button></p>
+                {accesoResultado.alreadyHadAccess && !accesoResultado.link && (
+                  <p style={{ fontSize: 11, color: "#9498a8", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
                 )}
               </div>
             );
           }
           return (
             <>
-              <p style={{ marginBottom: 14, fontSize: 13, color: "#5f6577" }}>Se usará el <strong>número registrado</strong> del cliente y se generará una contraseña automática.</p>
+              <p style={{ marginBottom: 14, fontSize: 13, color: "#5f6577" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
               <div style={{ background: "#eef0f8", borderRadius: 10, padding: 12, marginBottom: 14 }}>
-                <span style={{ fontSize: 12, color: "#5f6577" }}>Número que se usará: </span>
-                <strong style={{ color: "#1b2559" }}>{firstPhone || "—"}</strong>
+                <span style={{ fontSize: 12, color: "#5f6577" }}>Correo al que se enviará: </span>
+                <strong style={{ color: "#1b2559" }}>{firstEmail || "—"}</strong>
               </div>
-              {!firstPhone && <p style={{ fontSize: 12, color: "#dc2640", marginBottom: 8 }}>Este cliente no tiene teléfono. Agrega uno en Editar cliente.</p>}
+              {(!firstEmail || !String(firstEmail).includes("@")) && <p style={{ fontSize: 12, color: "#dc2640", marginBottom: 8 }}>Este cliente no tiene correo. Agrega uno en Editar cliente.</p>}
             </>
           );
         })()}
