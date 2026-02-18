@@ -1,17 +1,16 @@
 # dar-acceso-cliente
 
-Envía al cliente un **email con link mágico** (magic link). El cliente abre el link y entra directo al panel sin contraseña.
+Envía al cliente un **email con link** para entrar al panel. **No hace falta API key**: Supabase envía el correo con la plantilla "Invite".
 
-- Usa el **primer correo** del cliente en la ficha (`clientes.emails`).
-- Genera el link con `auth.admin.generateLink({ type: 'magiclink', email })`.
-- Envía el email con **Resend** (opcional). Si no está configurado Resend, la función devuelve el link para que el gerente lo copie y lo comparta.
+- **Primera vez (usuario nuevo):** se usa `inviteUserByEmail` → Supabase envía el email de invitación.
+- **Si el cliente ya tenía acceso:** Supabase no reenvía el invite; la función genera un nuevo magic link y lo devuelve para que el gerente lo copie y comparta (p. ej. por WhatsApp).
 
-## Variables de entorno (Supabase Edge Function)
+## Variables de entorno (opcionales)
 
-| Variable | Obligatorio | Descripción |
-|----------|-------------|-------------|
-| `RESEND_API_KEY` | No* | API key de [Resend](https://resend.com). Sin ella no se envía email y se devuelve el link en la respuesta. |
-| `RESEND_FROM` | No | Remitente del email (ej. `Holistic <noreply@tudominio.com>`). Por defecto `onboarding@resend.dev`. |
-| `APP_URL` o `PUBLIC_APP_URL` | No | URL de la app para el redirect tras el login (ej. `https://www.marketingconholistic.com`). Si no se define, el frontend puede enviar `redirect_to` en el body. |
+| Variable | Descripción |
+|----------|-------------|
+| `APP_URL` o `PUBLIC_APP_URL` | URL de la app para el redirect tras el login (ej. `https://www.marketingconholistic.com/credito`). Si no se define, se usa esa URL por defecto. |
 
-En el **Dashboard de Supabase → Authentication → URL Configuration**, asegura que **Redirect URLs** incluya la URL de tu app para que el magic link redirija bien.
+En **Authentication → URL Configuration**, la URL de la app debe estar en **Redirect URLs**.
+
+Puedes personalizar el texto del email en **Authentication → Email Templates → Invite**.
