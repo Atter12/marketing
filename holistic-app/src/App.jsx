@@ -810,7 +810,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
         <Inp label="Cliente *" type="select" value={gf.clientId} onChange={(e) => setGf({ ...gf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Fecha de movimiento * (dd/mm/aaaa)" type="date" value={gf.fechaMovimiento} onChange={(e) => { const v = e.target.value; setGf({ ...gf, fechaMovimiento: v, mes: v ? v.slice(0, 7) : gf.mes }); }} /><Inp label="Período (mm/aaaa)" type="month" value={gf.mes} onChange={(e) => { const v = e.target.value; setGf({ ...gf, mes: v, fechaMovimiento: v ? v + "-15" : gf.fechaMovimiento }); }} /></div>
+        <Inp label="Período (mes y año) *" type="select" value={gf.mes} onChange={(e) => { const v = e.target.value; setGf({ ...gf, mes: v, fechaMovimiento: v ? v + "-15" : gf.fechaMovimiento }); }}>
+          <option value="">Seleccionar...</option>
+          {[...getMonths(24)].reverse().map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+        </Inp>
         <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#1b2559" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#5f6577", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
         <Inp label="Gasto en Ads ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Inversión en TikTok Ads (u otra red)" />

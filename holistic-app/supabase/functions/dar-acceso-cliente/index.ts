@@ -113,11 +113,14 @@ Deno.serve(async (req) => {
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+      const resendHint = /testing|resend\.dev|domain|verify/i.test(sendResult.error || "")
+        ? " Con el dominio de prueba (onboarding@resend.dev) Resend solo permite enviar al correo de tu cuenta. Para enviar a clientes: verifica un dominio en resend.com y en Supabase añade el secret RESEND_FROM (ej. Holistic <noreply@tudominio.com>)."
+        : "";
       return new Response(
         JSON.stringify({
           ok: true,
           email: firstEmail,
-          message: "Link generado. Para que el correo se envíe solo a clientes que ya tenían acceso, configura RESEND_API_KEY en la Edge Function. Mientras tanto, copia el link de abajo y compártelo con el cliente.",
+          message: "No se pudo enviar el correo automáticamente (" + (sendResult.error || "error de Resend") + ")." + resendHint + " Copia el link de abajo y compártelo con el cliente (WhatsApp, etc.).",
           link: actionLink,
           alreadyHadAccess: true,
         }),
