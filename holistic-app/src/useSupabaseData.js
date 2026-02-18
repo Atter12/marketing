@@ -197,9 +197,9 @@ export function useSupabaseData(role, clientId) {
     },
     saveGarantia: async (payload) => {
       if (role !== "gerente") return;
-      const { id, clientId, tipo, desc, valor, estado } = payload;
+      const { id, clientId, gastoId, tipo, desc, valor, estado } = payload;
       const genCodigoVerif = () => "GV-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
-      const row = { client_id: clientId, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente" };
+      const row = { client_id: clientId, gasto_id: gastoId || null, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente" };
       if (id) {
         const { error: e } = await supabase.from("garantias").update(row).eq("id", id);
         if (e) throw e;
