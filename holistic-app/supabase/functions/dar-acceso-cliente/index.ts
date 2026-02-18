@@ -1,6 +1,5 @@
 // Edge Function: da acceso al cliente enviando un email con link (magic link).
-// Usa el correo del cliente (ficha). Envía el email con Supabase (inviteUserByEmail) — sin API key externa.
-// Si el usuario ya existe, genera un nuevo link y lo devuelve para que el gerente lo copie y comparta.
+// Nuevos: Supabase inviteUserByEmail (sin API key). Ya existentes: generateLink + envío por Resend si hay RESEND_API_KEY.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -13,6 +12,27 @@ function getAppUrl(): string {
   const url = Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "";
   if (url) return url.replace(/\/$/, "");
   return "https://www.marketingconholistic.com/credito";
+}
+
+async function sendEmailResend(to: string, actionLink: string, clientName: string): Promise<{ ok: boolean; error?: string }> {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) return { ok: false, error: "RESEND_API_KEY no configurado" };
+  const from = Deno.env.get("RESEND_FROM") || "Holistic Marketing <onboarding@resend.dev>";
+  const subject = "Acceso a tu panel — Holistic Marketing";
+  const html = `
+    <p>Hola${clientName ? ` ${clientName}` : ""},</p>
+    <p>Te enviamos un nuevo enlace para entrar a tu panel. Haz clic abajo (el link caduca en 1 hora):</p>
+    <p style="margin: 24px 0;"><a href="${actionLink}" style="display: inline-block; padding: 12px 24px; background: #1b2559; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600;">Entrar al panel</a></p>
+    <p style="color: #666; font-size: 13px;">Si no pediste este acceso, puedes ignorar este correo.</p>
+  `;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) return { ok: false, error: data?.message || data?.error || res.statusText };
+  return { ok: true };
 }
 
 Deno.serve(async (req) => {
@@ -73,7 +93,7 @@ Deno.serve(async (req) => {
     const msg = inviteError.message || "";
     const alreadyExists = /already|registered|duplicate|exists|422/i.test(msg);
 
-    if (alreadyExists && (regenerate || true)) {
+    if (alreadyExists) {
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: "magiclink",
         email: firstEmail,
@@ -86,11 +106,18 @@ Deno.serve(async (req) => {
       if (!actionLink) {
         return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
+      const sendResult = await sendEmailResend(firstEmail, actionLink, clientRow.name);
+      if (sendResult.ok) {
+        return new Response(
+          JSON.stringify({ ok: true, email: firstEmail, message: "Se reenvió el correo al cliente con el nuevo link de acceso. Debe abrirlo para entrar al panel.", alreadyHadAccess: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
         JSON.stringify({
           ok: true,
           email: firstEmail,
-          message: "Este cliente ya tenía acceso. Supabase no reenvía el email automáticamente; copia el link de abajo y compártelo con el cliente (WhatsApp, etc.).",
+          message: "Link generado. Para que el correo se envíe solo a clientes que ya tenían acceso, configura RESEND_API_KEY en la Edge Function. Mientras tanto, copia el link de abajo y compártelo con el cliente.",
           link: actionLink,
           alreadyHadAccess: true,
         }),
