@@ -307,6 +307,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     };
   }, [curCl, sGastos, cobros, gastos, months]);
 
+  /* Gastos filtrados por fecha de operación (para tabla y export) */
+  const gastosFiltrados = useMemo(() => {
+    let list = [...sGastos];
+    const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
+    if (expRango.gastos.ini) list = list.filter((g) => fOp(g) >= expRango.gastos.ini);
+    if (expRango.gastos.fin) list = list.filter((g) => fOp(g) <= expRango.gastos.fin);
+    return list.sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || ""));
+  }, [sGastos, expRango.gastos.ini, expRango.gastos.fin]);
+
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
   const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); };
@@ -414,15 +423,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
-
-  /* Gastos filtrados por fecha de operación (para tabla y export) */
-  const gastosFiltrados = useMemo(() => {
-    let list = [...sGastos];
-    const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
-    if (expRango.gastos.ini) list = list.filter((g) => fOp(g) >= expRango.gastos.ini);
-    if (expRango.gastos.fin) list = list.filter((g) => fOp(g) <= expRango.gastos.fin);
-    return list.sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || ""));
-  }, [sGastos, expRango.gastos.ini, expRango.gastos.fin]);
 
   /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
   const nav = isCliente
