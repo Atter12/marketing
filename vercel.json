@@ -123,6 +123,14 @@
       "dest": "/credito.html"
     },
     {
+      "src": "/video",
+      "dest": "/video-app/video.html"
+    },
+    {
+      "src": "/video.html",
+      "dest": "/video-app/video.html"
+    },
+    {
       "src": "/backup-dashboard",
       "dest": "/backup-dashboard/index.html"
     },

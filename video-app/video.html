@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VideoForge — Dashboard | Holistic Marketing</title>
+<meta name="description" content="Dashboard de videos: gestión de clientes, productos, editores y portfolio. VideoForge por Holistic Marketing.">
+<meta property="og:title" content="VideoForge — Dashboard | Holistic Marketing">
+<meta property="og:description" content="Dashboard de videos: gestión de clientes, productos, editores y portfolio.">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://www.marketingconholistic.com/video">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --side:#1E1B15;--sac:rgba(249,115,22,.25);--stx:#A89E8C;--stxa:#FFF;--sbdr:rgba(255,255,255,.06);
+  --bg:#FFF;--bgp:#FEFCF9;--bgh:#FFF7ED;--bgel:#FFF7ED;
+  --pri:#F97316;--prih:#EA580C;--pril:#FFF0E1;--prll:#FFFBF5;
+  --tx:#2D2518;--tx2:#8A7E6B;--tx3:#B5A998;
+  --bdr:#F0E6D9;--bdrl:#FFF7ED;
+  --dan:#DC2626;--danbg:#FEF2F2;--ok:#16A34A;--okbg:#F0FDF4;--wrn:#D97706;--wrnbg:#FFFBEB;--pur:#9333EA;--purbg:#FAF5FF;
+  --r:10px;--rl:14px;--sw:240px;--th:58px;
+  --f:'Plus Jakarta Sans',-apple-system,sans-serif;
+  --sh:0 4px 12px rgba(45,37,24,.05);--shmd:0 8px 24px rgba(45,37,24,.08)
+}
+body{font-family:var(--f);background:var(--bgp);color:var(--tx);font-size:13px;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:#D4C9B8;border-radius:3px}
+.side{position:fixed;left:0;top:0;bottom:0;width:var(--sw);background:linear-gradient(180deg,#1E1B15 0%,#151209 100%);display:flex;flex-direction:column;z-index:100}
+.sbr{height:var(--th);padding:0 20px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--sbdr)}
+.sbr-i{width:30px;height:30px;background:var(--pri);border-radius:8px;display:flex;align-items:center;justify-content:center}.sbr-i svg{width:14px;height:14px;fill:#fff}
+.sbr h1{font-size:15px;font-weight:800;color:#fff}.sbr h1 span{color:var(--pri)}
+.snv{flex:1;padding:14px 10px;overflow-y:auto}
+.sng{margin-bottom:22px}.sng-t{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--stx);opacity:.45;padding:0 14px 8px}
+.sni{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:500;color:var(--stx);transition:all .15s;margin-bottom:2px}
+.sni:hover{background:rgba(255,255,255,.06);color:#D4C4A8}.sni.act{background:var(--sac);color:var(--pri);font-weight:600}
+.sni svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.snb{margin-left:auto;background:var(--pri);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px}
+.sft{padding:12px 10px;border-top:1px solid var(--sbdr)}
+.sui{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer}.sui:hover{background:rgba(255,255,255,.06)}
+.sua{width:32px;height:32px;border-radius:10px;background:var(--pri);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff}
+.sun{font-size:12px;font-weight:600;color:#fff}.sur{font-size:10px;color:var(--stx)}
+.main{margin-left:var(--sw);min-height:100vh}
+.top{position:sticky;top:0;height:var(--th);background:rgba(254,252,249,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);padding:0 28px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+.top h2{font-size:15px;font-weight:800}.tsb{font-size:11px;color:var(--tx3);margin-left:10px;font-weight:500}.ta{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:600;font-family:var(--f);cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn-p{background:var(--pri);color:#fff}.btn-p:hover{background:var(--prih)}
+.btn-s{background:var(--bg);color:var(--tx);border:1px solid var(--bdr);box-shadow:var(--sh)}.btn-s:hover{background:var(--bgh)}
+.btn-g{background:transparent;color:var(--tx2);padding:6px 8px;border-radius:8px}.btn-g:hover{background:var(--bgh);color:var(--tx)}
+.btn-d{background:transparent;color:var(--dan)}.btn-d:hover{background:var(--danbg)}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:8px}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cnt{padding:24px 28px}.page{display:none}.page.act{display:block;animation:fu .25s ease}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--bg);border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden}
+.chd{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bdrl);flex-wrap:wrap;gap:8px}.chd h3{font-size:13px;font-weight:700}
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.sc{background:var(--bg);border-radius:var(--rl);padding:20px;box-shadow:var(--sh);position:relative;overflow:hidden}
+.sc::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:4px 0 0 4px}
+.sc.c1::after{background:var(--pri)}.sc.c2::after{background:var(--pur)}.sc.c3::after{background:var(--wrn)}.sc.c4::after{background:var(--ok)}
+.slb{font-size:11px;color:var(--tx3);font-weight:600;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.svl{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1}.ssu{font-size:10px;font-weight:500;margin-top:8px;color:var(--tx3)}
+table{width:100%;border-collapse:collapse}
+thead th{text-align:left;padding:10px 16px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--tx3);background:var(--bgel);border-bottom:1px solid var(--bdr)}
+tbody td{padding:11px 16px;font-size:12px;border-bottom:1px solid var(--bdrl);vertical-align:middle}tbody tr:last-child td{border-bottom:none}tbody tr:hover{background:var(--bgp)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-ok{background:var(--okbg);color:var(--ok)}.b-bad{background:var(--danbg);color:var(--dan)}.b-pur{background:var(--purbg);color:var(--pur)}.b-n{background:var(--bgel);color:var(--tx3)}
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;background:var(--bgel);color:var(--tx2)}
+.tag-type{background:var(--pril);color:var(--pri)}
+.tag-pub{background:var(--okbg);color:var(--ok)}
+.pb{height:5px;background:var(--bdrl);border-radius:3px;overflow:hidden;width:65px;display:inline-block;vertical-align:middle;margin-right:6px}.pf{height:100%;border-radius:3px;transition:width .5s}
+.mo{display:none;position:fixed;inset:0;background:rgba(30,27,21,.55);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}.mo.act{display:flex;animation:fu .15s ease}
+.mdl{background:var(--bg);border-radius:16px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 32px 64px rgba(0,0,0,.18)}
+.mdh{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--bdr)}.mdh h3{font-size:15px;font-weight:700}
+.mdc{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;color:var(--tx3);background:transparent;border:none;font-size:16px;font-family:var(--f)}.mdc:hover{background:var(--bgh)}
+.mdb{padding:22px}.mdf{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px;border-top:1px solid var(--bdr);background:var(--bgel);border-radius:0 0 16px 16px}
+.fg{margin-bottom:16px}.fl{display:block;font-size:12px;font-weight:600;color:var(--tx);margin-bottom:5px}
+.fi,.fs2,.fta{width:100%;padding:9px 13px;background:var(--bgp);border:1px solid var(--bdr);border-radius:10px;color:var(--tx);font-family:var(--f);font-size:12px;outline:none;transition:.15s}
+.fi:focus,.fs2:focus,.fta:focus{border-color:var(--pri);box-shadow:0 0 0 4px rgba(249,115,22,.1);background:var(--bg)}
+.fi::placeholder,.fta::placeholder{color:var(--tx3)}
+.fs2{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23B5A998' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:28px}
+.fta{min-height:68px;resize:vertical}.fr{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.uz{border:2px dashed var(--bdr);border-radius:var(--rl);padding:32px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);position:relative}
+.uz:hover,.uz.over{border-color:var(--pri);background:var(--prll)}
+.uz input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.uzi{width:52px;height:52px;border-radius:14px;background:var(--pril);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.uzi svg{width:24px;height:24px;stroke:var(--pri);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.uzt{font-size:14px;font-weight:700;margin-bottom:4px}.uzs{font-size:11px;color:var(--tx3)}
+.uzb{display:inline-flex;padding:8px 18px;border-radius:10px;font-size:12px;font-weight:700;background:var(--pri);color:#fff;border:none;cursor:pointer;margin-top:14px;font-family:var(--f)}.uzb:hover{background:var(--prih)}
+.fpv{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bgel);border:1px solid var(--bdr);border-radius:var(--r);margin-top:12px}
+.fpi{width:38px;height:38px;border-radius:10px;background:var(--pril);display:flex;align-items:center;justify-content:center;flex-shrink:0}.fpi svg{width:16px;height:16px;stroke:var(--pri);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fpn{font-size:12px;font-weight:700}.fps{font-size:10px;color:var(--tx3)}
+.fpr{margin-left:auto;cursor:pointer;color:var(--tx3);background:none;border:none;font-size:15px;font-family:var(--f)}.fpr:hover{color:var(--dan)}
+.vgr{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:14px}
+.vcd{background:var(--bg);border-radius:var(--rl);overflow:hidden;box-shadow:var(--sh);transition:.15s}.vcd:hover{box-shadow:var(--shmd);transform:translateY(-1px)}
+.vth{height:145px;background:linear-gradient(135deg,var(--pril) 0%,var(--bgp) 100%);display:flex;align-items:center;justify-content:center;position:relative}
+.vpli{width:40px;height:40px;border-radius:50%;background:var(--pri);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(249,115,22,.3)}.vpli svg{width:16px;height:16px;fill:#fff;margin-left:2px}
+.vdr{position:absolute;bottom:8px;right:8px;background:rgba(30,27,21,.8);padding:2px 7px;border-radius:6px;font-size:10px;font-weight:600;color:#fff}
+.vcb2{padding:12px 14px}.vtl{font-weight:700;font-size:12px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vcmx{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}.vcin{font-size:11px;color:var(--tx3)}
+.vcft{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--bdrl)}
+.egr{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.ecd{background:var(--bg);border-radius:var(--rl);padding:20px;text-align:center;box-shadow:var(--sh);transition:.15s}.ecd:hover{box-shadow:var(--shmd)}
+.eav{width:46px;height:46px;border-radius:12px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#fff}
+.enm{font-weight:700;font-size:13px;margin-bottom:2px}.esp3{font-size:11px;color:var(--tx3);margin-bottom:14px}
+.es3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.esi2{padding:8px 4px;background:var(--bgp);border-radius:8px}.esv2{font-size:16px;font-weight:800}.esl2{font-size:9px;color:var(--tx3);margin-top:2px}
+.cu2{display:flex;align-items:center;gap:9px}.cav2{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.tabs2{display:flex;gap:2px;background:var(--bgel);padding:3px;border-radius:10px}.tab2{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;color:var(--tx3);background:transparent;border:none;font-family:var(--f)}.tab2.act{background:var(--bg);color:var(--tx);box-shadow:var(--sh)}
+.flt2{padding:6px 26px 6px 10px;font-size:11px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg);color:var(--tx);font-family:var(--f);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' fill='%23B5A998' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;outline:none;box-shadow:var(--sh)}
+.shd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}.shd p{font-size:12px;color:var(--tx2)}
+.emp2{text-align:center;padding:44px 20px;color:var(--tx3)}.empi{width:48px;height:48px;border-radius:14px;background:var(--bgel);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px}
+.emp2 h3{font-size:13px;font-weight:700;color:var(--tx2);margin-bottom:4px}.emp2 p{font-size:12px}
+.tc0{position:fixed;top:16px;right:16px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.tst{background:var(--bg);border-radius:12px;padding:11px 16px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;box-shadow:var(--shmd);animation:si .2s ease,fo .2s ease 2.8s}
+@keyframes si{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes fo{to{opacity:0}}
+.tgl{position:relative;width:36px;height:20px;display:inline-block;vertical-align:middle;cursor:pointer}
+.tgl input{opacity:0;width:0;height:0}
+.tgl span{position:absolute;inset:0;background:var(--bdr);border-radius:20px;transition:.2s}
+.tgl span::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.tgl input:checked+span{background:var(--ok)}.tgl input:checked+span::before{transform:translateX(16px)}
+.pub-wrap{display:none;min-height:100vh;background:var(--bgp)}
+.pub-head{background:var(--bg);border-bottom:1px solid var(--bdr);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.pub-brand{display:flex;align-items:center;gap:10px}.pub-brand h1{font-size:18px;font-weight:800;color:var(--tx)}.pub-brand h1 span{color:var(--pri)}
+.pub-brand-i{width:34px;height:34px;background:var(--pri);border-radius:10px;display:flex;align-items:center;justify-content:center}.pub-brand-i svg{width:16px;height:16px;fill:#fff}
+.pub-sub{font-size:12px;color:var(--tx3);font-weight:500}
+.pub-cnt{padding:28px 32px;max-width:1200px;margin:0 auto}
+.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.pub-card{background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:var(--sh);transition:.2s}.pub-card:hover{box-shadow:var(--shmd);transform:translateY(-2px)}
+.pub-thumb{height:160px;background:linear-gradient(135deg,var(--pril) 0%,var(--bgp) 100%);display:flex;align-items:center;justify-content:center;position:relative}
+.pub-play{width:48px;height:48px;border-radius:50%;background:var(--pri);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(249,115,22,.3)}.pub-play svg{width:18px;height:18px;fill:#fff;margin-left:2px}
+.pub-dur{position:absolute;bottom:10px;right:10px;background:rgba(30,27,21,.8);padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;color:#fff}
+.pub-tags{position:absolute;top:10px;left:10px;display:flex;gap:4px}
+.pub-body{padding:16px 18px}
+.pub-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.pub-meta{font-size:11px;color:var(--tx3);margin-bottom:8px}
+.pub-chips{display:flex;flex-wrap:wrap;gap:4px}
+.pub-empty{text-align:center;padding:80px 20px}.pub-empty h3{font-size:18px;font-weight:700;color:var(--tx2);margin-bottom:6px}.pub-empty p{font-size:13px;color:var(--tx3)}
+@media(max-width:1024px){.sg{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.side{display:none}.main{margin-left:0}.sg{grid-template-columns:1fr}.fr{grid-template-columns:1fr}.cnt{padding:16px}.pub-cnt{padding:16px}.pub-head{padding:16px}}
+</style>
+</head>
+<body>
+<div class="pub-wrap" id="pubView">
+  <div class="pub-head"><div class="pub-brand"><div class="pub-brand-i"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><h1>Video<span>Forge</span></h1></div><div class="pub-sub">Portfolio de Videos</div></div>
+  <div class="pub-cnt"><div class="pub-grid" id="pubGrid"></div><div class="pub-empty" id="pubEmpty" style="display:none"><div class="empi" style="width:56px;height:56px;font-size:28px;margin:0 auto 14px">🎬</div><h3>Sin videos publicados</h3><p>Aún no hay contenido disponible</p></div></div>
+</div>
+<aside class="side" id="adminSide">
+  <div class="sbr"><div class="sbr-i"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><h1>Video<span>Forge</span></h1></div>
+  <nav class="snv">
+    <div class="sng"><div class="sng-t">Principal</div>
+      <div class="sni act" data-page="dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</div>
+      <div class="sni" data-page="videos"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg>Videos<span class="snb" id="vc0">0</span></div>
+      <div class="sni" data-page="upload"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Subir Video</div>
+    </div>
+    <div class="sng"><div class="sng-t">Gestión</div>
+      <div class="sni" data-page="clients"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Clientes</div>
+      <div class="sni" data-page="products"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>Productos</div>
+      <div class="sni" data-page="editors"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>Editores</div>
+      <div class="sni" data-page="deliveries"><svg viewBox="0 0 24 24"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Entregas</div>
+    </div>
+    <div class="sng"><div class="sng-t">Publicar</div>
+      <div class="sni" data-page="portfolio"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Portfolio Público</div>
+    </div>
+    <div class="sng"><div class="sng-t">Reportes</div>
+      <div class="sni" data-page="analytics"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Analytics</div>
+    </div>
+  </nav>
+  <div class="sft"><div class="sui"><div class="sua">SA</div><div><div class="sun">Super Admin</div><div class="sur">Administrador</div></div></div></div>
+</aside>
+<main class="main" id="adminMain">
+  <div class="top"><div style="display:flex;align-items:center"><h2 id="pt">Dashboard</h2><span class="tsb" id="ps">Resumen general</span></div>
+    <div class="ta"><button class="btn btn-s btn-sm" onclick="exp()"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar</button><button class="btn btn-p btn-sm" onclick="om('um')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Video</button></div>
+  </div>
+  <div class="cnt">
+    <div class="page act" id="page-dashboard">
+      <div class="sg">
+        <div class="sc c1"><div class="slb">Videos Totales</div><div class="svl" id="s1">0</div><div class="ssu">registrados</div></div>
+        <div class="sc c2"><div class="slb">Muy Buen CPA</div><div class="svl" id="s2">0</div><div class="ssu">top winners</div></div>
+        <div class="sc c3"><div class="slb">Sin Evaluar</div><div class="svl" id="s3">0</div><div class="ssu">pendientes</div></div>
+        <div class="sc c4"><div class="slb">Win Rate</div><div class="svl" id="s5">0%</div><div class="ssu">global</div></div>
+      </div>
+      <div class="card"><div class="chd"><h3>Videos Recientes</h3><button class="btn btn-g btn-sm" onclick="nav('videos')">Ver todos →</button></div>
+      <table><thead><tr><th>Video</th><th>Cliente</th><th>Producto</th><th>Tipo</th><th>Plataforma</th><th>CPA</th><th>Público</th></tr></thead><tbody id="rb"></tbody></table>
+      <div class="emp2" id="de"><div class="empi">🎬</div><h3>Sin videos aún</h3><p>Sube tu primer video</p></div></div>
+    </div>
+    <div class="page" id="page-videos">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <div class="tabs2"><button class="tab2 act" onclick="svw('g',this)">Tarjetas</button><button class="tab2" onclick="svw('t',this)">Tabla</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><select class="flt2" id="fC" onchange="rv()"><option value="">Todos clientes</option></select><select class="flt2" id="fE" onchange="rv()"><option value="">Todos editores</option></select><select class="flt2" id="fP" onchange="rv()"><option value="">Todos CPA</option><option value="muy_bueno">Muy Bueno</option><option value="bueno">Bueno</option><option value="malo">Malo</option><option value="pendiente">Sin evaluar</option></select><select class="flt2" id="fT" onchange="rv()"><option value="">Todos tipos</option></select></div>
+      </div>
+      <div id="vgv" class="vgr"></div><div id="vtv" style="display:none"><div class="card"><table><thead><tr><th>Video</th><th>Cliente</th><th>Producto</th><th>Tipo</th><th>Plataforma</th><th>Editor</th><th>CPA</th><th>Público</th><th></th></tr></thead><tbody id="vtb"></tbody></table></div></div>
+      <div class="emp2" id="ve" style="display:none"><div class="empi">🎥</div><h3>No hay videos</h3><p>Sube un video para empezar</p></div>
+    </div>
+    <div class="page" id="page-upload">
+      <div style="max-width:620px"><div class="card" style="padding:28px">
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:4px">Registrar Nuevo Video</h3>
+        <p style="font-size:12px;color:var(--tx3);margin-bottom:20px">Sube el archivo y completa los datos</p>
+        <div class="fg"><label class="fl">Archivo de Video</label>
+          <div class="uz" id="dz"><input type="file" accept="video/*" id="vfi" onchange="hf(this)">
+            <div class="uzi"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div class="uzt">Arrastra tu video aquí</div><div class="uzs">o haz clic · MP4, MOV, AVI</div><button type="button" class="uzb">Seleccionar archivo</button>
+          </div><div id="fpvw" style="display:none"></div>
+        </div>
+        <div class="fg"><label class="fl">Nombre del Video</label><input class="fi" id="vn" placeholder="ej: Hook Skincare V3"></div>
+        <div class="fr"><div class="fg"><label class="fl">Cliente</label><select class="fs2" id="vCl"></select></div><div class="fg"><label class="fl">Producto</label><select class="fs2" id="vPd"></select></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Tipo de Video</label><select class="fs2" id="vTp"><option>UGC</option><option>Talking Head</option><option>Product Shot</option><option>Motion Graphics</option><option>Testimonio</option><option>Unboxing</option><option>Before/After</option><option>Tutorial</option><option>Slideshow</option><option>Animación</option><option>Otro</option></select></div><div class="fg"><label class="fl">Plataforma</label><select class="fs2" id="vPl"><option>Facebook Ads</option><option>TikTok Ads</option><option>Instagram Ads</option><option>YouTube Ads</option><option>Google Ads</option><option>Snapchat Ads</option><option>Pinterest Ads</option><option>LinkedIn Ads</option><option>Orgánico</option><option>Otra</option></select></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Editor</label><select class="fs2" id="vEd"></select></div><div class="fg"><label class="fl">Formato</label><select class="fs2" id="vFo"><option>9:16</option><option>16:9</option><option>1:1</option><option>4:5</option></select></div></div>
+        <div class="fr"><div class="fg"><label class="fl">Duración (seg)</label><input type="number" class="fi" id="vDu" placeholder="30"></div><div class="fg"><label class="fl">URL del Video</label><input class="fi" id="vUr" placeholder="https://drive.google.com/..."></div></div>
+        <div class="fg"><label class="fl">Notas</label><textarea class="fta" id="vNo" placeholder="Hook, versión, detalles..."></textarea></div>
+        <div class="fg" style="display:flex;align-items:center;gap:10px"><label class="tgl"><input type="checkbox" id="vPub"><span></span></label><label class="fl" style="margin:0;cursor:pointer" for="vPub">Publicar en portfolio público</label></div>
+        <button class="btn btn-p" onclick="aV()" style="width:100%;justify-content:center;padding:11px;font-size:13px;border-radius:12px">Registrar Video</button>
+      </div></div>
+    </div>
+    <div class="page" id="page-clients">
+      <div class="shd"><p>Gestión de clientes</p><button class="btn btn-p btn-sm" onclick="om('cmo')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Cliente</button></div>
+      <div class="card"><table><thead><tr><th>Cliente</th><th>Empresa</th><th>Videos</th><th>🏆</th><th>✅</th><th>❌</th><th>Win Rate</th><th></th></tr></thead><tbody id="clb"></tbody></table>
+      <div class="emp2" id="ce"><div class="empi">👥</div><h3>Sin clientes</h3><p>Agrega tu primer cliente</p></div></div>
+    </div>
+    <div class="page" id="page-products">
+      <div class="shd"><p>Productos — se asignan a cualquier cliente</p><button class="btn btn-p btn-sm" onclick="om('pmo')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Producto</button></div>
+      <div class="card"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Videos</th><th>🏆</th><th>✅</th><th>❌</th><th>Win Rate</th><th></th></tr></thead><tbody id="prb"></tbody></table>
+      <div class="emp2" id="pe"><div class="empi">📦</div><h3>Sin productos</h3><p>Agrega productos</p></div></div>
+    </div>
+    <div class="page" id="page-editors">
+      <div class="shd"><p>Equipo de editores</p><button class="btn btn-p btn-sm" onclick="om('emo')"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Nuevo Editor</button></div>
+      <div class="egr" id="egrv"></div><div class="emp2" id="ee"><div class="empi">✂️</div><h3>Sin editores</h3><p>Agrega editores</p></div>
+    </div>
+    <div class="page" id="page-deliveries">
+      <div class="shd"><p>Historial de entregas</p></div>
+      <div class="card"><table><thead><tr><th>Video</th><th>Cliente</th><th>Producto</th><th>Tipo</th><th>CPA</th><th>Fecha</th><th></th></tr></thead><tbody id="dlb"></tbody></table>
+      <div class="emp2" id="dem"><div class="empi">📦</div><h3>Sin entregas</h3></div></div>
+    </div>
+    <div class="page" id="page-portfolio">
+      <div class="shd"><p>Gestiona qué videos aparecen en tu portfolio público</p><button class="btn btn-p btn-sm" onclick="openPub()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Ver Portfolio Público</button></div>
+      <div class="card"><table><thead><tr><th>Video</th><th>Cliente</th><th>Producto</th><th>Tipo</th><th>CPA</th><th>Público</th></tr></thead><tbody id="pfb"></tbody></table>
+      <div class="emp2" id="pfe"><div class="empi">🌐</div><h3>Sin videos</h3><p>Registra videos para publicarlos</p></div></div>
+    </div>
+    <div class="page" id="page-analytics">
+      <div class="sg"><div class="sc c4"><div class="slb">Win Rate Global</div><div class="svl" id="aw">0%</div><div class="ssu">bueno + muy bueno</div></div><div class="sc c1"><div class="slb">Total Videos</div><div class="svl" id="atv">0</div><div class="ssu">registrados</div></div><div class="sc c2"><div class="slb">Editor Top</div><div class="svl" id="ate" style="font-size:16px">—</div><div class="ssu">mayor win rate</div></div><div class="sc c3"><div class="slb">Plataforma Top</div><div class="svl" id="atf" style="font-size:16px">—</div><div class="ssu">mejor rendimiento</div></div></div>
+      <div class="card" style="margin-bottom:16px"><div class="chd"><h3>Rendimiento por Editor</h3><select class="flt2" id="edSel" onchange="rED()"><option value="">Seleccionar editor...</option></select></div>
+        <div style="padding:20px">
+          <div class="emp2" id="edE"><div class="empi">📊</div><h3>Selecciona un editor</h3><p>Elige un editor para ver su análisis</p></div>
+          <div id="edD" style="display:none">
+            <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+              <div style="flex:2;min-width:240px;background:var(--bgp);border-radius:14px;padding:20px">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><div class="eav" id="edAv" style="width:48px;height:48px;font-size:18px"></div><div><div id="edNm" style="font-weight:800;font-size:15px"></div><div id="edSp" style="font-size:11px;color:var(--tx3)"></div></div></div>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div style="text-align:center;padding:10px;background:var(--bg);border-radius:10px;box-shadow:var(--sh)"><div style="font-size:20px;font-weight:800" id="edT">0</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px;font-weight:600">Videos</div></div><div style="text-align:center;padding:10px;background:var(--bg);border-radius:10px;box-shadow:var(--sh)"><div style="font-size:20px;font-weight:800;color:var(--pur)" id="edMB">0</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px;font-weight:600">Muy Bueno</div></div><div style="text-align:center;padding:10px;background:var(--bg);border-radius:10px;box-shadow:var(--sh)"><div style="font-size:20px;font-weight:800;color:var(--ok)" id="edB">0</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px;font-weight:600">Bueno</div></div><div style="text-align:center;padding:10px;background:var(--bg);border-radius:10px;box-shadow:var(--sh)"><div style="font-size:20px;font-weight:800;color:var(--dan)" id="edM">0</div><div style="font-size:9px;color:var(--tx3);text-transform:uppercase;margin-top:2px;font-weight:600">Malo</div></div></div>
+              </div>
+              <div style="flex:1;min-width:150px;background:var(--bgp);border-radius:14px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+                <div style="font-size:10px;color:var(--tx3);text-transform:uppercase;font-weight:700;margin-bottom:6px">Win Rate</div>
+                <div id="edWR" style="font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1"></div>
+                <div id="edWRs" style="font-size:10px;color:var(--tx3);margin-top:4px"></div>
+              </div>
+            </div>
+            <div class="card" style="margin-bottom:14px"><div class="chd"><h3>Por Plataforma</h3></div><div style="padding:16px 20px 32px" id="edBC"></div></div>
+            <div class="card"><div class="chd"><h3>Historial de Videos</h3></div><table><thead><tr><th>Video</th><th>Producto</th><th>Tipo</th><th>Plataforma</th><th>CPA</th><th>Fecha</th></tr></thead><tbody id="edVB"></tbody></table></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px"><div class="card"><div class="chd"><h3>Ranking Editores</h3></div><table><thead><tr><th>#</th><th>Editor</th><th>Videos</th><th>Ganadores</th><th>Win Rate</th></tr></thead><tbody id="erb"></tbody></table></div><div class="card"><div class="chd"><h3>Por Plataforma</h3></div><table><thead><tr><th>Plataforma</th><th>Videos</th><th>Ganadores</th><th>Win Rate</th></tr></thead><tbody id="srb"></tbody></table></div></div>
+    </div>
+  </div>
+</main>
+<!-- MODALS -->
+<div class="mo" id="um"><div class="mdl"><div class="mdh"><h3>Nuevo Video Rápido</h3><button class="mdc" onclick="cm('um')">✕</button></div><div class="mdb"><div class="fg"><label class="fl">Nombre</label><input class="fi" id="qn" placeholder="ej: UGC Hook V2"></div><div class="fr"><div class="fg"><label class="fl">Cliente</label><select class="fs2" id="qc"></select></div><div class="fg"><label class="fl">Producto</label><select class="fs2" id="qpd"></select></div></div><div class="fr"><div class="fg"><label class="fl">Tipo</label><select class="fs2" id="qtp"><option>UGC</option><option>Talking Head</option><option>Product Shot</option><option>Motion Graphics</option><option>Testimonio</option><option>Unboxing</option><option>Otro</option></select></div><div class="fg"><label class="fl">Plataforma</label><select class="fs2" id="qpl"><option>Facebook Ads</option><option>TikTok Ads</option><option>Instagram Ads</option><option>YouTube Ads</option><option>Google Ads</option><option>Orgánico</option><option>Otra</option></select></div></div><div class="fg"><label class="fl">Editor</label><select class="fs2" id="qe"></select></div></div><div class="mdf"><button class="btn btn-s" onclick="cm('um')">Cancelar</button><button class="btn btn-p" onclick="qA()">Registrar</button></div></div></div>
+<div class="mo" id="cmo"><div class="mdl"><div class="mdh"><h3>Nuevo Cliente</h3><button class="mdc" onclick="cm('cmo')">✕</button></div><div class="mdb"><div class="fg"><label class="fl">Nombre</label><input class="fi" id="cn" placeholder="ej: Carlos Méndez"></div><div class="fg"><label class="fl">Empresa</label><input class="fi" id="cc" placeholder="ej: GlowSkin MX"></div><div class="fg"><label class="fl">Email</label><input type="email" class="fi" id="cem" placeholder="carlos@empresa.com"></div></div><div class="mdf"><button class="btn btn-s" onclick="cm('cmo')">Cancelar</button><button class="btn btn-p" onclick="aC()">Agregar</button></div></div></div>
+<div class="mo" id="pmo"><div class="mdl"><div class="mdh"><h3>Nuevo Producto</h3><button class="mdc" onclick="cm('pmo')">✕</button></div><div class="mdb"><div class="fg"><label class="fl">Nombre del Producto</label><input class="fi" id="pdn" placeholder="ej: Serum Vitamina C"></div><div class="fg"><label class="fl">Categoría</label><select class="fs2" id="pdct"><option>Skincare</option><option>Suplementos</option><option>Fitness</option><option>Tecnología</option><option>Moda</option><option>Alimentos</option><option>Educación</option><option>SaaS / App</option><option>E-commerce</option><option>Servicios</option><option>Otra</option></select></div></div><div class="mdf"><button class="btn btn-s" onclick="cm('pmo')">Cancelar</button><button class="btn btn-p" onclick="aPd()">Agregar</button></div></div></div>
+<div class="mo" id="emo"><div class="mdl"><div class="mdh"><h3>Nuevo Editor</h3><button class="mdc" onclick="cm('emo')">✕</button></div><div class="mdb"><div class="fg"><label class="fl">Nombre</label><input class="fi" id="enn" placeholder="ej: María López"></div><div class="fg"><label class="fl">Especialidad</label><select class="fs2" id="espc"><option>UGC</option><option>Motion Graphics</option><option>Product Shots</option><option>Talking Head</option><option>General</option></select></div></div><div class="mdf"><button class="btn btn-s" onclick="cm('emo')">Cancelar</button><button class="btn btn-p" onclick="aE()">Agregar</button></div></div></div>
+<div class="mo" id="cpm"><div class="mdl"><div class="mdh"><h3>Evaluar CPA</h3><button class="mdc" onclick="cm('cpm')">✕</button></div><div class="mdb"><p style="font-size:12px;color:var(--tx2);margin-bottom:14px">Video: <strong id="pvn" style="color:var(--tx)"></strong></p><div class="fg"><label class="fl">Resultado</label><select class="fs2" id="pv"><option value="muy_bueno">🏆 Muy Buen CPA</option><option value="bueno">✅ Buen CPA</option><option value="malo">❌ Mal CPA</option></select></div><div class="fg"><label class="fl">Notas</label><textarea class="fta" id="pn" placeholder="Comentarios..."></textarea></div></div><div class="mdf"><button class="btn btn-s" onclick="cm('cpm')">Cancelar</button><button class="btn btn-p" onclick="sCP()">Guardar</button></div></div></div>
+<div class="tc0" id="tc0"></div>
+<script>
+let D={videos:[],clients:[],editors:[],products:[],cv:null};
+const CL=['#F97316','#EA580C','#D97706','#C2410C','#B45309','#A16207','#92400E','#78350F'];
+const cl=i=>CL[i%CL.length],uid=()=>Date.now().toString(36)+Math.random().toString(36).substr(2,5),fd=d=>new Date(d).toLocaleDateString('es-MX',{day:'2-digit',month:'short',year:'numeric'}),sv=()=>localStorage.setItem('vf9',JSON.stringify(D));
+function ld(){try{const s=JSON.parse(localStorage.getItem('vf9'));if(s)D=s}catch(e){}['videos','clients','editors','products'].forEach(k=>{if(!D[k])D[k]=[]})}
+function t(m,i='✅'){const e=document.createElement('div');e.className='tst';e.innerHTML='<span>'+i+'</span>'+m;document.getElementById('tc0').appendChild(e);setTimeout(()=>e.remove(),3000)}
+function om(i){document.getElementById(i).classList.add('act')}
+function cm(i){document.getElementById(i).classList.remove('act')}
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('act')}));
+const subs={dashboard:'Resumen general',videos:'Gestión de videos',upload:'Registrar video',clients:'Gestión de clientes',products:'Catálogo de productos',editors:'Equipo de edición',deliveries:'Historial de entregas',portfolio:'Gestiona tu portfolio público',analytics:'Reportes y métricas'};
+const titles={dashboard:'Dashboard',videos:'Videos',upload:'Subir Video',clients:'Clientes',products:'Productos',editors:'Editores',deliveries:'Entregas',portfolio:'Portfolio Público',analytics:'Analytics'};
+function nav(p){document.querySelectorAll('.page').forEach(e=>e.classList.remove('act'));document.querySelectorAll('.sni').forEach(e=>e.classList.remove('act'));document.getElementById('page-'+p).classList.add('act');var el=document.querySelector('.sni[data-page="'+p+'"]');if(el)el.classList.add('act');document.getElementById('pt').textContent=titles[p]||p;document.getElementById('ps').textContent=subs[p]||'';rA()}
+document.querySelectorAll('.sni').forEach(n=>n.addEventListener('click',()=>nav(n.dataset.page)));
+const gn=i=>{var c=D.clients.find(c=>c.id===i);return c?c.name:'—'},ge=i=>{var e=D.editors.find(e=>e.id===i);return e?e.name:'—'},gp=i=>{var p=D.products.find(p=>p.id===i);return p?p.name:'—'},iw=c=>c==='bueno'||c==='muy_bueno';
+function cbg(v){if(v==='muy_bueno')return'<span class="badge b-pur">🏆 Muy Bueno</span>';if(v==='bueno')return'<span class="badge b-ok">✅ Bueno</span>';if(v==='malo')return'<span class="badge b-bad">❌ Malo</span>';return'<span class="badge b-n">⏳ Pendiente</span>'}
+function tg(s){return'<span class="tag">'+s+'</span>'}
+function ttg(s){return'<span class="tag tag-type">'+s+'</span>'}
+function pubTgl(id){var v=D.videos.find(function(x){return x.id===id});if(v){v.published=!v.published;sv();t(v.published?'Publicado 🌐':'Despublicado');rA()}}
+function tglHtml(v){return'<label class="tgl"><input type="checkbox" '+(v.published?'checked':'')+' onchange="pubTgl(\''+v.id+'\')"><span></span></label>'}
+
+function hf(inp){var f=inp.files[0];if(!f)return;var sz=f.size<1048576?(f.size/1024).toFixed(1)+' KB':(f.size/1048576).toFixed(1)+' MB';var p=document.getElementById('fpvw');p.style.display='block';p.innerHTML='<div class="fpv"><div class="fpi"><svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div><div><div class="fpn">'+f.name+'</div><div class="fps">'+sz+'</div></div><button class="fpr" onclick="rf()">✕</button></div>';document.getElementById('dz').style.borderColor='var(--pri)';document.getElementById('dz').style.background='var(--prll)';if(!document.getElementById('vn').value)document.getElementById('vn').value=f.name.replace(/\.[^/.]+$/,'').replace(/[-_]/g,' ')}
+function rf(){document.getElementById('fpvw').style.display='none';document.getElementById('fpvw').innerHTML='';document.getElementById('vfi').value='';document.getElementById('dz').style.borderColor='';document.getElementById('dz').style.background=''}
+var dz=document.getElementById('dz');dz.addEventListener('dragover',function(e){e.preventDefault();dz.classList.add('over')});dz.addEventListener('dragleave',function(){dz.classList.remove('over')});dz.addEventListener('drop',function(e){e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files.length){document.getElementById('vfi').files=e.dataTransfer.files;hf(document.getElementById('vfi'))}});
+
+function aC(){var n=document.getElementById('cn').value.trim();if(!n)return t('Requerido','❌');D.clients.push({id:uid(),name:n,company:document.getElementById('cc').value.trim(),email:document.getElementById('cem').value.trim(),at:new Date().toISOString()});sv();cm('cmo');['cn','cc','cem'].forEach(function(i){document.getElementById(i).value=''});t('"'+n+'" agregado');rA()}
+function dC(i){if(!confirm('¿Eliminar?'))return;D.clients=D.clients.filter(function(c){return c.id!==i});sv();t('Eliminado','🗑️');rA()}
+function aPd(){var n=document.getElementById('pdn').value.trim();if(!n)return t('Requerido','❌');D.products.push({id:uid(),name:n,category:document.getElementById('pdct').value,at:new Date().toISOString()});sv();cm('pmo');document.getElementById('pdn').value='';t('"'+n+'" agregado');rA()}
+function dPd(i){if(!confirm('¿Eliminar?'))return;D.products=D.products.filter(function(p){return p.id!==i});sv();t('Eliminado','🗑️');rA()}
+function aE(){var n=document.getElementById('enn').value.trim();if(!n)return t('Requerido','❌');D.editors.push({id:uid(),name:n,specialty:document.getElementById('espc').value,at:new Date().toISOString()});sv();cm('emo');document.getElementById('enn').value='';t('"'+n+'" agregado');rA()}
+function dE(i){if(!confirm('¿Eliminar?'))return;D.editors=D.editors.filter(function(e){return e.id!==i});sv();t('Eliminado','🗑️');rA()}
+function aV(){var n=document.getElementById('vn').value.trim(),ci=document.getElementById('vCl').value,ei=document.getElementById('vEd').value;if(!n)return t('Requerido','❌');if(!ci)return t('Selecciona cliente','❌');if(!ei)return t('Selecciona editor','❌');var ff=document.getElementById('vfi').files[0];D.videos.push({id:uid(),name:n,clientId:ci,productId:document.getElementById('vPd').value,editorId:ei,type:document.getElementById('vTp').value,platform:document.getElementById('vPl').value,duration:document.getElementById('vDu').value||'30',format:document.getElementById('vFo').value,url:document.getElementById('vUr').value.trim(),notes:document.getElementById('vNo').value.trim(),cpa:'pendiente',cpaNote:'',file:ff?{name:ff.name,size:ff.size}:null,published:document.getElementById('vPub').checked,at:new Date().toISOString()});sv();['vn','vUr','vNo','vDu'].forEach(function(i){document.getElementById(i).value=''});document.getElementById('vPub').checked=false;rf();t('"'+n+'" registrado');nav('videos')}
+function qA(){var n=document.getElementById('qn').value.trim(),ci=document.getElementById('qc').value;if(!n)return t('Requerido','❌');if(!ci)return t('Selecciona cliente','❌');D.videos.push({id:uid(),name:n,clientId:ci,productId:document.getElementById('qpd').value,editorId:document.getElementById('qe').value,type:document.getElementById('qtp').value,platform:document.getElementById('qpl').value,duration:'30',format:'9:16',url:'',notes:'',cpa:'pendiente',cpaNote:'',file:null,published:false,at:new Date().toISOString()});sv();cm('um');document.getElementById('qn').value='';t('"'+n+'" registrado');rA()}
+function dV(i){if(!confirm('¿Eliminar?'))return;D.videos=D.videos.filter(function(v){return v.id!==i});sv();t('Eliminado','🗑️');rA()}
+function oC(i){D.cv=i;var v=D.videos.find(function(x){return x.id===i});document.getElementById('pvn').textContent=v.name;document.getElementById('pv').value=v.cpa==='pendiente'?'bueno':v.cpa;document.getElementById('pn').value=v.cpaNote||'';om('cpm')}
+function sCP(){var v=D.videos.find(function(x){return x.id===D.cv});if(!v)return;v.cpa=document.getElementById('pv').value;v.cpaNote=document.getElementById('pn').value.trim();sv();cm('cpm');var lb={muy_bueno:'🏆 Muy Bueno',bueno:'✅ Bueno',malo:'❌ Malo'};t('CPA: '+lb[v.cpa]);rA()}
+function ps(){
+  ['vCl','qc','fC'].forEach(function(i){var e=document.getElementById(i);if(!e)return;var v=e.value,f=i[0]==='f';e.innerHTML=f?'<option value="">Todos clientes</option>':'<option value="">Seleccionar...</option>';D.clients.forEach(function(c){e.innerHTML+='<option value="'+c.id+'">'+c.name+(c.company?' — '+c.company:'')+'</option>'});e.value=v});
+  ['vEd','qe','fE'].forEach(function(i){var e=document.getElementById(i);if(!e)return;var v=e.value,f=i[0]==='f';e.innerHTML=f?'<option value="">Todos editores</option>':'<option value="">Seleccionar...</option>';D.editors.forEach(function(x){e.innerHTML+='<option value="'+x.id+'">'+x.name+'</option>'});e.value=v});
+  ['vPd','qpd'].forEach(function(i){var e=document.getElementById(i);if(!e)return;var v=e.value;e.innerHTML='<option value="">Seleccionar...</option>';D.products.forEach(function(p){e.innerHTML+='<option value="'+p.id+'">'+p.name+'</option>'});e.value=v});
+  var es=document.getElementById('edSel');if(es){var v=es.value;es.innerHTML='<option value="">Seleccionar editor...</option>';D.editors.forEach(function(x){es.innerHTML+='<option value="'+x.id+'">'+x.name+'</option>'});es.value=v}
+  var ft=document.getElementById('fT');if(ft){var v2=ft.value;var types=[];D.videos.forEach(function(v){if(v.type&&types.indexOf(v.type)<0)types.push(v.type)});ft.innerHTML='<option value="">Todos tipos</option>';types.forEach(function(tp){ft.innerHTML+='<option>'+tp+'</option>'});ft.value=v2}
+}
+function fl(){var v=D.videos.slice().sort(function(a,b){return new Date(b.at)-new Date(a.at)});var fc=document.getElementById('fC'),fe=document.getElementById('fE'),fp=document.getElementById('fP'),ftv=document.getElementById('fT');if(fc&&fc.value)v=v.filter(function(x){return x.clientId===fc.value});if(fe&&fe.value)v=v.filter(function(x){return x.editorId===fe.value});if(fp&&fp.value)v=v.filter(function(x){return x.cpa===fp.value});if(ftv&&ftv.value)v=v.filter(function(x){return x.type===ftv.value});return v}
+
+function rD(){var ev=D.videos.filter(function(v){return v.cpa!=='pendiente'}),w=D.videos.filter(function(v){return iw(v.cpa)}).length,wr=ev.length?Math.round((w/ev.length)*100):0;document.getElementById('s1').textContent=D.videos.length;document.getElementById('s2').textContent=D.videos.filter(function(v){return v.cpa==='muy_bueno'}).length;document.getElementById('s3').textContent=D.videos.filter(function(v){return v.cpa==='pendiente'}).length;document.getElementById('s5').textContent=wr+'%';document.getElementById('vc0').textContent=D.videos.length;var r=D.videos.slice().sort(function(a,b){return new Date(b.at)-new Date(a.at)}).slice(0,6),tb=document.getElementById('rb'),em=document.getElementById('de');if(!r.length){tb.innerHTML='';em.style.display='block';return}em.style.display='none';tb.innerHTML=r.map(function(v){return'<tr><td><strong>'+v.name+'</strong>'+(v.file?' <span style="color:var(--pri);font-size:9px">📎</span>':'')+'</td><td style="font-size:11px">'+gn(v.clientId)+'</td><td>'+tg(gp(v.productId))+'</td><td>'+ttg(v.type||'—')+'</td><td>'+tg(v.platform||'—')+'</td><td>'+cbg(v.cpa)+'</td><td>'+tglHtml(v)+'</td></tr>'}).join('')}
+
+function rv(){var vs=fl(),g=document.getElementById('vgv'),tb=document.getElementById('vtb'),em=document.getElementById('ve');if(!vs.length){g.innerHTML='';tb.innerHTML='';em.style.display='block';return}em.style.display='none';g.innerHTML=vs.map(function(v){return'<div class="vcd"><div class="vth"><div style="position:absolute;top:8px;left:8px;display:flex;gap:4px"><span class="tag" style="background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.08);font-size:9px;font-weight:700">'+v.format+'</span>'+(v.type?'<span class="tag tag-type" style="font-size:9px">'+v.type+'</span>':'')+'</div>'+(v.published?'<div style="position:absolute;top:8px;right:8px"><span class="tag tag-pub" style="font-size:9px">🌐 Público</span></div>':'')+'<div class="vpli"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div class="vdr">'+(v.duration||'30')+'s</div></div><div class="vcb2"><div class="vtl">'+v.name+'</div><div class="vcmx">'+tg(v.platform||'—')+' '+tg(gp(v.productId))+'</div><div class="vcin">'+gn(v.clientId)+' · '+ge(v.editorId)+'</div></div><div class="vcft">'+cbg(v.cpa)+'<div style="display:flex;gap:3px"><button class="btn btn-g btn-sm" onclick="oC(\''+v.id+'\')">📊</button><button class="btn btn-d btn-sm" onclick="dV(\''+v.id+'\')">✕</button></div></div></div>'}).join('');tb.innerHTML=vs.map(function(v){return'<tr><td><strong>'+v.name+'</strong></td><td>'+gn(v.clientId)+'</td><td>'+tg(gp(v.productId))+'</td><td>'+ttg(v.type||'—')+'</td><td>'+tg(v.platform||'—')+'</td><td>'+ge(v.editorId)+'</td><td>'+cbg(v.cpa)+'</td><td>'+tglHtml(v)+'</td><td><div style="display:flex;gap:4px"><button class="btn btn-g btn-sm" onclick="oC(\''+v.id+'\')">Evaluar</button><button class="btn btn-d btn-sm" onclick="dV(\''+v.id+'\')">✕</button></div></td></tr>'}).join('')}
+function svw(v,b){document.querySelectorAll('.tab2').forEach(function(x){x.classList.remove('act')});b.classList.add('act');document.getElementById('vgv').style.display=v==='g'?'grid':'none';document.getElementById('vtv').style.display=v==='t'?'block':'none'}
+
+function rCl(){var tb=document.getElementById('clb'),em=document.getElementById('ce');if(!D.clients.length){tb.innerHTML='';em.style.display='block';return}em.style.display='none';tb.innerHTML=D.clients.map(function(c,i){var vs=D.videos.filter(function(v){return v.clientId===c.id}),mb=vs.filter(function(v){return v.cpa==='muy_bueno'}).length,b=vs.filter(function(v){return v.cpa==='bueno'}).length,m=vs.filter(function(v){return v.cpa==='malo'}).length,ev=mb+b+m,wr=ev?Math.round(((mb+b)/ev)*100):0;return'<tr><td><div class="cu2"><div class="cav2" style="background:'+cl(i)+'">'+c.name[0]+'</div><div><div style="font-weight:700">'+c.name+'</div><div style="font-size:10px;color:var(--tx3)">'+(c.email||'')+'</div></div></div></td><td>'+(c.company||'—')+'</td><td><strong>'+vs.length+'</strong></td><td style="color:var(--pur);font-weight:800">'+mb+'</td><td style="color:var(--ok);font-weight:800">'+b+'</td><td style="color:var(--dan);font-weight:800">'+m+'</td><td><div class="pb"><div class="pf" style="width:'+wr+'%;background:'+(wr>=50?'var(--ok)':'var(--dan)')+'"></div></div><span style="font-size:11px;font-weight:800">'+wr+'%</span></td><td><button class="btn btn-d btn-sm" onclick="dC(\''+c.id+'\')">✕</button></td></tr>'}).join('')}
+
+function rPd(){var tb=document.getElementById('prb'),em=document.getElementById('pe');if(!D.products.length){tb.innerHTML='';em.style.display='block';return}em.style.display='none';tb.innerHTML=D.products.map(function(p){var vs=D.videos.filter(function(v){return v.productId===p.id}),mb=vs.filter(function(v){return v.cpa==='muy_bueno'}).length,b=vs.filter(function(v){return v.cpa==='bueno'}).length,m=vs.filter(function(v){return v.cpa==='malo'}).length,ev=mb+b+m,wr=ev?Math.round(((mb+b)/ev)*100):0;return'<tr><td><strong>'+p.name+'</strong></td><td>'+tg(p.category)+'</td><td><strong>'+vs.length+'</strong></td><td style="color:var(--pur);font-weight:800">'+mb+'</td><td style="color:var(--ok);font-weight:800">'+b+'</td><td style="color:var(--dan);font-weight:800">'+m+'</td><td><div class="pb"><div class="pf" style="width:'+wr+'%;background:'+(wr>=50?'var(--ok)':'var(--dan)')+'"></div></div><span style="font-size:11px;font-weight:800">'+wr+'%</span></td><td><button class="btn btn-d btn-sm" onclick="dPd(\''+p.id+'\')">✕</button></td></tr>'}).join('')}
+
+function rEd(){var g=document.getElementById('egrv'),em=document.getElementById('ee');if(!D.editors.length){g.innerHTML='';em.style.display='block';return}em.style.display='none';g.innerHTML=D.editors.map(function(e,i){var vs=D.videos.filter(function(v){return v.editorId===e.id}),w=vs.filter(function(v){return iw(v.cpa)}).length,ev=vs.filter(function(v){return v.cpa!=='pendiente'}).length,wr=ev?Math.round((w/ev)*100):0;return'<div class="ecd"><div class="eav" style="background:'+cl(i)+'">'+e.name[0]+'</div><div class="enm">'+e.name+'</div><div class="esp3">'+e.specialty+'</div><div class="es3"><div class="esi2"><div class="esv2">'+vs.length+'</div><div class="esl2">Videos</div></div><div class="esi2"><div class="esv2" style="color:var(--ok)">'+w+'</div><div class="esl2">Ganadores</div></div><div class="esi2"><div class="esv2" style="color:'+(wr>=50?'var(--ok)':wr>0?'var(--dan)':'var(--tx3)')+'">'+wr+'%</div><div class="esl2">Win Rate</div></div></div><button class="btn btn-s btn-sm" style="width:100%;margin-top:14px;justify-content:center" onclick="dE(\''+e.id+'\')">Eliminar</button></div>'}).join('')}
+
+function rDl(){var vs=D.videos.slice().sort(function(a,b){return new Date(b.at)-new Date(a.at)}),tb=document.getElementById('dlb'),em=document.getElementById('dem');if(!vs.length){tb.innerHTML='';em.style.display='block';return}em.style.display='none';tb.innerHTML=vs.map(function(v){return'<tr><td><strong>'+v.name+'</strong></td><td>'+gn(v.clientId)+'</td><td>'+tg(gp(v.productId))+'</td><td>'+ttg(v.type||'—')+'</td><td>'+cbg(v.cpa)+'</td><td style="color:var(--tx3);font-size:11px">'+fd(v.at)+'</td><td><button class="btn btn-p btn-sm" onclick="oC(\''+v.id+'\')">Evaluar</button></td></tr>'}).join('')}
+
+function rPf(){var vs=D.videos.slice().sort(function(a,b){return new Date(b.at)-new Date(a.at)}),tb=document.getElementById('pfb'),em=document.getElementById('pfe');if(!vs.length){tb.innerHTML='';em.style.display='block';return}em.style.display='none';tb.innerHTML=vs.map(function(v){return'<tr><td><strong>'+v.name+'</strong></td><td>'+gn(v.clientId)+'</td><td>'+tg(gp(v.productId))+'</td><td>'+ttg(v.type||'—')+'</td><td>'+cbg(v.cpa)+'</td><td>'+tglHtml(v)+'</td></tr>'}).join('')}
+
+function rPub(){var pv=D.videos.filter(function(v){return v.published}).sort(function(a,b){return new Date(b.at)-new Date(a.at)});var g=document.getElementById('pubGrid'),em=document.getElementById('pubEmpty');if(!pv.length){g.innerHTML='';em.style.display='block';return}em.style.display='none';g.innerHTML=pv.map(function(v){var wrap=v.url?'<a href="'+v.url+'" target="_blank" style="text-decoration:none;color:inherit">':'<div>';var wrapE=v.url?'</a>':'</div>';return'<div class="pub-card">'+wrap+'<div class="pub-thumb"><div class="pub-tags"><span class="tag" style="background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.08);font-size:9px;font-weight:700">'+v.format+'</span>'+(v.type?'<span class="tag tag-type" style="font-size:9px">'+v.type+'</span>':'')+'</div><div class="pub-play"><svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div><div class="pub-dur">'+(v.duration||'30')+'s</div></div><div class="pub-body"><div class="pub-title">'+v.name+'</div><div class="pub-meta">'+(gp(v.productId)!=='—'?gp(v.productId)+' · ':'')+( v.platform||'—')+'</div><div class="pub-chips">'+cbg(v.cpa)+'</div></div>'+wrapE+'</div>'}).join('')}
+function openPub(){window.location.hash='portfolio'}
+function rED(){var eid=document.getElementById('edSel').value;if(!eid){document.getElementById('edE').style.display='block';document.getElementById('edD').style.display='none';return}document.getElementById('edE').style.display='none';document.getElementById('edD').style.display='block';var ed=D.editors.find(function(e){return e.id===eid}),idx=D.editors.indexOf(ed),vs=D.videos.filter(function(v){return v.editorId===eid}),mb=vs.filter(function(v){return v.cpa==='muy_bueno'}).length,b=vs.filter(function(v){return v.cpa==='bueno'}).length,m=vs.filter(function(v){return v.cpa==='malo'}).length,ev=vs.filter(function(v){return v.cpa!=='pendiente'}).length,w=mb+b,wr=ev?Math.round((w/ev)*100):0;document.getElementById('edAv').textContent=ed.name[0];document.getElementById('edAv').style.background=cl(idx);document.getElementById('edNm').textContent=ed.name;document.getElementById('edSp').textContent=ed.specialty;document.getElementById('edT').textContent=vs.length;document.getElementById('edMB').textContent=mb;document.getElementById('edB').textContent=b;document.getElementById('edM').textContent=m;document.getElementById('edWR').textContent=wr+'%';document.getElementById('edWR').style.color=wr>=50?'var(--ok)':wr>0?'var(--dan)':'var(--tx3)';document.getElementById('edWRs').textContent=w+' de '+ev+' evaluados';var srcs={};vs.forEach(function(v){var k=v.platform||'—';if(!srcs[k])srcs[k]={t:0,w:0};srcs[k].t++;if(iw(v.cpa))srcs[k].w++});var keys=Object.keys(srcs);var mx=1;keys.forEach(function(k){if(srcs[k].t>mx)mx=srcs[k].t});var bc=document.getElementById('edBC');if(keys.length){bc.innerHTML='<div style="display:flex;align-items:flex-end;gap:10px;height:100px">'+keys.map(function(s){var d=srcs[s],h=Math.max((d.t/mx)*80,12),wr2=d.t?Math.round((d.w/d.t)*100):0;return'<div style="flex:1;text-align:center"><div style="font-size:11px;font-weight:800;margin-bottom:4px">'+d.t+'</div><div style="height:'+h+'px;background:var(--pril);border-radius:8px 8px 0 0;position:relative;margin:0 auto;width:85%"><div style="position:absolute;bottom:0;left:0;right:0;height:'+(d.t?d.w/d.t*100:0)+'%;background:linear-gradient(180deg,var(--pri),var(--prih));border-radius:8px 8px 0 0;opacity:.85"></div></div><div style="font-size:9px;color:var(--tx2);margin-top:8px;font-weight:600">'+s+'</div><div style="font-size:10px;font-weight:800;color:'+(wr2>=50?'var(--ok)':'var(--tx3)')+'">'+wr2+'%</div></div>'}).join('')+'</div>'}else{bc.innerHTML='<div style="text-align:center;padding:24px;color:var(--tx3)">Sin videos</div>'}document.getElementById('edVB').innerHTML=vs.slice().sort(function(a,b2){return new Date(b2.at)-new Date(a.at)}).map(function(v){return'<tr><td><strong>'+v.name+'</strong></td><td>'+tg(gp(v.productId))+'</td><td>'+ttg(v.type||'—')+'</td><td>'+tg(v.platform||'—')+'</td><td>'+cbg(v.cpa)+'</td><td style="color:var(--tx3);font-size:11px">'+fd(v.at)+'</td></tr>'}).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--tx3);padding:24px">Sin videos</td></tr>'}
+
+function rAn(){var ev=D.videos.filter(function(v){return v.cpa!=='pendiente'}),w=D.videos.filter(function(v){return iw(v.cpa)}).length,wr=ev.length?Math.round((w/ev.length)*100):0;document.getElementById('aw').textContent=wr+'%';document.getElementById('atv').textContent=D.videos.length;var te='—',tr2=0;D.editors.forEach(function(e){var eev=D.videos.filter(function(v){return v.editorId===e.id&&v.cpa!=='pendiente'}),ew=D.videos.filter(function(v){return v.editorId===e.id&&iw(v.cpa)}).length,r=eev.length?(ew/eev.length)*100:0;if(r>tr2&&eev.length>0){tr2=r;te=e.name}});document.getElementById('ate').textContent=te;var srcs={};D.videos.forEach(function(v){var k=v.platform||'—';if(!srcs[k])srcs[k]={t:0,w:0};srcs[k].t++;if(iw(v.cpa))srcs[k].w++});var ts='—',tsr=0;Object.keys(srcs).forEach(function(s){var d=srcs[s],sev=D.videos.filter(function(v){return(v.platform||'—')===s&&v.cpa!=='pendiente'}).length,r=sev?(d.w/sev)*100:0;if(r>tsr&&sev>0){tsr=r;ts=s}});document.getElementById('atf').textContent=ts;var eds=D.editors.map(function(e){var vs=D.videos.filter(function(v){return v.editorId===e.id}),ew=vs.filter(function(v){return iw(v.cpa)}).length,eev=vs.filter(function(v){return v.cpa!=='pendiente'}).length;return{name:e.name,total:vs.length,wins:ew,wr:eev?Math.round((ew/eev)*100):0}}).sort(function(a,b){return b.wr-a.wr});document.getElementById('erb').innerHTML=eds.map(function(e,i){return'<tr><td style="font-weight:800;color:'+(i===0?'var(--pri)':'var(--tx3)')+'">'+( i+1)+'</td><td><strong>'+e.name+'</strong></td><td>'+e.total+'</td><td style="color:var(--ok);font-weight:800">'+e.wins+'</td><td><div class="pb"><div class="pf" style="width:'+e.wr+'%;background:'+(e.wr>=50?'var(--ok)':'var(--dan)')+'"></div></div><span style="font-size:11px;font-weight:800">'+e.wr+'%</span></td></tr>'}).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--tx3);padding:24px">Sin datos</td></tr>';document.getElementById('srb').innerHTML=Object.keys(srcs).map(function(s){var d=srcs[s],sev=D.videos.filter(function(v){return(v.platform||'—')===s&&v.cpa!=='pendiente'}).length,r=sev?Math.round((d.w/sev)*100):0;return'<tr><td>'+tg(s)+'</td><td>'+d.t+'</td><td style="color:var(--ok);font-weight:800">'+d.w+'</td><td><span style="font-weight:800;color:'+(r>=50?'var(--ok)':'var(--tx3)')+'">'+r+'%</span></td></tr>'}).join('')||'<tr><td colspan="4" style="text-align:center;color:var(--tx3);padding:24px">Sin datos</td></tr>';rED()}
+
+function rA(){ps();rD();rv();rCl();rPd();rEd();rDl();rPf();rPub();rAn()}
+function exp(){var b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='videoforge_'+new Date().toISOString().split('T')[0]+'.json';a.click();t('Exportado','📥')}
+function checkHash(){var h=window.location.hash;if(h==='#portfolio'){document.getElementById('pubView').style.display='block';document.getElementById('adminSide').style.display='none';document.getElementById('adminMain').style.display='none';rPub()}else{document.getElementById('pubView').style.display='none';document.getElementById('adminSide').style.display='flex';document.getElementById('adminMain').style.display='block'}}
+window.addEventListener('hashchange',checkHash);
+
+function seed(){if(D.clients.length||D.editors.length)return;
+D.clients=[{id:'c1',name:'Carlos Méndez',company:'GlowSkin MX',email:'carlos@glowskin.mx',at:'2026-01-15'},{id:'c2',name:'Ana Torres',company:'FitLife Co',email:'ana@fitlife.com',at:'2026-01-20'},{id:'c3',name:'Diego Ruiz',company:'TechNova',email:'diego@technova.io',at:'2026-02-01'}];
+D.editors=[{id:'e1',name:'María López',specialty:'UGC',at:'2026-01-10'},{id:'e2',name:'José Ramírez',specialty:'Motion Graphics',at:'2026-01-10'},{id:'e3',name:'Laura Vega',specialty:'Product Shots',at:'2026-01-15'}];
+D.products=[{id:'p1',name:'Serum Vitamina C',category:'Skincare',at:'2026-01-15'},{id:'p2',name:'Crema Nocturna',category:'Skincare',at:'2026-01-15'},{id:'p3',name:'Whey Protein',category:'Suplementos',at:'2026-01-20'},{id:'p4',name:'Plan Fitness',category:'Fitness',at:'2026-01-20'},{id:'p5',name:'App TechNova',category:'SaaS / App',at:'2026-02-01'},{id:'p6',name:'Gym Starter Pack',category:'Fitness',at:'2026-01-22'}];
+D.videos=[
+{id:'v1',name:'Hook Serum V1',clientId:'c1',productId:'p1',editorId:'e1',type:'UGC',platform:'TikTok Ads',duration:'15',format:'9:16',url:'',notes:'',cpa:'muy_bueno',cpaNote:'CPA $1.80',file:null,published:true,at:'2026-02-01'},
+{id:'v2',name:'UGC Crema Noche',clientId:'c1',productId:'p2',editorId:'e1',type:'UGC',platform:'Facebook Ads',duration:'30',format:'9:16',url:'',notes:'',cpa:'bueno',cpaNote:'',file:null,published:true,at:'2026-02-03'},
+{id:'v3',name:'Motion Proteína',clientId:'c2',productId:'p3',editorId:'e2',type:'Motion Graphics',platform:'Instagram Ads',duration:'20',format:'9:16',url:'',notes:'',cpa:'malo',cpaNote:'CPA $12',file:null,published:false,at:'2026-02-05'},
+{id:'v4',name:'Demo App V2',clientId:'c3',productId:'p5',editorId:'e2',type:'Product Shot',platform:'YouTube Ads',duration:'60',format:'16:9',url:'',notes:'',cpa:'bueno',cpaNote:'',file:null,published:true,at:'2026-02-08'},
+{id:'v5',name:'Hook Gym Pack',clientId:'c2',productId:'p6',editorId:'e3',type:'UGC',platform:'TikTok Ads',duration:'12',format:'9:16',url:'',notes:'',cpa:'pendiente',cpaNote:'',file:null,published:false,at:'2026-02-10'},
+{id:'v6',name:'Unboxing Serum',clientId:'c1',productId:'p1',editorId:'e3',type:'Unboxing',platform:'Facebook Ads',duration:'25',format:'4:5',url:'',notes:'',cpa:'muy_bueno',cpaNote:'Top del mes',file:null,published:true,at:'2026-02-12'},
+{id:'v7',name:'Testimonio FitLife',clientId:'c2',productId:'p4',editorId:'e1',type:'Testimonio',platform:'TikTok Ads',duration:'45',format:'9:16',url:'',notes:'',cpa:'bueno',cpaNote:'',file:null,published:true,at:'2026-02-13'},
+{id:'v8',name:'Product Shot Crema',clientId:'c1',productId:'p2',editorId:'e3',type:'Product Shot',platform:'Google Ads',duration:'15',format:'1:1',url:'',notes:'',cpa:'malo',cpaNote:'',file:null,published:false,at:'2026-02-14'}];sv()}
+ld();seed();rA();checkHash();
+</script>
+</body>
+</html>

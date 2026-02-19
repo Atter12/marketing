@@ -13,15 +13,15 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ## 2. Dar acceso al cliente (email + link mágico)
 
-**Flujo actual – Email con link (magic link):**
+    **Flujo actual – Email con link (magic link):**
 
-- [x] En la **ficha del cliente**, el gerente tiene un botón/acción **"Dar acceso"**.
-- [x] Al hacerlo, el sistema usa el **correo del cliente** (el primero de la ficha). Si no tiene correo, se pide agregarlo en Editar cliente.
-- [x] Por detrás: se genera un **link mágico** (Supabase Auth) y se **envía por email** al cliente (vía Resend u otro proveedor).
-- [x] El cliente **abre el link desde su correo** y entra directo al panel (dashboard), sin escribir contraseña.
-- [x] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; experiencia simple (un clic desde el email); el gerente no comparte PIN ni contraseña.
+    - [x] En la **ficha del cliente**, el gerente tiene un botón/acción **"Dar acceso"**.
+    - [x] Al hacerlo, el sistema usa el **correo del cliente** (el primero de la ficha). Si no tiene correo, se pide agregarlo en Editar cliente.
+    - [x] Por detrás: se genera un **link mágico** (Supabase Auth) y se **envía por email** al cliente (vía Resend u otro proveedor).
+    - [x] El cliente **abre el link desde su correo** y entra directo al panel (dashboard), sin escribir contraseña.
+    - [x] **Ventaja:** se sigue usando el login normal (correo + contraseña) y Supabase Auth; experiencia simple (un clic desde el email); el gerente no comparte PIN ni contraseña.
 
-*(Implementado: Edge Function `dar-acceso-cliente` con magic link + envío de email; botón en ficha y en lista; cliente debe tener al menos un email en la ficha. Opción "Reenviar link" si ya tenía acceso.)*
+    *(Implementado: Edge Function `dar-acceso-cliente` con magic link + envío de email; botón en ficha y en lista; cliente debe tener al menos un email en la ficha. Opción "Reenviar link" si ya tenía acceso.)*
 
 ---
 
@@ -78,6 +78,42 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ---
 
+## 9. UX y consistencia: buscadores, contadores, descargas y reportes
+
+Objetivo: mismo patrón en Gastos, Cobros y Garantías (como en Clientes), contadores de filas, descarga en Clientes, y reportes enriquecidos.
+
+### 9.1 Buscador / filtro por cliente
+
+- [ ] **Gastos Ads:** Añadir combobox o buscador para filtrar por cliente (igual que el buscador por nombre en Clientes). Mostrar solo gastos del cliente seleccionado o todos si no hay filtro.
+- [ ] **Cobros:** Mismo patrón: combobox o buscador para filtrar por cliente.
+- [ ] **Garantías:** Mismo patrón: combobox o buscador para filtrar por cliente.
+
+### 9.2 Contador de filas
+
+- [ ] **Gastos:** Contador visible en el header (ej. "X gastos en total" o "Y de X gastos" si hay filtro), en un lugar claro y cómodo (como en Clientes).
+- [ ] **Cobros:** Contador de filas en el header (total y, si aplica, "Y de X" con filtro).
+- [ ] **Garantías:** Contador de filas en el header.
+
+### 9.3 Estructura de página unificada
+
+- [ ] **Cobros y Garantías:** Seguir la misma estructura de **Gastos Ads** (header con título, filtros/contador a un lado, botones; contenido ordenado). Evitar layouts distintos que confundan entre secciones.
+
+### 9.4 Descarga en Clientes
+
+- [ ] **Clientes:** Añadir botón **Descargar Excel** (o similar) para exportar el listado de clientes (como ya existe en Gastos, Cobros y Garantías).
+
+### 9.5 Reportes: FEE y bloques del Resumen
+
+- [ ] **FEE en reportes:** Incluir **FEE** (y **% FEE** donde corresponda) en la vista de reportes / relación de cuentas (que ya muestra ADS, TOTAL, PAGADO, etc.).
+- [ ] **Cuatro bloques del Resumen en Reportes:** Replicar en la sección Reportes los mismos 4 bloques que tiene el Resumen (Dashboard):
+  1. **Gasto Mensual en Ads** — "Inversión + fees por mes" (gráfico de barras: Gasto Ads + Fee por mes).
+  2. **Métodos de Cobro** — "Distribución por medio de pago" (gráfico por método de pago).
+  3. **Cobrado vs Gasto** — "Evolución mensual" (gráfico: Cobrado vs Gasto por mes).
+  4. **Deuda Neta por Cliente** — "Incluye descuento de garantías" (gráfico o tabla por cliente).
+- [ ] Asegurar que el **% FEE** aparezca también en "el otro reporte" (vista relación de cuentas o la vista alternativa de reportes).
+
+---
+
 ## Resumen por prioridad sugerida
 
 | Prioridad | Tema                    | Tareas clave |
@@ -88,6 +124,7 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 | Alta     | Cobros / prepago        | Cobro para todos; S/N prepago; "Añadir cobro" cuando prepago; texto claro en UI |
 | Media    | Descargas Excel         | Botones por sección + rango de fechas + por cliente |
 | Media    | Foto gerente            | Subir foto y mostrarla responsive y visible |
+| Media    | **§9 UX y consistencia** | Buscador/filtro por cliente en Gastos, Cobros, Garantías; contador de filas en las tres; misma estructura que Gastos Ads; descarga en Clientes; Reportes con FEE/% FEE y los 4 bloques del Resumen |
 
 ---
 
