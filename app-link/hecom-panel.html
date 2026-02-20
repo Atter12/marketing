@@ -751,6 +751,16 @@
 
   .sidebar-overlay.active { display: block; }
 
+  .stats-page .slug-row input { min-width: 120px; }
+  .stats-totals { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .stats-totals .stat-box { background: var(--primary-light); color: var(--primary); padding: 12px 20px; border-radius: var(--radius-sm); font-weight: 700; font-size: 1.1rem; }
+  .stats-by-link .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border-light); font-size: 0.85rem; }
+  .stats-by-link .stat-row:last-child { border-bottom: none; }
+  .stats-recent .recent-row { padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 0.8rem; display: flex; gap: 12px; flex-wrap: wrap; }
+  .stats-recent .recent-row:last-child { border-bottom: none; }
+  .stats-recent .recent-country { font-weight: 600; color: var(--text); min-width: 48px; }
+  .stats-recent .recent-url { color: var(--primary); word-break: break-all; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
@@ -779,8 +789,8 @@
   </div>
   <nav class="sidebar-nav">
     <div class="nav-section-title">Principal</div>
-    <a class="nav-item active"><span class="nav-icon">🔗</span> Cortador de Links</a>
-    <a class="nav-item"><span class="nav-icon">📊</span> Estadísticas</a>
+    <a class="nav-item active" id="nav-links" onclick="showPage('links')"><span class="nav-icon">🔗</span> Cortador de Links</a>
+    <a class="nav-item" id="nav-stats" onclick="showPage('stats')"><span class="nav-icon">📊</span> Estadísticas</a>
     <a class="nav-item"><span class="nav-icon">📋</span> Mis Enlaces</a>
     <div class="nav-section-title">Configuración</div>
     <a class="nav-item"><span class="nav-icon">⚙️</span> Ajustes</a>
@@ -802,12 +812,13 @@
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
       <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-      <div class="topbar-title">Cortador de Links</div>
+      <div class="topbar-title" id="topbar-title">Cortador de Links</div>
     </div>
     <span style="font-size:0.78rem;color:var(--text3);">Panel de Control</span>
   </div>
 
   <div class="content">
+    <div id="page-links">
     <div class="url-bar">
       <div class="url-label">TU LINK</div>
       <div class="url-display">
@@ -896,6 +907,29 @@
           </div>
           <div class="result-url" id="common-active-url"></div>
         </div>
+      </div>
+    </div>
+    </div>
+    <div id="page-stats" class="stats-page" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📊</span> Estadísticas por link</div>
+        </div>
+        <div class="slug-row" style="margin-bottom:16px;">
+          <span class="domain-prefix" style="color:var(--text2);">Slug:</span>
+          <input type="text" id="stats-slug-input" placeholder="mi-link o victor" style="flex:1;max-width:200px;">
+          <button class="btn btn-primary" onclick="loadStats()">Ver estadísticas</button>
+        </div>
+        <div id="stats-loading" style="display:none;padding:12px;color:var(--text2);">Cargando...</div>
+        <div id="stats-result" style="display:none;">
+          <div class="stats-totals" id="stats-totals"></div>
+          <div class="stats-by-link card" id="stats-by-link" style="margin-top:12px;padding:16px;"></div>
+          <div class="stats-recent card" style="margin-top:12px;padding:16px;">
+            <div class="card-title" style="margin-bottom:12px;">Últimos clics (país / destino)</div>
+            <div id="stats-recent-list" style="font-size:0.82rem;color:var(--text2);"></div>
+          </div>
+        </div>
+        <div id="stats-empty" style="display:none;padding:12px;color:var(--text3);">Elige un slug y pulsa "Ver estadísticas".</div>
       </div>
     </div>
   </div>
@@ -1064,7 +1098,52 @@
   function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sidebarOverlay').classList.toggle('active')}
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}
 
-  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;
+  function showPage(page){
+    const isLinks=page==='links';
+    document.getElementById('page-links').style.display=isLinks?'block':'none';
+    document.getElementById('page-stats').style.display=isLinks?'none':'block';
+    document.getElementById('topbar-title').textContent=isLinks?'Cortador de Links':'Estadísticas';
+    document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
+    document.getElementById(isLinks?'nav-links':'nav-stats').classList.add('active');
+    if(!isLinks){ document.getElementById('stats-empty').style.display='block'; document.getElementById('stats-empty').textContent='Elige un slug y pulsa "Ver estadísticas".'; document.getElementById('stats-result').style.display='none'; document.getElementById('stats-loading').style.display='none'; }
+  }
+
+  async function loadStats(){
+    const slug=(document.getElementById('stats-slug-input').value||'').trim().replace(/[^a-zA-Z0-9\-_]/g,'')||null;
+    if(!slug){ showToast('Escribe un slug','error'); return; }
+    if(!supabase){ showToast('Supabase no disponible','error'); return; }
+    document.getElementById('stats-empty').style.display='none';
+    document.getElementById('stats-result').style.display='none';
+    document.getElementById('stats-loading').style.display='block';
+    try{
+      const { data: clicks, error } = await supabase.from('link_clicks').select('link_index,target_url,country,clicked_at').eq('slug',slug).order('clicked_at',{ascending:false}).limit(200);
+      document.getElementById('stats-loading').style.display='none';
+      if(error) throw error;
+      const total = (clicks||[]).length;
+      const byIndex = {};
+      (clicks||[]).forEach(c=>{ byIndex[c.link_index]= (byIndex[c.link_index]||0)+1; });
+      document.getElementById('stats-totals').innerHTML = '<span class="stat-box">Total clics: '+total+'</span>';
+      let configLabels = {};
+      const { data: config } = await supabase.from('link_configs').select('mode,config').eq('slug',slug).maybeSingle();
+      if(config&&config.mode==='rotation'&&config.config&&Array.isArray(config.config.links)){
+        config.config.links.forEach((l,i)=>{ configLabels[i]=(l.url||'').replace(/https?:\/\//,'').substring(0,30)+(l.url&&l.url.length>30?'…':''); });
+      } else if(config&&config.mode==='common'&&config.config&&config.config.url){
+        configLabels[0]=(config.config.url||'').replace(/https?:\/\//,'').substring(0,40)+'…';
+      }
+      const byLinkHtml = Object.keys(byIndex).sort((a,b)=>+a - +b).map(i=>'<div class="stat-row"><span>Link '+(+i+1)+(configLabels[i]?' — '+configLabels[i]:'')+'</span><strong>'+byIndex[i]+' clics</strong></div>').join('');
+      document.getElementById('stats-by-link').innerHTML = byLinkHtml || '<div style="color:var(--text3);">Sin desglose</div>';
+      const recent = (clicks||[]).slice(0,30).map(c=>{ const u=c.target_url||''; const short=u.replace(/^https?:\/\//,'').substring(0,45)+(u.length>45?'…':''); const safeTitle=(u).replace(/"/g,'&quot;'); return '<div class="recent-row"><span class="recent-country">'+(c.country||'—')+'</span><span class="recent-url" title="'+safeTitle+'">'+short+'</span><span style="color:var(--text3);">'+new Date(c.clicked_at).toLocaleString('es')+'</span></div>'; }).join('');
+      document.getElementById('stats-recent-list').innerHTML = recent || '<span style="color:var(--text3);">Aún no hay clics</span>';
+      document.getElementById('stats-result').style.display='block';
+    }catch(e){
+      document.getElementById('stats-loading').style.display='none';
+      document.getElementById('stats-empty').style.display='block';
+      document.getElementById('stats-empty').textContent = 'Error: '+(e.message||'No se pudieron cargar las estadísticas.');
+      showToast('Error al cargar estadísticas','error');
+    }
+  }
+
+  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;window.showPage=showPage;window.loadStats=loadStats;
   init();
 })();
 </script>

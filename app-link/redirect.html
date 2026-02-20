@@ -42,6 +42,19 @@
         document.getElementById('app').innerHTML = '<p class="err">Falta el parámetro slug en la URL. pathname=' + (location.pathname || '') + ' search=' + (location.search || '') + '</p>';
         return;
       }
+      async function getCountry() {
+        try {
+          const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) });
+          const d = await r.json();
+          return d.country_code || d.country_name || null;
+        } catch (e) { return null; }
+      }
+      async function recordClick(supabase, slug, linkIndex, targetUrl) {
+        const country = await getCountry();
+        try {
+          await supabase.from('link_clicks').insert({ slug, link_index: linkIndex, target_url: targetUrl, country });
+        } catch (e) { console.warn('[redirect] No se pudo registrar clic', e); }
+      }
       async function run() {
         console.log('[redirect] Buscando config para slug:', slug);
         const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
@@ -55,7 +68,7 @@
         if (row.mode === 'common') {
           const url = row.config && row.config.url;
           if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-            window.location.replace(url);
+            recordClick(supabase, slug, 0, url).then(() => window.location.replace(url));
             return;
           }
           document.getElementById('app').innerHTML = '<p class="err">Enlace sin destino configurado.</p>';
@@ -67,14 +80,14 @@
           let n = parseInt(localStorage.getItem(key) || '0', 10);
           const total = links.reduce((s, x) => s + x.clicks, 0);
           const pos = n % total;
-          let acc = 0, target = links[0].url;
+          let acc = 0, target = links[0].url, linkIndex = 0;
           for (let i = 0; i < links.length; i++) {
             acc += links[i].clicks;
-            if (pos < acc) { target = links[i].url; break; }
+            if (pos < acc) { target = links[i].url; linkIndex = i; break; }
           }
           localStorage.setItem(key, String(n + 1));
           if (target && (target.startsWith('http://') || target.startsWith('https://'))) {
-            window.location.replace(target);
+            recordClick(supabase, slug, linkIndex, target).then(() => window.location.replace(target));
             return;
           }
         }
