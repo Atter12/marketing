@@ -84,23 +84,23 @@ Objetivo: mismo patrón en Gastos, Cobros y Garantías (como en Clientes), conta
 
 ### 9.1 Buscador / filtro por cliente
 
-- [ ] **Gastos Ads:** Añadir combobox o buscador para filtrar por cliente (igual que el buscador por nombre en Clientes). Mostrar solo gastos del cliente seleccionado o todos si no hay filtro.
-- [ ] **Cobros:** Mismo patrón: combobox o buscador para filtrar por cliente.
-- [ ] **Garantías:** Mismo patrón: combobox o buscador para filtrar por cliente.
+- [x] **Gastos Ads:** Añadir combobox o buscador para filtrar por cliente (igual que el buscador por nombre en Clientes). Mostrar solo gastos del cliente seleccionado o todos si no hay filtro.
+- [x] **Cobros:** Mismo patrón: combobox o buscador para filtrar por cliente.
+- [x] **Garantías:** Mismo patrón: combobox o buscador para filtrar por cliente.
 
 ### 9.2 Contador de filas
 
-- [ ] **Gastos:** Contador visible en el header (ej. "X gastos en total" o "Y de X gastos" si hay filtro), en un lugar claro y cómodo (como en Clientes).
-- [ ] **Cobros:** Contador de filas en el header (total y, si aplica, "Y de X" con filtro).
-- [ ] **Garantías:** Contador de filas en el header.
+- [x] **Gastos:** Contador visible en el header (ej. "X gastos en total" o "Y de X gastos" si hay filtro), en un lugar claro y cómodo (como en Clientes).
+- [x] **Cobros:** Contador de filas en el header (total y, si aplica, "Y de X" con filtro).
+- [x] **Garantías:** Contador de filas en el header.
 
 ### 9.3 Estructura de página unificada
 
-- [ ] **Cobros y Garantías:** Seguir la misma estructura de **Gastos Ads** (header con título, filtros/contador a un lado, botones; contenido ordenado). Evitar layouts distintos que confundan entre secciones.
+- [x] **Cobros y Garantías:** Seguir la misma estructura de **Gastos Ads** (header con título, filtros/contador a un lado, botones; contenido ordenado). Evitar layouts distintos que confundan entre secciones.
 
 ### 9.4 Descarga en Clientes
 
-- [ ] **Clientes:** Añadir botón **Descargar Excel** (o similar) para exportar el listado de clientes (como ya existe en Gastos, Cobros y Garantías).
+- [x] **Clientes:** Añadir botón **Descargar Excel** (o similar) para exportar el listado de clientes (como ya existe en Gastos, Cobros y Garantías).
 
 ### 9.5 Reportes: FEE y bloques del Resumen
 
