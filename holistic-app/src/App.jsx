@@ -41,6 +41,31 @@ function getMonths(n = 6) {
   for (let i = n - 1; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); r.push({ key: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"), label: d.toLocaleDateString("es-PE", { month: "short", year: "2-digit" }) }); }
   return r;
 }
+/** Parsea "01/2025", "2025-01", "1/25", "012025" → "2025-01" o null */
+function parsePeriodoInput(s) {
+  if (!s || typeof s !== "string") return null;
+  const t = s.trim().replace(/\s/g, "");
+  const m1 = t.match(/^(\d{1,2})[\/\-](\d{2,4})$/); // 01/2025 o 01-25
+  if (m1) {
+    let month = parseInt(m1[1], 10);
+    let year = parseInt(m1[2], 10);
+    if (year < 100) year += 2000;
+    if (month >= 1 && month <= 12) return `${year}-${String(month).padStart(2, "0")}`;
+  }
+  const m2 = t.match(/^(\d{4})[\/\-](\d{1,2})$/); // 2025-01
+  if (m2) {
+    const year = parseInt(m2[1], 10);
+    const month = parseInt(m2[2], 10);
+    if (month >= 1 && month <= 12) return `${year}-${String(month).padStart(2, "0")}`;
+  }
+  const m3 = t.match(/^(\d{2})(\d{4})$/); // 012025
+  if (m3) {
+    const month = parseInt(m3[1], 10);
+    const year = parseInt(m3[2], 10);
+    if (month >= 1 && month <= 12) return `${year}-${String(month).padStart(2, "0")}`;
+  }
+  return null;
+}
 
 /* ═══════ UI COMPONENTS ═══════ */
 const AVATAR_SIZE_SCALE = 1.35; // fotos de clientes 35% más grandes
@@ -92,6 +117,41 @@ const Inp = ({ label, hint, ...p }) => (
     {hint && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{hint}</div>}
   </div>
 );
+
+/** Buscador por nombre: input + lista filtrada. options = [{ value, label }], value = id seleccionado, onChange(id) */
+function SearchSelect({ label, options, value, onChange, placeholder = "Buscar por nombre...", emptyMessage = "Sin resultados" }) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o.value === value);
+  const filtered = useMemo(() => {
+    if (!query.trim()) return options.slice(0, 50);
+    const q = query.trim().toLowerCase();
+    return options.filter((o) => (o.label || "").toLowerCase().includes(q)).slice(0, 50);
+  }, [options, query]);
+  const displayText = open ? query : (selected ? selected.label : "");
+  return (
+    <div style={{ marginBottom: 14, minWidth: 0, position: "relative" }}>
+      {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
+      <input
+        type="text"
+        value={displayText}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 180)}
+        placeholder={placeholder}
+        style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
+      />
+      {open && filtered.length > 0 && (
+        <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, margin: 0, padding: 4, listStyle: "none", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 100, maxHeight: 220, overflowY: "auto" }}>
+          {filtered.map((o) => (
+            <li key={o.value} onMouseDown={() => { onChange(o.value); setQuery(""); setOpen(false); }} style={{ padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13.5, color: o.value === value ? "#0055ff" : "#1a1d26", fontWeight: o.value === value ? 600 : 400, background: o.value === value ? "#f0f4ff" : "transparent" }}>{o.label}</li>
+          ))}
+        </ul>
+      )}
+      {open && query.trim() && filtered.length === 0 && <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, padding: "12px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, color: "#9498a8", zIndex: 100 }}>{emptyMessage}</div>}
+    </div>
+  );
+}
 
 const Btn = ({ variant = "primary", size, children, ...p }) => {
   const vs = { primary: { bg: "#1b2559", color: "#fff", border: "none" }, accent: { bg: "#0055ff", color: "#fff", border: "none" }, outline: { bg: "#fff", color: "#1a1d26", border: "1px solid #e2e4e9" }, ghost: { bg: "transparent", color: "#9498a8", border: "none" }, danger: { bg: "#fdf0f2", color: "#dc2640", border: "none" } };
@@ -197,6 +257,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [detailTab, setDetailTab] = useState("gastos");
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
+  const [repPerInput, setRepPerInput] = useState("");
   const [repPerInicio, setRepPerInicio] = useState("");
   const [repPerFin, setRepPerFin] = useState("");
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
@@ -850,7 +911,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
-            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><select value={repPer} onChange={(e) => setRepPer(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input type="text" placeholder="MM/AAAA" value={repPerInput !== undefined ? repPerInput : (repPer || "")} onChange={(e) => setRepPerInput(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) { setRepPer(p); setRepPerInput(p); } else setRepPerInput(undefined); }} style={{ width: 100, padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} /><button type="button" onClick={() => { const d = new Date(); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button><button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button><select value={repPer} onChange={(e) => { setRepPer(e.target.value); setRepPerInput(e.target.value || undefined); }} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div></div>
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Rango por fecha de operación</label><div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="date" value={repPerInicio} onChange={(e) => setRepPerInicio(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 12 }}>a</span><input type="date" value={repPerFin} onChange={(e) => setRepPerFin(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
@@ -1177,9 +1238,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </Mdl>
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
-        <Inp label="Cliente *" type="select" value={gf.clientId} onChange={(e) => setGf({ ...gf, clientId: e.target.value })}><option value="">Seleccionar...</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
-        <div style={{ cursor: "pointer" }} onClick={() => { const el = document.getElementById("gf-periodo-date"); if (el && typeof el.showPicker === "function") el.showPicker(); }}>
-          <Inp id="gf-periodo-date" label="Período * (elija en el calendario)" type="date" value={gf.fechaMovimiento || (gf.mes ? gf.mes + "-15" : td())} onChange={(e) => { const v = e.target.value; if (v) setGf({ ...gf, fechaMovimiento: v, mes: v.slice(0, 7) }); }} />
+        <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gf.clientId} onChange={(id) => setGf({ ...gf, clientId: id })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período *</label>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
+            <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button>
+            <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button>
+            <span style={{ fontSize: 12, color: "#9498a8" }}>o</span>
+            <input id="gf-periodo-date" type="date" value={gf.fechaMovimiento || (gf.mes ? gf.mes + "-15" : td())} onChange={(e) => { const v = e.target.value; if (v) setGf({ ...gf, fechaMovimiento: v, mes: v.slice(0, 7), periodoInput: v.slice(0, 7) }); }} style={{ width: 150, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} title="Calendario" />
+          </div>
+          <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí mes/año (ej. 01/2025) o usá los botones / calendario</div>
         </div>
         <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#1b2559" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#5f6577", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
@@ -1213,7 +1282,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Registrar"}</Btn></>}>
-        <Inp label="Gasto *" type="select" value={cof.gastoId} onChange={(e) => { const g = sGastos.find((x) => x.id === e.target.value); setCof({ ...cof, gastoId: e.target.value, monto: g ? g._pend.toFixed(2) : "" }); }}><option value="">Seleccionar gasto a cobrar...</option>{sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return <option key={g.id} value={g.id}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)}) {g.prepago ? "· Prepago" : ""}</option>; })}</Inp>
+        <SearchSelect label="Gasto *" options={sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return { value: g.id, label: `${c?.name || "?"} — ${fmtM(g.mes)} ($${fmt(g._pend)}) ${g.prepago ? "· Prepago" : ""}` }; })} value={cof.gastoId} onChange={(id) => { const g = sGastos.find((x) => x.id === id); setCof({ ...cof, gastoId: id, monto: g ? g._pend.toFixed(2) : "" }); }} placeholder="Buscar por cliente o período..." emptyMessage="No hay gastos pendientes" />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Monto ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
@@ -1277,7 +1346,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
-        <Inp label="Cliente *" type="select" value={gaf.clientId} onChange={(e) => setGaf({ ...gaf, clientId: e.target.value, gastoId: "" })}><option value="">Seleccionar...</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
+        <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
         <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp : ""}</option>)}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Inp label="Tipo" type="select" value={gaf.tipo} onChange={(e) => setGaf({ ...gaf, tipo: e.target.value })}>{GT.map((t) => <option key={t}>{t}</option>)}</Inp>
