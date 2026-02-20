@@ -766,6 +766,8 @@
   .list-page .list-slug { font-weight: 700; color: var(--primary); min-width: 100px; }
   .list-page .list-mode { font-size: 0.78rem; color: var(--text2); padding: 3px 8px; border-radius: 6px; background: var(--bg); }
   .list-page .list-actions { margin-left: auto; display: flex; gap: 8px; }
+  .list-page .btn-delete { color: var(--danger); border-color: var(--danger); background: transparent; }
+  .list-page .btn-delete:hover { background: var(--danger-bg); color: var(--danger); }
 
   /* Responsive */
   @media (max-width: 768px) {
@@ -1179,7 +1181,7 @@
       const html=data.map(r=>{
         const modeLabel=r.mode==='rotation'?'Rotación':'Un solo destino';
         const detail=r.mode==='common'?(r.config&&r.config.url?(r.config.url.replace(/^https?:\/\//,'').substring(0,35)+'…'):''):(r.config&&r.config.links?(r.config.links.length+' enlaces'):'');
-        return '<div class="list-row"><span class="list-slug">'+base+r.slug+'</span><span class="list-mode">'+modeLabel+'</span>'+(detail?'<span style="font-size:0.8rem;color:var(--text3);">'+detail+'</span>':'')+'<span class="list-actions"><button class="btn btn-secondary" onclick="editSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Editar</button><button class="btn btn-secondary" onclick="goStatsForSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Estadísticas</button></span></div>';
+        return '<div class="list-row"><span class="list-slug">'+base+r.slug+'</span><span class="list-mode">'+modeLabel+'</span>'+(detail?'<span style="font-size:0.8rem;color:var(--text3);">'+detail+'</span>':'')+'<span class="list-actions"><button class="btn btn-secondary" onclick="editSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Editar</button><button class="btn btn-secondary" onclick="goStatsForSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Estadísticas</button><button class="btn btn-delete" onclick="deleteSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Eliminar</button></span></div>';
       }).join('');
       document.getElementById('list-items').innerHTML=html;
       document.getElementById('list-items').style.display='block';
@@ -1200,6 +1202,14 @@
     document.getElementById('slug-input').value=slug;
     updateSlugPreview();
     if(supabase) await loadFromSupabaseIfNeeded();
+  }
+  async function deleteSlug(slug){
+    if(!confirm('¿Eliminar el link /go/'+slug+'? La configuración se borrará y el link dejará de funcionar.')) return;
+    if(!supabase){ showToast('Supabase no disponible','error'); return; }
+    const{error}=await supabase.from('link_configs').delete().eq('slug',slug);
+    if(error){ showToast('Error al eliminar: '+error.message,'error'); return; }
+    showToast('Link eliminado','success');
+    loadList();
   }
 
   async function loadStats(){
@@ -1238,7 +1248,7 @@
     }
   }
 
-  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;window.showPage=showPage;window.loadStats=loadStats;window.onStatsSlugSelect=onStatsSlugSelect;window.editSlug=editSlug;window.goStatsForSlug=goStatsForSlug;
+  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;window.showPage=showPage;window.loadStats=loadStats;window.onStatsSlugSelect=onStatsSlugSelect;window.editSlug=editSlug;window.goStatsForSlug=goStatsForSlug;window.deleteSlug=deleteSlug;
   init();
 })();
 </script>
