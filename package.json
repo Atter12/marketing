@@ -5,7 +5,7 @@
   "main": "index.html",
   "scripts": {
     "dev": "vercel dev",
-    "build": "node scripts/build-credito.js",
+    "build": "node scripts/write-app-link-config.js && node scripts/build-credito.js",
     "build:credito": "node scripts/build-credito.js",
     "deploy": "vercel --prod"
   },

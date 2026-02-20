@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirigiendo...</title>
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; background: #f7f8fc; color: #1a1a2e; font-family: Inter, system-ui, sans-serif; text-align: center; padding: 20px; }
+    .s { width: 36px; height: 36px; border: 3px solid #e5e7eb; border-top-color: #3b5bdb; border-radius: 50%; animation: r .7s linear infinite; margin: 0 auto 14px; }
+    @keyframes r { to { transform: rotate(360deg); } }
+    .err { color: #ef4444; max-width: 360px; }
+  </style>
+</head>
+<body>
+  <script>
+    window.SUPABASE_URL = window.SUPABASE_URL || '';
+    window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+  </script>
+  <script src="config.js"></script>
+  <div id="app">
+    <div class="s"></div>
+    <p>Redirigiendo...</p>
+  </div>
+  <script type="module">
+    (function() {
+      const SUPABASE_URL = window.SUPABASE_URL || '';
+      const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || '';
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        document.getElementById('app').innerHTML = '<p class="err">Configuración faltante: SUPABASE_URL y SUPABASE_ANON_KEY.</p>';
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const slug = (params.get('slug') || '').trim().replace(/[^a-zA-Z0-9\-_]/g, '') || null;
+      if (!slug) {
+        document.getElementById('app').innerHTML = '<p class="err">Falta el parámetro slug en la URL.</p>';
+        return;
+      }
+      async function run() {
+        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const { data: row, error } = await supabase.from('link_configs').select('mode, config').eq('slug', slug).maybeSingle();
+        if (error || !row) {
+          document.getElementById('app').innerHTML = '<p class="err">Link no encontrado.</p>';
+          return;
+        }
+        if (row.mode === 'common') {
+          const url = row.config && row.config.url;
+          if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+            window.location.replace(url);
+            return;
+          }
+          document.getElementById('app').innerHTML = '<p class="err">Enlace sin destino configurado.</p>';
+          return;
+        }
+        if (row.mode === 'rotation' && row.config && Array.isArray(row.config.links) && row.config.links.length > 0) {
+          const links = row.config.links.map(l => ({ url: l.url, clicks: Math.max(1, parseInt(l.clicks) || 1) }));
+          const key = 'hecom_' + slug;
+          let n = parseInt(localStorage.getItem(key) || '0', 10);
+          const total = links.reduce((s, x) => s + x.clicks, 0);
+          const pos = n % total;
+          let acc = 0, target = links[0].url;
+          for (let i = 0; i < links.length; i++) {
+            acc += links[i].clicks;
+            if (pos < acc) { target = links[i].url; break; }
+          }
+          localStorage.setItem(key, String(n + 1));
+          if (target && (target.startsWith('http://') || target.startsWith('https://'))) {
+            window.location.replace(target);
+            return;
+          }
+        }
+        document.getElementById('app').innerHTML = '<p class="err">Link no configurado correctamente.</p>';
+      }
+      run();
+    })();
+  </script>
+</body>
+</html>

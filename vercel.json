@@ -139,6 +139,10 @@
       "dest": "/backup-dashboard/index.html"
     },
     {
+      "src": "/go/([a-zA-Z0-9-_]+)",
+      "dest": "/app-link/redirect.html?slug=$1"
+    },
+    {
       "src": "^/([a-zA-Z0-9-_]+)$",
       "dest": "/api/url-shortener/redirect?alias=$1",
       "check": true
