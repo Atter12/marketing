@@ -449,8 +449,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     let list = [...cobros];
     if (expRango.cobros.ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= expRango.cobros.ini);
     if (expRango.cobros.fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= expRango.cobros.fin);
-    const headers = ["Fecha", "Hora", "Cliente", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
-    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [fmtD(co.fecha), fmtT(co.hora) || "—", c?.name || "—", co.codigo || "—", g?.codigo || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmt(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
+    const headers = ["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
+    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmt(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
     exportToExcel("cobros_" + td(), "Cobros", headers, rows);
   };
   const expGarantias = () => {
@@ -900,18 +900,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Hora", "Cliente", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
               <tbody>{cobrosFiltrados.map((co) => {
                 const g = gastos.find((x) => x.id === co.gastoId);
                 const c = g ? clients.find((x) => x.id === g.clientId) : null;
                 const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
                 return (
                   <tr key={co.id}>
-                    <td style={TD}>{fmtD(co.fecha)}</td>
-                    <td style={TD}>{fmtT(co.hora)}</td>
                     <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
                     <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
                     <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
+                    <td style={TD}>{fmtD(co.fecha)}</td>
+                    <td style={TD}>{fmtT(co.hora)}</td>
                     <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
                     <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
                     <td style={TD}><PayB method={co.metodo} /></td>
