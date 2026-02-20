@@ -142,6 +142,19 @@ export function useSupabaseData(role, clientId) {
     },
     delClient: async (id) => {
       if (role !== "gerente") return;
+      // Eliminar en cascada: cobros de sus gastos → gastos → garantías → manual → cliente
+      const { data: gastosDelCliente } = await supabase.from("gastos").select("id").eq("client_id", id);
+      const gastoIds = (gastosDelCliente || []).map((g) => g.id);
+      if (gastoIds.length > 0) {
+        const { error: eCo } = await supabase.from("cobros").delete().in("gasto_id", gastoIds);
+        if (eCo) throw eCo;
+      }
+      const { error: eG } = await supabase.from("gastos").delete().eq("client_id", id);
+      if (eG) throw eG;
+      const { error: eGar } = await supabase.from("garantias").delete().eq("client_id", id);
+      if (eGar) throw eGar;
+      const { error: eM } = await supabase.from("manual").delete().eq("client_id", id);
+      if (eM) throw eM;
       const { error: e } = await supabase.from("clientes").delete().eq("id", id);
       if (e) throw e;
       await fetchAll();
@@ -170,6 +183,9 @@ export function useSupabaseData(role, clientId) {
     },
     delGasto: async (id) => {
       if (role !== "gerente") return;
+      // Primero eliminar cobros de este gasto para no dejar huérfanos
+      const { error: eCo } = await supabase.from("cobros").delete().eq("gasto_id", id);
+      if (eCo) throw eCo;
       const { error: e } = await supabase.from("gastos").delete().eq("id", id);
       if (e) throw e;
       await fetchAll();

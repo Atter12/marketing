@@ -30,6 +30,7 @@ const PC = { "Mercury Bank": "#5542f6", BCP: "#ff6200", Interbank: "#00a651", Bi
 const PI = { "Mercury Bank": "🏦", BCP: "🟠", Interbank: "🟢", Binance: "💛", Efectivo: "💵", Stripe: "💳", Yape: "💜", Plin: "💚" };
 const PM = ["Mercury Bank", "BCP", "Interbank", "Binance", "Efectivo", "Stripe", "Yape", "Plin"];
 const GT = ["Cuenta TikTok", "Business Center", "Dispositivo", "Documento ID", "Contrato Firmado", "Depósito", "Otro"];
+const PER_PAGE = 20;
 const clr = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return COLORS[Math.abs(h) % COLORS.length]; };
 const ini = (n) => n.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2);
 const gTotal = (g) => parseFloat(g.gasto || 0) * (1 + parseFloat(g.fee || 0) / 100);
@@ -203,6 +204,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
   const [menuOpen, setMenuOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [selectedIds, setSelectedIds] = useState({ clientes: [], gastos: [], cobros: [], garantias: [] });
+  const [pageNum, setPageNum] = useState({ clientes: 1, gastos: 1, cobros: 1, garantias: 1 });
 
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
@@ -436,6 +439,48 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const saveGar = async () => { if (!gaf.clientId) return alert("Selecciona cliente"); await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: gaf.gastoId || null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado }); closeMdl(); };
   const delGar = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delGarantia(id); };
 
+  /* Selección y eliminación en lote */
+  const toggleSelect = (listKey, id) => {
+    setSelectedIds((p) => {
+      const arr = p[listKey].includes(id) ? p[listKey].filter((x) => x !== id) : [...p[listKey], id];
+      return { ...p, [listKey]: arr };
+    });
+  };
+  const selectAllOnPage = (listKey, idsOnPage) => {
+    setSelectedIds((p) => {
+      const current = p[listKey];
+      const allSelected = idsOnPage.every((id) => current.includes(id));
+      const next = allSelected ? current.filter((id) => !idsOnPage.includes(id)) : [...new Set([...current, ...idsOnPage])];
+      return { ...p, [listKey]: next };
+    });
+  };
+  const clearSelection = (listKey) => setSelectedIds((p) => ({ ...p, [listKey]: [] }));
+
+  const delClientesBulk = async () => {
+    const ids = selectedIds.clientes;
+    if (!ids.length || !confirm(`¿Eliminar ${ids.length} cliente(s) y todos sus datos?`)) return;
+    for (const id of ids) await mutations.delClient(id);
+    clearSelection("clientes");
+  };
+  const delGastosBulk = async () => {
+    const ids = selectedIds.gastos;
+    if (!ids.length || !confirm(`¿Eliminar ${ids.length} gasto(s)?`)) return;
+    for (const id of ids) await mutations.delGasto(id);
+    clearSelection("gastos");
+  };
+  const delCobrosBulk = async () => {
+    const ids = selectedIds.cobros;
+    if (!ids.length || !confirm(`¿Eliminar ${ids.length} cobro(s)?`)) return;
+    for (const id of ids) await mutations.delCobro(id);
+    clearSelection("cobros");
+  };
+  const delGarantiasBulk = async () => {
+    const ids = selectedIds.garantias;
+    if (!ids.length || !confirm(`¿Eliminar ${ids.length} garantía(s)?`)) return;
+    for (const id of ids) await mutations.delGarantia(id);
+    clearSelection("garantias");
+  };
+
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
 
   /* ═══ EXPORT EXCEL ═══ */
@@ -455,8 +500,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
   const expGarantias = () => {
     let list = [...garantias];
-    const headers = ["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—"]; });
+    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
@@ -483,8 +528,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
     const rC = cos.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
     const wsC = XLSX.utils.aoa_to_sheet([hC, ...rC]); XLSX.utils.book_append_sheet(wb, wsC, "Cobros");
-    const hGar = ["Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto"];
-    const rGar = curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—"]; });
+    const hGar = ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado"];
+    const rGar = curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—"]; });
     const wsGar = XLSX.utils.aoa_to_sheet([hGar, ...rGar]); XLSX.utils.book_append_sheet(wb, wsGar, "Garantías");
     XLSX.writeFile(wb, `cliente_${(curC?.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_")}_${td()}.xlsx`);
   };
@@ -819,8 +864,32 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap hm-table-clientes"><table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-              <tbody>{clientsFiltered.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsFiltered.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
+            {(() => {
+              const totalPages = Math.ceil(clientsFiltered.length / PER_PAGE) || 1;
+              const currentPage = Math.min(pageNum.clientes, totalPages);
+              const clientsPaginated = clientsFiltered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+              const idsOnPage = clientsPaginated.map((c) => c.id);
+              const sel = selectedIds.clientes;
+              const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
+              return (
+                <>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                    {selectedIds.clientes.length > 0 && (
+                      <Btn variant="outline" size="sm" onClick={delClientesBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.clientes.length})</Btn>
+                    )}
+                  </div>
+                  <div className="hm-table-wrap hm-table-clientes"><table><thead><tr><th style={{ ...TH, width: 42 }} onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("clientes", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC} onClick={(e) => e.stopPropagation()}><input type="checkbox" checked={sel.includes(c.id)} onChange={() => toggleSelect("clientes", c.id)} onClick={(e) => e.stopPropagation()} style={{ cursor: "pointer", width: 16, height: 16 }} /></td><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, clientes: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div></div>
         </div>)}
 
@@ -880,8 +949,33 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Código", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{gastosFiltrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#0d9f6e" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosFiltrados.length && <Empty cols={isCliente ? 15 : 16} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></div>
+            {(() => {
+              const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
+              const currentPage = Math.min(pageNum.gastos, totalPages);
+              const gastosPaginated = gastosFiltrados.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+              const idsOnPage = gastosPaginated.map((g) => g.id);
+              const sel = selectedIds.gastos;
+              const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
+              const colsCount = (isCliente ? 15 : 16) + (!isCliente ? 1 : 0);
+              return (
+                <>
+                  {!isCliente && (selectedIds.gastos.length > 0) && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
+                      <Btn variant="outline" size="sm" onClick={delGastosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.gastos.length})</Btn>
+                    </div>
+                  )}
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Código", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                    <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#0d9f6e" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></div>
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, gastos: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div></div>
         </div>)}
 
@@ -900,28 +994,53 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{cobrosFiltrados.map((co) => {
-                const g = gastos.find((x) => x.id === co.gastoId);
-                const c = g ? clients.find((x) => x.id === g.clientId) : null;
-                const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
-                return (
-                  <tr key={co.id}>
-                    <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
-                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
-                    <td style={TD}>{fmtD(co.fecha)}</td>
-                    <td style={TD}>{fmtT(co.hora)}</td>
-                    <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
-                    <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
-                    <td style={TD}><PayB method={co.metodo} /></td>
-                    {!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{createdByStr}</td>}
-                    {!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}
-                    <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
-                    <td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td>
-                  </tr>
-                );
-              })}{!cobrosFiltrados.length && <Empty cols={isCliente ? 10 : 12} msg={emptyCobrosMsg} />}</tbody></table></div>
+            {(() => {
+              const totalPages = Math.ceil(cobrosFiltrados.length / PER_PAGE) || 1;
+              const currentPage = Math.min(pageNum.cobros, totalPages);
+              const cobrosPaginated = cobrosFiltrados.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+              const idsOnPage = cobrosPaginated.map((co) => co.id);
+              const sel = selectedIds.cobros;
+              const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
+              return (
+                <>
+                  {selectedIds.cobros.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
+                      <Btn variant="outline" size="sm" onClick={delCobrosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.cobros.length})</Btn>
+                    </div>
+                  )}
+                  <div className="hm-table-wrap"><table><thead><tr><th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("cobros", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Registrado", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                    <tbody>{cobrosPaginated.map((co) => {
+                      const g = gastos.find((x) => x.id === co.gastoId);
+                      const c = g ? clients.find((x) => x.id === g.clientId) : null;
+                      const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
+                      return (
+                        <tr key={co.id}>
+                          <td style={TD}><input type="checkbox" checked={sel.includes(co.id)} onChange={() => toggleSelect("cobros", co.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>
+                          <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
+                          <td style={TD}>{fmtD(co.fecha)}</td>
+                          <td style={TD}>{fmtT(co.hora)}</td>
+                          <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
+                          <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
+                          <td style={TD}><PayB method={co.metodo} /></td>
+                          <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
+                          <td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td>
+                        </tr>
+                      );
+                    })}{!cobrosPaginated.length && <Empty cols={13} msg={emptyCobrosMsg} />}</tbody></table></div>
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, cobros: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div></div>
         </div>)}
 
@@ -939,24 +1058,50 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-            <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantiasFiltradas.map((g) => {
-                const c = clients.find((x) => x.id === g.clientId);
-                const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
-                const estadoBdg = g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n";
-                return (
-                  <tr key={g.id}>
-                    <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                    <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
-                    <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
-                    <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
-                    <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
-                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td>
-                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
-                    <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
-                  </tr>
-                );
-              })}{!garantiasFiltradas.length && <Empty cols={8} msg={emptyGarantiasMsg} />}</tbody></table></div>
+            {(() => {
+              const totalPages = Math.ceil(garantiasFiltradas.length / PER_PAGE) || 1;
+              const currentPage = Math.min(pageNum.garantias, totalPages);
+              const garantiasPaginated = garantiasFiltradas.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+              const idsOnPage = garantiasPaginated.map((g) => g.id);
+              const sel = selectedIds.garantias;
+              const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
+              const colsCount = 8 + (!isCliente ? 1 : 0);
+              return (
+                <>
+                  {!isCliente && selectedIds.garantias.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
+                      <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
+                    </div>
+                  )}
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                    <tbody>{garantiasPaginated.map((g) => {
+                      const c = clients.find((x) => x.id === g.clientId);
+                      const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
+                      const estadoBdg = g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n";
+                      return (
+                        <tr key={g.id}>
+                          {!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("garantias", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}
+                          <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
+                          <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
+                          <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
+                          <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
+                          <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
+                          <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
+                        </tr>
+                      );
+                    })}{!garantiasPaginated.length && <Empty cols={colsCount} msg={emptyGarantiasMsg} />}</tbody></table></div>
+                  {totalPages > 1 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, garantias: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div></div>
         </div>)}
       </main>
@@ -996,15 +1141,20 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} hint="Porcentaje sobre el gasto" />
         <div style={{ background: "#eef0f8", padding: "12px 14px", borderRadius: 10, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, textAlign: "center", marginBottom: 16, color: "#1b2559" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))} → Total a cobrar: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</div>
         <Inp label="Notas" type="textarea" value={gf.notas} onChange={(e) => setGf({ ...gf, notas: e.target.value })} placeholder="Detalles del gasto o campaña..." />
-        {editId && gf.prepago && !isCliente && (() => { const g = sGastos.find((x) => x.id === editId); if (!g || g._st === "Pagado") return null; return (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #eff0f3" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 8 }}>Prepago — registrar cobro</div>
-            <button type="button" onClick={() => openCobroForGastoId(editId)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #0d9f6e", borderRadius: 10, background: "#e6f7f0", color: "#0d9f6e", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center" }}>
-              <CreditCard size={18} /> Registrar cobro para este gasto (pendiente ${fmt(g._pend)})
-            </button>
-            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 6 }}>Abre el formulario de cobro con este gasto y monto pendiente ya cargados.</div>
-          </div>
-        ); })()}
+        {editId && gf.prepago && !isCliente && (() => {
+          const g = sGastos.find((x) => x.id === editId);
+          if (!g || g._st === "Pagado") return null;
+          const clienteNombre = clients.find((c) => c.id === g.clientId)?.name || "este gasto";
+          return (
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #eff0f3" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 8 }}>Cobro para este gasto (prepago)</div>
+              <button type="button" onClick={() => openCobroForGastoId(editId)} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 18px", border: "1px dashed #0d9f6e", borderRadius: 10, background: "#e6f7f0", color: "#0d9f6e", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center", transition: "background .15s, color .15s" }} onMouseOver={(e) => { e.currentTarget.style.background = "#cceee2"; e.currentTarget.style.color = "#0a7d5a"; }} onMouseOut={(e) => { e.currentTarget.style.background = "#e6f7f0"; e.currentTarget.style.color = "#0d9f6e"; }}>
+                <CreditCard size={20} /> Añadir cobro — {clienteNombre} · {g.codigo || fmtM(g.mes)} (pendiente ${fmt(g._pend)})
+              </button>
+              <div style={{ fontSize: 11, color: "#9498a8", marginTop: 6 }}>Se abre el formulario de cobro con este gasto y el monto pendiente ya cargados.</div>
+            </div>
+          );
+        })()}
         {gf.clientId && !isCliente && (
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #eff0f3" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 8 }}>Garantía para este cliente</div>
