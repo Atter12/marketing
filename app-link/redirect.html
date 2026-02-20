@@ -42,17 +42,28 @@
         document.getElementById('app').innerHTML = '<p class="err">Falta el parámetro slug en la URL. pathname=' + (location.pathname || '') + ' search=' + (location.search || '') + '</p>';
         return;
       }
-      async function getCountry() {
+      async function getLocation() {
         try {
           const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2000) });
           const d = await r.json();
-          return d.country_code || d.country_name || null;
-        } catch (e) { return null; }
+          return {
+            country: d.country_code || d.country_name || null,
+            region: d.region || d.region_code || null,
+            city: d.city || null
+          };
+        } catch (e) { return { country: null, region: null, city: null }; }
       }
       async function recordClick(supabase, slug, linkIndex, targetUrl) {
-        const country = await getCountry();
+        const loc = await getLocation();
         try {
-          await supabase.from('link_clicks').insert({ slug, link_index: linkIndex, target_url: targetUrl, country });
+          await supabase.from('link_clicks').insert({
+            slug,
+            link_index: linkIndex,
+            target_url: targetUrl,
+            country: loc.country,
+            region: loc.region,
+            city: loc.city
+          });
         } catch (e) { console.warn('[redirect] No se pudo registrar clic', e); }
       }
       async function run() {

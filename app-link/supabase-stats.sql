@@ -8,6 +8,8 @@ create table if not exists public.link_clicks (
   link_index int not null default 0,
   target_url text,
   country text,
+  region text,
+  city text,
   clicked_at timestamptz default now()
 );
 
