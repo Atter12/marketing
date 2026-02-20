@@ -942,7 +942,7 @@
             <div class="stats-totals" id="stats-totals"></div>
             <div class="stats-by-link card" id="stats-by-link" style="margin-top:12px;padding:16px;"></div>
             <div class="stats-recent card" style="margin-top:12px;padding:16px;">
-              <div class="card-title" style="margin-bottom:12px;">Últimos clics (país · provincia · ciudad / destino)</div>
+              <div class="card-title" style="margin-bottom:12px;">Últimos 30 clics (destino y fecha)</div>
               <div id="stats-recent-list" style="font-size:0.82rem;color:var(--text2);"></div>
             </div>
           </div>
@@ -1220,12 +1220,18 @@
     document.getElementById('stats-result').style.display='none';
     document.getElementById('stats-loading').style.display='block';
     try{
-      const { data: clicks, error } = await supabase.from('link_clicks').select('link_index,target_url,country,region,city,clicked_at').eq('slug',slug).order('clicked_at',{ascending:false}).limit(200);
-      document.getElementById('stats-loading').style.display='none';
-      if(error) throw error;
-      const total = (clicks||[]).length;
-      const byIndex = {};
-      (clicks||[]).forEach(c=>{ byIndex[c.link_index]= (byIndex[c.link_index]||0)+1; });
+      let total = 0, byIndex = {};
+      const { data: rpcData, error: rpcErr } = await supabase.rpc('get_link_stats', { p_slug: slug });
+      if(!rpcErr&&rpcData){
+        total = rpcData.total ?? 0;
+        (rpcData.by_index||[]).forEach(row=>{ byIndex[row.link_index]=row.clics; });
+      } else {
+        const { count: totalCount, error: errCount } = await supabase.from('link_clicks').select('*',{ count: 'exact', head: true }).eq('slug',slug);
+        if(errCount) throw errCount;
+        total = totalCount ?? 0;
+        const { data: allIndex, error: errIndex } = await supabase.from('link_clicks').select('link_index').eq('slug',slug).limit(10000);
+        if(!errIndex&&allIndex) allIndex.forEach(c=>{ const i=c.link_index; byIndex[i]=(byIndex[i]||0)+1; });
+      }
       document.getElementById('stats-totals').innerHTML = '<span class="stat-box">Total clics: '+total+'</span>';
       let configLabels = {};
       const { data: config } = await supabase.from('link_configs').select('mode,config').eq('slug',slug).maybeSingle();
@@ -1236,8 +1242,8 @@
       }
       const byLinkHtml = Object.keys(byIndex).sort((a,b)=>+a - +b).map(i=>'<div class="stat-row"><span>Link '+(+i+1)+(configLabels[i]?' — '+configLabels[i]:'')+'</span><strong>'+byIndex[i]+' clics</strong></div>').join('');
       document.getElementById('stats-by-link').innerHTML = byLinkHtml || '<div style="color:var(--text3);">Sin desglose</div>';
-      const locStr = c=> [c.country||'—', c.region||'', c.city||''].filter(Boolean).join(' · ') || '—';
-      const recent = (clicks||[]).slice(0,30).map(c=>{ const u=c.target_url||''; const short=u.replace(/^https?:\/\//,'').substring(0,45)+(u.length>45?'…':''); const safeTitle=(u).replace(/"/g,'&quot;'); return '<div class="recent-row"><span class="recent-country" title="País · Provincia · Ciudad">'+locStr(c)+'</span><span class="recent-url" title="'+safeTitle+'">'+short+'</span><span style="color:var(--text3);">'+new Date(c.clicked_at).toLocaleString('es')+'</span></div>'; }).join('');
+      const { data: recentRows } = await supabase.from('link_clicks').select('target_url,clicked_at').eq('slug',slug).order('clicked_at',{ascending:false}).limit(30);
+      const recent = (recentRows||[]).map(c=>{ const u=c.target_url||''; const short=u.replace(/^https?:\/\//,'').substring(0,45)+(u.length>45?'…':''); const safeTitle=(u).replace(/"/g,'&quot;'); return '<div class="recent-row"><span class="recent-url" title="'+safeTitle+'">'+short+'</span><span style="color:var(--text3);">'+new Date(c.clicked_at).toLocaleString('es')+'</span></div>'; }).join('');
       document.getElementById('stats-recent-list').innerHTML = recent || '<span style="color:var(--text3);">Aún no hay clics</span>';
       document.getElementById('stats-result').style.display='block';
     }catch(e){
