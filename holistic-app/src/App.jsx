@@ -141,7 +141,7 @@ const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 
 /* ═══════ MAIN APP ═══════ */
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
   const sb = useSupabaseData(role, clientId);
-  const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, mutations, uid: uidGen } = sb;
+  const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, refetch: refetchData, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";
   const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
   const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
@@ -420,7 +420,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* Early returns only after all hooks have run */
   if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
-  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ color: "#dc2640", fontSize: 14 }}>Error: {dataError}</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 360 }}><p style={{ color: "#dc2640", fontSize: 14, marginBottom: 16 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "#1b2559", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
