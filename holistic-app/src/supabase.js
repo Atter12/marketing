@@ -110,3 +110,43 @@ export async function darAccesoCliente(clientId, options = {}) {
   if (body?.error) throw new Error(body.error);
   return body;
 }
+
+// ═══ Comprobantes (Cobros y Garantías) ═══
+const ALLOWED_COMPROBANTE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"];
+const MAX_COMPROBANTE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+/** Sube un comprobante de pago para un cobro. Devuelve la ruta a guardar en comprobante_urls. */
+export async function uploadComprobanteCobro(cobroId, file) {
+  if (!supabase || !cobroId) throw new Error("Configuración o cobro no disponible");
+  if (!file || !ALLOWED_COMPROBANTE_TYPES.includes(file.type)) throw new Error("Archivo debe ser imagen (JPG, PNG, WebP, GIF) o PDF");
+  if (file.size > MAX_COMPROBANTE_SIZE) throw new Error("El archivo no puede superar 10 MB");
+  let ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  if (ext === "jpeg") ext = "jpg";
+  const name = `${crypto.randomUUID()}.${ext}`;
+  const path = `cobros/${cobroId}/${name}`;
+  const { error } = await supabase.storage.from("comprobantes").upload(path, file, { upsert: false });
+  if (error) throw new Error(error.message || "Error al subir el comprobante");
+  return path;
+}
+
+/** Sube una imagen para una garantía. Devuelve la ruta a guardar en imagen_urls. */
+export async function uploadComprobanteGarantia(garantiaId, file) {
+  if (!supabase || !garantiaId) throw new Error("Configuración o garantía no disponible");
+  if (!file || !ALLOWED_COMPROBANTE_TYPES.includes(file.type)) throw new Error("Archivo debe ser imagen (JPG, PNG, WebP, GIF) o PDF");
+  if (file.size > MAX_COMPROBANTE_SIZE) throw new Error("El archivo no puede superar 10 MB");
+  let ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+  if (ext === "jpeg") ext = "jpg";
+  const name = `${crypto.randomUUID()}.${ext}`;
+  const path = `garantias/${garantiaId}/${name}`;
+  const { error } = await supabase.storage.from("comprobantes").upload(path, file, { upsert: false });
+  if (error) throw new Error(error.message || "Error al subir la imagen");
+  return path;
+}
+
+/** Devuelve una URL firmada para ver un comprobante (bucket privado). path = ej. "cobros/uuid/archivo.jpg". */
+export async function getComprobanteSignedUrl(path, expiresIn = 3600) {
+  if (!supabase || !path) return null;
+  const { data, error } = await supabase.storage.from("comprobantes").createSignedUrl(path, expiresIn);
+  if (error) return null;
+  return data?.signedUrl ?? null;
+}

@@ -25,12 +25,14 @@ function mapGasto(r) {
 
 function mapCobro(r) {
   if (!r) return r;
-  return { id: r.id, codigo: r.codigo ?? "", gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null };
+  const urls = r.comprobante_urls;
+  return { id: r.id, codigo: r.codigo ?? "", gastoId: r.gasto_id, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, comprobante_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
 }
 
 function mapGarantia(r) {
   if (!r) return r;
-  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "" };
+  const urls = r.imagen_urls;
+  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "", imagen_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
 }
 
 function mapManual(r) {
@@ -200,7 +202,14 @@ export function useSupabaseData(role, clientId) {
       } catch (_) {}
       const genCodigo = () => "C-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const row = { gasto_id: gastoId, codigo: genCodigo(), monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
-      const { error: e } = await supabase.from("cobros").insert(row);
+      const { data: inserted, error: e } = await supabase.from("cobros").insert(row).select("id").single();
+      if (e) throw e;
+      await fetchAll();
+      return inserted?.id ?? null;
+    },
+    setCobroComprobantes: async (cobroId, paths) => {
+      if (role !== "gerente") return;
+      const { error: e } = await supabase.from("cobros").update({ comprobante_urls: paths }).eq("id", cobroId);
       if (e) throw e;
       await fetchAll();
     },
@@ -219,11 +228,20 @@ export function useSupabaseData(role, clientId) {
       if (id) {
         const { error: e } = await supabase.from("garantias").update(row).eq("id", id);
         if (e) throw e;
+        await fetchAll();
+        return id;
       } else {
         row.codigo_verificacion = genCodigoVerif();
-        const { error: e } = await supabase.from("garantias").insert(row);
+        const { data: inserted, error: e } = await supabase.from("garantias").insert(row).select("id").single();
         if (e) throw e;
+        await fetchAll();
+        return inserted?.id ?? null;
       }
+    },
+    setGarantiaImagenes: async (garantiaId, paths) => {
+      if (role !== "gerente") return;
+      const { error: e } = await supabase.from("garantias").update({ imagen_urls: paths }).eq("id", garantiaId);
+      if (e) throw e;
       await fetchAll();
     },
     delGarantia: async (id) => {

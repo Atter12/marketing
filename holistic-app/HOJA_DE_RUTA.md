@@ -71,38 +71,77 @@ Lista ordenada de mejoras y tareas, unificada a partir de requerimientos del equ
 
 ---
 
-## 8. Otros / notas
+## 8. Comprobantes e imágenes (solo Cobros y Garantías)
+
+Objetivo: permitir **subir fotos/comprobantes de pago** en Cobros y **subir imágenes correspondientes** en Garantías (comprobantes, documentos). Todo limitado a estas dos secciones.
+
+### 8.1 Cobros — comprobantes de pago
+
+- [ ] **Espacio para subir comprobantes:** En el formulario de **Registrar Cobro** (y al editar si se permite), añadir un **área para subir imágenes** (comprobantes de pago).
+- [ ] **Subida de fotos:** Permitir subir una o varias fotos de comprobante por cobro (transferencia, depósito, captura, etc.).
+- [ ] **Solo en Cobros:** Esta funcionalidad aplica únicamente a la sección Cobros; no a Gastos ni a otras pantallas.
+
+### 8.2 Garantías — imágenes correspondientes
+
+- [ ] **Espacio para subir imágenes:** En el formulario de **Nueva garantía** / **Editar garantía**, añadir un **área para subir imágenes** (comprobantes o documentos asociados a la garantía).
+- [ ] **Subida de fotos:** Permitir subir las imágenes correspondientes a la garantía (contrato, comprobante, foto del bien, etc.).
+- [ ] **Solo en Garantías:** Esta funcionalidad aplica únicamente a la sección Garantías.
+
+### 8.3 Backend y almacenamiento
+
+- [ ] **Storage:** Crear bucket (o carpeta) en Supabase Storage para comprobantes de **cobros** y otro para **garantías**, con políticas RLS (gerente: todo; cliente: solo sus registros según `gasto_id`/`client_id`).
+- [ ] **Base de datos:** En tabla `cobros`: campo(s) para guardar referencia(s) a los archivos (ej. `comprobante_urls` jsonb o tabla `cobros_adjuntos`). En tabla `garantias`: análogo (ej. `imagen_urls` o `garantias_adjuntos`).
+- [ ] **Límites:** Definir tamaño máximo por archivo y tipos permitidos (ej. image/jpeg, image/png, image/webp, PDF opcional).
+
+### 8.4 UI y experiencia
+
+- [ ] **Formularios:** En modales de Cobro y Garantía, zona clara con “Subir comprobante(s)” / “Subir imágenes”, arrastrar o seleccionar archivos; mostrar miniaturas y opción de quitar.
+- [ ] **Listado/detalle:** En tabla de Cobros y de Garantías, indicador o columna “Comprobantes” (ej. ícono + cantidad) y, si se implementa detalle por fila, poder ver/descargar las imágenes.
+- [ ] **Texto de ayuda:** Mensaje tipo “Podés subir fotos de comprobantes de pago” en Cobros y “Podés subir las imágenes correspondientes” en Garantías.
+
+### 8.5 Resumen de alcance
+
+| Sección   | Qué se sube                    | Dónde en la UI                          |
+|----------|---------------------------------|----------------------------------------|
+| Cobros   | Fotos de comprobantes de pago  | Modal Registrar Cobro (+ edición)      |
+| Garantías| Imágenes correspondientes      | Modal Nueva/Editar garantía            |
+
+*No incluye: Gastos, Clientes (ya tienen avatar), Manual ni otras pantallas.*
+
+---
+
+## 9. Otros / notas
 
 - [ ] **holistic2025:** Anotado como referencia (ej. contraseña dashboard backup); no es tarea de desarrollo, solo recordatorio.
 - [ ] Revisar mensajes y tooltips del dashboard para que quede claro: qué es prepago, qué es "registrar cobro", qué es período vs fecha de movimiento.
 
 ---
 
-## 9. UX y consistencia: buscadores, contadores, descargas y reportes
+## 10. UX y consistencia: buscadores, contadores, descargas y reportes
 
 Objetivo: mismo patrón en Gastos, Cobros y Garantías (como en Clientes), contadores de filas, descarga en Clientes, y reportes enriquecidos.
 
-### 9.1 Buscador / filtro por cliente
+### 10.1 Buscador / filtro por cliente
 
 - [x] **Gastos Ads:** Añadir combobox o buscador para filtrar por cliente (igual que el buscador por nombre en Clientes). Mostrar solo gastos del cliente seleccionado o todos si no hay filtro.
 - [x] **Cobros:** Mismo patrón: combobox o buscador para filtrar por cliente.
 - [x] **Garantías:** Mismo patrón: combobox o buscador para filtrar por cliente.
 
-### 9.2 Contador de filas
+### 10.2 Contador de filas
 
 - [x] **Gastos:** Contador visible en el header (ej. "X gastos en total" o "Y de X gastos" si hay filtro), en un lugar claro y cómodo (como en Clientes).
 - [x] **Cobros:** Contador de filas en el header (total y, si aplica, "Y de X" con filtro).
 - [x] **Garantías:** Contador de filas en el header.
 
-### 9.3 Estructura de página unificada
+### 10.3 Estructura de página unificada
 
 - [x] **Cobros y Garantías:** Seguir la misma estructura de **Gastos Ads** (header con título, filtros/contador a un lado, botones; contenido ordenado). Evitar layouts distintos que confundan entre secciones.
 
-### 9.4 Descarga en Clientes
+### 10.4 Descarga en Clientes
 
 - [x] **Clientes:** Añadir botón **Descargar Excel** (o similar) para exportar el listado de clientes (como ya existe en Gastos, Cobros y Garantías).
 
-### 9.5 Reportes: FEE y bloques del Resumen
+### 10.5 Reportes: FEE y bloques del Resumen
 
 - [x] **FEE en reportes:** Incluir **FEE** (y **% FEE** donde corresponda) en la vista de reportes / relación de cuentas (que ya muestra ADS, TOTAL, PAGADO, etc.).
 - [x] **Cuatro bloques del Resumen en Reportes:** Replicar en la sección Reportes los mismos 4 bloques que tiene el Resumen (Dashboard):
@@ -124,7 +163,8 @@ Objetivo: mismo patrón en Gastos, Cobros y Garantías (como en Clientes), conta
 | Alta     | Cobros / prepago        | Cobro para todos; S/N prepago; "Añadir cobro" cuando prepago; texto claro en UI |
 | Media    | Descargas Excel         | Botones por sección + rango de fechas + por cliente |
 | Media    | Foto gerente            | Subir foto y mostrarla responsive y visible |
-| Media    | **§9 UX y consistencia** | Buscador/filtro por cliente en Gastos, Cobros, Garantías; contador de filas en las tres; misma estructura que Gastos Ads; descarga en Clientes; Reportes con FEE/% FEE y los 4 bloques del Resumen |
+| Media    | **§8 Comprobantes (Cobros y Garantías)** | Espacio para subir comprobantes de pago en Cobros; imágenes en Garantías; storage + campos en BD; UI en modales y listados |
+| Media    | **§10 UX y consistencia** | Buscador/filtro por cliente en Gastos, Cobros, Garantías; contador de filas en las tres; misma estructura que Gastos Ads; descarga en Clientes; Reportes con FEE/% FEE y los 4 bloques del Resumen |
 
 ---
 

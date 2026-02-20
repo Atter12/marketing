@@ -1,11 +1,11 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
-import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente } from "./supabase";
+import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
 const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
@@ -217,6 +217,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gf, setGf] = useState(emptyGf);
   const [cof, setCof] = useState(emptyCof);
   const [gaf, setGaf] = useState(emptyGaf);
+  const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
+  const [garantiaImagenNewFiles, setGarantiaImagenNewFiles] = useState([]);
+  const [uploadingComprobantes, setUploadingComprobantes] = useState(false);
+  const [comprobanteViewer, setComprobanteViewer] = useState(null);
+  const [viewerSignedUrls, setViewerSignedUrls] = useState([]);
   const [mf, setMf] = useState(emptyMf);
 
   /* Synced gastos with computed fields — hooks must run before any early return */
@@ -402,7 +407,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setGarantiaImagenNewFiles([]); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoId: g.id, monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
@@ -417,6 +422,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [modal, editId, clients, garantias]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
+
+  useEffect(() => {
+    if (!comprobanteViewer?.paths?.length) { setViewerSignedUrls([]); return; }
+    setViewerSignedUrls(comprobanteViewer.paths.map(() => null));
+    Promise.all(comprobanteViewer.paths.map((p) => getComprobanteSignedUrl(p))).then((urls) => setViewerSignedUrls(urls));
+  }, [comprobanteViewer]);
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
@@ -433,10 +444,49 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const saveGasto = async () => { if (!gf.clientId || !parseFloat(gf.gasto)) return alert("Completa cliente y gasto"); const periodo = gf.mes || (gf.fechaMovimiento ? gf.fechaMovimiento.slice(0, 7) : tm()); const g = { id: editId || undefined, clientId: gf.clientId, fechaMovimiento: gf.fechaMovimiento || periodo + "-15", mes: periodo, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
 
-  const saveCobro = async () => { if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos"); await mutations.saveCobro({ ...cof, hora: cof.hora || null }); closeMdl(); };
+  const saveCobro = async () => {
+    if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos");
+    try {
+      setUploadingComprobantes(true);
+      const id = await mutations.saveCobro({ ...cof, hora: cof.hora || null });
+      if (id && cobroComprobanteFiles.length > 0) {
+        const paths = [];
+        for (const f of cobroComprobanteFiles) {
+          paths.push(await uploadComprobanteCobro(id, f));
+        }
+        await mutations.setCobroComprobantes(id, paths);
+      }
+      closeMdl();
+    } catch (err) {
+      alert(err?.message || "Error al registrar el cobro");
+    } finally {
+      setUploadingComprobantes(false);
+    }
+  };
   const delCobro = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delCobro(id); };
 
-  const saveGar = async () => { if (!gaf.clientId) return alert("Selecciona cliente"); await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: gaf.gastoId || null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado }); closeMdl(); };
+  const saveGar = async () => {
+    if (!gaf.clientId) return alert("Selecciona cliente");
+    try {
+      setUploadingComprobantes(true);
+      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: gaf.gastoId || null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado });
+      const existingPaths = (editId && garantias.find((g) => g.id === editId)?.imagen_urls) || [];
+      if (garantiaImagenNewFiles.length > 0) {
+        const newPaths = [];
+        for (const f of garantiaImagenNewFiles) {
+          newPaths.push(await uploadComprobanteGarantia(id, f));
+        }
+        await mutations.setGarantiaImagenes(id, [...existingPaths, ...newPaths]);
+      } else if (editId && existingPaths.length > 0) {
+        await mutations.setGarantiaImagenes(id, existingPaths);
+      }
+      closeMdl();
+    } catch (err) {
+      alert(err?.message || "Error al guardar la garantía");
+    } finally {
+      setUploadingComprobantes(false);
+    }
+  };
   const delGar = async (id) => { if (!confirm("¿Eliminar?")) return; await mutations.delGarantia(id); };
 
   /* Selección y eliminación en lote */
@@ -1000,11 +1050,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       <Btn variant="outline" size="sm" onClick={delCobrosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.cobros.length})</Btn>
                     </div>
                   )}
-                  <div className="hm-table-wrap"><table><thead><tr><th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("cobros", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Registrado", "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <div className="hm-table-wrap"><table><thead><tr><th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("cobros", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Registrado", "Notas", "Comprob.", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                     <tbody>{cobrosPaginated.map((co) => {
                       const g = gastos.find((x) => x.id === co.gastoId);
                       const c = g ? clients.find((x) => x.id === g.clientId) : null;
                       const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
+                      const paths = co.comprobante_urls || [];
                       return (
                         <tr key={co.id}>
                           <td style={TD}><input type="checkbox" checked={sel.includes(co.id)} onChange={() => toggleSelect("cobros", co.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>
@@ -1019,10 +1070,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{createdByStr}</td>
                           <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
                           <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
+                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td>
                         </tr>
                       );
-                    })}{!cobrosPaginated.length && <Empty cols={13} msg={emptyCobrosMsg} />}</tbody></table></div>
+                    })}{!cobrosPaginated.length && <Empty cols={14} msg={emptyCobrosMsg} />}</tbody></table></div>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -1065,11 +1117,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
                     </div>
                   )}
-                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                     <tbody>{garantiasPaginated.map((g) => {
                       const c = clients.find((x) => x.id === g.clientId);
                       const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
                       const estadoBdg = g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n";
+                      const paths = g.imagen_urls || [];
                       return (
                         <tr key={g.id}>
                           {!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("garantias", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}
@@ -1080,10 +1133,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
                           <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
                           <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
+                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0eefe", color: "#7c3aed", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
                         </tr>
                       );
-                    })}{!garantiasPaginated.length && <Empty cols={colsCount} msg={emptyGarantiasMsg} />}</tbody></table></div>
+                    })}{!garantiasPaginated.length && <Empty cols={colsCount + 1} msg={emptyGarantiasMsg} />}</tbody></table></div>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -1158,12 +1212,31 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         )}
       </Mdl>
 
-      <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro}>Registrar</Btn></>}>
+      <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Registrar"}</Btn></>}>
         <Inp label="Gasto *" type="select" value={cof.gastoId} onChange={(e) => { const g = sGastos.find((x) => x.id === e.target.value); setCof({ ...cof, gastoId: e.target.value, monto: g ? g._pend.toFixed(2) : "" }); }}><option value="">Seleccionar gasto a cobrar...</option>{sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return <option key={g.id} value={g.id}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)}) {g.prepago ? "· Prepago" : ""}</option>; })}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Monto ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
+        <div style={{ marginTop: 8 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
+          <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #0055ff", borderRadius: 10, background: "#f0f4ff", color: "#0055ff", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
+            <Paperclip size={16} />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setCobroComprobanteFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
+            Añadir archivos
+          </label>
+          {cobroComprobanteFiles.length > 0 && (
+            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
+              {cobroComprobanteFiles.map((f, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  {f.name} ({(f.size / 1024).toFixed(1)} KB)
+                  <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </Mdl>
 
       <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={!accesoResultado ? <><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={() => submitDarAcceso(false)} disabled={savingAcceso}>{savingAcceso ? "Enviando…" : "Enviar link por email"}</Btn></> : <><Btn variant="outline" onClick={() => { setAccesoResultado(null); }} style={{ display: accesoResultado?.link ? "inline-flex" : "none" }}>Enviar otro</Btn><Btn onClick={closeMdl}>Cerrar</Btn></>}>
@@ -1203,7 +1276,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         })()}
       </Mdl>
 
-      <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGar}>Guardar</Btn></>}>
+      <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <Inp label="Cliente *" type="select" value={gaf.clientId} onChange={(e) => setGaf({ ...gaf, clientId: e.target.value, gastoId: "" })}><option value="">Seleccionar...</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</Inp>
         <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp : ""}</option>)}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
@@ -1212,6 +1285,46 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </div>
         <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
         <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
+        <div style={{ marginTop: 8 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
+          <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #7c3aed", borderRadius: 10, background: "#f0eefe", color: "#7c3aed", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
+            <Paperclip size={16} />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setGarantiaImagenNewFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
+            Añadir archivos
+          </label>
+          {garantiaImagenNewFiles.length > 0 && (
+            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
+              {garantiaImagenNewFiles.map((f, i) => (
+                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  {f.name} ({(f.size / 1024).toFixed(1)} KB)
+                  <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {editId && (() => { const gar = garantias.find((g) => g.id === editId); const paths = gar?.imagen_urls || []; return paths.length > 0 ? <p style={{ marginTop: 8, fontSize: 12, color: "#5f6577" }}>Ya hay {paths.length} archivo(s) subidos para esta garantía. Los nuevos se añadirán.</p> : null; })()}
+        </div>
+      </Mdl>
+
+      <Mdl open={!!comprobanteViewer} onClose={() => setComprobanteViewer(null)} title={comprobanteViewer?.type === "garantia" ? "Imágenes de la garantía" : "Comprobantes de pago"}>
+        <div style={{ padding: "8px 0" }}>
+          {comprobanteViewer?.paths?.length ? (
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {comprobanteViewer.paths.map((path, i) => {
+                const url = viewerSignedUrls[i];
+                const name = path.split("/").pop() || `Archivo ${i + 1}`;
+                return (
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < comprobanteViewer.paths.length - 1 ? "1px solid #e2e4e9" : "none" }}>
+                    <Paperclip size={16} style={{ color: "#5f6577", flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: "#1b2559", flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
+                    {url ? <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", background: "#0055ff", color: "#fff", borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: "none" }}><Eye size={12} /> Ver</a> : <span style={{ fontSize: 12, color: "#9498a8" }}>Cargando…</span>}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </div>
       </Mdl>
     </div>
   );
