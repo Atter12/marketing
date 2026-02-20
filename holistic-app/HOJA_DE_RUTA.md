@@ -104,13 +104,13 @@ Objetivo: mismo patrón en Gastos, Cobros y Garantías (como en Clientes), conta
 
 ### 9.5 Reportes: FEE y bloques del Resumen
 
-- [ ] **FEE en reportes:** Incluir **FEE** (y **% FEE** donde corresponda) en la vista de reportes / relación de cuentas (que ya muestra ADS, TOTAL, PAGADO, etc.).
-- [ ] **Cuatro bloques del Resumen en Reportes:** Replicar en la sección Reportes los mismos 4 bloques que tiene el Resumen (Dashboard):
+- [x] **FEE en reportes:** Incluir **FEE** (y **% FEE** donde corresponda) en la vista de reportes / relación de cuentas (que ya muestra ADS, TOTAL, PAGADO, etc.).
+- [x] **Cuatro bloques del Resumen en Reportes:** Replicar en la sección Reportes los mismos 4 bloques que tiene el Resumen (Dashboard):
   1. **Gasto Mensual en Ads** — "Inversión + fees por mes" (gráfico de barras: Gasto Ads + Fee por mes).
   2. **Métodos de Cobro** — "Distribución por medio de pago" (gráfico por método de pago).
   3. **Cobrado vs Gasto** — "Evolución mensual" (gráfico: Cobrado vs Gasto por mes).
   4. **Deuda Neta por Cliente** — "Incluye descuento de garantías" (gráfico o tabla por cliente).
-- [ ] Asegurar que el **% FEE** aparezca también en "el otro reporte" (vista relación de cuentas o la vista alternativa de reportes).
+- [x] Asegurar que el **% FEE** aparezca también en "el otro reporte" (vista relación de cuentas o la vista alternativa de reportes).
 
 ---
 
