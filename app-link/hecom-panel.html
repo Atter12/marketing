@@ -761,6 +761,12 @@
   .stats-recent .recent-country { font-weight: 600; color: var(--text); min-width: 48px; }
   .stats-recent .recent-url { color: var(--primary); word-break: break-all; }
 
+  .list-page .list-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--white); flex-wrap: wrap; }
+  .list-page .list-row:hover { border-color: var(--border); }
+  .list-page .list-slug { font-weight: 700; color: var(--primary); min-width: 100px; }
+  .list-page .list-mode { font-size: 0.78rem; color: var(--text2); padding: 3px 8px; border-radius: 6px; background: var(--bg); }
+  .list-page .list-actions { margin-left: auto; display: flex; gap: 8px; }
+
   /* Responsive */
   @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); }
@@ -791,7 +797,7 @@
     <div class="nav-section-title">Principal</div>
     <a class="nav-item active" id="nav-links" onclick="showPage('links')"><span class="nav-icon">🔗</span> Cortador de Links</a>
     <a class="nav-item" id="nav-stats" onclick="showPage('stats')"><span class="nav-icon">📊</span> Estadísticas</a>
-    <a class="nav-item"><span class="nav-icon">📋</span> Mis Enlaces</a>
+    <a class="nav-item" id="nav-list" onclick="showPage('list')"><span class="nav-icon">📋</span> Mis Enlaces</a>
     <div class="nav-section-title">Configuración</div>
     <a class="nav-item"><span class="nav-icon">⚙️</span> Ajustes</a>
     <a class="nav-item"><span class="nav-icon">🌐</span> Dominios</a>
@@ -915,21 +921,43 @@
         <div class="card-header">
           <div class="card-title"><span>📊</span> Estadísticas por link</div>
         </div>
-        <div class="slug-row" style="margin-bottom:16px;">
-          <span class="domain-prefix" style="color:var(--text2);">Slug:</span>
-          <input type="text" id="stats-slug-input" placeholder="mi-link o victor" style="flex:1;max-width:200px;">
-          <button class="btn btn-primary" onclick="loadStats()">Ver estadísticas</button>
+        <div id="stats-no-links" style="display:none;flex-wrap:wrap;" class="info-box">
+          <span class="info-icon">ℹ️</span>
+          <span style="flex:1;min-width:200px;">Necesitas tener al menos un link para ver estadísticas. Crea uno en <strong>Cortador de Links</strong> y guarda la configuración; después podrás elegir ese link aquí.</span>
+          <button class="btn btn-primary" style="margin-top:8px;flex-basis:100%;" onclick="showPage('links')">Ir a Cortador de Links</button>
         </div>
-        <div id="stats-loading" style="display:none;padding:12px;color:var(--text2);">Cargando...</div>
-        <div id="stats-result" style="display:none;">
-          <div class="stats-totals" id="stats-totals"></div>
-          <div class="stats-by-link card" id="stats-by-link" style="margin-top:12px;padding:16px;"></div>
-          <div class="stats-recent card" style="margin-top:12px;padding:16px;">
-            <div class="card-title" style="margin-bottom:12px;">Últimos clics (país / destino)</div>
-            <div id="stats-recent-list" style="font-size:0.82rem;color:var(--text2);"></div>
+        <div id="stats-has-links">
+          <div class="slug-row" style="margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <span class="domain-prefix" style="color:var(--text2);">Link (slug):</span>
+            <select id="stats-slug-select" style="max-width:220px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--white);font-size:0.88rem;" onchange="onStatsSlugSelect()">
+              <option value="">-- Elegir link --</option>
+            </select>
+            <input type="text" id="stats-slug-input" placeholder="o escribe slug" style="flex:1;max-width:160px;">
+            <button class="btn btn-primary" onclick="loadStats()">Ver estadísticas</button>
           </div>
+          <div id="stats-loading" style="display:none;padding:12px;color:var(--text2);">Cargando...</div>
+          <div id="stats-result" style="display:none;">
+            <div class="stats-totals" id="stats-totals"></div>
+            <div class="stats-by-link card" id="stats-by-link" style="margin-top:12px;padding:16px;"></div>
+            <div class="stats-recent card" style="margin-top:12px;padding:16px;">
+              <div class="card-title" style="margin-bottom:12px;">Últimos clics (país / destino)</div>
+              <div id="stats-recent-list" style="font-size:0.82rem;color:var(--text2);"></div>
+            </div>
+          </div>
+          <div id="stats-empty" style="display:none;padding:12px;color:var(--text3);">Elige un link de la lista o escribe el slug y pulsa "Ver estadísticas".</div>
         </div>
-        <div id="stats-empty" style="display:none;padding:12px;color:var(--text3);">Elige un slug y pulsa "Ver estadísticas".</div>
+      </div>
+    </div>
+    <div id="page-list" class="list-page" style="display:none;">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span>📋</span> Mis Enlaces</div>
+          <button class="btn btn-primary" onclick="showPage('links');document.getElementById('slug-input').value='';resetAll();">+ Nuevo link</button>
+        </div>
+        <p style="font-size:0.85rem;color:var(--text2);margin-bottom:16px;">Cada link tiene su propia URL corta y su propia rotación o destino. Edita uno o crea otro.</p>
+        <div id="list-loading" style="padding:12px;color:var(--text2);">Cargando...</div>
+        <div id="list-items" style="display:none;"></div>
+        <div id="list-empty" style="display:none;padding:16px;color:var(--text3);">Aún no hay links. Ve a Cortador de Links y crea uno.</div>
       </div>
     </div>
   </div>
@@ -1099,13 +1127,79 @@
   function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebarOverlay').classList.remove('active')}
 
   function showPage(page){
-    const isLinks=page==='links';
+    const isLinks=page==='links', isStats=page==='stats', isList=page==='list';
     document.getElementById('page-links').style.display=isLinks?'block':'none';
-    document.getElementById('page-stats').style.display=isLinks?'none':'block';
-    document.getElementById('topbar-title').textContent=isLinks?'Cortador de Links':'Estadísticas';
+    document.getElementById('page-stats').style.display=isStats?'block':'none';
+    document.getElementById('page-list').style.display=isList?'block':'none';
+    const titles={links:'Cortador de Links',stats:'Estadísticas',list:'Mis Enlaces'};
+    document.getElementById('topbar-title').textContent=titles[page]||titles.links;
     document.querySelectorAll('.sidebar .nav-item').forEach(n=>n.classList.remove('active'));
-    document.getElementById(isLinks?'nav-links':'nav-stats').classList.add('active');
-    if(!isLinks){ document.getElementById('stats-empty').style.display='block'; document.getElementById('stats-empty').textContent='Elige un slug y pulsa "Ver estadísticas".'; document.getElementById('stats-result').style.display='none'; document.getElementById('stats-loading').style.display='none'; }
+    const navId=isLinks?'nav-links':isStats?'nav-stats':'nav-list';
+    document.getElementById(navId).classList.add('active');
+    if(isStats){ document.getElementById('stats-empty').style.display='block'; document.getElementById('stats-empty').textContent='Elige un link de la lista o escribe el slug y pulsa "Ver estadísticas".'; document.getElementById('stats-result').style.display='none'; document.getElementById('stats-loading').style.display='none'; refreshStatsSlugSelect(); }
+    if(isList) loadList();
+  }
+  async function refreshStatsSlugSelect(){
+    const noLinks=document.getElementById('stats-no-links');
+    const hasLinks=document.getElementById('stats-has-links');
+    const sel=document.getElementById('stats-slug-select');
+    const empty=document.getElementById('stats-empty');
+    if(!sel)return;
+    sel.innerHTML='<option value="">-- Elegir link --</option>';
+    if(!supabase){ if(noLinks)noLinks.style.display='block'; if(hasLinks)hasLinks.style.display='none'; return; }
+    const{data}=await supabase.from('link_configs').select('slug').order('slug');
+    const list=data||[];
+    if(list.length===0){
+      if(noLinks)noLinks.style.display='block';
+      if(hasLinks)hasLinks.style.display='none';
+      document.getElementById('stats-result').style.display='none';
+    }else{
+      if(noLinks)noLinks.style.display='none';
+      if(hasLinks)hasLinks.style.display='block';
+      list.forEach(r=>{ const o=document.createElement('option'); o.value=r.slug; o.textContent=r.slug; sel.appendChild(o); });
+      if(empty){ empty.style.display='block'; empty.textContent='Elige un link de la lista o escribe el slug y pulsa "Ver estadísticas".'; }
+    }
+  }
+  function onStatsSlugSelect(){
+    const sel=document.getElementById('stats-slug-select');
+    const inp=document.getElementById('stats-slug-input');
+    if(sel&&inp&&sel.value){ inp.value=sel.value; loadStats(); }
+  }
+  async function loadList(){
+    document.getElementById('list-items').style.display='none';
+    document.getElementById('list-empty').style.display='none';
+    document.getElementById('list-loading').style.display='block';
+    if(!supabase){ document.getElementById('list-loading').style.display='none'; document.getElementById('list-empty').style.display='block'; document.getElementById('list-empty').textContent='Supabase no disponible.'; return; }
+    try{
+      const{data,error}=await supabase.from('link_configs').select('slug,mode,config').order('slug');
+      document.getElementById('list-loading').style.display='none';
+      if(error)throw error;
+      if(!data||data.length===0){ document.getElementById('list-empty').style.display='block'; return; }
+      const base=window.location.origin+'/go/';
+      const html=data.map(r=>{
+        const modeLabel=r.mode==='rotation'?'Rotación':'Un solo destino';
+        const detail=r.mode==='common'?(r.config&&r.config.url?(r.config.url.replace(/^https?:\/\//,'').substring(0,35)+'…'):''):(r.config&&r.config.links?(r.config.links.length+' enlaces'):'');
+        return '<div class="list-row"><span class="list-slug">'+base+r.slug+'</span><span class="list-mode">'+modeLabel+'</span>'+(detail?'<span style="font-size:0.8rem;color:var(--text3);">'+detail+'</span>':'')+'<span class="list-actions"><button class="btn btn-secondary" onclick="editSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Editar</button><button class="btn btn-secondary" onclick="goStatsForSlug(\''+r.slug.replace(/'/g,"\\'")+'\')">Estadísticas</button></span></div>';
+      }).join('');
+      document.getElementById('list-items').innerHTML=html;
+      document.getElementById('list-items').style.display='block';
+    }catch(e){
+      document.getElementById('list-loading').style.display='none';
+      document.getElementById('list-empty').style.display='block';
+      document.getElementById('list-empty').textContent='Error al cargar: '+(e.message||'');
+    }
+  }
+  function goStatsForSlug(slug){
+    showPage('stats');
+    document.getElementById('stats-slug-input').value=slug;
+    var s=document.getElementById('stats-slug-select'); if(s) s.value=slug;
+    loadStats();
+  }
+  async function editSlug(slug){
+    showPage('links');
+    document.getElementById('slug-input').value=slug;
+    updateSlugPreview();
+    if(supabase) await loadFromSupabaseIfNeeded();
   }
 
   async function loadStats(){
@@ -1143,7 +1237,7 @@
     }
   }
 
-  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;window.showPage=showPage;window.loadStats=loadStats;
+  window.toggleSidebar=toggleSidebar;window.closeSidebar=closeSidebar;window.copyMainUrl=copyMainUrl;window.updateSlugPreview=updateSlugPreview;window.switchTab=switchTab;window.addLink=addLink;window.removeLink=removeLink;window.updateLink=updateLink;window.applyChanges=applyChanges;window.applyCommonChanges=applyCommonChanges;window.simulateClick=simulateClick;window.resetSim=resetSim;window.resetAll=resetAll;window.showPage=showPage;window.loadStats=loadStats;window.onStatsSlugSelect=onStatsSlugSelect;window.editSlug=editSlug;window.goStatsForSlug=goStatsForSlug;
   init();
 })();
 </script>
