@@ -553,6 +553,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     </div>
   ) : null;
 
+  const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros");
+  const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
+
   return (
     <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -898,7 +901,27 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Hora", "Cliente", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", ...(isCliente ? [] : ["Registrado por", "Registrado"]), "Notas", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{cobrosFiltrados.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT(co.hora)}</td><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td><td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td><td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td></tr>; })}{!cobrosFiltrados.length && <Empty cols={isCliente ? 10 : 12} msg={cobros.length ? (filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros") : "Sin cobros" />}</tbody></table></div>
+              <tbody>{cobrosFiltrados.map((co) => {
+                const g = gastos.find((x) => x.id === co.gastoId);
+                const c = g ? clients.find((x) => x.id === g.clientId) : null;
+                const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
+                return (
+                  <tr key={co.id}>
+                    <td style={TD}>{fmtD(co.fecha)}</td>
+                    <td style={TD}>{fmtT(co.hora)}</td>
+                    <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
+                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
+                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
+                    <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
+                    <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
+                    <td style={TD}><PayB method={co.metodo} /></td>
+                    {!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{createdByStr}</td>}
+                    {!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>}
+                    <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
+                    <td style={TD}>{!isCliente && <IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger />}</td>
+                  </tr>
+                );
+              })}{!cobrosFiltrados.length && <Empty cols={isCliente ? 10 : 12} msg={emptyCobrosMsg} />}</tbody></table></div>
           </div></div>
         </div>)}
 
@@ -917,7 +940,23 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Tipo", "Descripción", "Valor", "Estado", "Cód. verificación", "Cód. gasto", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-              <tbody>{garantiasFiltradas.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return <tr key={g.id}><td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td></tr>; })}{!garantiasFiltradas.length && <Empty cols={8} msg={garantias.length ? (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías") : "Sin garantías" />}</tbody></table></div>
+              <tbody>{garantiasFiltradas.map((g) => {
+                const c = clients.find((x) => x.id === g.clientId);
+                const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
+                const estadoBdg = g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n";
+                return (
+                  <tr key={g.id}>
+                    <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
+                    <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
+                    <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
+                    <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
+                    <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
+                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td>
+                    <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
+                    <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
+                  </tr>
+                );
+              })}{!garantiasFiltradas.length && <Empty cols={8} msg={emptyGarantiasMsg} />}</tbody></table></div>
           </div></div>
         </div>)}
       </main>
