@@ -1048,7 +1048,7 @@
     for(const l of links){if(!l.url||!l.url.startsWith('http')){showToast('Ingresa URLs válidas (http:// o https://)','error');return}}
     currentConfig=links.map(l=>({url:l.url,clicks:parseInt(l.clicks)||1}));
     const slug=document.getElementById('slug-input').value.trim().replace(/[^a-zA-Z0-9\-_]/g,'')||'mi-link';
-    if(supabase){const{error}=await supabase.from('link_configs').upsert({slug,mode:'rotation',config:{links:currentConfig}},{onConflict:'slug'});if(error){showToast('Error al guardar: '+error.message,'error');return}}
+    if(supabase){const{error}=await supabase.from('link_configs').upsert({slug,mode:'rotation',config:{links:currentConfig},rotation_counter:0},{onConflict:'slug'});if(error){showToast('Error al guardar: '+error.message,'error');return}}
     saveConfig(true);
     document.getElementById('test-area').style.display='block';
     resetSim();renderFlowDiagram();

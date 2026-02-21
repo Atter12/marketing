@@ -87,18 +87,21 @@
         }
         if (row.mode === 'rotation' && row.config && Array.isArray(row.config.links) && row.config.links.length > 0) {
           const links = row.config.links.map(l => ({ url: l.url, clicks: Math.max(1, parseInt(l.clicks) || 1) }));
-          const key = 'hecom_' + slug;
-          let n = parseInt(localStorage.getItem(key) || '0', 10);
           const total = links.reduce((s, x) => s + x.clicks, 0);
-          const pos = n % total;
+          const { data: posData, error: posErr } = await supabase.rpc('next_rotation_position', { p_slug: slug });
+          if (posErr || posData == null) {
+            document.getElementById('app').innerHTML = '<p class="err">Error al obtener posición de rotación. Ejecuta el SQL de rotación global en Supabase.</p>';
+            return;
+          }
+          const pos = typeof posData === 'number' ? posData % total : 0;
           let acc = 0, target = links[0].url, linkIndex = 0;
           for (let i = 0; i < links.length; i++) {
             acc += links[i].clicks;
             if (pos < acc) { target = links[i].url; linkIndex = i; break; }
           }
-          localStorage.setItem(key, String(n + 1));
           if (target && (target.startsWith('http://') || target.startsWith('https://'))) {
-            recordClick(supabase, slug, linkIndex, target).then(() => window.location.replace(target));
+            await recordClick(supabase, slug, linkIndex, target);
+            window.location.replace(target);
             return;
           }
         }
