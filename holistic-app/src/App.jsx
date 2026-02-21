@@ -118,8 +118,8 @@ const Inp = ({ label, hint, ...p }) => (
   </div>
 );
 
-/** Buscador por nombre: input + lista filtrada. options = [{ value, label }], value = id seleccionado, onChange(id) */
-function SearchSelect({ label, options, value, onChange, placeholder = "Buscar por nombre...", emptyMessage = "Sin resultados" }) {
+/** Buscador por nombre: input + lista filtrada. options = [{ value, label }], value = id seleccionado, onChange(id). compact = sin margen inferior (para filtros en header). */
+function SearchSelect({ label, options, value, onChange, placeholder = "Buscar por nombre...", emptyMessage = "Sin resultados", compact }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
@@ -130,7 +130,7 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
   }, [options, query]);
   const displayText = open ? query : (selected ? selected.label : "");
   return (
-    <div style={{ marginBottom: 14, minWidth: 0, position: "relative" }}>
+    <div style={{ marginBottom: compact ? 0 : 14, minWidth: 0, position: "relative" }}>
       {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
       <input
         type="text"
@@ -270,7 +270,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
+  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -470,7 +470,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
   const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setGarantiaImagenNewFiles([]); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
-  const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoId: g.id, monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
+  const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
   useEffect(() => {
     if (!modal) return;
@@ -492,6 +492,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
+  const clientFilterOptions = useMemo(() => [{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))], [clientsSorted]);
 
   /* Early returns only after all hooks have run */
   if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
@@ -506,16 +507,35 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
 
   const saveCobro = async () => {
-    if (!cof.gastoId || !parseFloat(cof.monto) || !cof.metodo) return alert("Completa todos los campos");
+    const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : (cof.gastoId ? [cof.gastoId] : []);
+    if (!ids.length || !parseFloat(cof.monto) || !cof.metodo) return alert("Seleccioná al menos un gasto, monto y método de pago");
+    const totalMonto = parseFloat(cof.monto) || 0;
+    if (totalMonto <= 0) return alert("El monto debe ser mayor a 0");
     try {
       setUploadingComprobantes(true);
-      const id = await mutations.saveCobro({ ...cof, hora: cof.hora || null });
-      if (id && cobroComprobanteFiles.length > 0) {
+      const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
+      const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
+      const montos = totalPend > 0 && ids.length > 0
+        ? (() => { const parts = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); return g ? (g._pend / totalPend) * totalMonto : 0; }); const sum = parts.reduce((a, b) => a + b, 0); const diff = totalMonto - sum; if (diff !== 0 && parts.length) parts[0] += diff; return parts.map((p) => Math.round(p * 100) / 100); })()
+        : [totalMonto];
+      const createdIds = [];
+      for (let i = 0; i < ids.length; i++) {
+        const id = await mutations.saveCobro({ gastoId: ids[i], monto: montos[i] ?? totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        if (id) createdIds.push(id);
+      }
+      if (cobroComprobanteFiles.length > 0 && createdIds.length > 0) {
         const paths = [];
         for (const f of cobroComprobanteFiles) {
-          paths.push(await uploadComprobanteCobro(id, f));
+          paths.push(await uploadComprobanteCobro(createdIds[0], f));
         }
-        await mutations.setCobroComprobantes(id, paths);
+        await mutations.setCobroComprobantes(createdIds[0], paths);
+        for (let j = 1; j < createdIds.length; j++) {
+          const pathsCopy = [];
+          for (const f of cobroComprobanteFiles) {
+            pathsCopy.push(await uploadComprobanteCobro(createdIds[j], f));
+          }
+          await mutations.setCobroComprobantes(createdIds[j], pathsCopy);
+        }
       }
       closeMdl();
     } catch (err) {
@@ -530,7 +550,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!gaf.clientId) return alert("Selecciona cliente");
     try {
       setUploadingComprobantes(true);
-      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: gaf.gastoId || null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado });
+      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado });
       const existingPaths = (editId && garantias.find((g) => g.id === editId)?.imagen_urls) || [];
       if (garantiaImagenNewFiles.length > 0) {
         const newPaths = [];
@@ -542,6 +562,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         await mutations.setGarantiaImagenes(id, existingPaths);
       }
       closeMdl();
+      setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
     } finally {
@@ -911,11 +932,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
-            {!isCliente && <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Usuario</label><select value={repCl} onChange={(e) => setRepCl(e.target.value)} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 180, outline: "none", cursor: "pointer" }}><option value="all">Todos</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>}
+            {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input type="text" placeholder="MM/AAAA" value={repPerInput !== undefined ? repPerInput : (repPer || "")} onChange={(e) => setRepPerInput(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) { setRepPer(p); setRepPerInput(p); } else setRepPerInput(undefined); }} style={{ width: 100, padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} /><button type="button" onClick={() => { const d = new Date(); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button><button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button><select value={repPer} onChange={(e) => { setRepPer(e.target.value); setRepPerInput(e.target.value || undefined); }} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div></div>
             <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Rango por fecha de operación</label><div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="date" value={repPerInicio} onChange={(e) => setRepPerInicio(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 12 }}>a</span><input type="date" value={repPerFin} onChange={(e) => setRepPerFin(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
+            <div style={{ background: "linear-gradient(135deg, #f0eefe 0%, #eef0f8 100%)", border: "1px solid #c4b5fd", borderRadius: 12, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12 }}>
+              <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
+                <p style={{ margin: 0, fontSize: 12.5, color: "#6b21a8", lineHeight: 1.5 }}>Las garantías vigentes que agregás en <strong>Garantías</strong> se descuentan aquí: en la columna <strong>GARANTÍA</strong> (con signo negativo) y reducen el <strong>PEND. NETO</strong> de cada cliente. También bajan la columna <strong>A cobrar</strong> en Gastos. Si acabas de guardar una garantía, ya está reflejada.</p>
+              </div>
+            </div>
             <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
               <Stat icon={<DollarSign size={20} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#1b2559" />
               <Stat icon={<Percent size={20} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#0055ff" />
@@ -1046,7 +1074,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
                 {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
               </div>
-              {!isCliente && <select value={filterCliente.gastos} onChange={(e) => setFilterCliente((p) => ({ ...p, gastos: e.target.value }))} style={{ padding: "8px 12px", minWidth: 180, background: "#f4f5f7", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer" }} title="Filtrar por cliente"><option value="">Todos los clientes</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}
+              {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
@@ -1091,7 +1119,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
                 {filterCliente.cobros ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
-              <select value={filterCliente.cobros} onChange={(e) => setFilterCliente((p) => ({ ...p, cobros: e.target.value }))} style={{ padding: "8px 12px", minWidth: 180, background: "#f4f5f7", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer" }} title="Filtrar por cliente"><option value="">Todos los clientes</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /></div>
               <Btn variant="outline" size="sm" onClick={expCobros}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
@@ -1158,7 +1186,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
                 {filterCliente.garantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
-              {!isCliente && <select value={filterCliente.garantias} onChange={(e) => setFilterCliente((p) => ({ ...p, garantias: e.target.value }))} style={{ padding: "8px 12px", minWidth: 180, background: "#f4f5f7", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", cursor: "pointer" }} title="Filtrar por cliente"><option value="">Todos los clientes</option>{clientsSorted.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>}
+              {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
@@ -1283,8 +1311,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Registrar"}</Btn></>}>
-        <SearchSelect label="Gasto *" options={sGastos.filter((g) => g._st !== "Pagado").map((g) => { const c = clients.find((x) => x.id === g.clientId); return { value: g.id, label: `${c?.name || "?"} — ${fmtM(g.mes)} ($${fmt(g._pend)}) ${g.prepago ? "· Prepago" : ""}` }; })} value={cof.gastoId} onChange={(id) => { const g = sGastos.find((x) => x.id === id); setCof({ ...cof, gastoId: id, monto: g ? g._pend.toFixed(2) : "" }); }} placeholder="Buscar por cliente o período..." emptyMessage="No hay gastos pendientes" />
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Monto ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
+          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno.</p>
+          <SearchSelect options={sGastos.filter((g) => g._st !== "Pagado" && !(cof.gastoIds || []).includes(g.id)).map((g) => { const c = clients.find((x) => x.id === g.clientId); return { value: g.id, label: `${c?.name || "?"} — ${fmtM(g.mes)} ($${fmt(g._pend)}) ${g.prepago ? "· Prepago" : ""}` }; })} value="" onChange={(id) => { if (id && !(cof.gastoIds || []).includes(id)) { const list = [...(cof.gastoIds || []), id]; const sum = list.reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: cof.monto || sum.toFixed(2) }); } }} placeholder="Buscar y agregar gasto..." emptyMessage="No hay más gastos pendientes o ya están agregados" />
+          {(cof.gastoIds || []).length > 0 && (
+            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {(cof.gastoIds || []).map((gid) => { const g = sGastos.find((x) => x.id === gid); const c = g ? clients.find((x) => x.id === g.clientId) : null; return g ? <span key={gid} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "#e6f7f0", color: "#0d9f6e", borderRadius: 8, fontSize: 12, fontWeight: 600 }}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)})<button type="button" onClick={() => { const list = (cof.gastoIds || []).filter((id) => id !== gid); const sum = list.reduce((a, id) => { const x = sGastos.find((g) => g.id === id); return a + (x ? x._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: list.length === 1 ? (sGastos.find((x) => x.id === list[0])?._pend.toFixed(2) ?? "") : (list.length ? sum.toFixed(2) : cof.monto) }); }} style={{ padding: "0 4px", border: "none", background: "transparent", color: "#0d9f6e", cursor: "pointer", fontSize: 14, lineHeight: 1 }} aria-label="Quitar">×</button></span> : null; })}
+            </div>
+          )}
+        </div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</div>}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
@@ -1348,13 +1385,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
-        <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp : ""}</option>)}</Inp>
+        <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp : ""}</option>)}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Inp label="Tipo" type="select" value={gaf.tipo} onChange={(e) => setGaf({ ...gaf, tipo: e.target.value })}>{GT.map((t) => <option key={t}>{t}</option>)}</Inp>
           <Inp label="Valor ($)" type="number" step="0.01" min="0" value={gaf.valor} onChange={(e) => setGaf({ ...gaf, valor: e.target.value })} placeholder="0.00" />
         </div>
         <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
         <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
+        <div style={{ background: "#eef0f8", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 12, color: "#1b2559", border: "1px solid #c7d2fe" }}>
+          <strong>Se verá reflejada en:</strong> Reportes (columna Garantía y Pend. neto) y en Gastos (columna A cobrar). Al guardar, te llevamos a Reportes para que lo veas al instante.
+        </div>
         <div style={{ marginTop: 8 }}>
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
           <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
