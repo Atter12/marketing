@@ -207,6 +207,14 @@ export function useSupabaseData(role, clientId) {
       await fetchAll();
       return inserted?.id ?? null;
     },
+    updateCobro: async (id, payload) => {
+      if (role !== "gerente") return;
+      const { gastoId, monto, fecha, hora, metodo, notas } = payload;
+      const row = { gasto_id: gastoId, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), hora: hora || null, metodo: metodo || "Efectivo", notas: notas || null };
+      const { error: e } = await supabase.from("cobros").update(row).eq("id", id);
+      if (e) throw e;
+      await fetchAll();
+    },
     setCobroComprobantes: async (cobroId, paths) => {
       if (role !== "gerente") return;
       const { error: e } = await supabase.from("cobros").update({ comprobante_urls: paths }).eq("id", cobroId);

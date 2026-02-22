@@ -468,7 +468,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [garantias, filterCliente.garantias]);
 
   /* ═══ MODALS ═══ */
-  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
+  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) setCof(emptyCof); };
   const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setGarantiaImagenNewFiles([]); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
@@ -481,7 +481,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
-  }, [modal, editId, clients, garantias]);
+    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: [co.gastoId], monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
+  }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
 
@@ -514,6 +515,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (totalMonto <= 0) return alert("El monto debe ser mayor a 0");
     try {
       setUploadingComprobantes(true);
+      if (editId && modal === "cobro") {
+        await mutations.updateCobro(editId, { gastoId: ids[0], monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        if (cobroComprobanteFiles.length > 0) {
+          const paths = [];
+          for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(editId, f));
+          const existing = cobros.find((c) => c.id === editId)?.comprobante_urls || [];
+          await mutations.setCobroComprobantes(editId, [...(Array.isArray(existing) ? existing : existing ? [existing] : []), ...paths]);
+        }
+        closeMdl();
+        return;
+      }
       const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
       const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
       const montos = totalPend > 0 && ids.length > 0
@@ -1168,7 +1180,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
                           <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
                           <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
-                          <td style={TD}><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></td>
+                          <td style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("cobro", co.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></div></td>
                         </tr>
                       );
                     })}{!cobrosPaginated.length && <Empty cols={14} msg={emptyCobrosMsg} />}</tbody></table></div>
@@ -1321,7 +1333,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         )}
       </Mdl>
 
-      <Mdl open={modal === "cobro"} onClose={closeMdl} title="Registrar Cobro" footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Registrar"}</Btn></>}>
+      <Mdl open={modal === "cobro"} onClose={closeMdl} title={editId ? "Editar Cobro" : "Registrar Cobro"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : editId ? "Guardar" : "Registrar"}</Btn></>}>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
           <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno.</p>
