@@ -279,6 +279,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [cof, setCof] = useState(emptyCof);
   const [gaf, setGaf] = useState(emptyGaf);
   const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
+  const [cofGastosQuery, setCofGastosQuery] = useState("");
   const [garantiaImagenNewFiles, setGarantiaImagenNewFiles] = useState([]);
   const [uploadingComprobantes, setUploadingComprobantes] = useState(false);
   const [comprobanteViewer, setComprobanteViewer] = useState(null);
@@ -468,7 +469,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setGarantiaImagenNewFiles([]); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setGarantiaImagenNewFiles([]); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
@@ -516,7 +517,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
       const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
       const montos = totalPend > 0 && ids.length > 0
-        ? (() => { const parts = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); return g ? (g._pend / totalPend) * totalMonto : 0; }); const sum = parts.reduce((a, b) => a + b, 0); const diff = totalMonto - sum; if (diff !== 0 && parts.length) parts[0] += diff; return parts.map((p) => Math.round(p * 100) / 100); })()
+        ? (() => {
+            const totalCents = Math.round(totalMonto * 100);
+            const partCents = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); const prop = g ? g._pend / totalPend : 0; return Math.round(prop * totalCents); });
+            const diff = totalCents - partCents.reduce((a, b) => a + b, 0);
+            if (partCents.length) partCents[0] += diff;
+            return partCents.map((c) => c / 100);
+          })()
         : [totalMonto];
       const createdIds = [];
       for (let i = 0; i < ids.length; i++) {
@@ -1314,14 +1321,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
           <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno.</p>
-          <SearchSelect options={sGastos.filter((g) => g._st !== "Pagado" && !(cof.gastoIds || []).includes(g.id)).map((g) => { const c = clients.find((x) => x.id === g.clientId); return { value: g.id, label: `${c?.name || "?"} — ${fmtM(g.mes)} ($${fmt(g._pend)}) ${g.prepago ? "· Prepago" : ""}` }; })} value="" onChange={(id) => { if (id && !(cof.gastoIds || []).includes(id)) { const list = [...(cof.gastoIds || []), id]; const sum = list.reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: cof.monto || sum.toFixed(2) }); } }} placeholder="Buscar y agregar gasto..." emptyMessage="No hay más gastos pendientes o ya están agregados" />
-          {(cof.gastoIds || []).length > 0 && (
-            <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {(cof.gastoIds || []).map((gid) => { const g = sGastos.find((x) => x.id === gid); const c = g ? clients.find((x) => x.id === g.clientId) : null; return g ? <span key={gid} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "#e6f7f0", color: "#0d9f6e", borderRadius: 8, fontSize: 12, fontWeight: 600 }}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)})<button type="button" onClick={() => { const list = (cof.gastoIds || []).filter((id) => id !== gid); const sum = list.reduce((a, id) => { const x = sGastos.find((g) => g.id === id); return a + (x ? x._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: list.length === 1 ? (sGastos.find((x) => x.id === list[0])?._pend.toFixed(2) ?? "") : (list.length ? sum.toFixed(2) : cof.monto) }); }} style={{ padding: "0 4px", border: "none", background: "transparent", color: "#0d9f6e", cursor: "pointer", fontSize: 14, lineHeight: 1 }} aria-label="Quitar">×</button></span> : null; })}
-            </div>
-          )}
+          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por cliente o período..." style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4 }}>
+            {(() => { const pendientes = sGastos.filter((g) => g._st !== "Pagado"); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+              <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: checked ? "#e6f7f0" : "transparent" }}>
+                <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; const sum = list.reduce((a, gid) => { const x = sGastos.find((o) => o.id === gid); return a + (x ? x._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: list.length ? sum.toFixed(2) : cof.monto }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
+                <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
+              </label>
+            ); }); })()}
+          </div>
+          {(cof.gastoIds || []).length > 0 && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: "#0d9f6e" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</div>}
         </div>
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</div>}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>El monto se reparte exactamente entre los gastos según su pendiente.</div>}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
