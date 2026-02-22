@@ -32,7 +32,7 @@ function mapCobro(r) {
 function mapGarantia(r) {
   if (!r) return r;
   const urls = r.imagen_urls;
-  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "", fechaColocacion: r.fecha_colocacion ?? "", imagen_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
+  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "", fechaColocacion: r.fecha_colocacion ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, imagen_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
 }
 
 function mapManual(r) {
@@ -223,6 +223,11 @@ export function useSupabaseData(role, clientId) {
     saveGarantia: async (payload) => {
       if (role !== "gerente") return;
       const { id, clientId, gastoId, tipo, desc, valor, estado, fechaColocacion } = payload;
+      let created_by = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.email) created_by = user.email;
+      } catch (_) {}
       const genCodigoVerif = () => "GV-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const gid = (gastoId && String(gastoId).trim()) ? gastoId : null;
       const row = { client_id: clientId, gasto_id: gid, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente", fecha_colocacion: (fechaColocacion && String(fechaColocacion).trim()) ? fechaColocacion : null };
@@ -233,6 +238,7 @@ export function useSupabaseData(role, clientId) {
         return id;
       } else {
         row.codigo_verificacion = genCodigoVerif();
+        row.created_by = created_by || null;
         const { data: inserted, error: e } = await supabase.from("garantias").insert(row).select("id").single();
         if (e) throw e;
         await fetchAll();

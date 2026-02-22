@@ -639,8 +639,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
   const expGarantias = () => {
     let list = [...garantias];
-    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"]; });
+    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—", g.created_by || "—", g.created_at ? fmtDt(g.created_at) : "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
@@ -1206,7 +1206,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               const idsOnPage = garantiasPaginated.map((g) => g.id);
               const sel = selectedIds.garantias;
               const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
-              const colsCount = 9 + (!isCliente ? 1 : 0);
+              const colsCount = 11 + (!isCliente ? 1 : 0);
               return (
                 <>
                   {!isCliente && selectedIds.garantias.length > 0 && (
@@ -1214,12 +1214,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
                     </div>
                   )}
-                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                     <tbody>{garantiasPaginated.map((g) => {
                       const c = clients.find((x) => x.id === g.clientId);
                       const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
                       const estadoBdg = g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n";
                       const paths = g.imagen_urls || [];
+                      const createdByStr = g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—";
                       return (
                         <tr key={g.id}>
                           {!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("garantias", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}
@@ -1231,6 +1232,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
                           <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
                           <td style={TD}>{g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={g.created_at ? fmtDt(g.created_at) : ""}>{g.created_at ? fmtDt(g.created_at) : "—"}</td>
                           <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0eefe", color: "#7c3aed", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
                         </tr>
