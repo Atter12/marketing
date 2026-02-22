@@ -271,7 +271,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
-  const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente" };
+  const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
   const [cf, setCf] = useState(emptyCf);
@@ -479,7 +479,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "dar-acceso") setAccesoResultado(null);
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
-    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente" }); }
+    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
   }, [modal, editId, clients, garantias]);
 
@@ -557,7 +557,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!gaf.clientId) return alert("Selecciona cliente");
     try {
       setUploadingComprobantes(true);
-      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado });
+      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado, fechaColocacion: gaf.fechaColocacion || "" });
       const existingPaths = (editId && garantias.find((g) => g.id === editId)?.imagen_urls) || [];
       if (garantiaImagenNewFiles.length > 0) {
         const newPaths = [];
@@ -639,8 +639,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
   const expGarantias = () => {
     let list = [...garantias];
-    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—"]; });
+    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
@@ -1206,7 +1206,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               const idsOnPage = garantiasPaginated.map((g) => g.id);
               const sel = selectedIds.garantias;
               const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
-              const colsCount = 8 + (!isCliente ? 1 : 0);
+              const colsCount = 9 + (!isCliente ? 1 : 0);
               return (
                 <>
                   {!isCliente && selectedIds.garantias.length > 0 && (
@@ -1214,7 +1214,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
                     </div>
                   )}
-                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                     <tbody>{garantiasPaginated.map((g) => {
                       const c = clients.find((x) => x.id === g.clientId);
                       const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
@@ -1230,6 +1230,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
                           <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
                           <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
+                          <td style={TD}>{g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"}</td>
                           <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0eefe", color: "#7c3aed", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
                         </tr>
@@ -1402,6 +1403,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <Inp label="Valor ($)" type="number" step="0.01" min="0" value={gaf.valor} onChange={(e) => setGaf({ ...gaf, valor: e.target.value })} placeholder="0.00" />
         </div>
         <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
+        <Inp label="Fecha de colocación (opcional)" type="date" value={gaf.fechaColocacion || ""} onChange={(e) => setGaf({ ...gaf, fechaColocacion: e.target.value })} hint="Cuándo el cliente te depositó la garantía" />
         <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
         <div style={{ background: "#eef0f8", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 12, color: "#1b2559", border: "1px solid #c7d2fe" }}>
           <strong>Se verá reflejada en:</strong> Reportes (columna Garantía y Pend. neto) y en Gastos (columna A cobrar). Al guardar, te llevamos a Reportes para que lo veas al instante.
