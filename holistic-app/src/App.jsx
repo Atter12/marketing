@@ -16,7 +16,12 @@ const S = {
   s: (k, v) => localStorage.setItem("hm_" + k, JSON.stringify(v)),
 };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const fmt = (n) => parseFloat(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+// Formato fiel a los dígitos en BD: hasta 2 decimales, sin rellenar ceros (11.7 → "11.7", 64.52 → "64.52")
+const fmt = (n) => {
+  const v = parseFloat(n);
+  if (Number.isNaN(v)) return "0";
+  return v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+};
 const fmtK = (n) => { const v = parseFloat(n || 0); if (v >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M"; if (v >= 1e3) return "$" + (v / 1e3).toFixed(1) + "K"; return "$" + fmt(v); };
 const td = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const tm = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
@@ -118,7 +123,7 @@ const Inp = ({ label, hint, ...p }) => (
   </div>
 );
 
-/** Buscador por nombre: input + lista filtrada. options = [{ value, label }], value = id seleccionado, onChange(id). compact = sin margen inferior (para filtros en header). */
+/** Buscador por nombre: input + lista filtrada. options = [{ value, label }], value = id seleccionado, onChange(id). compact = sin margen inferior (para filtros en header). Auto-selecciona cuando hay una sola coincidencia (sin necesidad de clic o Enter). */
 function SearchSelect({ label, options, value, onChange, placeholder = "Buscar por nombre...", emptyMessage = "Sin resultados", compact }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -129,6 +134,20 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
     return options.filter((o) => (o.label || "").toLowerCase().includes(q)).slice(0, 50);
   }, [options, query]);
   const displayText = open ? query : (selected ? selected.label : "");
+  const applySingleMatch = useCallback(() => {
+    if (query.trim() && filtered.length === 1) {
+      onChange(filtered[0].value);
+      setQuery("");
+      setOpen(false);
+    }
+  }, [query, filtered, onChange]);
+  useEffect(() => {
+    if (query.trim().length >= 2 && filtered.length === 1) {
+      onChange(filtered[0].value);
+      setQuery("");
+      setOpen(false);
+    }
+  }, [query, filtered, onChange]);
   return (
     <div style={{ marginBottom: compact ? 0 : 14, minWidth: 0, position: "relative" }}>
       {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
@@ -137,7 +156,7 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
         value={displayText}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 180)}
+        onBlur={() => setTimeout(() => { applySingleMatch(); setOpen(false); }, 180)}
         placeholder={placeholder}
         style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
       />
@@ -263,12 +282,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [expClientRango, setExpClientRango] = useState({ ini: "", fin: "" });
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
+  const [filterPeriodoGarantias, setFilterPeriodoGarantias] = useState("");
+  const [gafFilterPeriodo, setGafFilterPeriodo] = useState("");
+  const [gastosPeriodoReportes, setGastosPeriodoReportes] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedIds, setSelectedIds] = useState({ clientes: [], gastos: [], cobros: [], garantias: [] });
   const [pageNum, setPageNum] = useState({ clientes: 1, gastos: 1, cobros: 1, garantias: 1 });
 
-  const emptyCf = { name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
+  const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
@@ -280,6 +302,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gaf, setGaf] = useState(emptyGaf);
   const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
   const [cofGastosQuery, setCofGastosQuery] = useState("");
+  const [cofFilterCliente, setCofFilterCliente] = useState("");
+  const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
   const [garantiaImagenNewFiles, setGarantiaImagenNewFiles] = useState([]);
   const [uploadingComprobantes, setUploadingComprobantes] = useState(false);
   const [comprobanteViewer, setComprobanteViewer] = useState(null);
@@ -461,21 +485,23 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
   }, [cobros, gastos, filterCliente.cobros]);
 
-  /* Garantías filtradas por cliente (para tabla) */
+  /* Garantías filtradas por cliente y período (para tabla) */
   const garantiasFiltradas = useMemo(() => {
-    if (!filterCliente.garantias) return garantias;
-    return garantias.filter((g) => g.clientId === filterCliente.garantias);
-  }, [garantias, filterCliente.garantias]);
+    let list = garantias;
+    if (filterCliente.garantias) list = list.filter((g) => g.clientId === filterCliente.garantias);
+    if (filterPeriodoGarantias) list = list.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === filterPeriodoGarantias) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === filterPeriodoGarantias));
+    return list;
+  }, [garantias, filterCliente.garantias, filterPeriodoGarantias, gastos]);
 
   /* ═══ MODALS ═══ */
-  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) setCof(emptyCof); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setGarantiaImagenNewFiles([]); };
-  const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
+  const const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); };
+  const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); setGafFilterPeriodo(""); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
   useEffect(() => {
     if (!modal) return;
-    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
+    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ codigo: c.codigo || "", name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
     if (modal === "dar-acceso") setAccesoResultado(null);
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
     if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
@@ -501,7 +527,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 360 }}><p style={{ color: "#dc2640", fontSize: 14, marginBottom: 16 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "#1b2559", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
-  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
+  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, codigo: cf.codigo || "", name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
   const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstEmail = (client?.emails || []).filter(Boolean)[0]; if (!firstEmail || !String(firstEmail).includes("@")) { alert("Este cliente no tiene correo. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const redirectTo = typeof window !== "undefined" ? (window.location.origin + "/credito") : ""; const res = await darAccesoCliente(editId, { regenerate, redirect_to: redirectTo }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
@@ -528,19 +554,25 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       }
       const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
       const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
+      const hayExcedente = totalMonto > totalPend && totalPend > 0;
+      const montoARepartir = hayExcedente ? totalPend : totalMonto;
       const montos = totalPend > 0 && ids.length > 0
         ? (() => {
-            const totalCents = Math.round(totalMonto * 100);
+            const totalCents = Math.round(montoARepartir * 100);
             const partCents = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); const prop = g ? g._pend / totalPend : 0; return Math.round(prop * totalCents); });
             const diff = totalCents - partCents.reduce((a, b) => a + b, 0);
             if (partCents.length) partCents[0] += diff;
             return partCents.map((c) => c / 100);
           })()
-        : [totalMonto];
+        : [montoARepartir];
       const createdIds = [];
       for (let i = 0; i < ids.length; i++) {
-        const id = await mutations.saveCobro({ gastoId: ids[i], monto: montos[i] ?? totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        const id = await mutations.saveCobro({ gastoId: ids[i], monto: montos[i] ?? montoARepartir, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (id) createdIds.push(id);
+      }
+      if (hayExcedente && gastosSel[0]) {
+        const excedente = totalMonto - totalPend;
+        await mutations.saveGarantia({ clientId: gastosSel[0].clientId, gastoId: null, tipo: "Depósito", desc: "Excedente de cobro " + (cof.fecha || td()) + " — para mes siguiente", valor: String(excedente), estado: "Vigente", fechaColocacion: cof.fecha || "" });
       }
       if (cobroComprobanteFiles.length > 0 && createdIds.length > 0) {
         const paths = [];
@@ -581,6 +613,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         await mutations.setGarantiaImagenes(id, existingPaths);
       }
       closeMdl();
+      const mesGar = (gaf.fechaColocacion && String(gaf.fechaColocacion).slice(0, 7)) || (gaf.gastoId && gastos.find((x) => x.id === gaf.gastoId)?.mes) || tm();
+      setRepCl(gaf.clientId);
+      setRepPer(mesGar);
+      setRepPerInput(mesGar);
+      setRepPerInicio("");
+      setRepPerFin("");
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -651,13 +689,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
   const expGarantias = () => {
     let list = [...garantias];
-    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—", g.created_by || "—", g.created_at ? fmtDt(g.created_at) : "—"]; });
+    const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Gasto ($)", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado"];
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", gastoAsoc != null ? fmt(gastoAsoc.gasto) : "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—", g.created_by || "—", g.created_at ? fmtDt(g.created_at) : "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
-    const headers = ["Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas"];
+    const headers = ["Código", "Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas"];
     const rows = clientsSorted.map((c) => [
+      c.codigo || "—",
       c.name || "—",
       c.ig || "—",
       (c.phones || []).filter(Boolean).join("; ") || "—",
@@ -1029,8 +1068,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               const clientsPaginated = clientsFiltered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
               return (
                 <>
-                  <div className="hm-table-wrap hm-table-clientes"><table><thead><tr>{["Cliente", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
+                  <div className="hm-table-wrap hm-table-clientes"><table><thead><tr>{["Cliente", "Código", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 10 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, fontWeight: 600, color: "#1b2559" }}>{c.codigo || "—"}</td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -1095,6 +1134,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio(""); setRepPerFin(""); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
             </div>
@@ -1203,9 +1243,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
-                {filterCliente.garantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
+                {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
+              {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
               <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
@@ -1218,7 +1259,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               const idsOnPage = garantiasPaginated.map((g) => g.id);
               const sel = selectedIds.garantias;
               const allOnPageSelected = idsOnPage.length > 0 && idsOnPage.every((id) => sel.includes(id));
-              const colsCount = 11 + (!isCliente ? 1 : 0);
+              const colsCount = 12 + (!isCliente ? 1 : 0);
               return (
                 <>
                   {!isCliente && selectedIds.garantias.length > 0 && (
@@ -1226,7 +1267,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
                     </div>
                   )}
-                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <div className="hm-table-wrap"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Gasto ($)", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Imágenes", ""].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                     <tbody>{garantiasPaginated.map((g) => {
                       const c = clients.find((x) => x.id === g.clientId);
                       const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
@@ -1239,6 +1280,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                           <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
                           <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td>
                           <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
+                          <td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td>
                           <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
                           <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
                           <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
@@ -1267,6 +1309,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
+        <Inp label="Código de cliente" value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Podés editarlo para identificar al cliente."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario" /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Teléfonos / WhatsApp</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
@@ -1294,7 +1337,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período *</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
+            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
             <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button>
             <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button>
             <span style={{ fontSize: 12, color: "#9498a8" }}>o</span>
@@ -1334,12 +1377,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </Mdl>
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title={editId ? "Editar Cobro" : "Registrar Cobro"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : editId ? "Guardar" : "Registrar"}</Btn></>}>
+        {!editId && (
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente (filtrar)</label><SearchSelect compact options={[{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cofFilterCliente} onChange={(id) => setCofFilterCliente(id || "")} placeholder="Todos..." emptyMessage="Ningún cliente" /></div>
+          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label><input type="text" placeholder="MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} /></div>
+        </div>
+        )}
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
-          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno.</p>
-          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por cliente o período..." style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno. Podés filtrar arriba por cliente y período.</p>
+          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
           <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4 }}>
-            {(() => { const pendientes = sGastos.filter((g) => g._st !== "Pagado"); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: checked ? "#e6f7f0" : "transparent" }}>
                 <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; const sum = list.reduce((a, gid) => { const x = sGastos.find((o) => o.id === gid); return a + (x ? x._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: list.length ? sum.toFixed(2) : cof.monto }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
                 <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
@@ -1348,7 +1397,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           {(cof.gastoIds || []).length > 0 && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: "#0d9f6e" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</div>}
         </div>
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>El monto se reparte exactamente entre los gastos según su pendiente.</div>}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>El monto se reparte exactamente entre los gastos según su pendiente.</div>}{!editId && (cof.gastoIds || []).length > 0 && (() => { const totalPendSel = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); const montoNum = parseFloat(cof.monto); if (montoNum > totalPendSel && totalPendSel >= 0) { const excedente = montoNum - totalPendSel; return <div style={{ marginTop: 10, padding: "10px 12px", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 600 }}>⚠️ Se pasó del monto pendiente. El excedente (${fmt(excedente)}) se registrará como garantía para el mes siguiente.</div>; } return null; })()}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
@@ -1412,7 +1461,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
-        <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp : ""}</option>)}</Inp>
+        {gaf.clientId && (
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
+          <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+        </div>
+        )}
+        <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).filter((g) => !gafFilterPeriodo || g.mes === gafFilterPeriodo).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp + " " : ""}· ${fmt(g.gasto)}</option>)}</Inp>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           <Inp label="Tipo" type="select" value={gaf.tipo} onChange={(e) => setGaf({ ...gaf, tipo: e.target.value })}>{GT.map((t) => <option key={t}>{t}</option>)}</Inp>
           <Inp label="Valor ($)" type="number" step="0.01" min="0" value={gaf.valor} onChange={(e) => setGaf({ ...gaf, valor: e.target.value })} placeholder="0.00" />

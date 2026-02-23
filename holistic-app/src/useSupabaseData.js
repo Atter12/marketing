@@ -5,6 +5,7 @@ function mapCliente(r) {
   if (!r) return r;
   return {
     id: r.id,
+    codigo: r.codigo ?? "",
     name: r.name,
     ig: r.ig ?? "",
     phones: Array.isArray(r.phones) ? r.phones : (r.phones ? [r.phones] : [""]),
@@ -121,14 +122,17 @@ export function useSupabaseData(role, clientId) {
   const mutations = {
     saveClient: async (payload) => {
       if (role !== "gerente") return;
-      const { id, name, ig, phones, emails, biz, notes, avatar_url } = payload;
-      const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null, avatar_url: avatar_url || null };
+      const { id, name, codigo, ig, phones, emails, biz, notes, avatar_url } = payload;
+      const genCodigo = () => "CL-" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2, 5).toUpperCase();
+      const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null, avatar_url: avatar_url || null, codigo: (codigo && String(codigo).trim()) ? String(codigo).trim() : null };
       if (id) {
+        if (row.codigo === null) delete row.codigo;
         const { error: e } = await supabase.from("clientes").update(row).eq("id", id);
         if (e) throw e;
         await fetchAll();
         return id;
       } else {
+        if (!row.codigo) row.codigo = genCodigo();
         const { data, error: e } = await supabase.from("clientes").insert(row).select("id").single();
         if (e) throw e;
         await fetchAll();
