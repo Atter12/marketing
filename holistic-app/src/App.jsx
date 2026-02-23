@@ -494,7 +494,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [garantias, filterCliente.garantias, filterPeriodoGarantias, gastos]);
 
   /* ═══ MODALS ═══ */
-  const const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
+  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
   const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); setGafFilterPeriodo(""); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
