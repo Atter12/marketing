@@ -466,14 +466,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     };
   }, [curCl, sGastos, cobros, gastos, months]);
 
-  /* Gastos filtrados por fecha de operación y por cliente (para tabla y export) */
+  /* Gastos filtrados por fecha de operación y por cliente (para tabla y export); orden: mayor a menor por total (gasto + fee) */
   const gastosFiltrados = useMemo(() => {
     let list = [...sGastos];
     if (filterCliente.gastos) list = list.filter((g) => g.clientId === filterCliente.gastos);
     const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
     if (expRango.gastos.ini) list = list.filter((g) => fOp(g) >= expRango.gastos.ini);
     if (expRango.gastos.fin) list = list.filter((g) => fOp(g) <= expRango.gastos.fin);
-    return list.sort((a, b) => (b.fechaMovimiento || b.mes || "").localeCompare(a.fechaMovimiento || a.mes || ""));
+    return list.sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0));
   }, [sGastos, filterCliente.gastos, expRango.gastos.ini, expRango.gastos.fin]);
 
   /* Cobros filtrados por cliente (para tabla) */
@@ -747,7 +747,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   /* ═══ CURRENT CLIENT DATA ═══ */
   const curC = curCl ? clients.find((x) => x.id === curCl) : null;
   const curD = curCl ? cData(curCl) : null;
-  const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (b.mes || "").localeCompare(a.mes || "")) : [];
+  const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0)) : [];
   const curGids = curCl ? gastos.filter((g) => g.clientId === curCl).map((g) => g.id) : [];
   const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
