@@ -292,7 +292,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "" };
+  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden" };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -361,6 +361,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     } else if (repPer) gs = gs.filter((g) => g.mes === repPer);
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
+    const reportPeriodEnd = repPer || (repPerFin || "").slice(0, 7);
+    const garantiasParaReporte = garantias.filter((g) => {
+      if (g.estado !== "Vigente") return false;
+      const period = g.gastoId ? (gastos.find((x) => x.id === g.gastoId)?.mes) : (g.fechaColocacion || "").slice(0, 7);
+      if (!reportPeriodEnd) return true;
+      if (!period) return true;
+      return period <= reportPeriodEnd;
+    });
+
     const bc = {};
     gs.forEach((g) => {
       if (!bc[g.clientId]) bc[g.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
@@ -371,7 +380,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
 
     const rows = Object.entries(bc).map(([cid, d]) => {
-      const gar = garantias.filter((g) => g.clientId === cid && g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+      const gar = garantiasParaReporte.filter((g) => g.clientId === cid).reduce((a, g) => a + parseFloat(g.valor || 0), 0);
       const pend = Math.max(0, d.total - d.paid);
       const netPend = Math.max(0, pend - gar);
       return { cid, name: clients.find((c) => c.id === cid)?.name || "—", ...d, gar, pending: pend, netPending: netPend };
@@ -379,7 +388,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
     return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
-  }, [sGastos, repCl, repPer, repPerInicio, repPerFin, clients, garantias]);
+  }, [sGastos, repCl, repPer, repPerInicio, repPerFin, clients, garantias, gastos]);
 
   /* Reportes: meses del período seleccionado para gráficos */
   const reportMonths = useMemo(() => {
@@ -493,6 +502,40 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return list;
   }, [garantias, filterCliente.garantias, filterPeriodoGarantias, gastos]);
 
+  /* Resumen de aplicación del cobro: cómo se reparte el monto entre los gastos (voucher exacto) */
+  const resumenCobro = useMemo(() => {
+    const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : [];
+    const montoTotal = parseFloat(cof.monto) || 0;
+    if (!ids.length || montoTotal <= 0) return { lineas: [], excedente: 0, totalAplicado: 0 };
+    const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
+    const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
+    const esOrden = cof.distribucion === "orden";
+    if (esOrden) {
+      const ordenados = [...gastosSel].sort((a, b) => (a.mes || "").localeCompare(b.mes || "") || (a.fechaMovimiento || "").localeCompare(b.fechaMovimiento || ""));
+      let rest = montoTotal;
+      const lineas = [];
+      for (const g of ordenados) {
+        const aplicado = Math.min(rest, Math.max(0, g._pend));
+        if (aplicado > 0) lineas.push({ gastoId: g.id, g, camp: g.camp || "—", mes: g.mes, codigo: g.codigo || "—", pendienteAntes: g._pend, montoAplicado: aplicado, pendienteDespues: g._pend - aplicado });
+        rest -= aplicado;
+        if (rest <= 0) break;
+      }
+      const totalAplicado = lineas.reduce((a, l) => a + l.montoAplicado, 0);
+      const excedente = Math.max(0, montoTotal - totalAplicado);
+      return { lineas, excedente, totalAplicado };
+    }
+    const montoARepartir = Math.min(montoTotal, totalPend);
+    const totalCents = Math.round(montoARepartir * 100);
+    const partCents = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); const prop = g && totalPend > 0 ? g._pend / totalPend : 0; return Math.round(prop * totalCents); });
+    let diff = totalCents - partCents.reduce((a, b) => a + b, 0);
+    if (partCents.length) partCents[0] += diff;
+    const montos = partCents.map((c) => c / 100);
+    const lineas = gastosSel.map((g, i) => ({ gastoId: g.id, g, camp: g.camp || "—", mes: g.mes, codigo: g.codigo || "—", pendienteAntes: g._pend, montoAplicado: montos[i] ?? 0, pendienteDespues: g._pend - (montos[i] ?? 0) }));
+    const totalAplicado = lineas.reduce((a, l) => a + l.montoAplicado, 0);
+    const excedente = Math.max(0, montoTotal - totalAplicado);
+    return { lineas, excedente, totalAplicado };
+  }, [cof.gastoIds, cof.monto, cof.distribucion, sGastos]);
+
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
   const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); };
@@ -552,39 +595,24 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         closeMdl();
         return;
       }
-      const gastosSel = ids.map((gid) => sGastos.find((g) => g.id === gid)).filter(Boolean);
-      const totalPend = gastosSel.reduce((a, g) => a + g._pend, 0);
-      const hayExcedente = totalMonto > totalPend && totalPend > 0;
-      const montoARepartir = hayExcedente ? totalPend : totalMonto;
-      const montos = totalPend > 0 && ids.length > 0
-        ? (() => {
-            const totalCents = Math.round(montoARepartir * 100);
-            const partCents = ids.map((gid) => { const g = sGastos.find((x) => x.id === gid); const prop = g ? g._pend / totalPend : 0; return Math.round(prop * totalCents); });
-            const diff = totalCents - partCents.reduce((a, b) => a + b, 0);
-            if (partCents.length) partCents[0] += diff;
-            return partCents.map((c) => c / 100);
-          })()
-        : [montoARepartir];
+      const { lineas, excedente } = resumenCobro;
+      const lineasConMonto = lineas.filter((l) => l.montoAplicado > 0);
+      if (!lineasConMonto.length) return alert("El monto no alcanza a cubrir ningún gasto. Revisá la selección o el monto.");
       const createdIds = [];
-      for (let i = 0; i < ids.length; i++) {
-        const id = await mutations.saveCobro({ gastoId: ids[i], monto: montos[i] ?? montoARepartir, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+      for (const l of lineasConMonto) {
+        const id = await mutations.saveCobro({ gastoId: l.gastoId, monto: l.montoAplicado, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (id) createdIds.push(id);
       }
-      if (hayExcedente && gastosSel[0]) {
-        const excedente = totalMonto - totalPend;
-        await mutations.saveGarantia({ clientId: gastosSel[0].clientId, gastoId: null, tipo: "Depósito", desc: "Excedente de cobro " + (cof.fecha || td()) + " — para mes siguiente", valor: String(excedente), estado: "Vigente", fechaColocacion: cof.fecha || "" });
+      if (excedente > 0 && lineasConMonto[0]?.g?.clientId) {
+        await mutations.saveGarantia({ clientId: lineasConMonto[0].g.clientId, gastoId: null, tipo: "Depósito", desc: "Excedente de cobro " + (cof.fecha || td()) + " — para mes siguiente", valor: String(excedente), estado: "Vigente", fechaColocacion: cof.fecha || "" });
       }
       if (cobroComprobanteFiles.length > 0 && createdIds.length > 0) {
         const paths = [];
-        for (const f of cobroComprobanteFiles) {
-          paths.push(await uploadComprobanteCobro(createdIds[0], f));
-        }
+        for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(createdIds[0], f));
         await mutations.setCobroComprobantes(createdIds[0], paths);
         for (let j = 1; j < createdIds.length; j++) {
           const pathsCopy = [];
-          for (const f of cobroComprobanteFiles) {
-            pathsCopy.push(await uploadComprobanteCobro(createdIds[j], f));
-          }
+          for (const f of cobroComprobanteFiles) pathsCopy.push(await uploadComprobanteCobro(createdIds[j], f));
           await mutations.setCobroComprobantes(createdIds[j], pathsCopy);
         }
       }
@@ -1381,26 +1409,62 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title={editId ? "Editar Cobro" : "Registrar Cobro"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : editId ? "Guardar" : "Registrar"}</Btn></>}>
         {!editId && (
+        <>
+        <div style={{ marginBottom: 14, padding: "14px 16px", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: 12 }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#166534", marginBottom: 6 }}>¿Cuánto pagó el cliente? ($) *</label>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <input type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="Ej. 1500" style={{ width: "100%", maxWidth: 220, padding: "12px 14px", fontSize: 18, fontWeight: 700, border: "2px solid #22c55e", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+            <button type="button" onClick={() => { const m = parseFloat(cof.monto) || 0; if (m <= 0) return; let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const ordenados = [...pendientes].sort((a, b) => (a.mes || "").localeCompare(b.mes || "") || (a.fechaMovimiento || "").localeCompare(b.fechaMovimiento || "")); let sum = 0; const ids = []; for (const g of ordenados) { ids.push(g.id); sum += g._pend; if (sum >= m) break; } setCof({ ...cof, gastoIds: ids }); }} style={{ padding: "8px 14px", fontSize: 12, fontWeight: 600, border: "1px solid #22c55e", borderRadius: 8, background: "#fff", color: "#166534", cursor: "pointer" }}>Sugerir gastos con este monto</button>
+          </div>
+          <p style={{ fontSize: 11, color: "#166534", marginTop: 8, marginBottom: 0 }}>Con este monto el sistema te mostrará qué gastos se cubren (total o parcial) y el resumen exacto del voucher.</p>
+        </div>
+        <div style={{ marginBottom: 14 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577", display: "block", marginBottom: 6 }}>Aplicar monto</span>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "orden"} onChange={() => setCof({ ...cof, distribucion: "orden" })} />En orden (primero el más antiguo)</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "proporcional"} onChange={() => setCof({ ...cof, distribucion: "proporcional" })} />Proporcional al pendiente</label>
+          </div>
+          <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
+        </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente (filtrar)</label><SearchSelect compact options={[{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cofFilterCliente} onChange={(id) => setCofFilterCliente(id || "")} placeholder="Todos..." emptyMessage="Ningún cliente" /></div>
           <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label><input type="text" placeholder="MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} /></div>
         </div>
+        </>
         )}
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
-          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos; el monto total se reparte según el pendiente de cada uno. Podés filtrar arriba por cliente y período.</p>
+          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago. Podés poner primero el monto y luego marcar gastos; el resumen abajo muestra el voucher exacto.</p>
           <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
           <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4 }}>
-            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: checked ? "#e6f7f0" : "transparent" }}>
-                <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; const sum = list.reduce((a, gid) => { const x = sGastos.find((o) => o.id === gid); return a + (x ? x._pend : 0); }, 0); setCof({ ...cof, gastoIds: list, monto: list.length ? sum.toFixed(2) : cof.monto }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
-                <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
+                <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
+                <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} · {g.camp || "—"} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
               </label>
             ); }); })()}
           </div>
-          {(cof.gastoIds || []).length > 0 && <div style={{ marginTop: 8, fontSize: 12, fontWeight: 600, color: "#0d9f6e" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</div>}
+          {(cof.gastoIds || []).length > 0 && (
+          <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#0d9f6e" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</span>
+            {!editId && <button type="button" onClick={() => { const sum = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, monto: sum > 0 ? sum.toFixed(2) : cof.monto }); }} style={{ padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "1px solid #0d9f6e", borderRadius: 6, background: "#fff", color: "#0d9f6e", cursor: "pointer" }}>Rellenar monto con pendiente sumado</button>}
+          </div>
+          )}
         </div>
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" />{(cof.gastoIds || []).length > 1 && <div style={{ fontSize: 11, color: "#9498a8", marginTop: -6, marginBottom: 6 }}>El monto se reparte exactamente entre los gastos según su pendiente.</div>}{!editId && (cof.gastoIds || []).length > 0 && (() => { const totalPendSel = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); const montoNum = parseFloat(cof.monto); if (montoNum > totalPendSel && totalPendSel >= 0) { const excedente = montoNum - totalPendSel; return <div style={{ marginTop: 10, padding: "10px 12px", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 600 }}>⚠️ Se pasó del monto pendiente. El excedente (${fmt(excedente)}) se registrará como garantía para el mes siguiente.</div>; } return null; })()}</div><Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} /></div>
+        {!editId && (cof.gastoIds || []).length > 0 && parseFloat(cof.monto) > 0 && (
+        <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e4e9", borderRadius: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#1b2559", marginBottom: 10 }}>Resumen de aplicación (voucher exacto)</div>
+          <div style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Total pagado: <strong style={{ color: "#0d9f6e" }}>${fmt(parseFloat(cof.monto) || 0)}</strong> — Se aplica a:</div>
+          <div style={{ overflowX: "auto", maxHeight: 200, overflowY: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead><tr style={{ borderBottom: "1px solid #e2e4e9" }}><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Campaña</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Período</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Código</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Pend. antes</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#0d9f6e", fontWeight: 600 }}>Monto aplicado</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Pend. después</th></tr></thead>
+              <tbody>{resumenCobro.lineas.filter((l) => l.montoAplicado > 0).map((l) => <tr key={l.gastoId} style={{ borderBottom: "1px solid #eee" }}><td style={{ padding: "6px 8px" }}>{l.camp}</td><td style={{ padding: "6px 8px" }}>{fmtM(l.mes)}</td><td style={{ padding: "6px 8px", fontFamily: "'IBM Plex Mono',monospace" }}>{l.codigo}</td><td style={{ padding: "6px 8px", textAlign: "right" }}>${fmt(l.pendienteAntes)}</td><td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#0d9f6e" }}>${fmt(l.montoAplicado)}</td><td style={{ padding: "6px 8px", textAlign: "right", color: l.pendienteDespues > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(l.pendienteDespues)}</td></tr>)}</tbody>
+            </table>
+          </div>
+          {resumenCobro.excedente > 0 && <div style={{ marginTop: 10, padding: "10px 12px", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 600 }}>⚠️ Excedente ${fmt(resumenCobro.excedente)} se registrará como garantía para el mes siguiente.</div>}
+        </div>
+        )}
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}<Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />{editId && <span />}</div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
