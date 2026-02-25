@@ -1368,27 +1368,29 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </Mdl>
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
-        <div style={{ marginBottom: 14, position: "relative" }}>
+        <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente *</label>
           {(() => {
             const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
-            const resolveClient = (txt) => { if (!txt.trim()) return null; const exact = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (exact) return exact; const sug = clients.filter((c) => norm(c.name || "").includes(norm(txt))); return sug.length === 1 ? sug[0] : null; };
+            const resolveClient = (txt) => { if (!txt.trim()) return null; const exact = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (exact) return exact; const list = clients.filter((c) => norm(c.name || "").includes(norm(txt))); return list.length === 1 ? list[0] : null; };
             const q = gfClientNameInput.trim();
             const sug = q.length > 0 ? clients.filter((c) => norm(c.name || "").includes(norm(q))).slice(0, 10) : [];
-            const showSuggestions = sug.length > 0;
+            const exactMatch = q.length > 0 && clients.some((c) => norm((c.name || "").trim()) === norm(q));
+            const showSuggestions = sug.length > 0 && !exactMatch;
             return (
             <>
-          <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
-          {showSuggestions && (
-          <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
-            <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "#9498a8", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
-            {sug.map((c) => (
-              <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#1a1d26", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#f0f4ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
-            ))}
+          <div style={{ position: "relative" }}>
+            <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
+            {showSuggestions && (
+            <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
+              <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "#9498a8", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
+              {sug.map((c) => (
+                <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#1a1d26", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#f0f4ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
+              ))}
+            </div>
+            )}
           </div>
-          )}
-          {showSuggestions && <div style={{ height: 224, minHeight: 224 }} />}
-          {!showSuggestions && <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>}
+          <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>
             </>
             );
           })()}
