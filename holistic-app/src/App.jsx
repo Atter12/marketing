@@ -362,12 +362,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
     const reportPeriodEnd = repPer || (repPerFin || "").slice(0, 7);
+    const reportPeriodStart = repPer || (repPerInicio || "").slice(0, 7);
     const garantiasParaReporte = garantias.filter((g) => {
       if (g.estado !== "Vigente") return false;
       const period = g.gastoId ? (gastos.find((x) => x.id === g.gastoId)?.mes) : (g.fechaColocacion || "").slice(0, 7);
-      if (!reportPeriodEnd) return true;
-      if (!period) return true;
-      return period <= reportPeriodEnd;
+      if (!period) return false;
+      if (repPer && !repPerInicio && !repPerFin) return period === repPer;
+      if (reportPeriodStart && reportPeriodEnd) return period >= reportPeriodStart && period <= reportPeriodEnd;
+      return true;
     });
 
     const bc = {};
