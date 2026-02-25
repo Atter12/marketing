@@ -309,6 +309,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [comprobanteViewer, setComprobanteViewer] = useState(null);
   const [viewerSignedUrls, setViewerSignedUrls] = useState([]);
   const [mf, setMf] = useState(emptyMf);
+  const [gfClientNameInput, setGfClientNameInput] = useState("");
 
   /* Synced gastos with computed fields — hooks must run before any early return */
   const sGastos = useMemo(() => gastos.map((g) => {
@@ -540,7 +541,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); };
+  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); setGfClientNameInput(""); };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); setGafFilterPeriodo(""); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
@@ -548,8 +549,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!modal) return;
     if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ codigo: c.codigo || "", name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
     if (modal === "dar-acceso") setAccesoResultado(null);
-    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); }
-    if (modal === "gasto" && !editId && curCl) setGf((p) => ({ ...p, clientId: curCl }));
+    if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
+    if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
+    if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
     if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: [co.gastoId], monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
@@ -1366,7 +1368,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </Mdl>
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
-        <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gf.clientId} onChange={(id) => setGf({ ...gf, clientId: id })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente *</label>
+          <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre exacto del cliente..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => (x.name || "").trim().toLowerCase() === txt.toLowerCase()); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => (x.name || "").trim().toLowerCase() === txt.toLowerCase()); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
+          <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí el nombre completo. Al dar Enter o hacer clic afuera se fija el cliente.</p>
+        </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período *</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
