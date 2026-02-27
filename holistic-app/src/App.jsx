@@ -558,6 +558,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
+  useEffect(() => { if (!isCliente && page === "reportes") setPage("dashboard"); }, [isCliente, page]);
 
   useEffect(() => {
     if (!comprobanteViewer?.paths?.length) { setViewerSignedUrls([]); return; }
@@ -799,7 +800,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "clientes", icon: <Users size={18} />, label: "Clientes" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN },
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros" },
-        { id: "reportes", icon: <FileText size={18} />, label: "Reportes", section: "Finanzas" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías" },
         { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", section: "Sistema" },
       ];
@@ -1016,8 +1016,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
         </div>)}
 
-        {/* ══ REPORTES (también se muestra en Resumen para gerente) ══ */}
-        {((page === "dashboard" && !isCliente) || page === "reportes") && (<div>
+        {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
+        {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
