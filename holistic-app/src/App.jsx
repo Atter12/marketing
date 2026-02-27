@@ -971,14 +971,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
         )}
 
-        {/* ══ DASHBOARD ══ */}
-        {page === "dashboard" && (<div>
+        {/* ══ DASHBOARD: cliente = Resumen actual; gerente = vista Reportes (Relación de Cuentas) ══ */}
+        {page === "dashboard" && isCliente && (<div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
             <div>
               <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>Resumen general</h2>
               <p style={{ fontSize: 12, color: "#9498a8", margin: "4px 0 0", maxWidth: 420 }}>Totales, tendencias y pendientes de cobro. Datos: {months[0]?.label} a {months[months.length - 1]?.label} (últimos 6 meses). Para análisis por período o por cliente, usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>{!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
             <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
@@ -1016,8 +1016,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
         </div>)}
 
-        {/* ══ REPORTES ══ */}
-        {page === "reportes" && (<div>
+        {/* ══ REPORTES (también se muestra en Resumen para gerente) ══ */}
+        {((page === "dashboard" && !isCliente) || page === "reportes") && (<div>
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
