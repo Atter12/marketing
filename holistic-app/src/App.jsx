@@ -74,13 +74,17 @@ function parsePeriodoInput(s) {
 
 /* ═══════ UI COMPONENTS ═══════ */
 const AVATAR_SIZE_SCALE = 1.35; // fotos de clientes 35% más grandes
-const Av = ({ name, size = 34, avatarUrl }) => {
+function Av({ name, size = 34, avatarUrl }) {
+  const [imgError, setImgError] = useState(false);
   const c = clr(name);
   const s = Math.round(size * AVATAR_SIZE_SCALE);
   const style = { width: s, height: s, borderRadius: s > 40 ? 14 : 8, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "14", color: c, fontWeight: 700, fontSize: s * 0.36, letterSpacing: -0.3 };
-  if (avatarUrl && avatarUrl.trim()) return <div style={style}><img src={avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>;
+  const showImg = avatarUrl && avatarUrl.trim() && !imgError;
+  useEffect(() => { setImgError(false); }, [avatarUrl]);
+  const imgSrc = showImg ? (avatarUrl.replace(/&amp;/gi, "&")) : "";
+  if (showImg) return <div style={style}><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} referrerPolicy="no-referrer" /></div>;
   return <div style={style}>{ini(name)}</div>;
-};
+}
 
 const Bdg = ({ type = "n", children, style: customStyle }) => {
   const m = { ok: ["#eafaf4", "#0d9f6e"], err: ["#fdf0f2", "#dc2640"], warn: ["#fef9ec", "#d97706"], acc: ["#edf2ff", "#0055ff"], n: ["#f4f5f7", "#5f6577"], gar: ["#f0eefe", "#7c3aed"] };
