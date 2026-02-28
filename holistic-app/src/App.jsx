@@ -912,21 +912,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               {isCliente ? (
                 <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
               ) : (
-                <>
-                  <Av name={displayName} size={48} avatarUrl={gerenteAvatarUrl} />
-                  <label style={{ position: "absolute", right: -4, bottom: -4, width: 28, height: 28, borderRadius: 8, background: "#1b2559", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: uploadingGerenteAvatar ? "wait" : "pointer", boxShadow: "0 2px 8px rgba(27,37,89,.3)", border: "2px solid #fff" }} title="Cambiar foto">
-                    <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (f) await handleGerenteAvatarUpload(f); e.target.value = ""; }} disabled={uploadingGerenteAvatar} />
-                    <Camera size={14} />
-                  </label>
-                </>
+                <Av name={displayName} size={48} avatarUrl={gerenteAvatarUrl} />
               )}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
               {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
-              {!isCliente && (
-                <button type="button" onClick={handleEditarNombreGerente} style={{ marginTop: 4, padding: 0, border: "none", background: "none", color: "#0055ff", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", textDecoration: "underline" }}>Cambiar nombre</button>
-              )}
             </div>
           </div>
         </div>
