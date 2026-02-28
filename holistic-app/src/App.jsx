@@ -289,6 +289,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [selectedIds, setSelectedIds] = useState({ clientes: [], gastos: [], cobros: [], garantias: [] });
   const [pageNum, setPageNum] = useState({ clientes: 1, gastos: 1, cobros: 1, garantias: 1 });
+  const [sortClientesBy, setSortClientesBy] = useState("nombre");
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
@@ -569,6 +570,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
+  const clientsFilteredAndSorted = useMemo(() => {
+    const list = [...clientsFiltered];
+    if (sortClientesBy === "nombre") return list.sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es"));
+    return list.sort((a, b) => {
+      const dA = cData(a.id), dB = cData(b.id);
+      switch (sortClientesBy) {
+        case "deuda": return dB.net - dA.net;
+        case "gasto": return dB.tG - dA.tG;
+        case "cobrado": return dB.tP - dA.tP;
+        default: return (a.name || "").localeCompare((b.name || ""), "es");
+      }
+    });
+  }, [clientsFiltered, sortClientesBy, cData]);
   const clientFilterOptions = useMemo(() => [{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))], [clientsSorted]);
 
   /* Early returns only after all hooks have run */
@@ -1081,7 +1095,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Clientes</h2>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
               <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de clientes">
-                {search.trim() ? `${clientsFiltered.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
+                {search.trim() ? `${clientsFilteredAndSorted.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", whiteSpace: "nowrap" }}>Ordenar:</label>
+                <select value={sortClientesBy} onChange={(e) => { setSortClientesBy(e.target.value); setPageNum((p) => ({ ...p, clientes: 1 })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", background: "#fff", color: "#1a1d26", outline: "none", cursor: "pointer", minWidth: 160 }}>
+                  <option value="nombre">Nombre (A-Z)</option>
+                  <option value="deuda">Quien más debe</option>
+                  <option value="gasto">Mayor gasto</option>
+                  <option value="cobrado">Más cobrado</option>
+                </select>
               </div>
               <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div>
               <Btn variant="outline" size="sm" onClick={expClientes}><Download size={14} /> Descargar Excel</Btn>
@@ -1090,9 +1113,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             {(() => {
-              const totalPages = Math.ceil(clientsFiltered.length / PER_PAGE) || 1;
+              const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
-              const clientsPaginated = clientsFiltered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+              const clientsPaginated = clientsFilteredAndSorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
               return (
                 <>
                   <div className="hm-table-wrap hm-table-clientes"><table><thead><tr>{["Cliente", "Código", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 10 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
