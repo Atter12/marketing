@@ -98,6 +98,20 @@ export function loginToEmail(value) {
   return trimmed;
 }
 
+/** Solicita magic link (OTP) para entrar al panel. Solo envía si el email está en gerentes o clientes_acceso. */
+export async function solicitarMagicLink(email, options = {}) {
+  if (!supabase) throw new Error("App no configurada");
+  const e = String(email || "").trim();
+  if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
+  const { data, error } = await supabase.functions.invoke("magic-link-login", {
+    body: { email: e, redirect_to: options.redirect_to || null },
+  });
+  if (error) throw new Error(error.message || "Error al enviar el enlace");
+  const body = data?.data ?? data;
+  if (body?.error) throw new Error(body.error);
+  return body;
+}
+
 /** Da acceso al panel: envía un email al cliente (correo de la ficha) con un link mágico. Al abrirlo entra al panel.
  *  Opciones: { regenerate: true } para reenviar el link; { redirect_to: url } para la URL de redirección tras el login. */
 export async function darAccesoCliente(clientId, options = {}) {

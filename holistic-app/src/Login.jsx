@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Lock, Mail, AlertCircle, UserPlus, CheckCircle } from "lucide-react";
-import { getClientIdForUser, loginToEmail } from "./supabase";
+import { getClientIdForUser, solicitarMagicLink } from "./supabase";
 
 const inputStyle = { width: "100%", padding: "12px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
 
@@ -24,33 +24,28 @@ export default function Login({ onSuccess, supabase }) {
     return null;
   }
 
-  async function handleSubmit(e) {
+  const [linkEnviado, setLinkEnviado] = useState(false);
+
+  async function handleEnviarLink(e) {
     e.preventDefault();
     setError("");
+    setLinkEnviado(false);
     if (!supabase) {
       setError("App no configurada. Faltan PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY.");
       return;
     }
+    const correo = String(email || "").trim();
+    if (!correo || !correo.includes("@")) {
+      setError("Indicá un correo válido.");
+      return;
+    }
     setLoading(true);
     try {
-      const loginEmail = loginToEmail(email);
-      const { data, error: signError } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-      if (signError) {
-        setError(signError.message === "Invalid login credentials" ? "Correo o contraseña incorrectos." : signError.message);
-        setLoading(false);
-        return;
-      }
-      const result = await tryEnter(data);
-      if (result) {
-        onSuccess({ ...result, userEmail: data.user?.email ?? "" });
-        setLoading(false);
-        return;
-      }
-      await supabase.auth.signOut();
-      setError("No autorizado. Sin acceso de gerente ni de cliente.");
+      const redirectTo = typeof window !== "undefined" ? window.location.origin + (window.location.pathname || "") : null;
+      await solicitarMagicLink(correo, { redirect_to: redirectTo || undefined });
+      setLinkEnviado(true);
     } catch (err) {
-      console.error("[Login] Error:", err);
-      setError(err?.message || "Error al iniciar sesión.");
+      setError(err?.message || "Error al enviar el enlace.");
     } finally {
       setLoading(false);
     }
@@ -128,7 +123,14 @@ export default function Login({ onSuccess, supabase }) {
         {signupOk && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 28px 0", padding: "12px 14px", background: "#eafaf4", color: "#0d9f6e", borderRadius: 10, fontSize: 13 }}>
             <CheckCircle size={18} style={{ flexShrink: 0 }} />
-            <span>Cuenta creada. Ya puedes iniciar sesión con tu correo y contraseña.</span>
+            <span>Cuenta creada. Para entrar la próxima vez usá tu correo y pedí un enlace al correo.</span>
+          </div>
+        )}
+
+        {linkEnviado && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 28px 0", padding: "12px 14px", background: "#eafaf4", color: "#0d9f6e", borderRadius: 10, fontSize: 13 }}>
+            <CheckCircle size={18} style={{ flexShrink: 0 }} />
+            <span>Revisá tu correo. Abrí el enlace para entrar al panel.</span>
           </div>
         )}
 
@@ -168,30 +170,26 @@ export default function Login({ onSuccess, supabase }) {
             </p>
           </form>
         ) : (
-          <form onSubmit={handleSubmit} style={{ padding: "28px 28px 32px" }}>
+          <form onSubmit={handleEnviarLink} style={{ padding: "28px 28px 32px" }}>
             {error && (
               <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 14px", marginBottom: 18, background: "#fdf0f2", color: "#dc2640", borderRadius: 10, fontSize: 13 }}>
                 <AlertCircle size={18} style={{ flexShrink: 0 }} />
                 <span>{error}</span>
               </div>
             )}
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Correo o número de celular</label>
+            <div style={{ marginBottom: 22 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Correo</label>
               <div style={{ position: "relative" }}>
                 <Mail size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} />
-                <input type="text" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@empresa.com o 51 999 999 999" required autoComplete="username" style={{ ...inputStyle, paddingLeft: 44 }} />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" required autoComplete="email" style={{ ...inputStyle, paddingLeft: 44 }} />
               </div>
             </div>
-            <div style={{ marginBottom: 22 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Contraseña</label>
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete="current-password" style={inputStyle} />
-            </div>
             <button type="submit" disabled={loading} style={{ width: "100%", padding: "14px", border: "none", borderRadius: 10, background: loading ? "#9498a8" : "#1b2559", color: "#fff", fontSize: 15, fontWeight: 600, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer" }}>
-              {loading ? "Entrando…" : "Entrar"}
+              {loading ? "Enviando…" : "Enviar enlace al correo"}
             </button>
             <p style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: "#9498a8" }}>
               ¿Eres cliente y no tienes cuenta?{" "}
-              <button type="button" onClick={() => { setMode("signup"); setError(""); setSignupOk(false); }} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Crear cuenta</button>
+              <button type="button" onClick={() => { setMode("signup"); setError(""); setSignupOk(false); setLinkEnviado(false); }} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit" }}>Crear cuenta</button>
             </p>
           </form>
         )}
