@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
@@ -67,6 +67,13 @@ function parsePeriodoInput(s) {
   if (m3) {
     const month = parseInt(m3[1], 10);
     const year = parseInt(m3[2], 10);
+    if (month >= 1 && month <= 12) return `${year}-${String(month).padStart(2, "0")}`;
+  }
+  const m4 = t.match(/^(\d{2})(\d{2})$/); // 0125 = MMYY (ene. 2025)
+  if (m4) {
+    const month = parseInt(m4[1], 10);
+    let year = parseInt(m4[2], 10);
+    if (year < 100) year += 2000;
     if (month >= 1 && month <= 12) return `${year}-${String(month).padStart(2, "0")}`;
   }
   return null;
@@ -1476,7 +1483,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente (filtrar)</label><SearchSelect compact options={[{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cofFilterCliente} onChange={(id) => setCofFilterCliente(id || "")} placeholder="Todos..." emptyMessage="Ningún cliente" /></div>
-          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label><input type="text" placeholder="MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} /></div>
+          <div>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <button type="button" onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#1b2559" : "#9498a8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
+              <button type="button" onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
+              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 01/25 o MM/AAAA" />
+              {cofFilterPeriodo && <button type="button" onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Limpiar</button>}
+            </div>
+          </div>
         </div>
         </>
         )}
