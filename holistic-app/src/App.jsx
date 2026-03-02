@@ -807,6 +807,47 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     XLSX.writeFile(wb, `cliente_${(curC?.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_")}_${td()}.xlsx`);
   };
 
+  /* Exportar según el período mostrado en vista cliente (Gastos, Cobros, Garantías, Datos manuales) */
+  const expClientDataPorPeriodo = (exportExcel = true, openPdfWindow = false) => {
+    if (!curC) return;
+    const periodoLabel = clientDetailPeriodo ? fmtM(clientDetailPeriodo) : "Todos";
+    const safeName = (curC.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_");
+    const fileSuffix = clientDetailPeriodo ? clientDetailPeriodo.replace(/-/g, "") : "todos";
+
+    if (exportExcel) {
+      const wb = XLSX.utils.book_new();
+      const curDExp = curDDisplay || { tGar: 0, net: 0 };
+      const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", "Código"];
+      const rG = curGastosDisplay.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", fmt(g._pend), fmt(curDExp.net), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hG, ...rG]), "Gastos");
+      const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
+      const rC = curCobrosDisplay.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hC, ...rC]), "Cobros");
+      const hGar = ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"];
+      const rGar = curGarsDisplay.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"]; });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hGar, ...rGar]), "Garantías");
+      const hM = ["Fecha", "Concepto", "Monto", "Tipo", "Nota"];
+      const rM = curManDisplay.map((m) => [fmtDD(m.fecha), m.conc || "—", fmt(m.monto), m.tipo || "—", m.nota || "—"]);
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hM, ...rM]), "Datos manuales");
+      XLSX.writeFile(wb, `cliente_${safeName}_periodo_${fileSuffix}_${td()}.xlsx`);
+    }
+
+    if (openPdfWindow) {
+      const curDExp = curDDisplay || { tGar: 0, net: 0 };
+      const rows = (arr, fn) => arr.map(fn).map((r) => "<tr>" + r.map((c) => `<td>${String(c).replace(/</g, "&lt;")}</td>`).join("") + "</tr>").join("");
+      const table = (title, headers, rowData) => `<div style="margin-bottom:24px"><h3 style="font-size:14px;margin:0 0 8px;color:#1b2559">${title}</h3><table border="1" cellpadding="8" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${headers.map((h) => `<th style="background:#f8f9fb;text-align:left">${h}</th>`).join("")}</tr></thead><tbody>${rowData}</tbody></table></div>`;
+      const rG = rows(curGastosDisplay, (g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", fmt(g._pend), g._st, g.prepago ? "S" : "N"]);
+      const rC = rows(curCobrosDisplay, (co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
+      const rGar = rows(curGarsDisplay, (gr) => { const gastoAsoc = gr.gastoId ? gastos.find((x) => x.id === gr.gastoId) : null; return [gr.codigoVerificacion || "—", gastoAsoc?.codigo || "—", gr.tipo || "—", gr.desc || "—", fmt(gr.valor), gr.estado || "—", gr.fechaColocacion ? fmtDD(gr.fechaColocacion) : "—"]; });
+      const rM = rows(curManDisplay, (m) => [fmtDD(m.fecha), m.conc || "—", fmt(m.monto), m.tipo || "—", m.nota || "—"]);
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${curC.name} — ${periodoLabel}</title><style>body{font-family:'DM Sans',sans-serif;padding:20px;color:#1a1d26;max-width:900px;margin:0 auto} h1{font-size:18px;margin:0 0 4px} .meta{color:#5f6577;font-size:12px;margin-bottom:20px} .tip{background:#f0f4ff;padding:10px 14px;border-radius:8px;font-size:12px;color:#1b2559;margin-bottom:24px}</style></head><body><h1>${curC.name}</h1><p class="meta">Período: ${periodoLabel} · Generado ${fmtD(td())}</p><p class="tip">Para guardar como PDF: Archivo → Imprimir → Guardar como PDF (o Destino: Guardar como PDF)</p>${table("Gastos Ads", ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"], rG)}${table("Cobros", ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"], rC)}${table("Garantías", ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"], rGar)}${table("Datos manuales", ["Fecha", "Concepto", "Monto", "Tipo", "Nota"], rM)}</body></html>`;
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const w = window.open(url, "_blank", "noopener");
+      if (w) w.addEventListener("load", () => setTimeout(() => URL.revokeObjectURL(url), 500));
+    }
+  };
+
   const goTo = (p, cid = null) => {
     setPage(p);
     if (cid != null) setCurCl(cid);
@@ -1200,6 +1241,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             updateClientAvatar={mutations.updateClientAvatar}
             uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
             onExportClient={expClientData}
+            onExportClientPorPeriodo={expClientDataPorPeriodo}
             expClientRango={expClientRango}
             setExpClientRango={setExpClientRango}
           />
