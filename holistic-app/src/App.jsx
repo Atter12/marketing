@@ -5,6 +5,8 @@ import ClientDetailView from "./ClientDetailView";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
@@ -834,17 +836,43 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
     if (openPdfWindow) {
       const curDExp = curDDisplay || { tGar: 0, net: 0 };
-      const rows = (arr, fn) => arr.map(fn).map((r) => "<tr>" + r.map((c) => `<td>${String(c).replace(/</g, "&lt;")}</td>`).join("") + "</tr>").join("");
-      const table = (title, headers, rowData) => `<div style="margin-bottom:24px"><h3 style="font-size:14px;margin:0 0 8px;color:#1b2559">${title}</h3><table border="1" cellpadding="8" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr>${headers.map((h) => `<th style="background:#f8f9fb;text-align:left">${h}</th>`).join("")}</tr></thead><tbody>${rowData}</tbody></table></div>`;
-      const rG = rows(curGastosDisplay, (g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", fmt(g._pend), g._st, g.prepago ? "S" : "N"]);
-      const rC = rows(curCobrosDisplay, (co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
-      const rGar = rows(curGarsDisplay, (gr) => { const gastoAsoc = gr.gastoId ? gastos.find((x) => x.id === gr.gastoId) : null; return [gr.codigoVerificacion || "—", gastoAsoc?.codigo || "—", gr.tipo || "—", gr.desc || "—", fmt(gr.valor), gr.estado || "—", gr.fechaColocacion ? fmtDD(gr.fechaColocacion) : "—"]; });
-      const rM = rows(curManDisplay, (m) => [fmtDD(m.fecha), m.conc || "—", fmt(m.monto), m.tipo || "—", m.nota || "—"]);
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${curC.name} — ${periodoLabel}</title><style>body{font-family:'DM Sans',sans-serif;padding:20px;color:#1a1d26;max-width:900px;margin:0 auto} h1{font-size:18px;margin:0 0 4px} .meta{color:#5f6577;font-size:12px;margin-bottom:20px} .tip{background:#f0f4ff;padding:10px 14px;border-radius:8px;font-size:12px;color:#1b2559;margin-bottom:24px}</style></head><body><h1>${curC.name}</h1><p class="meta">Período: ${periodoLabel} · Generado ${fmtD(td())}</p><p class="tip">Para guardar como PDF: Archivo → Imprimir → Guardar como PDF (o Destino: Guardar como PDF)</p>${table("Gastos Ads", ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"], rG)}${table("Cobros", ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"], rC)}${table("Garantías", ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"], rGar)}${table("Datos manuales", ["Fecha", "Concepto", "Monto", "Tipo", "Nota"], rM)}</body></html>`;
-      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const w = window.open(url, "_blank", "noopener");
-      if (w) w.addEventListener("load", () => setTimeout(() => URL.revokeObjectURL(url), 500));
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      let y = 14;
+      doc.setFontSize(16);
+      doc.setTextColor(26, 29, 38);
+      doc.text(curC.name || "Cliente", 14, y); y += 8;
+      doc.setFontSize(10);
+      doc.setTextColor(95, 101, 119);
+      doc.text(`Período: ${periodoLabel} · Generado ${fmtD(td())}`, 14, y); y += 12;
+
+      const addTable = (title, headers, rows) => {
+        if (y > 250) { doc.addPage(); y = 14; }
+        doc.setFontSize(11);
+        doc.setTextColor(27, 37, 89);
+        doc.text(title, 14, y); y += 7;
+        doc.autoTable({
+          startY: y,
+          head: [headers],
+          body: rows,
+          theme: "grid",
+          headStyles: { fillColor: [248, 249, 251], textColor: [95, 101, 119], fontStyle: "bold", fontSize: 8 },
+          bodyStyles: { fontSize: 7 },
+          margin: { left: 14 },
+          tableWidth: "auto",
+        });
+        y = doc.lastAutoTable.finalY + 10;
+      };
+      const toStr = (x) => (x != null && x !== undefined ? String(x) : "—");
+      const rG = curGastosDisplay.map((g) => [toStr(fmtDD(g.fechaMovimiento)), toStr(fmtM(g.mes)), toStr(g.camp), toStr(fmt(g.gasto)), g.fee + "%", toStr(fmt(g._f)), toStr(fmt(g._t)), toStr(fmt(g._p)), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", toStr(fmt(g._pend)), g._st, g.prepago ? "S" : "N"]);
+      addTable("Gastos Ads", ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"], rG);
+      const rC = curCobrosDisplay.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [toStr(fmtD(co.fecha)), toStr(fmtT(co.hora)), toStr(co.codigo), toStr(g?.codigo), toStr(fmt(co.monto)), toStr(co.metodo), toStr(co.notas)]; });
+      addTable("Cobros", ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"], rC);
+      const rGar = curGarsDisplay.map((gr) => { const gastoAsoc = gr.gastoId ? gastos.find((x) => x.id === gr.gastoId) : null; return [toStr(gr.codigoVerificacion), toStr(gastoAsoc?.codigo), toStr(gr.tipo), toStr(gr.desc), toStr(fmt(gr.valor)), toStr(gr.estado), gr.fechaColocacion ? fmtDD(gr.fechaColocacion) : "—"]; });
+      addTable("Garantías", ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"], rGar);
+      const rM = curManDisplay.map((m) => [toStr(fmtDD(m.fecha)), toStr(m.conc), toStr(fmt(m.monto)), toStr(m.tipo), toStr(m.nota)]);
+      addTable("Datos manuales", ["Fecha", "Concepto", "Monto", "Tipo", "Nota"], rM);
+      doc.save(`cliente_${safeName}_periodo_${fileSuffix}_${td()}.pdf`);
     }
   };
 
@@ -1214,7 +1242,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             manualTabContent={manualTabContent}
             clientDetailPeriodo={clientDetailPeriodo}
             setClientDetailPeriodo={setClientDetailPeriodo}
-            fmtM={fmtM}
             parsePeriodoInput={parsePeriodoInput}
             tm={tm}
             cCharts={cCharts}
