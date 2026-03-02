@@ -301,6 +301,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
+  const [gastosSearch, setGastosSearch] = useState("");
   const [filterPeriodoGarantias, setFilterPeriodoGarantias] = useState("");
   const [gafFilterPeriodo, setGafFilterPeriodo] = useState("");
   const [gastosPeriodoReportes, setGastosPeriodoReportes] = useState("");
@@ -507,8 +508,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
     if (expRango.gastos.ini) list = list.filter((g) => fOp(g) >= expRango.gastos.ini);
     if (expRango.gastos.fin) list = list.filter((g) => fOp(g) <= expRango.gastos.fin);
+    if (gastosSearch && gastosSearch.trim()) {
+      const q = gastosSearch.trim().toLowerCase();
+      list = list.filter((g) => {
+        const c = clients.find((x) => x.id === g.clientId);
+        const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase();
+        return text.includes(q);
+      });
+    }
     return list.sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0));
-  }, [sGastos, filterCliente.gastos, expRango.gastos.ini, expRango.gastos.fin]);
+  }, [sGastos, filterCliente.gastos, expRango.gastos.ini, expRango.gastos.fin, gastosSearch, clients]);
 
   /* Cobros filtrados por cliente (para tabla) */
   const cobrosFiltrados = useMemo(() => {
@@ -1351,6 +1360,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                 {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
+              <div style={{ position: "relative" }}>
+                <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} />
+                <input
+                  value={gastosSearch}
+                  onChange={(e) => setGastosSearch(e.target.value)}
+                  placeholder="Buscar por cliente, campaña o código..."
+                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }}
+                />
+              </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio(""); setRepPerFin(""); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
