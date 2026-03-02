@@ -596,6 +596,29 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [clientsFiltered, sortClientesBy, cData]);
   const clientFilterOptions = useMemo(() => [{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))], [clientsSorted]);
 
+  /* ═══ CURRENT CLIENT DATA (hooks: deben ejecutarse antes del early return) ═══ */
+  const curC = curCl ? clients.find((x) => x.id === curCl) : null;
+  const curD = curCl ? cData(curCl) : null;
+  const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0)) : [];
+  const curGids = curCl ? gastos.filter((g) => g.clientId === curCl).map((g) => g.id) : [];
+  const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
+  const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
+  const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
+  const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
+  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => (c.fecha || "").slice(0, 7) === clientDetailPeriodo) : curCobros;
+  const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
+  const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
+  const curDDisplay = useMemo(() => {
+    if (!curCl) return null;
+    if (!clientDetailPeriodo) return curD;
+    const tG = curGastosDisplay.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
+    const tF = curGastosDisplay.reduce((a, g) => a + g._f, 0);
+    const tP = curCobrosDisplay.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const tGar = curGarsDisplay.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    const gross = tG + tF - tP;
+    return { tG, tF, tP, tGar, gross, net: Math.max(0, gross - tGar) };
+  }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
+
   /* Early returns only after all hooks have run */
   if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 360 }}><p style={{ color: "#dc2640", fontSize: 14, marginBottom: 16 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "#1b2559", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
@@ -803,31 +826,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const R = Math.PI / 180, r = innerRadius + (outerRadius - innerRadius) * 1.5;
     return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="#5f6577" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>{(percent * 100).toFixed(1)}%</text>;
   };
-
-  /* ═══ CURRENT CLIENT DATA ═══ */
-  const curC = curCl ? clients.find((x) => x.id === curCl) : null;
-  const curD = curCl ? cData(curCl) : null;
-  const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0)) : [];
-  const curGids = curCl ? gastos.filter((g) => g.clientId === curCl).map((g) => g.id) : [];
-  const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
-  const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
-  const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
-
-  /* Filtro por período en vista cliente: listas y totales mostrados */
-  const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
-  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => (c.fecha || "").slice(0, 7) === clientDetailPeriodo) : curCobros;
-  const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
-  const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
-  const curDDisplay = useMemo(() => {
-    if (!curCl) return null;
-    if (!clientDetailPeriodo) return curD;
-    const tG = curGastosDisplay.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
-    const tF = curGastosDisplay.reduce((a, g) => a + g._f, 0);
-    const tP = curCobrosDisplay.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
-    const tGar = curGarsDisplay.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
-    const gross = tG + tF - tP;
-    return { tG, tF, tP, tGar, gross, net: Math.max(0, gross - tGar) };
-  }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
 
   /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
   const nav = isCliente
