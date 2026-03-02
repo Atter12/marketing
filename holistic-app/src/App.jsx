@@ -292,6 +292,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repPerFin, setRepPerFin] = useState("");
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [expClientRango, setExpClientRango] = useState({ ini: "", fin: "" });
+  const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
   const [filterPeriodoGarantias, setFilterPeriodoGarantias] = useState("");
   const [gafFilterPeriodo, setGafFilterPeriodo] = useState("");
@@ -787,6 +788,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setPage(p);
     if (cid != null) setCurCl(cid);
     if (p === "client-detail" && isCliente && clientId) setCurCl(clientId);
+    if (p !== "client-detail") setClientDetailPeriodo("");
     setSearch("");
     if (p === "client-detail") setDetailTab("gastos");
     setMenuOpen(false);
@@ -811,6 +813,22 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
 
+  /* Filtro por período en vista cliente: listas y totales mostrados */
+  const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
+  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => (c.fecha || "").slice(0, 7) === clientDetailPeriodo) : curCobros;
+  const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
+  const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
+  const curDDisplay = useMemo(() => {
+    if (!curCl) return null;
+    if (!clientDetailPeriodo) return curD;
+    const tG = curGastosDisplay.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
+    const tF = curGastosDisplay.reduce((a, g) => a + g._f, 0);
+    const tP = curCobrosDisplay.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const tGar = curGarsDisplay.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    const gross = tG + tF - tP;
+    return { tG, tF, tP, tGar, gross, net: Math.max(0, gross - tGar) };
+  }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
+
   /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
   const nav = isCliente
     ? [
@@ -829,13 +847,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", section: "Sistema" },
       ];
 
-  const pct = curD && (curD.tG + curD.tF) > 0 ? (curD.tP / (curD.tG + curD.tF)) * 100 : 0;
+  const pct = curDDisplay && (curDDisplay.tG + curDDisplay.tF) > 0 ? (curDDisplay.tP / (curDDisplay.tG + curDDisplay.tF)) * 100 : 0;
 
   const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
     <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-      <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curMan.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curMan.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
+      <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
       {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
         <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
         <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
@@ -1147,14 +1165,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         {page === "client-detail" && curC && (
           <ClientDetailView
             curC={curC}
-            curD={curD}
+            curD={curDDisplay}
             pct={pct}
             detailTab={detailTab}
             setDetailTab={setDetailTab}
-            curGastos={curGastos}
-            curCobros={curCobros}
-            curGars={curGars}
+            curGastos={curGastosDisplay}
+            curCobros={curCobrosDisplay}
+            curGars={curGarsDisplay}
             manualTabContent={manualTabContent}
+            clientDetailPeriodo={clientDetailPeriodo}
+            setClientDetailPeriodo={setClientDetailPeriodo}
+            fmtM={fmtM}
+            parsePeriodoInput={parsePeriodoInput}
+            tm={tm}
             cCharts={cCharts}
             goTo={goTo}
             openMdl={openMdl}

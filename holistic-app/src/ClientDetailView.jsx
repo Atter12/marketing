@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { CreditCard, Plus, ChevronLeft, Edit3, Camera, Trash2, KeyRound, Download } from "lucide-react";
+import { CreditCard, Plus, ChevronLeft, ChevronRight, Edit3, Camera, Trash2, KeyRound, Download } from "lucide-react";
 
 const Slot = ({ content }) => content;
 
@@ -41,6 +41,10 @@ export default function ClientDetailView(props) {
     onExportClient,
     expClientRango,
     setExpClientRango,
+    clientDetailPeriodo = "",
+    setClientDetailPeriodo,
+    parsePeriodoInput,
+    tm,
   } = props;
 
   const [photoUrl, setPhotoUrl] = useState(curC.avatar_url || "");
@@ -123,6 +127,19 @@ export default function ClientDetailView(props) {
           </div>
           <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2>{curC.codigo && <div style={{ fontSize: 12, color: "#5f6577", fontFamily: "'IBM Plex Mono',monospace", marginTop: 2, fontWeight: 600 }}>Código: {curC.codigo}</div>}<div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
         </div>,
+        setClientDetailPeriodo && (
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Ver período:</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <button type="button" onClick={() => { const base = clientDetailPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setClientDetailPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+            <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: clientDetailPeriodo ? "#1b2559" : "#9498a8" }}>{clientDetailPeriodo ? (fmtM ? fmtM(clientDetailPeriodo) : clientDetailPeriodo) : "Todos"}</div>
+            <button type="button" onClick={() => { const base = clientDetailPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setClientDetailPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+            <input type="text" placeholder="0125, 02/25, MM/AAAA" value={clientDetailPeriodo} onChange={(e) => setClientDetailPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput && parsePeriodoInput(e.target.value); if (p) setClientDetailPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter" && parsePeriodoInput) { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setClientDetailPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+            {clientDetailPeriodo && <button type="button" onClick={() => setClientDetailPeriodo("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+          </div>
+          <span style={{ fontSize: 11, color: "#9498a8" }}>Las tarjetas y tablas abajo muestran solo este período.</span>
+        </div>
+        ),
         <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>
