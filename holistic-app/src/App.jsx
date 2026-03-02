@@ -24,6 +24,12 @@ const fmt = (n) => {
   if (Number.isNaN(v)) return "0";
   return v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 };
+/** Número para Excel: sin coma de miles (8331.27 en vez de 8,331.27) */
+const fmtExcel = (n) => {
+  const v = parseFloat(n);
+  if (Number.isNaN(v)) return "—";
+  return v.toFixed(2);
+};
 const fmtK = (n) => { const v = parseFloat(n || 0); if (v >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M"; if (v >= 1e3) return "$" + (v / 1e3).toFixed(1) + "K"; return "$" + fmt(v); };
 const td = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const tm = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
@@ -759,7 +765,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const expGastos = () => {
     const list = [...gastosFiltrados];
     const headers = ["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return [c?.name || "—", fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", g.codigo || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), garVal > 0 ? fmt(garVal) : "—", fmt(g._pend), fmt(netCobrar), g._st, g.prepago ? "S" : "N"]; });
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return [c?.name || "—", fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", g.codigo || "—", fmtExcel(g.gasto), g.fee + "%", fmtExcel(g._f), fmtExcel(g._t), fmtExcel(g._p), garVal > 0 ? fmtExcel(garVal) : "—", fmtExcel(g._pend), fmtExcel(netCobrar), g._st, g.prepago ? "S" : "N"]; });
     exportToExcel("gastos_" + td(), "Gastos", headers, rows);
   };
   const expCobros = () => {
@@ -767,13 +773,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (expRango.cobros.ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= expRango.cobros.ini);
     if (expRango.cobros.fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= expRango.cobros.fin);
     const headers = ["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
-    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmt(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
+    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmtExcel(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
     exportToExcel("cobros_" + td(), "Cobros", headers, rows);
   };
   const expGarantias = () => {
     let list = [...garantias];
     const headers = ["Cliente", "Cód. verificación", "Cód. gasto", "Gasto ($)", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado"];
-    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", gastoAsoc != null ? fmt(gastoAsoc.gasto) : "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—", g.created_by || "—", g.created_at ? fmtDt(g.created_at) : "—"]; });
+    const rows = list.map((g) => { const c = clients.find((x) => x.id === g.clientId); const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [c?.name || "—", g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", gastoAsoc != null ? fmtExcel(gastoAsoc.gasto) : "—", g.tipo || "—", g.desc || "—", fmtExcel(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—", g.created_by || "—", g.created_at ? fmtDt(g.created_at) : "—"]; });
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
@@ -797,13 +803,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const wb = XLSX.utils.book_new();
     const curDExp = curCl ? cData(curCl) : { tGar: 0, net: 0 };
     const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", "Código"];
-    const rG = gs.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", fmt(g._pend), fmt(curDExp.net), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
+    const rG = gs.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmtExcel(g.gasto), g.fee + "%", fmtExcel(g._f), fmtExcel(g._t), fmtExcel(g._p), curDExp.tGar > 0 ? fmtExcel(curDExp.tGar) : "—", fmtExcel(g._pend), fmtExcel(curDExp.net), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
     const wsG = XLSX.utils.aoa_to_sheet([hG, ...rG]); XLSX.utils.book_append_sheet(wb, wsG, "Gastos");
     const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
-    const rC = cos.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
+    const rC = cos.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmtExcel(co.monto), co.metodo || "—", co.notas || "—"]; });
     const wsC = XLSX.utils.aoa_to_sheet([hC, ...rC]); XLSX.utils.book_append_sheet(wb, wsC, "Cobros");
     const hGar = ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado"];
-    const rGar = curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—"]; });
+    const rGar = curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmtExcel(g.valor), g.estado || "—"]; });
     const wsGar = XLSX.utils.aoa_to_sheet([hGar, ...rGar]); XLSX.utils.book_append_sheet(wb, wsGar, "Garantías");
     XLSX.writeFile(wb, `cliente_${(curC?.name || "cliente").replace(/[^a-zA-Z0-9]/g, "_")}_${td()}.xlsx`);
   };
@@ -819,16 +825,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const wb = XLSX.utils.book_new();
       const curDExp = curDDisplay || { tGar: 0, net: 0 };
       const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", "Código"];
-      const rG = curGastosDisplay.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmt(g.gasto), g.fee + "%", fmt(g._f), fmt(g._t), fmt(g._p), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", fmt(g._pend), fmt(curDExp.net), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
+      const rG = curGastosDisplay.map((g) => [fmtDD(g.fechaMovimiento), fmtM(g.mes), g.camp || "—", fmtExcel(g.gasto), g.fee + "%", fmtExcel(g._f), fmtExcel(g._t), fmtExcel(g._p), curDExp.tGar > 0 ? fmtExcel(curDExp.tGar) : "—", fmtExcel(g._pend), fmtExcel(curDExp.net), g._st, g.prepago ? "S" : "N", g.codigo || "—"]);
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hG, ...rG]), "Gastos");
       const hC = ["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Monto", "Método", "Notas"];
-      const rC = curCobrosDisplay.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmt(co.monto), co.metodo || "—", co.notas || "—"]; });
+      const rC = curCobrosDisplay.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [fmtD(co.fecha), fmtT(co.hora) || "—", co.codigo || "—", g?.codigo || "—", fmtExcel(co.monto), co.metodo || "—", co.notas || "—"]; });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hC, ...rC]), "Cobros");
       const hGar = ["Cód. verificación", "Cód. gasto", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación"];
-      const rGar = curGarsDisplay.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmt(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"]; });
+      const rGar = curGarsDisplay.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; return [g.codigoVerificacion || "—", gastoAsoc?.codigo || "—", g.tipo || "—", g.desc || "—", fmtExcel(g.valor), g.estado || "—", g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"]; });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hGar, ...rGar]), "Garantías");
       const hM = ["Fecha", "Concepto", "Monto", "Tipo", "Nota"];
-      const rM = curManDisplay.map((m) => [fmtDD(m.fecha), m.conc || "—", fmt(m.monto), m.tipo || "—", m.nota || "—"]);
+      const rM = curManDisplay.map((m) => [fmtDD(m.fecha), m.conc || "—", fmtExcel(m.monto), m.tipo || "—", m.nota || "—"]);
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hM, ...rM]), "Datos manuales");
       XLSX.writeFile(wb, `cliente_${safeName}_periodo_${fileSuffix}_${td()}.xlsx`);
     }
