@@ -38,10 +38,7 @@ export default function ClientDetailView(props) {
     isCliente,
     updateClientAvatar,
     uploadAvatarFile,
-    onExportClient,
     onExportClientPorPeriodo,
-    expClientRango,
-    setExpClientRango,
     clientDetailPeriodo = "",
     setClientDetailPeriodo,
     parsePeriodoInput,
@@ -100,7 +97,6 @@ export default function ClientDetailView(props) {
     <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
         <div style={{ fontSize: 13, color: "#9498a8", minWidth: 0 }}>{!isCliente && <><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › </>}<span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span>{curC.codigo && <span style={{ marginLeft: 8, fontSize: 12, color: "#5f6577", fontFamily: "'IBM Plex Mono',monospace" }}>{curC.codigo}</span>}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-          {onExportClient && <><div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expClientRango?.ini || ""} onChange={(e) => setExpClientRango?.((p) => ({ ...p, ini: e.target.value }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expClientRango?.fin || ""} onChange={(e) => setExpClientRango?.((p) => ({ ...p, fin: e.target.value }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /></div><Btn variant="outline" size="sm" onClick={() => onExportClient(expClientRango?.ini, expClientRango?.fin)}><Download size={14} /> Descargar Excel</Btn></>}
           {!isCliente && <Btn variant="outline" size="sm" onClick={() => openMdl("client", curCl)}><Edit3 size={14} /> Editar</Btn>}{!isCliente && <Btn variant="outline" size="sm" onClick={() => openMdl("dar-acceso", curCl)} style={{ borderColor: "#0d9f6e", color: "#0d9f6e" }}><KeyRound size={14} /> Dar acceso</Btn>}{!isCliente && <Btn size="sm" onClick={() => openMdl("gasto")}><Plus size={14} /> Gasto</Btn>}{!isCliente && <Btn variant="accent" size="sm" onClick={() => openMdl("cobro")}><CreditCard size={14} /> Cobro</Btn>}
         </div>
       </div>,

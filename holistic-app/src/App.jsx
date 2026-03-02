@@ -293,7 +293,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repPerInicio, setRepPerInicio] = useState("");
   const [repPerFin, setRepPerFin] = useState("");
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
-  const [expClientRango, setExpClientRango] = useState({ ini: "", fin: "" });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
   const [filterPeriodoGarantias, setFilterPeriodoGarantias] = useState("");
@@ -1267,10 +1266,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             isCliente={isCliente}
             updateClientAvatar={mutations.updateClientAvatar}
             uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
-            onExportClient={expClientData}
             onExportClientPorPeriodo={expClientDataPorPeriodo}
-            expClientRango={expClientRango}
-            setExpClientRango={setExpClientRango}
           />
         )}
 
