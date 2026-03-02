@@ -196,6 +196,16 @@ export function useSupabaseData(role, clientId) {
       if (e) throw e;
       await fetchAll();
     },
+    setGastosFeeBulk: async (ids, feeValue) => {
+      if (role !== "gerente") return;
+      const idsArr = Array.isArray(ids) ? ids.filter(Boolean) : [];
+      if (!idsArr.length) return;
+      const feeNum = parseFloat(feeValue);
+      if (!Number.isFinite(feeNum)) throw new Error("Fee inválido");
+      const { error: e } = await supabase.from("gastos").update({ fee: feeNum }).in("id", idsArr);
+      if (e) throw e;
+      await fetchAll();
+    },
     saveCobro: async (payload) => {
       if (role !== "gerente") return;
       const { gastoId, monto, fecha, hora, metodo, notas } = payload;

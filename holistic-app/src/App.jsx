@@ -330,6 +330,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [viewerSignedUrls, setViewerSignedUrls] = useState([]);
   const [mf, setMf] = useState(emptyMf);
   const [gfClientNameInput, setGfClientNameInput] = useState("");
+  const [bulkFee, setBulkFee] = useState("");
+  const [bulkFeeScope, setBulkFeeScope] = useState("selected"); // "selected" | "filtered"
 
   /* Synced gastos with computed fields — hooks must run before any early return */
   const sGastos = useMemo(() => gastos.map((g) => {
@@ -561,7 +563,24 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* ═══ MODALS ═══ */
   const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
-  const closeMdl = () => { setModal(null); setEditId(null); setCf(emptyCf); setGf({ ...emptyGf, clientId: curCl || "" }); setCof(emptyCof); setGaf({ ...emptyGaf, clientId: curCl || "" }); setAccesoResultado(null); setCobroComprobanteFiles([]); setCofGastosQuery(""); setCofFilterCliente(""); setCofFilterPeriodo(""); setGafFilterPeriodo(""); setGarantiaImagenNewFiles([]); setGfClientNameInput(""); };
+  const closeMdl = () => {
+    setModal(null);
+    setEditId(null);
+    setCf(emptyCf);
+    setGf({ ...emptyGf, clientId: curCl || "" });
+    setCof(emptyCof);
+    setGaf({ ...emptyGaf, clientId: curCl || "" });
+    setAccesoResultado(null);
+    setCobroComprobanteFiles([]);
+    setCofGastosQuery("");
+    setCofFilterCliente("");
+    setCofFilterPeriodo("");
+    setGafFilterPeriodo("");
+    setGarantiaImagenNewFiles([]);
+    setGfClientNameInput("");
+    setBulkFee("");
+    setBulkFeeScope("selected");
+  };
   const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); setGafFilterPeriodo(""); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
@@ -769,6 +788,41 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!ids.length || !confirm(`¿Eliminar ${ids.length} garantía(s)?`)) return;
     for (const id of ids) await mutations.delGarantia(id);
     clearSelection("garantias");
+  };
+
+  const openBulkFeeModal = (scope = "selected") => {
+    setBulkFeeScope(scope);
+    setBulkFee("");
+    setEditId(null);
+    setModal("gasto-fee-bulk");
+  };
+
+  const applyBulkFee = async () => {
+    if (isCliente) return;
+    const feeNum = parseFloat(bulkFee);
+    if (!Number.isFinite(feeNum)) {
+      alert("Ingresá un Fee válido.");
+      return;
+    }
+    let targetList = [];
+    if (bulkFeeScope === "selected") {
+      const idsSet = new Set(selectedIds.gastos);
+      targetList = gastosFiltrados.filter((g) => idsSet.has(g.id));
+    } else {
+      targetList = gastosFiltrados;
+    }
+    if (!targetList.length) {
+      alert("No hay gastos para actualizar con el criterio elegido.");
+      return;
+    }
+    if (!confirm(`¿Actualizar el Fee a ${feeNum}% para ${targetList.length} gasto(s)?`)) return;
+    try {
+      await mutations.setGastosFeeBulk(targetList.map((g) => g.id), feeNum);
+      clearSelection("gastos");
+      closeMdl();
+    } catch (err) {
+      alert(err?.message || "Error al actualizar los Fee en lote.");
+    }
   };
 
   const saveMan = async () => { if (!mf.conc.trim()) return alert("Concepto obligatorio"); await mutations.saveManual({ clientId: curCl, fecha: mf.fecha, conc: mf.conc, monto: mf.monto, tipo: mf.tipo, nota: mf.nota }); setMf(emptyMf); };
@@ -1300,6 +1354,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio(""); setRepPerFin(""); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
+              {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
             </div>
           </div>
@@ -1317,6 +1372,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                   {!isCliente && (selectedIds.gastos.length > 0) && (
                     <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
                       <Btn variant="outline" size="sm" onClick={delGastosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.gastos.length})</Btn>
+                      <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("selected")}><Percent size={14} /> Editar Fee ({selectedIds.gastos.length})</Btn>
                     </div>
                   )}
                   <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
@@ -1564,6 +1620,60 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <div style={{ fontSize: 11, color: "#9498a8", marginTop: 6 }}>Las garantías se descuentan de la deuda al calcular el pendiente neto.</div>
           </div>
         )}
+      </Mdl>
+
+      <Mdl
+        open={modal === "gasto-fee-bulk"}
+        onClose={closeMdl}
+        title="Edición masiva de Fee"
+        footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={applyBulkFee} disabled={!bulkFee.trim()}>Aplicar</Btn></>}
+      >
+        <div style={{ marginBottom: 12, fontSize: 12.5, color: "#5f6577" }}>
+          Elegí si querés actualizar solo los gastos seleccionados o todos los que están filtrados en la tabla, y luego defini el nuevo porcentaje de Fee.
+        </div>
+        <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+            <input
+              type="radio"
+              name="bulk-fee-scope"
+              checked={bulkFeeScope === "selected"}
+              onChange={() => setBulkFeeScope("selected")}
+              disabled={selectedIds.gastos.length === 0}
+              style={{ width: 16, height: 16, cursor: selectedIds.gastos.length === 0 ? "not-allowed" : "pointer" }}
+            />
+            <span>
+              Solo gastos seleccionados
+              {" "}
+              <span style={{ color: "#9498a8" }}>({selectedIds.gastos.length} seleccionado(s))</span>
+            </span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+            <input
+              type="radio"
+              name="bulk-fee-scope"
+              checked={bulkFeeScope === "filtered"}
+              onChange={() => setBulkFeeScope("filtered")}
+              style={{ width: 16, height: 16, cursor: "pointer" }}
+            />
+            <span>
+              Todos los gastos filtrados en la tabla
+              {" "}
+              <span style={{ color: "#9498a8" }}>({gastosFiltrados.length} gasto(s))</span>
+            </span>
+          </label>
+        </div>
+        <Inp
+          label="Nuevo Fee (%)"
+          type="number"
+          step="0.1"
+          min="0"
+          value={bulkFee}
+          onChange={(e) => setBulkFee(e.target.value)}
+          hint="Se aplicará este porcentaje al gasto de cada fila incluida en el alcance elegido."
+        />
+        <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>
+          El total a cobrar de cada gasto se recalculará automáticamente según el nuevo Fee.
+        </div>
       </Mdl>
 
       <Mdl open={modal === "cobro"} onClose={closeMdl} title={editId ? "Editar Cobro" : "Registrar Cobro"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn variant="accent" onClick={saveCobro} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : editId ? "Guardar" : "Registrar"}</Btn></>}>
