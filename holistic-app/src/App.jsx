@@ -312,7 +312,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden" };
+  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -574,7 +574,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
-    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: [co.gastoId], monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
+    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
   }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
@@ -640,18 +640,30 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const saveCobro = async () => {
     const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : (cof.gastoId ? [cof.gastoId] : []);
-    if (!ids.length || !parseFloat(cof.monto) || !cof.metodo) return alert("Seleccioná al menos un gasto, monto y método de pago");
+    const sinAsignar = !editId && !!cof.sinAsignarGasto;
+    if (!sinAsignar && !ids.length) return alert("Seleccioná al menos un gasto a los que aplicar el pago, o marcá «Ninguna» para registrar un cobro sin asignar.");
+    if (!parseFloat(cof.monto) || !cof.metodo) return alert("Completá monto y método de pago.");
     const totalMonto = parseFloat(cof.monto) || 0;
     if (totalMonto <= 0) return alert("El monto debe ser mayor a 0");
     try {
       setUploadingComprobantes(true);
       if (editId && modal === "cobro") {
-        await mutations.updateCobro(editId, { gastoId: ids[0], monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(editId, f));
           const existing = cobros.find((c) => c.id === editId)?.comprobante_urls || [];
           await mutations.setCobroComprobantes(editId, [...(Array.isArray(existing) ? existing : existing ? [existing] : []), ...paths]);
+        }
+        closeMdl();
+        return;
+      }
+      if (sinAsignar || ids.length === 0) {
+        const id = await mutations.saveCobro({ gastoId: null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        if (id && cobroComprobanteFiles.length > 0) {
+          const paths = [];
+          for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(id, f));
+          await mutations.setCobroComprobantes(id, paths);
         }
         closeMdl();
         return;
@@ -1589,13 +1601,21 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </>
         )}
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos *</label>
-          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago. Podés poner primero el monto y luego marcar gastos; el resumen abajo muestra el voucher exacto.</p>
-          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
-          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos</label>
+          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: cof.sinAsignarGasto ? "#fef3c7" : "transparent", border: cof.sinAsignarGasto ? "1px solid #f59e0b" : "1px solid #e2e4e9" }}>
+            <input type="radio" name="cof-gasto-mode" checked={cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: true, gastoIds: [] })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#d97706" }} />
+            <span style={{ fontSize: 13, fontWeight: cof.sinAsignarGasto ? 600 : 500, color: cof.sinAsignarGasto ? "#92400e" : "#1a1d26" }}>Ninguna — cobro sin asignar a ningún gasto</span>
+          </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: !cof.sinAsignarGasto && (cof.gastoIds || []).length > 0 ? "#e6f7f0" : "transparent", border: !cof.sinAsignarGasto ? "1px solid #e2e4e9" : "1px solid #e2e4e9" }}>
+            <input type="radio" name="cof-gasto-mode" checked={!cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: false })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1d26" }}>Asignar a uno o más gastos (elegir abajo)</span>
+          </label>
+          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
             {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: checked ? "#e6f7f0" : "transparent" }}>
-                <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
+                <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, sinAsignarGasto: false, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
                 <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} · {g.camp || "—"} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
               </label>
             ); }); })()}
