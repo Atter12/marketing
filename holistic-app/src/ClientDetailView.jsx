@@ -167,7 +167,98 @@ export default function ClientDetailView(props) {
           </div>
         </div>
         ),
-        effectiveTab === "gastos" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGastos.map((g) => <tr key={g.id}><td style={{ ...TD, fontWeight: 600 }}>{fmtDD ? fmtDD(g.fechaMovimiento) : (g.fechaMovimiento || "—")}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{curD.tGar > 0 ? "$" + fmt(curD.tGar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={{ ...TD, ...MN, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td></tr>)}{!curGastos.length && <Empty cols={13} msg="Sin gastos" />}</tbody></table></div></div>,
+        effectiveTab === "gastos" && (() => {
+          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago"];
+          const byMes = {};
+          (curGastos || []).forEach((g) => {
+            const m = g.mes || "";
+            if (!byMes[m]) byMes[m] = [];
+            byMes[m].push(g);
+          });
+          const periods = Object.keys(byMes).filter(Boolean).sort().reverse();
+          const totalAll = { gasto: 0, fee: 0, total: 0, pagado: 0, pendiente: 0 };
+          const rowTotal = (list) => {
+            const t = { gasto: 0, fee: 0, total: 0, pagado: 0, pendiente: 0 };
+            list.forEach((g) => {
+              t.gasto += parseFloat(g.gasto || 0);
+              t.fee += g._f || 0;
+              t.total += g._t || 0;
+              t.pagado += g._p || 0;
+              t.pendiente += g._pend || 0;
+            });
+            return t;
+          };
+          const subRowStyle = { ...TD, background: "#f8f9fb", fontWeight: 700, borderTop: "2px solid #e2e4e9" };
+          const totalRowStyle = { ...TD, background: "#1b2559", color: "#fff", fontWeight: 700, borderTop: "2px solid #0d1117", padding: "12px 18px" };
+          return (
+            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+              <div className="hm-table-wrap">
+                <table>
+                  <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <tbody>
+                    {!curGastos.length && <Empty cols={13} msg="Sin gastos" />}
+                    {curGastos.length > 0 && periods.map((mes) => {
+                      const list = byMes[mes];
+                      const t = rowTotal(list);
+                      totalAll.gasto += t.gasto;
+                      totalAll.fee += t.fee;
+                      totalAll.total += t.total;
+                      totalAll.pagado += t.pagado;
+                      totalAll.pendiente += t.pendiente;
+                      return (
+                        <React.Fragment key={mes}>
+                          {list.map((g) => (
+                            <tr key={g.id}>
+                              <td style={{ ...TD, fontWeight: 600 }}>{fmtDD ? fmtDD(g.fechaMovimiento) : (g.fechaMovimiento || "—")}</td>
+                              <td style={TD}>{fmtM(g.mes)}</td>
+                              <td style={TD}>{g.camp || "—"}</td>
+                              <td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td>
+                              <td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td>
+                              <td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td>
+                              <td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td>
+                              <td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td>
+                              <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{curD.tGar > 0 ? "$" + fmt(curD.tGar) : "—"}</td>
+                              <td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td>
+                              <td style={{ ...TD, ...MN, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</td>
+                              <td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td>
+                              <td style={TD}>{g.prepago ? "S" : "N"}</td>
+                            </tr>
+                          ))}
+                          <tr>
+                            <td style={{ ...subRowStyle, color: "#5f6577", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }} colSpan={2}>Total {fmtM(mes)}</td>
+                            <td style={subRowStyle}>—</td>
+                            <td style={{ ...subRowStyle, ...MN }}>${fmt(t.gasto)}</td>
+                            <td style={subRowStyle}>—</td>
+                            <td style={{ ...subRowStyle, ...MN, color: "#0055ff" }}>${fmt(t.fee)}</td>
+                            <td style={{ ...subRowStyle, ...MN }}>${fmt(t.total)}</td>
+                            <td style={{ ...subRowStyle, ...MN, color: "#0d9f6e" }}>${fmt(t.pagado)}</td>
+                            <td style={subRowStyle}>—</td>
+                            <td style={{ ...subRowStyle, ...MN, color: "#dc2640" }}>${fmt(t.pendiente)}</td>
+                            <td style={subRowStyle} colSpan={3}>—</td>
+                          </tr>
+                        </React.Fragment>
+                      );
+                    })}
+                    {curGastos.length > 0 && periods.length > 0 && (
+                      <tr>
+                        <td style={{ ...totalRowStyle, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.8 }} colSpan={2}>Total general</td>
+                        <td style={totalRowStyle}>—</td>
+                        <td style={totalRowStyle}>${fmt(totalAll.gasto)}</td>
+                        <td style={totalRowStyle}>—</td>
+                        <td style={{ ...totalRowStyle, opacity: 0.95 }}>${fmt(totalAll.fee)}</td>
+                        <td style={totalRowStyle}>${fmt(totalAll.total)}</td>
+                        <td style={{ ...totalRowStyle, color: "#86efac" }}>${fmt(totalAll.pagado)}</td>
+                        <td style={totalRowStyle}>—</td>
+                        <td style={{ ...totalRowStyle, color: "#fca5a5" }}>${fmt(totalAll.pendiente)}</td>
+                        <td style={totalRowStyle} colSpan={3}>—</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })(),
         effectiveTab === "cobros" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Fecha", "Hora", "Cód. cobro", "Cód. gasto", "Ref.", "Monto", "Método", ...(!isCliente ? ["Registrado por", "Registrado"] : []), "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curCobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT ? fmtT(co.hora) : (co.hora || "—")}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td><td style={TD}>{g ? fmtM(g.mes) : "—"}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 18 ? co.created_by.slice(0, 16) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{co.created_at && fmtDt ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td></tr>; })}{!curCobros.length && <Empty cols={isCliente ? 8 : 10} msg="Sin cobros" />}</tbody></table></div></div>,
         effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={10} msg="Sin garantías" />}</tbody></table></div></div>,
         <Slot content={manualTabContent} />,
