@@ -313,7 +313,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoIds: [], monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
+  const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -524,7 +524,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!filterCliente.cobros) return cobros;
     return cobros.filter((co) => {
       const g = gastos.find((x) => x.id === co.gastoId);
-      return g && g.clientId === filterCliente.cobros;
+      return (g && g.clientId === filterCliente.cobros) || co.clientId === filterCliente.cobros;
     });
   }, [cobros, gastos, filterCliente.cobros]);
 
@@ -602,7 +602,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
-    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
+    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
   }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
@@ -670,13 +670,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : (cof.gastoId ? [cof.gastoId] : []);
     const sinAsignar = !editId && !!cof.sinAsignarGasto;
     if (!sinAsignar && !ids.length) return alert("Seleccioná al menos un gasto a los que aplicar el pago, o marcá «Ninguna» para registrar un cobro sin asignar.");
+    if (sinAsignar && !cof.clientId) return alert("Para un cobro sin asignar a gasto, elegí el cliente.");
     if (!parseFloat(cof.monto) || !cof.metodo) return alert("Completá monto y método de pago.");
     const totalMonto = parseFloat(cof.monto) || 0;
     if (totalMonto <= 0) return alert("El monto debe ser mayor a 0");
     try {
       setUploadingComprobantes(true);
       if (editId && modal === "cobro") {
-        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(editId, f));
@@ -687,7 +688,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         return;
       }
       if (sinAsignar || ids.length === 0) {
-        const id = await mutations.saveCobro({ gastoId: null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        const id = await mutations.saveCobro({ gastoId: null, clientId: cof.clientId || null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (id && cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(id, f));
@@ -848,7 +849,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (expRango.cobros.ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= expRango.cobros.ini);
     if (expRango.cobros.fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= expRango.cobros.fin);
     const headers = ["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
-    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = g ? clients.find((x) => x.id === g.clientId) : null; return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmtExcel(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
+    const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = co.clientId ? clients.find((x) => x.id === co.clientId) : (g ? clients.find((x) => x.id === g.clientId) : null); return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmtExcel(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
     exportToExcel("cobros_" + td(), "Cobros", headers, rows);
   };
   const expGarantias = () => {
@@ -1440,7 +1441,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                   <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr><th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("cobros", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Registrado", "Notas", "Comprob.", ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
                     <tbody>{cobrosPaginated.map((co) => {
                       const g = gastos.find((x) => x.id === co.gastoId);
-                      const c = g ? clients.find((x) => x.id === g.clientId) : null;
+                      const c = co.clientId ? clients.find((x) => x.id === co.clientId) : (g ? clients.find((x) => x.id === g.clientId) : null);
                       const createdByStr = co.created_by ? (co.created_by.length > 20 ? co.created_by.slice(0, 18) + "…" : co.created_by) : "—";
                       const paths = co.comprobante_urls || [];
                       return (
@@ -1739,6 +1740,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             <input type="radio" name="cof-gasto-mode" checked={!cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: false })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
             <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1d26" }}>Asignar a uno o más gastos (elegir abajo)</span>
           </label>
+          {cof.sinAsignarGasto && (
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente del cobro *</label>
+              <SearchSelect options={[{ value: "", label: "Elegir cliente..." }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.clientId} onChange={(id) => setCof({ ...cof, clientId: id || "" })} placeholder="Buscar por nombre..." emptyMessage="Ningún cliente coincide" />
+              <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Se mostrará en la tabla de Cobros para identificar a quién corresponde.</p>
+            </div>
+          )}
           <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
           <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
             {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
