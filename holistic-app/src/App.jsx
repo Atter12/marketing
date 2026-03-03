@@ -340,16 +340,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return { ...g, _t: t, _f: f, _p: p, _pend: Math.max(0, t - p), _st: p >= t ? "Pagado" : p > 0 ? "Parcial" : "Pendiente" };
   }), [gastos, cobros]);
 
-  /* Client aggregate data */
+  /* Client aggregate data (incluye cobros sin asignar gasto con clientId = cid) */
   const cData = useCallback((cid) => {
     const gs = sGastos.filter((g) => g.clientId === cid);
     const tG = gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
     const tF = gs.reduce((a, g) => a + g._f, 0);
-    const tP = gs.reduce((a, g) => a + g._p, 0);
+    const cobradoEnGastos = gs.reduce((a, g) => a + g._p, 0);
+    const cobradoSinAsignar = cobros.filter((c) => c.clientId === cid).reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const tP = cobradoEnGastos + cobradoSinAsignar;
     const tGar = garantias.filter((g) => g.clientId === cid && g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
     const gross = tG + tF - tP;
     return { tG, tF, tP, tGar, gross, net: Math.max(0, gross - tGar) };
-  }, [sGastos, garantias]);
+  }, [sGastos, garantias, cobros]);
 
   /* Totals */
   const tots = useMemo(() => {
@@ -404,6 +406,21 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       bc[g.clientId].total += g._t;
       bc[g.clientId].paid += g._p;
     });
+    /* Cobros sin asignar gasto: sumar al "paid" del cliente si la fecha del cobro cae en el período del reporte */
+    const cobrosSinAsignar = cobros.filter((c) => c.clientId && !c.gastoId);
+    cobrosSinAsignar.forEach((c) => {
+      const f = (c.fecha || "").slice(0, 10);
+      if (!f) return;
+      const inPeriod = repPerInicio && repPerFin
+        ? (f >= repPerInicio && f <= repPerFin)
+        : repPer
+          ? f.slice(0, 7) === repPer
+          : true;
+      if (!inPeriod) return;
+      if (repCl !== "all" && c.clientId !== repCl) return;
+      if (!bc[c.clientId]) bc[c.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
+      bc[c.clientId].paid += parseFloat(c.monto || 0);
+    });
 
     const rows = Object.entries(bc).map(([cid, d]) => {
       const gar = garantiasParaReporte.filter((g) => g.clientId === cid).reduce((a, g) => a + parseFloat(g.valor || 0), 0);
@@ -414,7 +431,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
     return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
-  }, [sGastos, repCl, repPer, repPerInicio, repPerFin, clients, garantias, gastos]);
+  }, [sGastos, repCl, repPer, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
 
   /* Reportes: meses del período seleccionado para gráficos */
   const reportMonths = useMemo(() => {
@@ -636,7 +653,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curD = curCl ? cData(curCl) : null;
   const curGastos = curCl ? sGastos.filter((g) => g.clientId === curCl).sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0)) : [];
   const curGids = curCl ? gastos.filter((g) => g.clientId === curCl).map((g) => g.id) : [];
-  const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId)).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
+  const curCobros = curCl ? cobros.filter((c) => curGids.includes(c.gastoId) || c.clientId === curCl).sort((a, b) => (b.created_at || b.fecha || "").localeCompare(a.created_at || a.fecha || "")) : [];
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
   const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
