@@ -1,0 +1,3428 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgencyFlow v5 — Gestión para Agencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════
+   DESIGN TOKENS — AGENCYFLOW V5
+   Custom palette: warm orange brand (#EA580C)
+   Light: warm whites, dark: rich dark surfaces
+══════════════════════════════════════════════ */
+:root, [data-theme="light"] {
+  /* Surfaces */
+  --color-bg:              #FAFAF9;
+  --color-surface:         #FFFFFF;
+  --color-surface-2:       #F7F6F4;
+  --color-surface-offset:  #F2F0EE;
+  --color-surface-dynamic: #EAE8E5;
+  --color-divider:         #E7E5E2;
+  --color-border:          oklch(from #1C1917 l c h / 0.10);
+
+  /* Text */
+  --color-text:            #1C1917;
+  --color-text-muted:      #78716C;
+  --color-text-faint:      #A8A29E;
+  --color-text-inverse:    #FAFAF9;
+
+  /* Primary accent — AgencyFlow Orange */
+  --color-primary:         #EA580C;
+  --color-primary-hover:   #C2410C;
+  --color-primary-active:  #9A3412;
+  --color-primary-highlight: rgba(234,88,12,0.10);
+  --color-primary-glow:    rgba(234,88,12,0.15);
+
+  /* Semantic colors */
+  --green:                 #16A34A;
+  --green-bg:              #F0FDF4;
+  --red:                   #DC2626;
+  --red-bg:                #FEF2F2;
+  --orange2:               #D97706;
+  --orange2-bg:            #FFFBEB;
+  --purple:                #7C3AED;
+  --purple-bg:             #F5F3FF;
+  --cyan:                  #0891B2;
+  --cyan-bg:               #ECFEFF;
+  --pink:                  #DB2777;
+  --pink-bg:               #FDF2F8;
+
+  /* Sidebar — rich warm dark */
+  --sidebar-bg:            #1C1917;
+  --sidebar-hover:         #292524;
+  --sidebar-active:        #3D3530;
+  --sidebar-border:        rgba(255,255,255,0.07);
+  --sidebar-text:          rgba(255,255,255,0.45);
+  --sidebar-text-active:   #FFFFFF;
+
+  /* Radius */
+  --r-sm:   0.375rem;
+  --r-md:   0.5rem;
+  --r-lg:   0.75rem;
+  --r-xl:   1rem;
+  --r-full: 9999px;
+
+  /* Spacing (4px grid) */
+  --sp-1:  0.25rem;
+  --sp-2:  0.5rem;
+  --sp-3:  0.75rem;
+  --sp-4:  1rem;
+  --sp-5:  1.25rem;
+  --sp-6:  1.5rem;
+  --sp-8:  2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+
+  /* Type scale */
+  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.8125rem);
+  --text-sm:   clamp(0.8125rem,0.75rem + 0.3vw,  0.875rem);
+  --text-base: clamp(0.875rem, 0.82rem + 0.35vw, 0.9375rem);
+  --text-lg:   clamp(1rem,     0.9rem  + 0.5vw,  1.125rem);
+  --text-xl:   clamp(1.125rem, 1rem    + 0.6vw,  1.5rem);
+  --text-2xl:  clamp(1.5rem,   1.2rem  + 1vw,    2rem);
+
+  /* Fonts */
+  --font-display: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  --font-body:    'Inter', 'Segoe UI', sans-serif;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 50 / 0.06);
+  --shadow-md: 0 1px 3px oklch(0.2 0.02 50 / 0.06), 0 4px 12px oklch(0.2 0.02 50 / 0.05);
+  --shadow-lg: 0 2px 4px oklch(0.2 0.02 50 / 0.04), 0 12px 32px oklch(0.2 0.02 50 / 0.10);
+  --shadow-xl: 0 4px 8px oklch(0.2 0.02 50 / 0.06), 0 24px 48px oklch(0.2 0.02 50 / 0.14);
+
+  /* Transition */
+  --tr: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --tr-slow: 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] {
+  --color-bg:              #17171A;
+  --color-surface:         #1E1E22;
+  --color-surface-2:       #242428;
+  --color-surface-offset:  #1A1A1E;
+  --color-surface-dynamic: #2C2C32;
+  --color-divider:         #2A2A2F;
+  --color-border:          rgba(255,255,255,0.08);
+
+  --color-text:            #E8E6E3;
+  --color-text-muted:      #7C7A77;
+  --color-text-faint:      #4A4946;
+  --color-text-inverse:    #17171A;
+
+  --color-primary:         #FB923C;
+  --color-primary-hover:   #FCA66A;
+  --color-primary-active:  #FDB98A;
+  --color-primary-highlight: rgba(251,146,60,0.12);
+  --color-primary-glow:    rgba(251,146,60,0.18);
+
+  --green:                 #4ADE80;
+  --green-bg:              rgba(74,222,128,0.10);
+  --red:                   #F87171;
+  --red-bg:                rgba(248,113,113,0.10);
+  --orange2:               #FBD05A;
+  --orange2-bg:            rgba(251,208,90,0.10);
+  --purple:                #C084FC;
+  --purple-bg:             rgba(192,132,252,0.10);
+  --cyan:                  #22D3EE;
+  --cyan-bg:               rgba(34,211,238,0.10);
+  --pink:                  #F472B6;
+  --pink-bg:               rgba(244,114,182,0.10);
+
+  --sidebar-bg:            #121214;
+  --sidebar-hover:         #1C1C20;
+  --sidebar-active:        #26262C;
+  --sidebar-border:        rgba(255,255,255,0.06);
+  --sidebar-text:          rgba(255,255,255,0.38);
+  --sidebar-text-active:   #F0EFEC;
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.25);
+  --shadow-md: 0 1px 3px oklch(0 0 0 / 0.30), 0 4px 12px oklch(0 0 0 / 0.25);
+  --shadow-lg: 0 2px 4px oklch(0 0 0 / 0.25), 0 12px 32px oklch(0 0 0 / 0.40);
+  --shadow-xl: 0 4px 8px oklch(0 0 0 / 0.30), 0 24px 48px oklch(0 0 0 / 0.50);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-bg:#17171A; --color-surface:#1E1E22; --color-surface-2:#242428;
+    --color-surface-offset:#1A1A1E; --color-surface-dynamic:#2C2C32;
+    --color-divider:#2A2A2F; --color-border:rgba(255,255,255,0.08);
+    --color-text:#E8E6E3; --color-text-muted:#7C7A77; --color-text-faint:#4A4946;
+    --color-text-inverse:#17171A;
+    --color-primary:#FB923C; --color-primary-hover:#FCA66A;
+    --color-primary-active:#FDB98A; --color-primary-highlight:rgba(251,146,60,0.12);
+    --color-primary-glow:rgba(251,146,60,0.18);
+    --green:#4ADE80; --green-bg:rgba(74,222,128,0.10);
+    --red:#F87171; --red-bg:rgba(248,113,113,0.10);
+    --orange2:#FBD05A; --orange2-bg:rgba(251,208,90,0.10);
+    --purple:#C084FC; --purple-bg:rgba(192,132,252,0.10);
+    --cyan:#22D3EE; --cyan-bg:rgba(34,211,238,0.10);
+    --pink:#F472B6; --pink-bg:rgba(244,114,182,0.10);
+    --sidebar-bg:#121214; --sidebar-hover:#1C1C20; --sidebar-active:#26262C;
+    --sidebar-border:rgba(255,255,255,0.06); --sidebar-text:rgba(255,255,255,0.38);
+    --sidebar-text-active:#F0EFEC;
+    --shadow-sm:0 1px 2px oklch(0 0 0 / 0.25);
+    --shadow-md:0 1px 3px oklch(0 0 0 / 0.30), 0 4px 12px oklch(0 0 0 / 0.25);
+    --shadow-lg:0 2px 4px oklch(0 0 0 / 0.25), 0 12px 32px oklch(0 0 0 / 0.40);
+    --shadow-xl:0 4px 8px oklch(0 0 0 / 0.30), 0 24px 48px oklch(0 0 0 / 0.50);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   BASE RESET
+══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  -moz-text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+  text-size-adjust: none;
+  scroll-behavior: smooth;
+}
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.5;
+}
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+input, select, textarea { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+table { border-collapse: collapse; width: 100%; }
+h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(--font-display); }
+::selection { background: var(--color-primary-highlight); color: var(--color-text); }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: var(--r-sm); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-surface-dynamic); border-radius: var(--r-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-faint); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD SHELL
+══════════════════════════════════════════════ */
+.app {
+  display: grid;
+  grid-template-columns: 252px 1fr;
+  grid-template-rows: 1fr;
+  height: 100dvh;
+}
+
+/* ══════════════════════════════════════════════
+   SIDEBAR
+══════════════════════════════════════════════ */
+.sidebar {
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  grid-row: 1 / -1;
+  border-right: 1px solid var(--sidebar-border);
+  position: relative;
+  z-index: 20;
+}
+.sidebar-brand {
+  padding: var(--sp-4) var(--sp-5);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  border-bottom: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+}
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+.sidebar-wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-wordmark h1 {
+  font-size: clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-pro {
+  font-size: 0.5rem;
+  font-weight: 700;
+  background: rgba(234,88,12,0.25);
+  color: #FB923C;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: var(--sp-3) var(--sp-2);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.nav-section { margin-bottom: var(--sp-6); }
+.nav-section-label {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: rgba(255,255,255,0.2);
+  padding: 0 var(--sp-3);
+  margin-bottom: var(--sp-2);
+  font-weight: 700;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--sidebar-text);
+  cursor: pointer;
+  transition: background var(--tr), color var(--tr);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  position: relative;
+  user-select: none;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.75); }
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--sidebar-text-active);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 18px;
+  background: var(--color-primary);
+  border-radius: 0 3px 3px 0;
+}
+.nav-item svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  opacity: 0.55;
+  transition: opacity var(--tr);
+}
+.nav-item.active svg { opacity: 1; }
+.nav-badge {
+  margin-left: auto;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-full);
+  min-width: 16px;
+  text-align: center;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.nav-badge.orange { background: var(--color-primary); }
+.nav-badge.red    { background: #DC2626; }
+.nav-badge.green  { background: #16A34A; }
+.nav-badge.purple { background: #7C3AED; }
+.sidebar-footer {
+  padding: var(--sp-3);
+  border-top: 1px solid var(--sidebar-border);
+  flex-shrink: 0;
+}
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background var(--tr);
+}
+.user-card:hover { background: var(--sidebar-hover); }
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #EA580C, #F97316);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.625rem;
+  flex-shrink: 0;
+}
+.user-name { color: #fff; font-size: 0.75rem; font-weight: 600; }
+.user-role { color: rgba(255,255,255,0.4); font-size: 0.625rem; }
+
+/* ══════════════════════════════════════════════
+   MAIN AREA
+══════════════════════════════════════════════ */
+.main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ══════════════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════════════ */
+.topbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+  padding: 0 var(--sp-6);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.topbar-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
+.breadcrumb {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+.breadcrumb span { color: var(--color-text-muted); }
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-lg);
+  padding: var(--sp-2) var(--sp-3);
+  width: 220px;
+  transition: border-color var(--tr), box-shadow var(--tr), width var(--tr);
+  cursor: text;
+}
+.search-box:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+  width: 260px;
+  background: var(--color-surface);
+}
+.search-box svg { color: var(--color-text-faint); width: 14px; height: 14px; flex-shrink: 0; }
+.search-box input {
+  border: none;
+  background: none;
+  outline: none;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  width: 100%;
+  min-width: 0;
+}
+.search-box input::placeholder { color: var(--color-text-faint); }
+.search-hint {
+  font-size: 0.5625rem;
+  color: var(--color-text-faint);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-divider);
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+  position: relative;
+  flex-shrink: 0;
+}
+.icon-btn:hover { background: var(--color-surface-2); color: var(--color-text); border-color: var(--color-border); }
+.icon-btn svg { width: 16px; height: 16px; }
+.notif-dot {
+  position: absolute;
+  top: 5px; right: 5px;
+  width: 7px; height: 7px;
+  background: var(--red);
+  border-radius: 50%;
+  border: 1.5px solid var(--color-surface);
+}
+.btn-primary {
+  padding: var(--sp-2) var(--sp-4);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  background: var(--color-primary);
+  color: #fff;
+  transition: background var(--tr), box-shadow var(--tr), transform var(--tr);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--color-primary-hover); box-shadow: 0 2px 8px var(--color-primary-glow); }
+.btn-primary:active { transform: translateY(1px); }
+.btn-secondary {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-divider);
+  transition: background var(--tr), color var(--tr), border-color var(--tr);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
+.btn-secondary:hover { background: var(--color-surface-2); color: var(--color-text); border-color: var(--color-border); }
+.btn-sm { padding: var(--sp-1) var(--sp-3); font-size: var(--text-xs); }
+.btn-danger { background: var(--red); color: #fff; border: none; }
+.btn-danger:hover { background: #B91C1C; }
+.btn-success { background: var(--green); color: #fff; border: none; }
+.btn-success:hover { background: #15803D; }
+.btn-warning { background: var(--orange2); color: #fff; border: none; }
+.btn-warning:hover { background: #B45309; }
+
+/* ══════════════════════════════════════════════
+   CONTENT AREA
+══════════════════════════════════════════════ */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-6);
+}
+.view { display: none; }
+.view.active { display: block; }
+
+/* ══════════════════════════════════════════════
+   PILLS & BADGES
+══════════════════════════════════════════════ */
+.pill {
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.pill-orange { background: var(--color-primary-highlight); color: var(--color-primary); }
+.pill-green  { background: var(--green-bg); color: var(--green); }
+.pill-red    { background: var(--red-bg); color: var(--red); }
+.pill-orange2{ background: var(--orange2-bg); color: var(--orange2); }
+.pill-purple { background: var(--purple-bg); color: var(--purple); }
+.pill-gray   { background: var(--color-surface-offset); color: var(--color-text-muted); }
+.pill-cyan   { background: var(--cyan-bg); color: var(--cyan); }
+.pill-pink   { background: var(--pink-bg); color: var(--pink); }
+
+.service-tag {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px var(--sp-2);
+  border-radius: 3px;
+}
+.tag-mk  { background: #FFF7ED; color: #EA580C; }
+.tag-br  { background: #F3E8FF; color: #7C3AED; }
+.tag-vi  { background: #FEE2E2; color: #DC2626; }
+.tag-so  { background: #D1FAE5; color: #059669; }
+.tag-de  { background: #FEF3C7; color: #D97706; }
+.tag-se  { background: #FFF1F2; color: #9F1239; }
+.tag-ad  { background: #FDF2F8; color: #BE185D; }
+
+[data-theme="dark"] .tag-mk { background: rgba(234,88,12,0.15); color: #FB923C; }
+[data-theme="dark"] .tag-br { background: rgba(124,58,237,0.15); color: #C084FC; }
+[data-theme="dark"] .tag-vi { background: rgba(220,38,38,0.15); color: #F87171; }
+[data-theme="dark"] .tag-so { background: rgba(5,150,105,0.15); color: #4ADE80; }
+[data-theme="dark"] .tag-de { background: rgba(217,119,6,0.15); color: #FBD05A; }
+[data-theme="dark"] .tag-se { background: rgba(159,18,57,0.15); color: #F43F5E; }
+[data-theme="dark"] .tag-ad { background: rgba(190,24,93,0.15); color: #F472B6; }
+
+/* ══════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════ */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+.card-header {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-header h3 {
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+.card-body { padding: var(--sp-5); }
+
+/* ══════════════════════════════════════════════
+   SECTION HEADER
+══════════════════════════════════════════════ */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.section-header h3 {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* ══════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════ */
+.tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-md);
+  padding: 2px;
+}
+.tab {
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-sm);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: background var(--tr), color var(--tr);
+  border: none;
+  background: none;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--color-text); }
+.tab.active { background: var(--color-primary); color: #fff; }
+
+/* ══════════════════════════════════════════════
+   STAT CARDS
+══════════════════════════════════════════════ */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-6);
+}
+.stat-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  transition: box-shadow var(--tr), border-color var(--tr), transform var(--tr);
+  cursor: default;
+}
+.stat-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+.stat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--sp-3);
+}
+.stat-icon {
+  width: 36px; height: 36px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stat-icon svg { width: 18px; height: 18px; }
+.stat-delta {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px var(--sp-2);
+  border-radius: var(--r-full);
+  font-variant-numeric: tabular-nums;
+}
+.stat-value {
+  font-size: clamp(1.5rem, 1.3rem + 0.5vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1;
+  margin-bottom: var(--sp-1);
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════
+   DASHBOARD LAYOUT
+══════════════════════════════════════════════ */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+/* Welcome banner */
+.welcome-banner {
+  background: linear-gradient(135deg, #1C1917 0%, #44200A 50%, #9A3412 100%);
+  border-radius: var(--r-xl);
+  padding: var(--sp-6) var(--sp-8);
+  margin-bottom: var(--sp-6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #fff;
+  gap: var(--sp-5);
+  overflow: hidden;
+  position: relative;
+}
+.welcome-banner::after {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(234,88,12,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.welcome-greeting {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  margin-bottom: var(--sp-1);
+}
+.welcome-sub {
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.55);
+}
+.welcome-stats {
+  display: flex;
+  gap: var(--sp-8);
+  flex-shrink: 0;
+}
+.welcome-stat { text-align: center; }
+.welcome-stat-num {
+  font-size: clamp(1.25rem, 1rem + 0.5vw, 1.75rem);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.welcome-stat-lbl {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+}
+
+/* Activity Timeline */
+.timeline-item {
+  display: flex;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-4);
+  position: relative;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 28px;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--color-divider);
+}
+.timeline-item:last-child::before { display: none; }
+.timeline-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  z-index: 1;
+  font-size: 0.6875rem;
+}
+.tl-green  { background: var(--green-bg); color: var(--green); }
+.tl-orange { background: var(--color-primary-highlight); color: var(--color-primary); }
+.tl-red    { background: var(--red-bg); color: var(--red); }
+.tl-purple { background: var(--purple-bg); color: var(--purple); }
+.timeline-content h4 {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.timeline-content p { font-size: var(--text-xs); color: var(--color-text-muted); }
+.timeline-content .tm { font-size: 0.625rem; color: var(--color-text-faint); margin-top: 2px; }
+
+/* Quick Actions */
+.quick-actions { display: flex; flex-direction: column; gap: var(--sp-2); }
+.deadline-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  padding: var(--sp-1) 0;
+}
+
+/* ══════════════════════════════════════════════
+   CLIENTS VIEW
+══════════════════════════════════════════════ */
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--sp-4);
+}
+.client-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+  transition: box-shadow var(--tr);
+}
+.client-card:hover { box-shadow: var(--shadow-md); }
+.client-header {
+  padding: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  border-bottom: 1px solid var(--color-divider);
+}
+.client-avatar {
+  width: 42px; height: 42px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.client-name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+.client-type { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+.client-body { padding: var(--sp-4); }
+.client-phase {
+  display: flex;
+  gap: 3px;
+  margin-bottom: var(--sp-4);
+}
+.phase-item {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: var(--sp-1) var(--sp-1);
+  border-radius: var(--r-sm);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.phase-done { background: var(--green-bg); color: var(--green); }
+.phase-curr { background: var(--color-primary-highlight); color: var(--color-primary); box-shadow: 0 0 0 1.5px var(--color-primary); }
+.phase-pend { background: var(--color-surface-offset); color: var(--color-text-faint); }
+.client-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.metric-item {
+  text-align: center;
+  padding: var(--sp-2) var(--sp-1);
+  background: var(--color-surface-2);
+  border-radius: var(--r-md);
+}
+.metric-num {
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.metric-lbl { font-size: 0.5rem; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
+.health-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  margin-bottom: var(--sp-3);
+}
+.health-ring {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.health-info h5 { font-size: var(--text-xs); font-weight: 600; margin-bottom: 1px; }
+.health-info p  { font-size: 0.625rem; color: var(--color-text-muted); }
+.client-contacts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2);
+  background: var(--color-surface-2);
+  border-radius: var(--r-md);
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  min-width: 0;
+}
+.contact-item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.next-action {
+  background: var(--color-primary-highlight);
+  border: 1px solid rgba(234,88,12,0.15);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.next-action h5 {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.next-action p { font-size: var(--text-sm); font-weight: 500; }
+.client-notes {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-2);
+  border-radius: var(--r-md);
+  padding: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-3);
+  line-height: 1.5;
+}
+.client-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--color-divider);
+}
+.team-avatars { display: flex; }
+.team-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+  margin-left: -5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+.team-avatar:first-child { margin-left: 0; }
+
+/* ══════════════════════════════════════════════
+   KANBAN BOARD
+══════════════════════════════════════════════ */
+.kanban-board {
+  display: flex;
+  gap: var(--sp-4);
+  overflow-x: auto;
+  padding-bottom: var(--sp-4);
+  min-height: 500px;
+  overscroll-behavior: contain;
+}
+.kanban-col {
+  min-width: 280px;
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+.kanban-col-title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.col-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.kanban-col-title h4 { font-size: var(--text-sm); font-weight: 700; }
+.col-count {
+  font-size: 0.5625rem;
+  color: var(--color-text-faint);
+  background: var(--color-surface-offset);
+  padding: 1px var(--sp-2);
+  border-radius: var(--r-full);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.col-add {
+  width: 22px; height: 22px;
+  border-radius: var(--r-sm);
+  border: 1px dashed var(--color-border);
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-faint);
+  font-size: 1rem;
+  transition: all var(--tr);
+}
+.col-add:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-highlight); }
+.kanban-cards { flex: 1; display: flex; flex-direction: column; gap: var(--sp-2); }
+.kanban-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3);
+  cursor: pointer;
+  transition: box-shadow var(--tr), border-color var(--tr), transform var(--tr);
+  position: relative;
+  overflow: hidden;
+}
+.kanban-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+}
+.kanban-card[data-sv="marketing"]::before { background: #EA580C; }
+.kanban-card[data-sv="branding"]::before  { background: #7C3AED; }
+.kanban-card[data-sv="video"]::before     { background: #DC2626; }
+.kanban-card[data-sv="social"]::before    { background: #059669; }
+.kanban-card[data-sv="design"]::before    { background: #D97706; }
+.kanban-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); transform: translateY(-1px); }
+.kanban-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--sp-2);
+}
+.card-client-tag {
+  font-size: 0.5625rem;
+  color: var(--color-text-faint);
+  background: var(--color-surface-2);
+  padding: 1px var(--sp-2);
+  border-radius: 3px;
+  margin-bottom: var(--sp-1);
+  display: inline-block;
+}
+.card-title { font-size: var(--text-sm); font-weight: 600; line-height: 1.4; margin-bottom: 3px; }
+.card-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin-bottom: var(--sp-2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-date {
+  font-size: 0.625rem;
+  color: var(--color-text-faint);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.card-date.late { color: var(--red); font-weight: 600; }
+.card-date.soon { color: var(--orange2); font-weight: 600; }
+.priority-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.priority-dot.hi { background: var(--red); }
+.priority-dot.md { background: var(--orange2); }
+.priority-dot.lo { background: var(--green); }
+.progress-bar-wrap {
+  margin-top: var(--sp-2);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.progress-bar {
+  flex: 1;
+  height: 3px;
+  background: var(--color-surface-offset);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill { height: 100%; border-radius: 3px; }
+.progress-pct { font-size: 0.5625rem; font-weight: 600; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+.card-subtasks { font-size: 0.5625rem; color: var(--color-text-faint); margin-top: var(--sp-2); }
+
+/* ══════════════════════════════════════════════
+   TICKET SYSTEM
+══════════════════════════════════════════════ */
+.tickets-stats {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+.ticket-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3);
+  text-align: center;
+  transition: box-shadow var(--tr), border-color var(--tr);
+  cursor: pointer;
+}
+.ticket-stat:hover { box-shadow: var(--shadow-sm); border-color: var(--color-primary); }
+.ticket-stat.active { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.ticket-stat-num {
+  font-size: clamp(1.25rem, 1rem + 0.4vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ticket-stat-lbl {
+  font-size: 0.5625rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: var(--sp-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.tickets-table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+.tickets-thead {
+  display: grid;
+  grid-template-columns: 72px 2.5fr 1fr 90px 90px 1fr 100px 100px;
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-faint);
+  align-items: center;
+}
+.ticket-row {
+  display: grid;
+  grid-template-columns: 72px 2.5fr 1fr 90px 90px 1fr 100px 100px;
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+  align-items: center;
+  font-size: var(--text-sm);
+  transition: background var(--tr);
+  cursor: pointer;
+}
+.ticket-row:last-of-type { border-bottom: none; }
+.ticket-row:nth-child(even) { background: var(--color-surface-2); }
+.ticket-row:hover { background: var(--color-primary-highlight); }
+.ticket-row.expanded { background: var(--color-primary-highlight); border-bottom: none; }
+.ticket-id { font-weight: 700; color: var(--color-primary); font-size: 0.6875rem; font-family: monospace; font-variant-numeric: tabular-nums; }
+.ticket-title-col { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ticket-title-col .main { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-title-col .sub  { font-size: 0.625rem; color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ticket-client { font-weight: 500; display: flex; align-items: center; gap: var(--sp-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.client-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.ticket-assignee { display: flex; align-items: center; gap: var(--sp-2); }
+.tk-avatar { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.4375rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+.sla-col { display: flex; align-items: center; gap: var(--sp-2); font-weight: 600; font-size: var(--text-xs); }
+.sla-indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.sla-ok     { background: var(--green); }
+.sla-warn   { background: var(--orange2); }
+.sla-breach { background: var(--red); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+/* Ticket Detail Panel */
+.ticket-detail {
+  display: none;
+  grid-column: 1 / -1;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-divider);
+  padding: 0 var(--sp-5) var(--sp-5);
+  overflow: hidden;
+  transition: max-height var(--tr-slow);
+}
+.ticket-detail.show { display: block; }
+.ticket-detail-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-5);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--color-divider);
+}
+.detail-section h4 {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-faint);
+  font-weight: 700;
+  margin-bottom: var(--sp-3);
+}
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.info-item {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-surface-2);
+  border-radius: var(--r-md);
+}
+.info-item .lbl { font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-faint); font-weight: 600; margin-bottom: 2px; }
+.info-item .val { font-size: var(--text-sm); font-weight: 600; }
+.ticket-timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-left: var(--sp-4);
+}
+.ticket-timeline::before {
+  content: '';
+  position: absolute;
+  left: 5px; top: 6px; bottom: 6px;
+  width: 1.5px;
+  background: var(--color-divider);
+}
+.tl-entry { padding: var(--sp-2) 0; position: relative; }
+.tl-entry::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--sp-4) + 1px);
+  top: 10px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  border: 2px solid var(--color-divider);
+  background: var(--color-surface);
+  z-index: 1;
+}
+.tl-entry.system::before  { background: var(--color-primary); border-color: var(--color-primary); }
+.tl-entry.comment::before { background: var(--purple); border-color: var(--purple); }
+.tl-entry.resolve::before { background: var(--green); border-color: var(--green); }
+.tl-entry .who  { font-size: var(--text-xs); font-weight: 600; }
+.tl-entry .what { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 1px; }
+.tl-entry .when { font-size: 0.5625rem; color: var(--color-text-faint); margin-top: 2px; }
+.comment-box { margin-top: var(--sp-3); display: flex; gap: var(--sp-2); }
+.comment-input {
+  flex: 1;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--tr), box-shadow var(--tr);
+}
+.comment-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
+.ticket-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════
+   CALENDAR VIEW
+══════════════════════════════════════════════ */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.cal-header-day {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-faint);
+  text-align: center;
+  padding: var(--sp-2);
+}
+.cal-day {
+  min-height: 88px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-sm);
+  padding: var(--sp-1);
+  transition: border-color var(--tr);
+}
+.cal-day:hover { border-color: var(--color-primary); }
+.cal-day-num {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-1);
+  width: 20px; height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+}
+.cal-day-num.today {
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.5625rem;
+}
+.cal-event {
+  font-size: 0.5625rem;
+  padding: 1px var(--sp-1);
+  border-radius: 2px;
+  margin-bottom: 1px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cal-day.other { opacity: 0.3; }
+
+/* ══════════════════════════════════════════════
+   WORKLOAD VIEW
+══════════════════════════════════════════════ */
+.workload-table {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  overflow: hidden;
+}
+.workload-header, .workload-row {
+  display: grid;
+  grid-template-columns: 210px 1fr 80px 80px 80px;
+  align-items: center;
+}
+.workload-header {
+  padding: var(--sp-3) var(--sp-5);
+  background: var(--color-surface-2);
+  border-bottom: 1px solid var(--color-divider);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-text-faint);
+}
+.workload-row {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+  transition: background var(--tr);
+}
+.workload-row:last-child { border-bottom: none; }
+.workload-row:hover { background: var(--color-primary-highlight); }
+.wl-person { display: flex; align-items: center; gap: var(--sp-3); }
+.wl-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.625rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+.wl-name { font-size: var(--text-sm); font-weight: 600; }
+.wl-role { font-size: var(--text-xs); color: var(--color-text-muted); }
+.wl-bar-wrap { display: flex; flex-direction: column; gap: var(--sp-1); }
+.wl-bar { height: 22px; background: var(--color-surface-offset); border-radius: var(--r-sm); overflow: hidden; display: flex; }
+.wl-seg { height: 100%; transition: width 0.5s cubic-bezier(0.16,1,0.3,1); }
+.wl-seg.done    { background: var(--green); }
+.wl-seg.pending { background: var(--color-primary); }
+.wl-bar-labels { display: flex; gap: var(--sp-3); font-size: 0.5625rem; color: var(--color-text-faint); }
+.wl-bar-labels span { display: flex; align-items: center; gap: 3px; }
+.wl-label-dot { width: 5px; height: 5px; border-radius: 50%; }
+.wl-num { text-align: center; font-weight: 700; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
+.wl-cap { text-align: center; font-weight: 700; font-size: var(--text-base); font-variant-numeric: tabular-nums; }
+.wl-cap.over { color: var(--red); }
+.wl-cap.high { color: var(--orange2); }
+.wl-cap.ok   { color: var(--green); }
+
+/* ══════════════════════════════════════════════
+   ATTENDANCE VIEW
+══════════════════════════════════════════════ */
+.attendance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--sp-4);
+}
+.attendance-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  transition: box-shadow var(--tr);
+}
+.attendance-card:hover { box-shadow: var(--shadow-sm); }
+.att-top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.att-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: #fff;
+  position: relative;
+  flex-shrink: 0;
+}
+.online-dot {
+  position: absolute;
+  bottom: 0; right: 0;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--color-surface);
+}
+.online-dot.on  { background: var(--green); }
+.online-dot.off { background: var(--color-text-faint); }
+.att-name { font-size: var(--text-sm); font-weight: 600; }
+.att-role { font-size: var(--text-xs); color: var(--color-text-muted); }
+.att-verif-section {
+  background: var(--color-surface-2);
+  border-radius: var(--r-lg);
+  padding: var(--sp-3);
+  margin-bottom: var(--sp-3);
+}
+.att-verif-title {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-faint);
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+}
+.att-verif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.att-vf {
+  padding: var(--sp-2) var(--sp-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+.att-vf .lbl { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-faint); margin-bottom: 2px; font-weight: 600; }
+.att-vf .val { font-size: 0.6875rem; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+.att-vf .ck { color: var(--green); }
+.att-vf .no  { color: var(--red); }
+.att-check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.att-tasks-section { border-top: 1px solid var(--color-divider); padding-top: var(--sp-3); }
+.att-tasks-title {
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-faint);
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+}
+.att-task { display: flex; align-items: center; gap: var(--sp-2); padding: 3px 0; font-size: var(--text-xs); }
+.task-check {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--tr);
+  flex-shrink: 0;
+}
+.task-check.done { background: var(--green); border-color: var(--green); }
+.task-check.done svg { display: block !important; }
+.task-check svg { display: none; width: 8px; height: 8px; color: #fff; }
+.task-text.done { text-decoration: line-through; color: var(--color-text-faint); }
+
+/* ══════════════════════════════════════════════
+   WORKFLOWS VIEW
+══════════════════════════════════════════════ */
+.workflows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: var(--sp-4);
+}
+.workflow-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  padding: var(--sp-5);
+  transition: box-shadow var(--tr);
+}
+.workflow-card:hover { box-shadow: var(--shadow-md); }
+.workflow-top { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+.workflow-icon {
+  width: 38px; height: 38px;
+  border-radius: var(--r-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.workflow-title { font-size: var(--text-sm); font-weight: 700; }
+.workflow-desc { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.5; margin-bottom: var(--sp-3); }
+.workflow-steps { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; margin-bottom: var(--sp-3); }
+.wf-step {
+  padding: 3px var(--sp-2);
+  border-radius: var(--r-sm);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  background: var(--color-surface-offset);
+  color: var(--color-text-faint);
+}
+.wf-step.done { background: var(--green-bg); color: var(--green); }
+.wf-step.active { background: var(--color-primary-highlight); color: var(--color-primary); }
+.wf-step-arrow { color: var(--color-text-faint); font-size: 0.5rem; }
+.workflow-badges { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════
+   MODAL SYSTEM
+══════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,25,23,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  padding: var(--sp-5);
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--color-surface);
+  border-radius: var(--r-xl);
+  width: 100%;
+  max-width: 620px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  transform: scale(0.96) translateY(12px);
+  transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
+  border: 1px solid var(--color-divider);
+}
+.modal-overlay.show .modal { transform: scale(1) translateY(0); }
+.modal-header {
+  padding: var(--sp-5) var(--sp-6);
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  background: var(--color-surface);
+  z-index: 1;
+}
+.modal-header h3 { font-size: var(--text-lg); font-weight: 700; }
+.modal-close {
+  width: 30px; height: 30px;
+  border-radius: var(--r-md);
+  background: var(--color-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: background var(--tr), color var(--tr);
+  font-size: 1rem;
+}
+.modal-close:hover { background: var(--red-bg); color: var(--red); }
+.modal-body { padding: var(--sp-5) var(--sp-6); }
+.modal-footer {
+  padding: var(--sp-4) var(--sp-6);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  position: sticky;
+  bottom: 0;
+  background: var(--color-surface);
+}
+
+/* Form elements */
+.form-group { margin-bottom: var(--sp-4); }
+.form-group label {
+  display: block;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: var(--sp-2);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  transition: border-color var(--tr), box-shadow var(--tr);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+.form-textarea { resize: vertical; min-height: 60px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-3); }
+
+/* ══════════════════════════════════════════════
+   NOTIFICATION PANEL
+══════════════════════════════════════════════ */
+.notif-panel {
+  position: fixed;
+  top: 60px; right: var(--sp-5);
+  width: 340px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  z-index: 500;
+  display: none;
+  overflow: hidden;
+}
+.notif-panel.show { display: block; }
+.notif-header {
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notif-header h4 { font-size: var(--text-sm); font-weight: 700; }
+.notif-item {
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+  transition: background var(--tr);
+  cursor: pointer;
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--color-surface-2); }
+.notif-item.unread { background: var(--color-primary-highlight); }
+.notif-dot-marker {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  margin-top: 5px;
+  flex-shrink: 0;
+}
+.notif-text { font-size: var(--text-xs); color: var(--color-text); }
+.notif-time { font-size: 0.5625rem; color: var(--color-text-faint); margin-top: 2px; }
+
+/* ══════════════════════════════════════════════
+   COMMAND PALETTE
+══════════════════════════════════════════════ */
+.cmd-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,25,23,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: clamp(60px, 15vh, 120px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+.cmd-overlay.show { opacity: 1; pointer-events: all; }
+.cmd-palette {
+  width: 100%;
+  max-width: 560px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  transform: scale(0.97) translateY(-8px);
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1);
+  margin: 0 var(--sp-5);
+}
+.cmd-overlay.show .cmd-palette { transform: scale(1) translateY(0); }
+.cmd-search {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+.cmd-search svg { color: var(--color-text-faint); width: 18px; height: 18px; flex-shrink: 0; }
+.cmd-input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: var(--text-lg);
+  color: var(--color-text);
+}
+.cmd-input::placeholder { color: var(--color-text-faint); }
+.cmd-results { max-height: 400px; overflow-y: auto; overscroll-behavior: contain; }
+.cmd-section-title {
+  padding: var(--sp-3) var(--sp-5) var(--sp-2);
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-faint);
+}
+.cmd-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-5);
+  cursor: pointer;
+  transition: background var(--tr);
+}
+.cmd-item:hover, .cmd-item.selected { background: var(--color-primary-highlight); }
+.cmd-item svg { width: 16px; height: 16px; color: var(--color-text-faint); flex-shrink: 0; }
+.cmd-item-text { flex: 1; }
+.cmd-item-name { font-size: var(--text-sm); font-weight: 500; }
+.cmd-item-desc { font-size: var(--text-xs); color: var(--color-text-muted); }
+.cmd-footer {
+  padding: var(--sp-3) var(--sp-5);
+  border-top: 1px solid var(--color-divider);
+  display: flex;
+  gap: var(--sp-5);
+  font-size: 0.5625rem;
+  color: var(--color-text-faint);
+}
+.cmd-hint { display: flex; align-items: center; gap: var(--sp-2); }
+.kbd {
+  font-size: 0.5625rem;
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-divider);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: var(--font-body);
+  color: var(--color-text-muted);
+}
+
+/* ══════════════════════════════════════════════
+   FADE-IN ANIMATION (scroll-safe: opacity only)
+══════════════════════════════════════════════ */
+.fade-in {
+  opacity: 0;
+  transition: opacity 0.35s cubic-bezier(0.16,1,0.3,1);
+}
+.fade-in.visible { opacity: 1; }
+
+/* ══════════════════════════════════════════════
+   DAILY CODE
+══════════════════════════════════════════════ */
+.daily-code-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  padding: var(--sp-4) var(--sp-5);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+}
+.daily-code-num {
+  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
+  font-weight: 800;
+  color: var(--color-primary);
+  letter-spacing: 0.5rem;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
+}
+.daily-code-meta { display: flex; gap: var(--sp-5); font-size: var(--text-xs); color: var(--color-text-muted); flex-wrap: wrap; }
+
+/* Anti-fraud banner */
+.antifr-banner {
+  background: var(--color-primary-highlight);
+  border: 1px solid rgba(234,88,12,0.2);
+  border-radius: var(--r-xl);
+  padding: var(--sp-4) var(--sp-5);
+  margin-bottom: var(--sp-4);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.antifr-banner .title { font-size: var(--text-sm); font-weight: 600; color: var(--color-primary); }
+.antifr-banner .sub   { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+
+/* ══════════════════════════════════════════════
+   MOBILE HAMBURGER
+══════════════════════════════════════════════ */
+.mobile-menu-toggle {
+  display: none;
+  width: 34px; height: 34px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 19;
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════ */
+@media (max-width: 1200px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+  .tickets-stats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .tickets-stats { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .welcome-stats { gap: var(--sp-5); }
+}
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0;
+    bottom: 0;
+    z-index: 20;
+    width: 252px;
+    transition: left var(--tr-slow);
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay { display: block; }
+  .sidebar.open ~ .sidebar-overlay { display: block; }
+  .mobile-menu-toggle { display: flex; }
+  .main { grid-column: 1; }
+  .search-hint { display: none; }
+  .search-box { width: 160px; }
+  .topbar { padding: 0 var(--sp-4); }
+  .content { padding: var(--sp-4); }
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .tickets-stats { grid-template-columns: repeat(2, 1fr); }
+  .kanban-board { min-height: 400px; }
+  .clients-grid { grid-template-columns: 1fr; }
+  .ticket-detail-inner { grid-template-columns: 1fr; }
+  .ticket-row, .tickets-thead { grid-template-columns: 60px 1fr 70px 80px; }
+  .ticket-row > :nth-child(n+4):not(:nth-child(4)):not(:nth-child(5)) { display: none; }
+  .tickets-thead > :nth-child(n+4):not(:nth-child(4)):not(:nth-child(5)) { display: none; }
+  .workload-header, .workload-row { grid-template-columns: 1fr 1fr 60px; }
+  .workload-header > :nth-child(n+4), .workload-row > :nth-child(n+4) { display: none; }
+  .welcome-stats { display: none; }
+  .ticket-row > :nth-child(5), .tickets-thead > :nth-child(5) { display: none; }
+  .cmd-palette { margin: 0 var(--sp-4); }
+}
+@media (max-width: 480px) {
+  .stats-row { grid-template-columns: 1fr; }
+  .tickets-stats { grid-template-columns: 1fr 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+}
+@media (hover: none) {
+  .stat-card:hover, .kanban-card:hover, .client-card:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- Skip to content -->
+<a href="#main-content" class="sr-only" style="position:absolute;top:-40px;left:0;background:var(--color-primary);color:#fff;padding:8px 16px;border-radius:0 0 8px 0;z-index:9999;transition:top 0.2s">Saltar al contenido</a>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
+
+<!-- ══════ APP SHELL ══════ -->
+<div class="app">
+
+<!-- ══════ SIDEBAR ══════ -->
+<aside class="sidebar" id="sidebar" role="navigation" aria-label="Navegación principal">
+  <div class="sidebar-brand">
+    <!-- AgencyFlow Logo — Paul Rand-inspired lightning bolt -->
+    <svg class="sidebar-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <rect width="32" height="32" rx="7" fill="#EA580C"/>
+      <path d="M19 5L10 17h7l-4 10 12-14h-8l3-8z" fill="#fff"/>
+    </svg>
+    <div class="sidebar-wordmark">
+      <h1>AgencyFlow</h1>
+      <span class="sidebar-pro">PRO</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <div class="nav-section-label">General</div>
+
+      <button class="nav-item active" data-view="dashboard" onclick="navigate('dashboard',this)" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+        Dashboard
+      </button>
+
+      <button class="nav-item" data-view="clients" onclick="navigate('clients',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        Clientes
+        <span class="nav-badge orange" id="badge-clients">6</span>
+      </button>
+
+      <button class="nav-item" data-view="kanban" onclick="navigate('kanban',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="3" width="5" height="18" rx="1"/>
+          <rect x="10" y="3" width="5" height="12" rx="1"/>
+          <rect x="17" y="3" width="5" height="15" rx="1"/>
+        </svg>
+        Entregables
+        <span class="nav-badge orange" id="badge-kanban">14</span>
+      </button>
+
+      <button class="nav-item" data-view="tickets" onclick="navigate('tickets',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/>
+        </svg>
+        Tickets
+        <span class="nav-badge red" id="badge-tickets">7</span>
+      </button>
+
+      <button class="nav-item" data-view="calendar" onclick="navigate('calendar',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        Calendario
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Equipo</div>
+
+      <button class="nav-item" data-view="workload" onclick="navigate('workload',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        Carga de Trabajo
+      </button>
+
+      <button class="nav-item" data-view="attendance" onclick="navigate('attendance',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="8.5" cy="7" r="4"/>
+          <polyline points="17 11 19 13 23 9"/>
+        </svg>
+        Asistencia
+        <span class="nav-badge green" id="badge-attendance">6/8</span>
+      </button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-label">Automatización</div>
+
+      <button class="nav-item" data-view="workflows" onclick="navigate('workflows',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="16 3 21 3 21 8"/>
+          <line x1="4" y1="20" x2="21" y2="3"/>
+          <polyline points="21 16 21 21 16 21"/>
+          <line x1="15" y1="15" x2="21" y2="21"/>
+          <line x1="4" y1="4" x2="9" y2="9"/>
+        </svg>
+        Workflows
+        <span class="nav-badge purple" id="badge-workflows">12</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-card" role="button" tabindex="0">
+      <div class="user-avatar" aria-hidden="true">CA</div>
+      <div>
+        <div class="user-name">Carlos Admin</div>
+        <div class="user-role">Director de Agencia</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════ MAIN ══════ -->
+<div class="main" role="main">
+
+  <!-- Top Bar -->
+  <header class="topbar" role="banner">
+    <div class="topbar-left">
+      <button class="mobile-menu-toggle" onclick="openMobileSidebar()" aria-label="Abrir menú" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <h2 class="topbar-title" id="pageTitle">Dashboard</h2>
+      <div class="breadcrumb" aria-label="Navegación de ruta">
+        AgencyFlow <span>›</span> <span id="pageCrumb">Dashboard</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <!-- Search -->
+      <div class="search-box" role="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="search" placeholder="Buscar..." id="globalSearch" oninput="globalSearch()" aria-label="Buscar en todo el sistema">
+        <span class="search-hint">⌘K</span>
+      </div>
+
+      <!-- Notifications -->
+      <button class="icon-btn" id="notifBtn" onclick="toggleNotifPanel()" aria-label="Notificaciones" aria-haspopup="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-dot" aria-hidden="true"></span>
+      </button>
+
+      <!-- Dark Mode Toggle -->
+      <button class="icon-btn" data-theme-toggle id="themeToggle" aria-label="Cambiar a modo oscuro">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+
+      <!-- New button -->
+      <button class="btn-primary" onclick="openModal('task')" aria-haspopup="dialog">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Nuevo
+      </button>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="content" id="main-content">
+
+<!-- ══════════════ DASHBOARD VIEW ══════════════ -->
+<section class="view active" id="view-dashboard" aria-label="Dashboard">
+
+  <!-- Welcome Banner -->
+  <div class="welcome-banner fade-in">
+    <div>
+      <div class="welcome-greeting">Buenos días, Carlos 👋</div>
+      <div class="welcome-sub">5 entregables pendientes · 7 tickets por resolver · 2 revisiones hoy</div>
+    </div>
+    <div class="welcome-stats">
+      <div class="welcome-stat">
+        <div class="welcome-stat-num" style="color:#fff">47</div>
+        <div class="welcome-stat-lbl">Entregables</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-num" style="color:#86EFAC">18</div>
+        <div class="welcome-stat-lbl">Completados</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-num" style="color:#FCD34D">7</div>
+        <div class="welcome-stat-lbl">Tickets</div>
+      </div>
+      <div class="welcome-stat">
+        <div class="welcome-stat-num" style="color:#fff">6/8</div>
+        <div class="welcome-stat-lbl">Asistencia</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="stats-row">
+    <div class="stat-card fade-in">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:var(--color-primary-highlight);color:var(--color-primary)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="stat-delta" style="background:var(--green-bg);color:var(--green)">+1</span>
+      </div>
+      <div class="stat-value" id="stat-clients">6</div>
+      <div class="stat-label">Clientes Activos</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:var(--green-bg);color:var(--green)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="stat-delta" style="background:var(--green-bg);color:var(--green)">+8%</span>
+      </div>
+      <div class="stat-value">18</div>
+      <div class="stat-label">Completados Mes</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:var(--red-bg);color:var(--red)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        </div>
+        <span class="stat-delta" style="background:var(--red-bg);color:var(--red)">2 SLA</span>
+      </div>
+      <div class="stat-value" id="stat-tickets">7</div>
+      <div class="stat-label">Tickets Abiertos</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:var(--orange2-bg);color:var(--orange2)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <span class="stat-delta" style="background:var(--orange2-bg);color:var(--orange2)">-2</span>
+      </div>
+      <div class="stat-value">3</div>
+      <div class="stat-label">Vencidos</div>
+    </div>
+    <div class="stat-card fade-in">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
+        </div>
+      </div>
+      <div class="stat-value">12</div>
+      <div class="stat-label">Workflows Activos</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid: Activity + Quick Actions -->
+  <div class="dashboard-grid">
+    <div class="card fade-in">
+      <div class="card-header">
+        <h3>Actividad Reciente</h3>
+        <button class="btn-secondary btn-sm" onclick="navigate('kanban')">Ver todo</button>
+      </div>
+      <div class="card-body">
+        <div class="timeline-item">
+          <div class="timeline-dot tl-green">✓</div>
+          <div class="timeline-content">
+            <h4>Video Reel — Luna Beauty</h4>
+            <p>María completó edición final.</p>
+            <div class="tm">Hace 25 min</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot tl-orange">●</div>
+          <div class="timeline-content">
+            <h4>SEO Q1 — TechStart</h4>
+            <p>Diego movió a revisión.</p>
+            <div class="tm">Hace 1h</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot tl-red">!</div>
+          <div class="timeline-content">
+            <h4>TK-003 — CTA FitZone</h4>
+            <p>⚠️ SLA breach. Escalado a director.</p>
+            <div class="tm">Hace 2h</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot tl-green">✓</div>
+          <div class="timeline-content">
+            <h4>TK-006 — Audiencia Meta NovaTech</h4>
+            <p>Juan tomó el ticket. En proceso.</p>
+            <div class="tm">Hace 2h</div>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot tl-purple">⚡</div>
+          <div class="timeline-content">
+            <h4>Workflow: Onboarding TechStart</h4>
+            <p>Paso 3/5 completado — Kickoff realizado.</p>
+            <div class="tm">Hace 3h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="card-header"><h3>Acciones Rápidas</h3></div>
+      <div class="card-body">
+        <div class="quick-actions">
+          <button class="btn-primary" style="width:100%;justify-content:center" onclick="openModal('task')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Nuevo Entregable
+          </button>
+          <button class="btn-secondary" style="width:100%;justify-content:center" onclick="openModal('ticket')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+            Nuevo Ticket
+          </button>
+          <button class="btn-secondary" style="width:100%;justify-content:center" onclick="navigate('attendance')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+            Marcar Asistencia
+          </button>
+          <button class="btn-secondary" style="width:100%;justify-content:center" onclick="navigate('workflows')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/></svg>
+            Workflows
+          </button>
+        </div>
+        <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-lg)">
+          <div style="font-size:0.5625rem;font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:var(--sp-3)">Próximos Vencimientos</div>
+          <div class="deadline-item">
+            <span>Tutorial YT Streaming</span>
+            <span style="color:var(--red);font-weight:600;font-size:0.625rem">Hoy</span>
+          </div>
+          <div class="deadline-item">
+            <span>TK-003 CTA FitZone</span>
+            <span style="color:var(--red);font-weight:600;font-size:0.625rem">SLA breach</span>
+          </div>
+          <div class="deadline-item">
+            <span>TK-005 Videos Coach</span>
+            <span style="color:var(--orange2);font-weight:600;font-size:0.625rem">SLA 2h</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CLIENTS VIEW ══════════════ -->
+<section class="view" id="view-clients" aria-label="Clientes">
+  <div class="section-header">
+    <h3>Seguimiento Integral de Clientes</h3>
+    <div class="section-actions">
+      <div class="tabs" id="clientTabs" role="tablist" aria-label="Filtrar clientes">
+        <button class="tab active" onclick="filterClients('all',this)" role="tab" aria-selected="true">Todos</button>
+        <button class="tab" onclick="filterClients('activo',this)" role="tab">Activos</button>
+        <button class="tab" onclick="filterClients('onboarding',this)" role="tab">Onboarding</button>
+      </div>
+      <button class="btn-primary" onclick="openModal('client')">+ Nuevo Cliente</button>
+    </div>
+  </div>
+  <div class="clients-grid" id="clientsGrid"></div>
+</section>
+
+<!-- ══════════════ KANBAN VIEW ══════════════ -->
+<section class="view" id="view-kanban" aria-label="Tablero de entregables">
+  <div class="section-header">
+    <h3>Tablero de Entregables</h3>
+    <div class="section-actions">
+      <div class="tabs" role="tablist" aria-label="Filtrar por servicio">
+        <button class="tab active" onclick="filterKanban('all',this)">Todos</button>
+        <button class="tab" onclick="filterKanban('marketing',this)">Marketing</button>
+        <button class="tab" onclick="filterKanban('branding',this)">Branding</button>
+        <button class="tab" onclick="filterKanban('video',this)">Video</button>
+        <button class="tab" onclick="filterKanban('social',this)">Social</button>
+      </div>
+      <button class="btn-primary" onclick="openModal('task')">+ Nuevo</button>
+    </div>
+  </div>
+  <div class="kanban-board" id="kanbanBoard" role="region" aria-label="Tablero Kanban"></div>
+</section>
+
+<!-- ══════════════ TICKETS VIEW ══════════════ -->
+<section class="view" id="view-tickets" aria-label="Sistema de tickets">
+  <div class="section-header">
+    <h3>Sistema de Tickets — Mesa de Ayuda</h3>
+    <div class="section-actions">
+      <div class="tabs" id="ticketTabs" role="tablist">
+        <button class="tab active" onclick="filterTickets('all',this)">Todos</button>
+        <button class="tab" onclick="filterTickets('open',this)">Abiertos</button>
+        <button class="tab" onclick="filterTickets('progress',this)">En Proceso</button>
+        <button class="tab" onclick="filterTickets('resolved',this)">Resueltos</button>
+      </div>
+      <button class="btn-primary" onclick="openModal('ticket')">+ Nuevo Ticket</button>
+    </div>
+  </div>
+  <div class="tickets-stats" id="ticketsStats"></div>
+  <div id="ticketsGrid"></div>
+</section>
+
+<!-- ══════════════ CALENDAR VIEW ══════════════ -->
+<section class="view" id="view-calendar" aria-label="Calendario editorial">
+  <div class="section-header">
+    <h3>Calendario Editorial — Febrero 2026</h3>
+    <div class="section-actions">
+      <button class="btn-secondary btn-sm">← Anterior</button>
+      <button class="btn-primary btn-sm">Hoy</button>
+      <button class="btn-secondary btn-sm">Siguiente →</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-body" style="padding:var(--sp-4)">
+      <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Calendario de Febrero 2026"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ WORKLOAD VIEW ══════════════ -->
+<section class="view" id="view-workload" aria-label="Carga de trabajo">
+  <div class="section-header">
+    <h3>Carga de Trabajo del Equipo</h3>
+    <div class="section-actions">
+      <div class="tabs" role="tablist">
+        <button class="tab active">Vista Barras</button>
+        <button class="tab">Vista Gantt</button>
+      </div>
+    </div>
+  </div>
+  <div class="workload-table" id="workloadTable" role="table" aria-label="Carga de trabajo del equipo"></div>
+</section>
+
+<!-- ══════════════ ATTENDANCE VIEW ══════════════ -->
+<section class="view" id="view-attendance" aria-label="Control de asistencia">
+  <div class="section-header">
+    <h3>Control de Asistencia Verificada — 15 Feb 2026</h3>
+    <div class="section-actions">
+      <button class="btn-success btn-sm" onclick="markAllPresent()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        Marcar todos
+      </button>
+      <button class="btn-secondary btn-sm">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar
+      </button>
+    </div>
+  </div>
+
+  <!-- Anti-Fraud Banner -->
+  <div class="antifr-banner" role="alert">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    <div>
+      <div class="title">Verificación Anti-Fraude Activa</div>
+      <div class="sub">Cada check-in requiere: Código diario rotativo + Selfie en tiempo real + Geolocalización GPS + Verificación de IP de red.</div>
+    </div>
+  </div>
+
+  <!-- Daily Code -->
+  <div class="daily-code-box">
+    <div style="display:flex;align-items:center;gap:var(--sp-4)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
+        <rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+        <line x1="12" y1="18" x2="12" y2="22"/><line x1="12" y1="2" x2="12" y2="6"/>
+      </svg>
+      <div>
+        <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-faint);font-weight:700;margin-bottom:4px">Código del Día</div>
+        <div class="daily-code-num" id="dailyCode" aria-live="polite"></div>
+      </div>
+    </div>
+    <div class="daily-code-meta">
+      <span>⏰ Generado: 6:00 AM</span>
+      <span>♻️ Expira: 11:59 PM</span>
+      <span>🛡️ Solo válido desde IP oficina</span>
+    </div>
+  </div>
+
+  <div class="attendance-grid" id="attendanceGrid"></div>
+</section>
+
+<!-- ══════════════ WORKFLOWS VIEW ══════════════ -->
+<section class="view" id="view-workflows" aria-label="Workflows y automatizaciones">
+  <div class="section-header">
+    <h3>Automatizaciones y Flujos de Trabajo</h3>
+    <button class="btn-primary">+ Crear Workflow</button>
+  </div>
+  <div class="workflows-grid" id="workflowsGrid"></div>
+</section>
+
+  </main><!-- /content -->
+</div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════
+     NOTIFICATION PANEL
+══════════════════════════════════ -->
+<div class="notif-panel" id="notifPanel" role="dialog" aria-label="Notificaciones" aria-modal="true">
+  <div class="notif-header">
+    <h4>Notificaciones</h4>
+    <button class="btn-secondary btn-sm" onclick="toggleNotifPanel()">Cerrar</button>
+  </div>
+  <div class="notif-item unread">
+    <div class="notif-dot-marker" aria-hidden="true"></div>
+    <div>
+      <div class="notif-text"><strong>TK-003</strong> SLA breach — CTA FitZone no resuelto</div>
+      <div class="notif-time">Hace 2h</div>
+    </div>
+  </div>
+  <div class="notif-item unread">
+    <div class="notif-dot-marker" aria-hidden="true"></div>
+    <div>
+      <div class="notif-text"><strong>TK-005</strong> SLA breach — Video formato vertical</div>
+      <div class="notif-time">Hace 1 día</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
+    <div>
+      <div class="notif-text">María García completó edición — Luna Beauty Reel</div>
+      <div class="notif-time">Hace 25 min</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
+    <div>
+      <div class="notif-text">Nuevo cliente <strong>TechStart</strong> en onboarding</div>
+      <div class="notif-time">Hace 3 días</div>
+    </div>
+  </div>
+  <div class="notif-item">
+    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
+    <div>
+      <div class="notif-text">Workflow Onboarding TechStart — Paso 3/5 completado</div>
+      <div class="notif-time">Hace 3h</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     COMMAND PALETTE (Ctrl+K)
+══════════════════════════════════ -->
+<div class="cmd-overlay" id="cmdOverlay" onclick="closeCmdPalette(event)" role="dialog" aria-label="Paleta de comandos" aria-modal="true">
+  <div class="cmd-palette" onclick="event.stopPropagation()">
+    <div class="cmd-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="cmd-input" id="cmdInput" placeholder="Buscar o ejecutar comando..." autocomplete="off" oninput="filterCmdItems()" onkeydown="handleCmdKey(event)" aria-label="Buscar o ejecutar comando">
+    </div>
+    <div class="cmd-results" id="cmdResults">
+      <div class="cmd-section-title">Navegación</div>
+      <div class="cmd-item selected" onclick="navigate('dashboard');closeCmdPalette()" data-cmd="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Dashboard</div><div class="cmd-item-desc">Vista general del sistema</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('clients');closeCmdPalette()" data-cmd="Clientes">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Clientes</div><div class="cmd-item-desc">Seguimiento integral de clientes</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('kanban');closeCmdPalette()" data-cmd="Entregables Kanban">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Entregables</div><div class="cmd-item-desc">Tablero Kanban de entregas</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('tickets');closeCmdPalette()" data-cmd="Tickets Mesa de Ayuda">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Tickets</div><div class="cmd-item-desc">Mesa de ayuda y soporte</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('calendar');closeCmdPalette()" data-cmd="Calendario Editorial">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Calendario</div><div class="cmd-item-desc">Calendario editorial Feb 2026</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('workload');closeCmdPalette()" data-cmd="Carga de Trabajo Equipo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Carga de Trabajo</div><div class="cmd-item-desc">Distribución de tareas del equipo</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('attendance');closeCmdPalette()" data-cmd="Asistencia Control">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Asistencia</div><div class="cmd-item-desc">Control de asistencia verificada</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('workflows');closeCmdPalette()" data-cmd="Workflows Automatizaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Workflows</div><div class="cmd-item-desc">Automatizaciones y flujos de trabajo</div></div>
+      </div>
+      <div class="cmd-section-title">Acciones</div>
+      <div class="cmd-item" onclick="openModal('task');closeCmdPalette()" data-cmd="Nuevo Entregable Crear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Nuevo Entregable</div><div class="cmd-item-desc">Crear un nuevo entregable en el tablero</div></div>
+      </div>
+      <div class="cmd-item" onclick="openModal('ticket');closeCmdPalette()" data-cmd="Nuevo Ticket Crear">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Nuevo Ticket</div><div class="cmd-item-desc">Registrar solicitud de cliente</div></div>
+      </div>
+      <div class="cmd-item" onclick="openModal('client');closeCmdPalette()" data-cmd="Nuevo Cliente Agregar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Nuevo Cliente</div><div class="cmd-item-desc">Registrar nuevo cliente en el sistema</div></div>
+      </div>
+    </div>
+    <div class="cmd-footer">
+      <div class="cmd-hint"><span class="kbd">↑↓</span> Navegar</div>
+      <div class="cmd-hint"><span class="kbd">↵</span> Seleccionar</div>
+      <div class="cmd-hint"><span class="kbd">Esc</span> Cerrar</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     MODAL
+══════════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nuevo</h3>
+      <button class="modal-close" onclick="closeModal()" aria-label="Cerrar modal">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════════════════
+//  DATA — Preserved exactly from v4
+// ══════════════════════════════════════════════════════════════════
+const TEAM = [
+  {id:'DG',n:'Diego Gutiérrez',r:'Estratega de Marketing',c:'#EA580C',on:true,att:'present',ci:'8:55 AM',svc:'Marketing',selfie:true,gps:true,ip:true,code:true},
+  {id:'MG',n:'María García',r:'Editora de Video Sr.',c:'#DC2626',on:true,att:'present',ci:'9:02 AM',svc:'Video',selfie:true,gps:true,ip:true,code:true},
+  {id:'AL',n:'Ana López',r:'Diseñadora & Branding',c:'#16A34A',on:true,att:'late',ci:'9:45 AM',svc:'Branding',selfie:true,gps:false,ip:true,code:true},
+  {id:'JR',n:'Juan Ramírez',r:'Paid Media Specialist',c:'#B45309',on:true,att:'present',ci:'8:50 AM',svc:'Paid Ads',selfie:true,gps:true,ip:true,code:true},
+  {id:'SP',n:'Sofía Pérez',r:'Social Media Manager',c:'#CA8A04',on:false,att:'remote',ci:'9:10 AM',svc:'Social Media',selfie:true,gps:false,ip:false,code:true},
+  {id:'LV',n:'Luis Vargas',r:'Motion Graphics',c:'#57534E',on:true,att:'present',ci:'9:00 AM',svc:'Video',selfie:true,gps:true,ip:true,code:true},
+  {id:'CM',n:'Carmen Mendoza',r:'Copywriter',c:'#BE185D',on:false,att:'absent',ci:'—',svc:'Content',selfie:false,gps:false,ip:false,code:false},
+  {id:'PR',n:'Pablo Ríos',r:'Community Manager',c:'#0891B2',on:true,att:'present',ci:'8:48 AM',svc:'Social Media',selfie:true,gps:true,ip:true,code:true}
+];
+const MT = {
+  DG:[{t:'Auditoría SEO TechStart',d:1},{t:'Keyword research Q1',d:1},{t:'Email sequence NovaTech',d:0},{t:'Reporte analytics',d:0}],
+  MG:[{t:'Edición Reel Vive Fit #1',d:1},{t:'Edición Reel #2',d:0},{t:'Color grading Tutorial YT',d:1},{t:'Exportar versiones',d:0}],
+  AL:[{t:'Moodboard Coach María',d:1},{t:'3 propuestas logo',d:1},{t:'Paleta definitiva',d:1},{t:'Brand Book Méndez',d:0}],
+  JR:[{t:'Config pixel Meta Ads',d:1},{t:'Audiencias lookalike',d:1},{t:'Reporte Google Ads',d:0}],
+  SP:[{t:'Diseño posts semana 7',d:1},{t:'Programar posts',d:1},{t:'Calendario Marzo',d:0}],
+  LV:[{t:'Lower thirds Tutorial YT',d:1},{t:'Intro animada',d:0},{t:'Transiciones motion',d:0}],
+  CM:[{t:'Copy emails NovaTech 1-3',d:1},{t:'Copy emails 4-5',d:0},{t:'Blog post SEO',d:0}],
+  PR:[{t:'Responder DMs Luna',d:1},{t:'Moderar comentarios',d:1},{t:'Encuesta Stories',d:0}]
+};
+const clients = [
+  {n:'NovaTech',tp:'SaaS / Tech',c:'#EA580C',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:2,svcs:['tag-mk','tag-ad','tag-se'],team:['DG','CM','JR'],entregables:15,done:9,tickets:2,meetings:3,satisfaction:92,budget:'$4,000',spent:'$2,400',contact:'Pablo Rojas',email:'pablo@novatech.io',phone:'+51 987 654 321',nextAction:'Reunión de resultados Q1 — 1 Mar',contractStart:'Oct 2025',contractEnd:'Oct 2026',monthlyFee:'$4,000',health:88,healthTxt:'Buena — Avance estable pero hay 2 tickets pendientes',notes:'Priorizar email marketing. CEO quiere ver resultados de SEO en Q2.',status:'activo'},
+  {n:'Luna Beauty',tp:'Cosmética',c:'#BE185D',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:3,svcs:['tag-so','tag-vi','tag-de'],team:['SP','MG','LV'],entregables:12,done:8,tickets:1,meetings:2,satisfaction:96,budget:'$1,800',spent:'$950',contact:'Isabella Luna',email:'isa@lunabeauty.com',phone:'+51 912 345 678',nextAction:'Aprobación calendario Marzo — 26 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$1,800',health:95,healthTxt:'Excelente — Alta satisfacción, entregas puntuales',notes:'Muy responsive. Les encanta el contenido. Upsell potencial: Paid Ads.',status:'activo'},
+  {n:'FitZone Gym',tp:'Fitness',c:'#16A34A',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:4,svcs:['tag-ad','tag-vi'],team:['JR','MG'],entregables:10,done:9,tickets:1,meetings:4,satisfaction:88,budget:'$3,200',spent:'$2,900',contact:'Marco Díaz',email:'marco@fitzone.pe',phone:'+51 998 765 432',nextAction:'Reporte final de campaña — 28 Feb',contractStart:'Nov 2025',contractEnd:'May 2026',monthlyFee:'$3,200',health:78,healthTxt:'Alerta — Presupuesto casi agotado, 1 ticket CTA urgente',notes:'Muy exigente con resultados. Necesita ver ROI constante.',status:'activo'},
+  {n:'TechStart',tp:'Startup',c:'#7C3AED',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:2,svcs:['tag-se','tag-mk'],team:['DG','CM'],entregables:15,done:6,tickets:0,meetings:1,satisfaction:85,budget:'$1,500',spent:'$600',contact:'Ana Vega',email:'ana@techstart.co',phone:'+51 976 543 210',nextAction:'Entrega auditoría SEO — 5 Mar',contractStart:'Feb 2026',contractEnd:'Feb 2027',monthlyFee:'$1,500',health:82,healthTxt:'Buena — Cliente nuevo, avance inicial correcto',notes:'Startup recién fondeada. Foco total en SEO y content marketing.',status:'onboarding'},
+  {n:'Dr. Roberto Méndez',tp:'Marca Personal',c:'#B45309',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:2,svcs:['tag-br','tag-so','tag-vi'],team:['AL','SP','MG'],entregables:9,done:5,tickets:1,meetings:2,satisfaction:90,budget:'$2,000',spent:'$1,300',contact:'Roberto Méndez',email:'dr.mendez@gmail.com',phone:'+51 945 678 901',nextAction:'Presentar 3 opciones de logo — 20 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$2,000',health:85,healthTxt:'Buena — En fase de identidad, esperando aprobación logo',notes:'Muy involucrado en el proceso. Prefiere estilo minimalista y premium.',status:'activo'},
+  {n:'Coach María Torres',tp:'Marca Personal',c:'#0891B2',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:3,svcs:['tag-br','tag-so'],team:['AL','SP','CM'],entregables:11,done:10,tickets:0,meetings:3,satisfaction:98,budget:'$1,600',spent:'$1,400',contact:'María Torres',email:'maria@coachtorres.com',phone:'+51 923 456 789',nextAction:'Lanzamiento redes — 3 Mar',contractStart:'Dic 2025',contractEnd:'Jun 2026',monthlyFee:'$1,600',health:97,healthTxt:'Excelente — Casi lista para lanzamiento, súper contenta',notes:'Cliente ideal. Referidos potenciales. Ya recomendó 1 persona.',status:'activo'}
+];
+const KT = [
+  {col:'todo',tt:'Campaña Email NovaTech',ds:'Diseñar secuencia de 5 emails para lanzamiento.',sv:'marketing',tg:'tag-mk',pr:'hi',du:'Feb 13',dc:'lt',pc:20,tm:['DG','CM'],cl:'NovaTech',sb:'1/5'},
+  {col:'todo',tt:'Video Testimonial FitZone',ds:'Grabar y editar testimonial de 60 seg.',sv:'video',tg:'tag-vi',pr:'md',du:'Feb 18',dc:'',pc:0,tm:['MG'],cl:'FitZone Gym',sb:'0/4'},
+  {col:'todo',tt:'Calendario Editorial Marzo',ds:'30 posts Instagram + TikTok.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 28',dc:'',pc:0,tm:['SP','DG'],cl:'Luna Beauty',sb:'0/3'},
+  {col:'todo',tt:'Brand Book Dr. Méndez',ds:'Logo, paleta, tipografías, tono de voz.',sv:'branding',tg:'tag-br',pr:'hi',du:'Feb 12',dc:'lt',pc:65,tm:['AL'],cl:'Dr. Roberto Méndez',sb:'4/6'},
+  {col:'progress',tt:'3 Reels "Vive Fit"',ds:'Edición con motion graphics.',sv:'video',tg:'tag-vi',pr:'hi',du:'Feb 16',dc:'sn',pc:45,tm:['MG','LV'],cl:'FitZone Gym',sb:'2/6'},
+  {col:'progress',tt:'Estrategia SEO Q1',ds:'Auditoría técnica, keywords, contenidos.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 25',dc:'',pc:60,tm:['DG'],cl:'TechStart',sb:'4/7'},
+  {col:'progress',tt:'Landing Summit 2026',ds:'Diseño responsivo con registro.',sv:'design',tg:'tag-de',pr:'lo',du:'Mar 5',dc:'',pc:30,tm:['AL','SP'],cl:'NovaTech',sb:'3/8'},
+  {col:'review',tt:'Identidad Visual Coach María',ds:'Logo, iconografía, plantillas redes.',sv:'branding',tg:'tag-br',pr:'hi',du:'Feb 20',dc:'',pc:90,tm:['AL'],cl:'Coach María Torres',sb:'9/10'},
+  {col:'review',tt:'Reporte Google Ads FitZone',ds:'Métricas, ROI, recomendaciones.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 17',dc:'',pc:80,tm:['JR'],cl:'FitZone Gym',sb:'3/4'},
+  {col:'review',tt:'Tutorial Setup Streaming',ds:'Video 12 min con animaciones.',sv:'video',tg:'tag-vi',pr:'md',du:'Feb 15',dc:'sn',pc:85,tm:['MG','LV'],cl:'FitZone Gym',sb:'5/6'},
+  {col:'done',tt:'Pack 15 Posts Luna Beauty',ds:'Feed Instagram + copies.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 10',dc:'dn',pc:100,tm:['SP'],cl:'Luna Beauty',sb:'15/15'},
+  {col:'done',tt:'Setup Meta Ads NovaTech',ds:'Business Manager, píxel, campañas.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 8',dc:'dn',pc:100,tm:['JR','DG'],cl:'NovaTech',sb:'8/8'}
+];
+const tickets = [
+  {id:'TK-001',title:'Cambiar copy del post #3',sub:'Luna Beauty pidió ajuste de texto en post de Instagram — no refleja la promo actual',client:'Luna Beauty',clientColor:'#BE185D',status:'open',priority:'media',category:'Cambio',channel:'WhatsApp',assignee:'SP',sla:'4h',slaLeft:'2h 15m',slaStatus:'ok',created:'Hoy 10:42 AM',due:'Hoy 2:42 PM',linkedDeliverable:'Pack 15 Posts Luna Beauty',
+   timeline:[{who:'Sistema',what:'Ticket creado automáticamente desde WhatsApp',when:'10:42 AM',type:'system'},{who:'Sofía Pérez',what:'Recibido. Revisando cuál es la promo correcta.',when:'10:55 AM',type:'comment'}]},
+  {id:'TK-002',title:'Agregar slide al deck de inversores',sub:'NovaTech necesita una slide extra con proyecciones Q2 para reunión de mañana',client:'NovaTech',clientColor:'#EA580C',status:'progress',priority:'alta',category:'Solicitud',channel:'Email',assignee:'DG',sla:'2h',slaLeft:'35m',slaStatus:'warn',created:'Hoy 9:25 AM',due:'Hoy 11:25 AM',linkedDeliverable:'Estrategia SEO Q1',
+   timeline:[{who:'Sistema',what:'Ticket creado desde email de pablo@novatech.io',when:'9:25 AM',type:'system'},{who:'Diego Gutiérrez',what:'Preparando la slide con datos de proyección.',when:'9:40 AM',type:'comment'},{who:'Sistema',what:'⚠ SLA al 70% — 35 min restantes',when:'10:50 AM',type:'system'}]},
+  {id:'TK-003',title:'Corregir CTA del landing page',sub:'FitZone reportó que el botón de registro no redirige al formulario correcto',client:'FitZone Gym',clientColor:'#16A34A',status:'open',priority:'urgente',category:'Error',channel:'Llamada',assignee:'AL',sla:'1h',slaLeft:'VENCIDO',slaStatus:'breach',created:'Hoy 8:00 AM',due:'Hoy 9:00 AM',linkedDeliverable:'Landing Summit 2026',
+   timeline:[{who:'Sistema',what:'Ticket urgente creado — SLA 1 hora',when:'8:00 AM',type:'system'},{who:'Sistema',what:'🚨 SLA BREACH — Escalado a Carlos (Director)',when:'9:00 AM',type:'system'},{who:'Carlos Admin',what:'Ana, por favor prioriza esto inmediatamente.',when:'9:05 AM',type:'comment'}]},
+  {id:'TK-004',title:'Reemplazar foto del carrusel',sub:'Dr. Méndez quiere cambiar foto 3 del carrusel IG por una más profesional',client:'Dr. Roberto Méndez',clientColor:'#B45309',status:'progress',priority:'baja',category:'Cambio',channel:'WhatsApp',assignee:'MG',sla:'24h',slaLeft:'18h',slaStatus:'ok',created:'Ayer 4:00 PM',due:'Hoy 4:00 PM',linkedDeliverable:'Brand Book Dr. Méndez',
+   timeline:[{who:'Sistema',what:'Ticket creado desde WhatsApp',when:'Ayer 4:00 PM',type:'system'},{who:'María García',what:'Recibido. ¿Tiene la foto nueva o necesitamos coordinar sesión?',when:'Ayer 4:30 PM',type:'comment'},{who:'Dr. Méndez',what:'Envié 3 opciones al WhatsApp de María.',when:'Ayer 5:15 PM',type:'comment'},{who:'María García',what:'Editando. Entrego hoy antes de las 2pm.',when:'Hoy 9:30 AM',type:'comment'}]},
+  {id:'TK-005',title:'Exportar video en formato vertical',sub:'Coach María necesita versión 9:16 del video de presentación para Reels',client:'Coach María Torres',clientColor:'#0891B2',status:'open',priority:'media',category:'Solicitud',channel:'Email',assignee:'LV',sla:'4h',slaLeft:'VENCIDO',slaStatus:'breach',created:'Ayer 10:00 AM',due:'Ayer 2:00 PM',linkedDeliverable:'Identidad Visual Coach María',
+   timeline:[{who:'Sistema',what:'Ticket creado desde email',when:'Ayer 10:00 AM',type:'system'},{who:'Sistema',what:'🚨 SLA BREACH — Vencido sin resolución',when:'Ayer 6:00 PM',type:'system'}]},
+  {id:'TK-006',title:'Ajustar audiencia de campaña Meta',sub:'NovaTech quiere excluir audiencia menor de 25 años en campaña de conversión',client:'NovaTech',clientColor:'#EA580C',status:'progress',priority:'alta',category:'Cambio',channel:'Slack',assignee:'JR',sla:'2h',slaLeft:'1h 20m',slaStatus:'ok',created:'Hoy 9:50 AM',due:'Hoy 11:50 AM',linkedDeliverable:'Setup Meta Ads NovaTech',
+   timeline:[{who:'Sistema',what:'Ticket creado desde Slack #novatech',when:'9:50 AM',type:'system'},{who:'Juan Ramírez',what:'Ajustando segmentación ahora mismo. Excluyo menores de 25 y agrego lookalike.',when:'10:05 AM',type:'comment'}]},
+  {id:'TK-007',title:'Revisar ortografía del blog post',sub:'TechStart encontró 3 errores ortográficos en el artículo publicado ayer',client:'TechStart',clientColor:'#7C3AED',status:'open',priority:'media',category:'Error',channel:'Email',assignee:'CM',sla:'4h',slaLeft:'3h 10m',slaStatus:'ok',created:'Hoy 10:15 AM',due:'Hoy 2:15 PM',linkedDeliverable:'Estrategia SEO Q1',
+   timeline:[{who:'Sistema',what:'Ticket creado desde email de ana@techstart.co',when:'10:15 AM',type:'system'}]}
+];
+const workflows = [
+  {ic:'💡',bg:'var(--color-primary-highlight)',t:'Ideación y Brainstorm',d:'Al crear proyecto, se genera moodboard con brief, referencias y espacio colaborativo.',steps:['Brief recibido','Crear moodboard','Sesión brainstorm','Seleccionar conceptos'],act:3,badges:['Automático']},
+  {ic:'✏️',bg:'var(--purple-bg)',t:'Bocetaje y Propuestas',d:'Ideas pasan a bocetaje. 3 opciones mínimo con deadline automático.',steps:['Conceptos aprobados','Boceto A','Boceto B','Boceto C','Presentar'],act:1,badges:['3 opciones']},
+  {ic:'🎨',bg:'var(--pink-bg)',t:'Desarrollo Creativo',d:'Propuesta aprobada se desarrolla: verificación de brand y checklist de calidad.',steps:['Aprobada','Desarrollo','Verificar brand','Checklist QA'],act:2,badges:['Checklist']},
+  {ic:'✅',bg:'var(--green-bg)',t:'Aprobación de Contenido',d:'Todo contenido pasa por: creador → revisor → director → publicación.',steps:['Creación','Revisión interna','Aprobación director','Publicar'],act:1,badges:['Obligatorio']},
+  {ic:'🔄',bg:'var(--orange2-bg)',t:'Ciclo de Revisiones',d:'Cliente pide cambios: máximo 3 rondas incluidas con tracking.',steps:['Feedback','Aplicar cambios','Re-enviar','Aprobación final'],act:0,badges:['Máx 3 rondas']},
+  {ic:'📦',bg:'var(--cyan-bg)',t:'Entrega Final y Cierre',d:'Archivos finales, QA, envío al cliente y archivo con métricas.',steps:['Archivos','QA final','Enviar','Archivar + métricas'],act:0,badges:['Auto-archivo']},
+  {ic:'📥',bg:'var(--color-primary-highlight)',t:'Brief → Entregable',d:'Solicitud recibida crea entregable, asigna equipo y notifica.',steps:['Solicitud','Crear entregable','Asignar','Notificar'],act:2,badges:['Auto']},
+  {ic:'🎫',bg:'var(--red-bg)',t:'Ticket → Resolución',d:'SLA automático: Urgente=1h, Alta=2h, Media=4h, Baja=24h.',steps:['Creado','Asignar + SLA','Resolver','Confirmar cierre'],act:1,badges:['SLA auto']},
+  {ic:'⏰',bg:'var(--orange2-bg)',t:'Alerta de Vencimiento',d:'24h antes: aviso. Vencido: escala al director + prioridad urgente.',steps:['24h: aviso','Vencido: escalar','Reasignar','Reporte atraso'],act:0,badges:['Escalamiento']},
+  {ic:'📊',bg:'var(--purple-bg)',t:'Reporte Semanal',d:'Viernes 5pm: reporte por cliente con métricas y horas. Email auto.',steps:['Recopilar','Generar PDF','Enviar','Archivar'],act:0,badges:['Viernes 5pm']},
+  {ic:'👤',bg:'var(--cyan-bg)',t:'Onboarding Cliente',d:'Workspace, equipo, kickoff, brand guidelines, primer brief.',steps:['Workspace','Equipo','Kickoff','Guidelines','Brief'],act:3,badges:['5 pasos']},
+  {ic:'📱',bg:'var(--pink-bg)',t:'Publicación en Redes',d:'Contenido aprobado: formato por plataforma, hashtags, horario óptimo.',steps:['Aprobado','Formato','Programar','Publicar + analytics'],act:1,badges:['Multi-plataforma']}
+];
+const calI = [
+  {d:3,t:'Post IG Luna',cl:'pill-pink'},{d:5,t:'Camp Luna',cl:'pill-orange'},{d:7,t:'Blog TechStart',cl:'pill-purple'},
+  {d:8,t:'✅ Meta Ads',cl:'pill-green'},{d:10,t:'✅ Posts Luna',cl:'pill-green'},{d:10,t:'Reel TikTok',cl:'pill-red'},
+  {d:12,t:'⚠ Brand Book',cl:'pill-orange2'},{d:13,t:'⚠ Email Mkt',cl:'pill-orange2'},{d:15,t:'Tutorial YT',cl:'pill-red'},
+  {d:15,t:'Summit Ads',cl:'pill-orange'},{d:16,t:'Reels Vive Fit',cl:'pill-red'},{d:17,t:'Reporte Ads',cl:'pill-orange'},
+  {d:18,t:'Testimonial',cl:'pill-red'},{d:20,t:'ID Coach María',cl:'pill-purple'},{d:25,t:'SEO Q1',cl:'pill-purple'},
+  {d:28,t:'Cal. Marzo',cl:'pill-green'}
+];
+
+// ══════════════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════════════
+const svcNames = {'tag-mk':'Marketing','tag-br':'Branding','tag-vi':'Video','tag-so':'Social','tag-de':'Diseño','tag-se':'SEO','tag-ad':'Paid Ads'};
+
+function makeAvatar(id, size=22) {
+  const m = TEAM.find(x => x.id === id);
+  const s = Math.round(size * 0.35);
+  return `<div class="team-avatar" style="background:${m?.c||'#666'};width:${size}px;height:${size}px;font-size:${s}px" aria-label="${m?.n||id}">${id}</div>`;
+}
+
+function makeTkAvatar(id, size=22) {
+  const m = TEAM.find(x => x.id === id);
+  const s = Math.round(size * 0.4);
+  return `<div class="tk-avatar" style="background:${m?.c||'#666'};width:${size}px;height:${size}px;font-size:${s}px" aria-label="${m?.n||id}">${id}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════════
+const pageNames = {
+  dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables',
+  tickets:'Sistema de Tickets',calendar:'Calendario Editorial',workload:'Carga de Trabajo',
+  attendance:'Asistencia Verificada',workflows:'Workflows'
+};
+
+function navigate(viewId, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const view = document.getElementById('view-' + viewId);
+  if (view) view.classList.add('active');
+  document.getElementById('pageTitle').textContent = pageNames[viewId] || viewId;
+  document.getElementById('pageCrumb').textContent = pageNames[viewId] || viewId;
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active');
+    n.removeAttribute('aria-current');
+  });
+  const active = btn || document.querySelector(`.nav-item[data-view="${viewId}"]`);
+  if (active) { active.classList.add('active'); active.setAttribute('aria-current','page'); }
+  // Render the view
+  if (renderers[viewId]) renderers[viewId]();
+  // Close mobile sidebar
+  closeMobileSidebar();
+  // Trigger fade-ins
+  setTimeout(() => {
+    view?.querySelectorAll('.fade-in:not(.visible)').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 45);
+    });
+  }, 50);
+}
+
+// Mobile sidebar
+function openMobileSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').style.display = 'block';
+  document.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded','true');
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').style.display = 'none';
+  document.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded','false');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RENDERERS
+// ══════════════════════════════════════════════════════════════════
+const renderers = {};
+
+// ─── CLIENTS ───
+renderers.clients = function() {
+  const grid = document.getElementById('clientsGrid');
+  grid.innerHTML = '';
+  clients.forEach((c, ci) => {
+    const pct = c.entregables > 0 ? Math.round(c.done / c.entregables * 100) : 0;
+    const hcl = c.health >= 90 ? 'var(--green)' : c.health >= 75 ? 'var(--color-primary)' : 'var(--red)';
+    const hbg = c.health >= 90 ? 'var(--green-bg)' : c.health >= 75 ? 'var(--color-primary-highlight)' : 'var(--red-bg)';
+    const svcHtml = c.svcs.map(s => `<span class="service-tag ${s}" style="margin-left:2px">${svcNames[s]||s}</span>`).join('');
+    const teamHtml = c.team.map(id => makeAvatar(id, 24)).join('');
+    const phasesHtml = c.phases.map((p,i) => `<div class="phase-item ${i<c.curr?'phase-done':i===c.curr?'phase-curr':'phase-pend'}" title="${p}">${p}</div>`).join('');
+    const satPill = c.satisfaction >= 95 ? 'pill-green' : c.satisfaction >= 85 ? 'pill-orange' : 'pill-orange2';
+
+    const card = document.createElement('article');
+    card.className = 'client-card fade-in';
+    card.dataset.status = c.status;
+    card.innerHTML = `
+      <div class="client-header">
+        <div class="client-avatar" style="background:${c.c}" aria-hidden="true">${c.n[0]}</div>
+        <div style="flex:1;min-width:0">
+          <div class="client-name">${c.n}</div>
+          <div class="client-type">${c.tp} · ${svcHtml}</div>
+        </div>
+        <span class="pill ${satPill}" title="Satisfacción">${c.satisfaction}%</span>
+      </div>
+      <div class="client-body">
+        <div class="health-bar" style="background:${hbg}">
+          <div class="health-ring" style="background:${hcl}" aria-label="Health score ${c.health}">${c.health}</div>
+          <div class="health-info">
+            <h5 style="color:${hcl}">Health Score</h5>
+            <p>${c.healthTxt}</p>
+          </div>
+        </div>
+        <div class="client-phase" role="list" aria-label="Fases del proyecto">${phasesHtml}</div>
+        <div class="client-metrics">
+          <div class="metric-item"><div class="metric-num" style="font-variant-numeric:tabular-nums">${c.entregables}</div><div class="metric-lbl">Entregables</div></div>
+          <div class="metric-item"><div class="metric-num" style="color:var(--green);font-variant-numeric:tabular-nums">${pct}%</div><div class="metric-lbl">Avance</div></div>
+          <div class="metric-item"><div class="metric-num" style="color:${c.tickets>0?'var(--orange2)':'var(--color-text-faint)'};font-variant-numeric:tabular-nums">${c.tickets}</div><div class="metric-lbl">Tickets</div></div>
+          <div class="metric-item"><div class="metric-num" style="font-variant-numeric:tabular-nums">${c.meetings}</div><div class="metric-lbl">Reuniones</div></div>
+        </div>
+        <div class="client-contacts">
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>${c.contact}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${c.email}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.8 19.79 19.79 0 0 1 1.61 1.21 2 2 0 0 1 3.6.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 7.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>${c.phone}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>${c.spent} / ${c.budget}</span></div>
+        </div>
+        <div class="next-action">
+          <h5>📌 Próxima Acción</h5>
+          <p>${c.nextAction}</p>
+        </div>
+        <div class="client-notes">📝 <strong>Notas:</strong> ${c.notes}</div>
+        <div style="font-size:0.625rem;color:var(--color-text-faint);margin-bottom:var(--sp-3)">
+          📄 Contrato: ${c.contractStart} — ${c.contractEnd} · Mensual: ${c.monthlyFee}
+        </div>
+        <div class="client-footer">
+          <div class="team-avatars" aria-label="Equipo asignado">${teamHtml}</div>
+          <button class="btn-secondary btn-sm" onclick="openClientDetail(${ci})">Ver detalle →</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+};
+
+function filterClients(status, btn) {
+  document.querySelectorAll('#clientTabs .tab').forEach(t => { t.classList.remove('active'); t.setAttribute('aria-selected','false'); });
+  btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+  document.querySelectorAll('.client-card').forEach(c => {
+    c.style.display = (status === 'all' || c.dataset.status === status) ? '' : 'none';
+  });
+}
+
+// ─── KANBAN ───
+renderers.kanban = function() {
+  const board = document.getElementById('kanbanBoard');
+  board.innerHTML = '';
+  const cols = [
+    {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
+    {k:'progress',l:'En Progreso',d:'var(--color-primary)'},
+    {k:'review',l:'En Revisión',d:'var(--orange2)'},
+    {k:'done',l:'Completado',d:'var(--green)'}
+  ];
+  cols.forEach(col => {
+    const tasks = KT.filter(t => t.col === col.k);
+    const colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    const cardsHtml = tasks.map(t => {
+      const avsHtml = t.tm.map(id => makeAvatar(id, 20)).join('');
+      const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
+      const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
+      const dateIcon = t.dc === 'dn' ? '✅' : '📅';
+      return `
+        <article class="kanban-card fade-in" data-sv="${t.sv}" role="article">
+          <div class="kanban-card-top">
+            <span class="service-tag ${t.tg}">${t.sv}</span>
+            <div class="priority-dot ${t.pr}" title="Prioridad: ${t.pr === 'hi' ? 'Alta' : t.pr === 'md' ? 'Media' : 'Baja'}"></div>
+          </div>
+          <div class="card-client-tag">📁 ${t.cl}</div>
+          <div class="card-title">${t.tt}</div>
+          <div class="card-desc">${t.ds}</div>
+          <div class="card-meta">
+            <span class="card-date ${dateCls}">${dateIcon} ${t.du}</span>
+            <div class="team-avatars">${avsHtml}</div>
+          </div>
+          ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
+          <div class="card-subtasks">☑ ${t.sb} subtareas</div>
+        </article>`;
+    }).join('');
+    colEl.innerHTML = `
+      <div class="kanban-col-header">
+        <div class="kanban-col-title">
+          <div class="col-dot" style="background:${col.d}"></div>
+          <h4>${col.l}</h4>
+          <span class="col-count">${tasks.length}</span>
+        </div>
+        ${col.k !== 'done' ? `<button class="col-add" onclick="openModal('task')" title="Agregar entregable" aria-label="Agregar entregable a ${col.l}">+</button>` : ''}
+      </div>
+      <div class="kanban-cards">${cardsHtml}</div>`;
+    board.appendChild(colEl);
+  });
+};
+
+function filterKanban(sv, btn) {
+  document.querySelectorAll('#view-kanban .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.kanban-card').forEach(c => {
+    c.style.display = (sv === 'all' || c.dataset.sv === sv) ? '' : 'none';
+  });
+}
+
+// ─── TICKETS ───
+renderers.tickets = function() {
+  const open   = tickets.filter(t => t.status === 'open').length;
+  const prog   = tickets.filter(t => t.status === 'progress').length;
+  const res    = tickets.filter(t => t.status === 'resolved').length;
+  const breach = tickets.filter(t => t.slaStatus === 'breach').length;
+
+  document.getElementById('ticketsStats').innerHTML = `
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${tickets.length}</div><div class="ticket-stat-lbl">Total</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--color-primary);font-variant-numeric:tabular-nums">${open}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-primary);display:inline-block;margin-right:3px"></span>Abiertos</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--orange2);font-variant-numeric:tabular-nums">${prog}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--orange2);display:inline-block;margin-right:3px"></span>En Proceso</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--red);font-variant-numeric:tabular-nums">${breach}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px"></span>SLA Breach</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--green);font-variant-numeric:tabular-nums">${res+15}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px"></span>Resueltos (mes)</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">3.8h</div><div class="ticket-stat-lbl">Tiempo Promedio</div></div>`;
+
+  const grid = document.getElementById('ticketsGrid');
+  let html = `<div class="tickets-table" role="table">
+    <div class="tickets-thead" role="row">
+      <div role="columnheader">#</div>
+      <div role="columnheader">Solicitud</div>
+      <div role="columnheader">Cliente</div>
+      <div role="columnheader">Categoría</div>
+      <div role="columnheader">Prioridad</div>
+      <div role="columnheader">Asignado</div>
+      <div role="columnheader">SLA</div>
+      <div role="columnheader">Estado</div>
+    </div>`;
+
+  tickets.forEach((tk, idx) => {
+    const m = TEAM.find(x => x.id === tk.assignee);
+    const stPill = tk.status === 'open' ? 'pill-orange' : tk.status === 'progress' ? 'pill-orange2' : 'pill-green';
+    const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En Proceso' : 'Resuelto';
+    const prPill = tk.priority === 'urgente' ? 'pill-red' : tk.priority === 'alta' ? 'pill-orange2' : tk.priority === 'media' ? 'pill-orange' : 'pill-gray';
+    const catPill= tk.category === 'Error' ? 'pill-red' : tk.category === 'Cambio' ? 'pill-orange2' : tk.category === 'Solicitud' ? 'pill-purple' : 'pill-gray';
+    const slaDot = tk.slaStatus === 'ok' ? 'sla-ok' : tk.slaStatus === 'warn' ? 'sla-warn' : 'sla-breach';
+    const slaColor = tk.slaStatus === 'ok' ? 'var(--green)' : tk.slaStatus === 'warn' ? 'var(--orange2)' : 'var(--red)';
+
+    const tlHtml = tk.timeline.map(t =>
+      `<div class="tl-entry ${t.type}"><div class="who">${t.who}</div><div class="what">${t.what}</div><div class="when">${t.when}</div></div>`
+    ).join('');
+
+    html += `
+    <div class="ticket-row" data-st="${tk.status}" onclick="toggleTicketDetail(${idx})" role="row" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTicketDetail(${idx})">
+      <div class="ticket-id" role="cell">${tk.id}</div>
+      <div class="ticket-title-col" role="cell"><span class="main">${tk.title}</span><span class="sub">${tk.sub}</span></div>
+      <div class="ticket-client" role="cell"><span class="client-dot" style="background:${tk.clientColor}"></span>${tk.client}</div>
+      <div role="cell"><span class="pill ${catPill}">${tk.category}</span></div>
+      <div role="cell"><span class="pill ${prPill}">${tk.priority}</span></div>
+      <div class="ticket-assignee" role="cell">${makeTkAvatar(tk.assignee,22)}<span>${m?.n.split(' ')[0]||''}</span></div>
+      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span style="color:${slaColor}">${tk.slaLeft}</span></div>
+      <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
+    </div>
+    <div class="ticket-detail" id="tkDetail-${idx}" role="region" aria-label="Detalle del ticket ${tk.id}">
+      <div class="ticket-detail-inner">
+        <div class="detail-section">
+          <h4>📋 Información del Ticket</h4>
+          <div class="info-grid">
+            <div class="info-item"><div class="lbl">Creado</div><div class="val">${tk.created}</div></div>
+            <div class="info-item"><div class="lbl">Vencimiento SLA</div><div class="val" style="color:${slaColor}">${tk.due}</div></div>
+            <div class="info-item"><div class="lbl">Canal de Entrada</div><div class="val">${tk.channel}</div></div>
+            <div class="info-item"><div class="lbl">SLA Asignado</div><div class="val">${tk.sla}</div></div>
+            <div class="info-item"><div class="lbl">Entregable Vinculado</div><div class="val" style="color:var(--color-primary)">${tk.linkedDeliverable}</div></div>
+            <div class="info-item"><div class="lbl">Categoría</div><div class="val">${tk.category}</div></div>
+          </div>
+          <div class="ticket-actions">
+            ${tk.status !== 'resolved' ? `<button class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();resolveTicket('${tk.id}')">✅ Resolver</button>` : ''}
+            ${tk.status === 'open' ? `<button class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${tk.id}')">▶ Tomar Ticket</button>` : ''}
+            <button class="btn-secondary btn-sm" onclick="event.stopPropagation()">🔄 Reasignar</button>
+            ${tk.priority !== 'urgente' ? `<button class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${tk.id}')">⬆ Escalar</button>` : ''}
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>💬 Historial y Comentarios</h4>
+          <div class="ticket-timeline">${tlHtml}</div>
+          <div class="comment-box">
+            <input class="comment-input" placeholder="Agregar comentario interno..." id="tkComment-${idx}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){addTicketComment(${idx});event.stopPropagation()}" aria-label="Agregar comentario al ticket">
+            <button class="btn-primary btn-sm" onclick="event.stopPropagation();addTicketComment(${idx})">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+  grid.innerHTML = html;
+};
+
+function toggleTicketDetail(idx) {
+  const detail = document.getElementById('tkDetail-' + idx);
+  if (!detail) return;
+  const row = detail.previousElementSibling;
+  const isOpen = detail.classList.contains('show');
+  detail.classList.toggle('show');
+  row.classList.toggle('expanded');
+  row.setAttribute('aria-expanded', !isOpen);
+}
+function addTicketComment(idx) {
+  const inp = document.getElementById('tkComment-' + idx);
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) return;
+  tickets[idx].timeline.push({who:'Carlos Admin',what:v,when:'Ahora',type:'comment'});
+  inp.value = '';
+  renderers.tickets();
+}
+function resolveTicket(id) {
+  const tk = tickets.find(x => x.id === id);
+  if (tk) {
+    tk.status = 'resolved'; tk.slaStatus = 'ok'; tk.slaLeft = 'Resuelto';
+    tk.timeline.push({who:'Carlos Admin',what:'✅ Ticket resuelto y cerrado.',when:'Ahora',type:'resolve'});
+    renderers.tickets(); updateBadges();
+  }
+}
+function progressTicket(id) {
+  const tk = tickets.find(x => x.id === id);
+  if (tk) {
+    tk.status = 'progress';
+    tk.timeline.push({who:'Sistema',what:'Ticket movido a "En Proceso"',when:'Ahora',type:'system'});
+    renderers.tickets(); updateBadges();
+  }
+}
+function escalateTicket(id) {
+  const tk = tickets.find(x => x.id === id);
+  if (tk) {
+    tk.priority = 'urgente'; tk.sla = '1h';
+    tk.timeline.push({who:'Carlos Admin',what:'⬆ Ticket escalado a prioridad URGENTE',when:'Ahora',type:'system'});
+    renderers.tickets(); updateBadges();
+  }
+}
+function filterTickets(s, btn) {
+  document.querySelectorAll('#ticketTabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ticket-row').forEach(r => {
+    if (!r.dataset.st) return;
+    const show = s === 'all' || r.dataset.st === s;
+    r.style.display = show ? '' : 'none';
+    const det = r.nextElementSibling;
+    if (det && det.classList.contains('ticket-detail')) {
+      det.classList.remove('show'); r.classList.remove('expanded');
+    }
+  });
+}
+
+// ─── CALENDAR ───
+renderers.calendar = function() {
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d => {
+    const h = document.createElement('div');
+    h.className = 'cal-header-day'; h.textContent = d; h.setAttribute('role','columnheader');
+    grid.appendChild(h);
+  });
+  // Previous month overflow (Jan 26 days to fill Mon-Sat = 6 days)
+  for (let i = 0; i < 6; i++) {
+    const d = document.createElement('div');
+    d.className = 'cal-day other'; d.setAttribute('role','gridcell');
+    d.innerHTML = `<div class="cal-day-num">${25+i}</div>`;
+    grid.appendChild(d);
+  }
+  for (let day = 1; day <= 28; day++) {
+    const items = calI.filter(x => x.d === day);
+    const d = document.createElement('div');
+    d.className = 'cal-day'; d.setAttribute('role','gridcell');
+    d.setAttribute('aria-label',`${day} de febrero${items.length?', '+items.length+' evento'+(items.length>1?'s':''):''}`);
+    d.innerHTML = (day === 15
+      ? `<div class="cal-day-num today" aria-current="date">${day}</div>`
+      : `<div class="cal-day-num">${day}</div>`)
+      + items.map(i => `<div class="cal-event pill ${i.cl}">${i.t}</div>`).join('');
+    grid.appendChild(d);
+  }
+};
+
+// ─── WORKLOAD ───
+renderers.workload = function() {
+  const table = document.getElementById('workloadTable');
+  table.innerHTML = `
+    <div class="workload-header" role="row">
+      <div role="columnheader">Miembro</div>
+      <div role="columnheader">Distribución de Tareas</div>
+      <div style="text-align:center" role="columnheader">Total</div>
+      <div style="text-align:center" role="columnheader">Hechas</div>
+      <div style="text-align:center" role="columnheader">Carga</div>
+    </div>`;
+  TEAM.forEach(m => {
+    const ts = MT[m.id] || [];
+    const done = ts.filter(x => x.d).length;
+    const tot = ts.length;
+    const pend = tot - done;
+    const cap = Math.round((tot / (tot > 4 ? tot : 5)) * 100);
+    const capCls = cap > 90 ? 'over' : cap > 70 ? 'high' : 'ok';
+    const doneW = tot ? Math.round(done/tot*100) : 0;
+    const pendW = tot ? Math.round(pend/tot*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'workload-row fade-in'; row.setAttribute('role','row');
+    row.innerHTML = `
+      <div class="wl-person" role="cell">
+        <div class="wl-avatar" style="background:${m.c}" aria-hidden="true">${m.id}</div>
+        <div><div class="wl-name">${m.n}</div><div class="wl-role">${m.r}</div></div>
+      </div>
+      <div class="wl-bar-wrap" role="cell" aria-label="${done} completadas, ${pend} pendientes">
+        <div class="wl-bar">
+          <div class="wl-seg done" style="width:${doneW}%"></div>
+          <div class="wl-seg pending" style="width:${pendW}%"></div>
+        </div>
+        <div class="wl-bar-labels">
+          <span><div class="wl-label-dot" style="background:var(--green)"></div>Completadas ${done}</span>
+          <span><div class="wl-label-dot" style="background:var(--color-primary)"></div>Pendientes ${pend}</span>
+        </div>
+      </div>
+      <div class="wl-num" role="cell" style="font-variant-numeric:tabular-nums">${tot}</div>
+      <div class="wl-num" role="cell" style="color:var(--green);font-variant-numeric:tabular-nums">${done}</div>
+      <div class="wl-cap ${capCls}" role="cell" style="font-variant-numeric:tabular-nums">${cap}%</div>`;
+    table.appendChild(row);
+  });
+};
+
+// ─── ATTENDANCE ───
+renderers.attendance = function() {
+  const code = String(Math.floor(Math.random()*9000)+1000);
+  document.getElementById('dailyCode').textContent = code.split('').join(' ');
+  const grid = document.getElementById('attendanceGrid');
+  grid.innerHTML = '';
+  const stMap = {present:{l:'Presente',p:'pill-green'},absent:{l:'Ausente',p:'pill-red'},late:{l:'Tardanza',p:'pill-orange2'},remote:{l:'Remoto',p:'pill-orange'}};
+  TEAM.forEach(m => {
+    const ts = MT[m.id] || [];
+    const done = ts.filter(x => x.d).length;
+    const st = stMap[m.att];
+    const ck = (v, label) => `<div class="att-vf"><div class="lbl">${label}</div><div class="val">${v?'<span class="ck">✓ Verificado</span>':'<span class="no">✗ Pendiente</span>'}</div></div>`;
+    const tasksHtml = ts.map((t, i) => `
+      <div class="att-task">
+        <div class="task-check ${t.d?'done':''}" onclick="toggleAttendance('${m.id}',${i})" role="checkbox" aria-checked="${!!t.d}" aria-label="${t.t}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="task-text ${t.d?'done':''}">${t.t}</span>
+      </div>`).join('');
+    const card = document.createElement('article');
+    card.className = 'attendance-card fade-in';
+    card.innerHTML = `
+      <div class="att-top">
+        <div class="att-avatar" style="background:${m.c}" aria-hidden="true">${m.id}
+          <div class="online-dot ${m.on?'on':'off'}" aria-label="${m.on?'En línea':'Fuera de línea'}"></div>
+        </div>
+        <div style="flex:1">
+          <div class="att-name">${m.n}</div>
+          <div class="att-role">${m.r}</div>
+        </div>
+        <span class="pill ${st.p}">${st.l}</span>
+      </div>
+      <div class="att-verif-section">
+        <div class="att-verif-title">🔒 Verificación de Identidad</div>
+        <div class="att-verif-grid">
+          ${ck(m.code,'🔑 Código Diario')}
+          ${ck(m.selfie,'📸 Selfie en Vivo')}
+          ${ck(m.gps,'📍 GPS Ubicación')}
+          ${ck(m.ip,'🌐 IP de Red')}
+        </div>
+      </div>
+      <div class="att-check-grid">
+        <div class="att-vf"><div class="lbl">Check-in</div><div class="val">${m.ci}</div></div>
+        <div class="att-vf"><div class="lbl">Tareas</div><div class="val" style="color:var(--green);font-variant-numeric:tabular-nums">${done}/${ts.length}</div></div>
+      </div>
+      <div class="att-tasks-section">
+        <div class="att-tasks-title">Tareas del Día</div>
+        ${tasksHtml}
+      </div>`;
+    grid.appendChild(card);
+  });
+};
+
+function toggleAttendance(mid, idx) {
+  MT[mid][idx].d = MT[mid][idx].d ? 0 : 1;
+  renderers.attendance();
+}
+function markAllPresent() {
+  TEAM.forEach(m => m.att = 'present');
+  renderers.attendance();
+}
+
+// ─── WORKFLOWS ───
+renderers.workflows = function() {
+  const grid = document.getElementById('workflowsGrid');
+  grid.innerHTML = '';
+  workflows.forEach(w => {
+    const stepsHtml = w.steps.map((s, i) => `
+      ${i > 0 ? '<span class="wf-step-arrow" aria-hidden="true">→</span>' : ''}
+      <span class="wf-step ${i < w.act ? 'done' : i === w.act ? 'active' : ''}">${s}</span>`).join('');
+    const badgesHtml = w.badges.map(b => `<span class="pill pill-gray">${b}</span>`).join('');
+    const card = document.createElement('article');
+    card.className = 'workflow-card fade-in';
+    card.innerHTML = `
+      <div class="workflow-top">
+        <div class="workflow-icon" style="background:${w.bg}" aria-hidden="true">${w.ic}</div>
+        <div style="flex:1"><div class="workflow-title">${w.t}</div></div>
+      </div>
+      <div class="workflow-desc">${w.d}</div>
+      <div class="workflow-steps" role="list">${stepsHtml}</div>
+      <div class="workflow-badges">${badgesHtml}</div>`;
+    grid.appendChild(card);
+  });
+};
+
+// ─── SIDEBAR BADGE UPDATES ───
+function updateBadges() {
+  const tkOpen = tickets.filter(t => t.status !== 'resolved').length;
+  const el = document.getElementById('badge-tickets');
+  if (el) el.textContent = tkOpen;
+  const clEl = document.getElementById('badge-clients');
+  if (clEl) clEl.textContent = clients.length;
+  const kbEl = document.getElementById('badge-kanban');
+  if (kbEl) kbEl.textContent = KT.length;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  MODAL SYSTEM
+// ══════════════════════════════════════════════════════════════════
+function openModal(type) {
+  const overlay = document.getElementById('modalOverlay');
+  const title   = document.getElementById('modalTitle');
+  const body    = document.getElementById('modalBody');
+  const footer  = document.getElementById('modalFooter');
+
+  if (type === 'task') {
+    title.textContent = 'Nuevo Entregable';
+    body.innerHTML = `
+      <div class="form-group"><label for="m-name">Nombre</label><input class="form-input" placeholder="Ej: Video Reel — Cliente X" id="m-name"></div>
+      <div class="form-group"><label for="m-desc">Descripción</label><textarea class="form-textarea" placeholder="Detalles del entregable..." id="m-desc"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client">${clients.map(c=>`<option>${c.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="m-service">Servicio</label><select class="form-select" id="m-service"><option value="marketing">Marketing</option><option value="branding">Branding</option><option value="video">Video</option><option value="social">Social</option><option value="design">Diseño</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
+        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee">${TEAM.map(m=>`<option value="${m.id}">${m.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="m-due">Fecha Límite</label><input class="form-input" type="date" id="m-due"></div>
+      </div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
+
+  } else if (type === 'ticket') {
+    title.textContent = 'Nuevo Ticket — Solicitud de Cliente';
+    body.innerHTML = `
+      <div class="form-group"><label for="tk-name">Título</label><input class="form-input" placeholder="Ej: Cambiar foto del carrusel" id="tk-name"></div>
+      <div class="form-group"><label for="tk-desc">Descripción Detallada</label><textarea class="form-textarea" placeholder="¿Qué necesita el cliente exactamente? Contexto, archivos, etc." id="tk-desc"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label for="tk-client">Cliente</label><select class="form-select" id="tk-client">${clients.map(c=>`<option value="${c.n}">${c.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label for="tk-priority">Prioridad (SLA)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente (1h)</option><option value="alta">🟠 Alta (2h)</option><option value="media" selected>🟡 Media (4h)</option><option value="baja">⚪ Baja (24h)</option></select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign">${TEAM.map(m=>`<option value="${m.id}">${m.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="tk-channel">Canal</label><select class="form-select" id="tk-channel"><option>WhatsApp</option><option>Email</option><option>Slack</option><option>Llamada</option><option>Presencial</option></select></div>
+      </div>
+      <div class="form-group"><label for="tk-link">Entregable Vinculado</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${KT.map(k=>`<option>${k.tt}</option>`).join('')}</select></div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear Ticket</button>`;
+
+  } else if (type === 'client') {
+    title.textContent = 'Nuevo Cliente';
+    body.innerHTML = `
+      <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" placeholder="Ej: Luna Beauty" id="cl-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" placeholder="Cosmética" id="cl-ind"></div>
+        <div class="form-group"><label for="cl-contact">Contacto Principal</label><input class="form-input" placeholder="Nombre completo" id="cl-contact"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label for="cl-email">Email</label><input class="form-input" type="email" placeholder="email@empresa.com" id="cl-email"></div>
+        <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" placeholder="+51 999 999 999" id="cl-phone"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" placeholder="$2,000" id="cl-fee"></div>
+        <div class="form-group"><label for="cl-dur">Duración Contrato</label><select class="form-select" id="cl-dur"><option>3 meses</option><option>6 meses</option><option selected>12 meses</option></select></div>
+      </div>
+      <div class="form-group">
+        <label>Servicios Contratados</label>
+        <select class="form-select" multiple style="height:80px" id="cl-svcs">
+          <option value="tag-mk">Marketing Digital</option><option value="tag-br">Branding</option>
+          <option value="tag-vi">Edición de Video</option><option value="tag-so">Social Media</option>
+          <option value="tag-de">Diseño</option><option value="tag-se">SEO</option><option value="tag-ad">Paid Ads</option>
+        </select>
+      </div>
+      <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
+  }
+
+  overlay.classList.add('show');
+  overlay.removeAttribute('aria-hidden');
+  // Focus first input
+  setTimeout(() => body.querySelector('input,select,textarea')?.focus(), 100);
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('show');
+    document.getElementById('modalOverlay').setAttribute('aria-hidden','true');
+  }
+}
+
+function openClientDetail(idx) {
+  const c = clients[idx];
+  if (!c) return;
+  const relTk  = tickets.filter(tk => tk.client === c.n);
+  const relDel = KT.filter(k => k.cl === c.n);
+  const hcl = c.health >= 90 ? 'var(--green)' : c.health >= 75 ? 'var(--color-primary)' : 'var(--red)';
+
+  document.getElementById('modalTitle').textContent = c.n + ' — Detalle';
+  document.getElementById('modalBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5)">
+      <div class="client-avatar" style="background:${c.c};width:50px;height:50px;font-size:1.25rem" aria-hidden="true">${c.n[0]}</div>
+      <div><div style="font-size:var(--text-xl);font-weight:700">${c.n}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp} · ${c.contact} · ${c.email}</div></div>
+    </div>
+    <div class="info-grid" style="margin-bottom:var(--sp-5)">
+      <div class="info-item"><div class="lbl">Health Score</div><div class="val" style="color:${hcl}">● ${c.health}/100 — ${c.health>=90?'Excelente':c.health>=75?'Buena':'Alerta'}</div></div>
+      <div class="info-item"><div class="lbl">Contrato</div><div class="val">${c.contractStart} → ${c.contractEnd}</div></div>
+      <div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent} de ${c.budget} (${c.monthlyFee}/mes)</div></div>
+      <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${c.satisfaction}%</div></div>
+    </div>
+    <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
+    ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
+    <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
+    ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}
+    <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📝 Notas Internas</div>
+    <div style="padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);font-size:var(--text-sm)">${c.notes||'Sin notas'}</div>`;
+  document.getElementById('modalFooter').innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+// ─── ADD FUNCTIONS ───
+function addTask() {
+  const n = document.getElementById('m-name').value.trim();
+  if (!n) { alert('Nombre requerido'); return; }
+  const tgMap = {marketing:'tag-mk',branding:'tag-br',video:'tag-vi',social:'tag-so',design:'tag-de'};
+  const sv = document.getElementById('m-service').value;
+  KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg:tgMap[sv],pr:document.getElementById('m-priority').value,du:document.getElementById('m-due').value||'Sin fecha',dc:'',pc:0,tm:[document.getElementById('m-assignee').value],cl:document.getElementById('m-client').value,sb:'0/1'});
+  renderers.kanban(); updateBadges(); closeModal();
+}
+function addTicket() {
+  const n = document.getElementById('tk-name').value.trim();
+  if (!n) { alert('Título requerido'); return; }
+  const slaMap = {urgente:'1h',alta:'2h',media:'4h',baja:'24h'};
+  const pr = document.getElementById('tk-priority').value;
+  const clVal = document.getElementById('tk-client').value;
+  tickets.unshift({
+    id:'TK-'+String(tickets.length+1).padStart(3,'0'),title:n,sub:document.getElementById('tk-desc').value||'',
+    client:clVal,clientColor:clients.find(c=>c.n===clVal)?.c||'#666',status:'open',priority:pr,
+    category:document.getElementById('tk-cat').value,channel:document.getElementById('tk-channel').value,
+    assignee:document.getElementById('tk-assign').value,sla:slaMap[pr],slaLeft:slaMap[pr],slaStatus:'ok',
+    created:'Ahora',due:'Pendiente',linkedDeliverable:document.getElementById('tk-link').value||'—',
+    timeline:[{who:'Sistema',what:`Ticket creado — Categoría: ${document.getElementById('tk-cat').value}`,when:'Ahora',type:'system'}]
+  });
+  renderers.tickets(); updateBadges(); closeModal();
+}
+function addClient() {
+  const n = document.getElementById('cl-name').value.trim();
+  if (!n) { alert('Nombre requerido'); return; }
+  const svcs = Array.from(document.getElementById('cl-svcs').selectedOptions).map(o => o.value);
+  const colors = ['#EA580C','#DC2626','#16A34A','#7C3AED','#B45309','#0891B2','#BE185D','#CA8A04'];
+  clients.push({
+    n,tp:document.getElementById('cl-ind').value||'General',c:colors[clients.length%colors.length],
+    phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:0,
+    svcs:svcs.length?svcs:['tag-mk'],team:['DG'],entregables:0,done:0,tickets:0,meetings:0,satisfaction:0,
+    budget:document.getElementById('cl-fee').value||'$0',spent:'$0',
+    contact:document.getElementById('cl-contact').value||n,
+    email:document.getElementById('cl-email').value||'',
+    phone:document.getElementById('cl-phone').value||'',
+    nextAction:'Agendar kickoff meeting',contractStart:'Feb 2026',contractEnd:'Feb 2027',
+    monthlyFee:document.getElementById('cl-fee').value||'$0',health:50,
+    healthTxt:'Nuevo — Pendiente de onboarding',notes:document.getElementById('cl-notes').value||'',status:'onboarding'
+  });
+  renderers.clients(); updateBadges(); closeModal();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GLOBAL SEARCH
+// ══════════════════════════════════════════════════════════════════
+function globalSearch() {
+  const q = document.getElementById('globalSearch').value.toLowerCase();
+  document.querySelectorAll('.kanban-card,.client-card,.attendance-card,.workflow-card').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+  document.querySelectorAll('.ticket-row').forEach(r => {
+    if (!r.dataset.st) return;
+    const show = r.textContent.toLowerCase().includes(q);
+    r.style.display = show ? '' : 'none';
+    const det = r.nextElementSibling;
+    if (det && det.classList.contains('ticket-detail') && !show) {
+      det.classList.remove('show'); r.classList.remove('expanded');
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  NOTIFICATIONS PANEL
+// ══════════════════════════════════════════════════════════════════
+function toggleNotifPanel() {
+  const p = document.getElementById('notifPanel');
+  p.classList.toggle('show');
+}
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn   = document.getElementById('notifBtn');
+  if (panel.classList.contains('show') && !panel.contains(e.target) && !btn.contains(e.target)) {
+    panel.classList.remove('show');
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  COMMAND PALETTE
+// ══════════════════════════════════════════════════════════════════
+function openCmdPalette() {
+  const ov = document.getElementById('cmdOverlay');
+  ov.classList.add('show');
+  ov.removeAttribute('aria-hidden');
+  document.getElementById('cmdInput').value = '';
+  document.getElementById('cmdInput').focus();
+  filterCmdItems();
+}
+function closeCmdPalette(e) {
+  if (!e || e.target === document.getElementById('cmdOverlay')) {
+    document.getElementById('cmdOverlay').classList.remove('show');
+    document.getElementById('cmdOverlay').setAttribute('aria-hidden','true');
+  }
+}
+function filterCmdItems() {
+  const q = document.getElementById('cmdInput').value.toLowerCase();
+  document.querySelectorAll('.cmd-item').forEach(item => {
+    const txt = (item.dataset.cmd || item.textContent).toLowerCase();
+    item.style.display = txt.includes(q) ? '' : 'none';
+  });
+}
+function handleCmdKey(e) {
+  const items = [...document.querySelectorAll('.cmd-item:not([style*="display: none"])')];
+  const sel = document.querySelector('.cmd-item.selected');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const idx = items.indexOf(sel);
+    sel?.classList.remove('selected');
+    (items[(idx+1) % items.length])?.classList.add('selected');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const idx = items.indexOf(sel);
+    sel?.classList.remove('selected');
+    (items[(idx-1+items.length) % items.length])?.classList.add('selected');
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    sel?.click();
+  } else if (e.key === 'Escape') {
+    closeCmdPalette();
+  }
+}
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    openCmdPalette();
+  }
+  if (e.key === 'Escape') {
+    closeCmdPalette();
+    closeModal();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════════
+//  DARK MODE TOGGLE
+// ══════════════════════════════════════════════════════════════════
+(function() {
+  const toggle = document.getElementById('themeToggle');
+  const root   = document.documentElement;
+  let theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  root.setAttribute('data-theme', theme);
+  updateToggleIcon(theme);
+
+  toggle.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    root.setAttribute('data-theme', theme);
+    toggle.setAttribute('aria-label', `Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`);
+    updateToggleIcon(theme);
+  });
+
+  function updateToggleIcon(t) {
+    toggle.innerHTML = t === 'dark'
+      ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+      : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+  }
+})();
+
+// ══════════════════════════════════════════════════════════════════
+//  INTERSECTION OBSERVER — Scroll fade-ins
+// ══════════════════════════════════════════════════════════════════
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+
+function observeFadeIns(container) {
+  (container || document).querySelectorAll('.fade-in:not(.visible)').forEach(el => fadeObserver.observe(el));
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  // Render dashboard fade-ins immediately
+  setTimeout(() => {
+    document.querySelectorAll('#view-dashboard .fade-in').forEach((el, i) => {
+      setTimeout(() => el.classList.add('visible'), i * 55);
+    });
+  }, 100);
+
+  // Pre-render all views so they're ready when navigated to
+  renderers.clients?.();
+  renderers.kanban?.();
+  renderers.tickets?.();
+  renderers.calendar?.();
+  renderers.workload?.();
+  renderers.attendance?.();
+  renderers.workflows?.();
+
+  // Set up observers
+  observeFadeIns();
+
+  // Update badges
+  updateBadges();
+});
+</script>
+</body>
+</html>

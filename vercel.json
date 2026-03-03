@@ -123,6 +123,30 @@
       "dest": "/credito.html"
     },
     {
+      "src": "/creativos",
+      "dest": "/creativos/creativo.html"
+    },
+    {
+      "src": "/creativos/",
+      "dest": "/creativos/creativo.html"
+    },
+    {
+      "src": "/creativos/creativo.html",
+      "dest": "/creativos/creativo.html"
+    },
+    {
+      "src": "/tareas",
+      "dest": "/tareas/tarea.html"
+    },
+    {
+      "src": "/tareas/",
+      "dest": "/tareas/tarea.html"
+    },
+    {
+      "src": "/tareas/tarea.html",
+      "dest": "/tareas/tarea.html"
+    },
+    {
       "src": "/video",
       "dest": "/video-app/video.html"
     },
