@@ -340,13 +340,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return { ...g, _t: t, _f: f, _p: p, _pend: Math.max(0, t - p), _st: p >= t ? "Pagado" : p > 0 ? "Parcial" : "Pendiente" };
   }), [gastos, cobros]);
 
-  /* Client aggregate data (incluye cobros sin asignar gasto con clientId = cid) */
+  /* Client aggregate data (incluye cobros sin asignar gasto: sin gastoId y con clientId = cid) */
   const cData = useCallback((cid) => {
     const gs = sGastos.filter((g) => g.clientId === cid);
     const tG = gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
     const tF = gs.reduce((a, g) => a + g._f, 0);
     const cobradoEnGastos = gs.reduce((a, g) => a + g._p, 0);
-    const cobradoSinAsignar = cobros.filter((c) => c.clientId === cid).reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const cobradoSinAsignar = cobros
+      .filter((c) => !c.gastoId && c.clientId && String(c.clientId) === String(cid))
+      .reduce((a, c) => a + parseFloat(c.monto || 0), 0);
     const tP = cobradoEnGastos + cobradoSinAsignar;
     const tGar = garantias.filter((g) => g.clientId === cid && g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
     const gross = tG + tF - tP;
@@ -1793,7 +1795,25 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           {resumenCobro.excedente > 0 && <div style={{ marginTop: 10, padding: "10px 12px", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 600 }}>⚠️ Excedente ${fmt(resumenCobro.excedente)} se registrará como garantía para el mes siguiente.</div>}
         </div>
         )}
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>{editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}<Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />{editId && <span />}</div>
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          {editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}
+          <Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
+          <div style={{ marginBottom: 14, minWidth: 0 }}>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (mes/año)</label>
+            <input
+              type="text"
+              placeholder="0125, 02/25, MM/AAAA"
+              defaultValue={cof.fecha ? cof.fecha.slice(0, 7) : ""}
+              key={cof.fecha || "period"}
+              onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, fecha: p + "-15" }); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, fecha: p + "-15" }); e.currentTarget.blur(); } } }}
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
+              title="Escribí 0125, 02/25 o MM/AAAA para que el cobro cuente en ese mes en el resumen"
+            />
+            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>Define en qué mes aparece en el resumen del cliente. Coincide con la Fecha.</div>
+          </div>
+          {editId && <span />}
+        </div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
