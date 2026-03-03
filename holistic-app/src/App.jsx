@@ -1735,15 +1735,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
           <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente (filtrar)</label><SearchSelect compact options={[{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cofFilterCliente} onChange={(id) => setCofFilterCliente(id || "")} placeholder="Todos..." emptyMessage="Ningún cliente" /></div>
-          <div>
+          <div style={{ opacity: cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
             <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#1b2559" : "#9498a8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
-              <button type="button" onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
-              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 01/25 o MM/AAAA" />
-              {cofFilterPeriodo && <button type="button" onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Limpiar</button>}
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: cof.sinAsignarGasto ? "#f4f5f7" : "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#1b2559" : "#9498a8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
+              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} disabled={cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none", background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff" }} title="Escribí 0125, 01/25 o MM/AAAA" />
+              {cofFilterPeriodo && <button type="button" disabled={cof.sinAsignarGasto} onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button>}
             </div>
+            {cof.sinAsignarGasto && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>Deshabilitado cuando el cobro es sin asignar. Usá «Período (mes/año)» más abajo.</div>}
           </div>
         </div>
         </>
@@ -1798,19 +1799,20 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           {editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}
           <Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
-          <div style={{ marginBottom: 14, minWidth: 0 }}>
+          <div style={{ marginBottom: 14, minWidth: 0, opacity: !cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: !cof.sinAsignarGasto ? "none" : "auto" }}>
             <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (mes/año)</label>
             <input
               type="text"
               placeholder="0125, 02/25, MM/AAAA"
               defaultValue={cof.fecha ? cof.fecha.slice(0, 7) : ""}
               key={cof.fecha || "period"}
+              disabled={!cof.sinAsignarGasto}
               onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, fecha: p + "-15" }); }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, fecha: p + "-15" }); e.currentTarget.blur(); } } }}
-              style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: !cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
               title="Escribí 0125, 02/25 o MM/AAAA para que el cobro cuente en ese mes en el resumen"
             />
-            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>Define en qué mes aparece en el resumen del cliente. Coincide con la Fecha.</div>
+            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{cof.sinAsignarGasto ? "Define en qué mes aparece en el resumen del cliente. Coincide con la Fecha." : "Solo para cobros sin asignar a gasto. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
           </div>
           {editId && <span />}
         </div>
