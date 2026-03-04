@@ -1360,6 +1360,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             curGastos={curGastosDisplay}
             curCobros={curCobrosDisplay}
             curGars={curGarsDisplay}
+            mesCobro={mesCobro}
             manualTabContent={manualTabContent}
             clientDetailPeriodo={clientDetailPeriodo}
             setClientDetailPeriodo={setClientDetailPeriodo}
