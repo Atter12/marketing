@@ -37,7 +37,8 @@ const firstDayOfMonth = () => { const d = new Date(); return d.getFullYear() + "
 const lastDayOfMonth = (ym) => { const [y, m] = (ym || "").split("-").map(Number); if (!y || !m) return td(); const day = new Date(y, m, 0).getDate(); return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`; };
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
-const mesCobro = (c) => (c.periodoResumen && String(c.periodoResumen).trim()) ? String(c.periodoResumen).trim() : (c.fecha || "").slice(0, 7);
+const normalizePeriod = (p) => { if (!p || typeof p !== "string") return ""; const t = String(p).trim(); const i = t.indexOf("-"); if (i === -1) return t; const y = t.slice(0, i), m = t.slice(i + 1); const mon = parseInt(m, 10); if (mon >= 1 && mon <= 12) return `${y}-${String(mon).padStart(2, "0")}`; return t; };
+const mesCobro = (c, gastosList) => { if (c.periodoResumen && String(c.periodoResumen).trim()) return normalizePeriod(String(c.periodoResumen).trim()); if (c.gastoId && gastosList && gastosList.length) { const g = gastosList.find((x) => x.id === c.gastoId); if (g && g.mes) return normalizePeriod(g.mes); } return normalizePeriod((c.fecha || "").slice(0, 7)); };
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
 const fmtDt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return d.toLocaleString("es-PE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); };
@@ -486,7 +487,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         return true;
       });
       const csM = cobros.filter((c) => {
-        if (mesCobro(c) !== m.key) return false;
+        if (mesCobro(c, gastos) !== m.key) return false;
         if (repCl === "all") return true;
         const g = gastos.find((x) => x.id === c.gastoId);
         return (g && g.clientId === repCl) || c.clientId === repCl;
@@ -511,7 +512,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const dCharts = useMemo(() => ({
     monthly: months.map((m) => {
       const gs = sGastos.filter((g) => g.mes === m.key);
-      const cs = cobros.filter((c) => mesCobro(c) === m.key);
+      const cs = cobros.filter((c) => mesCobro(c, gastos) === m.key);
       return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0), cobrado: cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0) };
     }),
     methods: (() => { const m = {}; cobros.forEach((c) => { m[c.metodo] = (m[c.metodo] || 0) + parseFloat(c.monto || 0); }); return Object.entries(m).map(([n, v]) => ({ name: n, value: v, color: PC[n] || "#94a3b8" })); })(),
@@ -524,7 +525,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const gids = gastos.filter((g) => g.clientId === curCl).map((g) => g.id);
     return {
       m: months.map((m) => { const gs = sGastos.filter((g) => g.clientId === curCl && g.mes === m.key); return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0) }; }),
-      co: months.map((m) => ({ name: m.label, cobrado: cobros.filter((c) => gids.includes(c.gastoId) && mesCobro(c) === m.key).reduce((a, c) => a + parseFloat(c.monto || 0), 0) })),
+      co: months.map((m) => ({ name: m.label, cobrado: cobros.filter((c) => gids.includes(c.gastoId) && mesCobro(c, gastos) === m.key).reduce((a, c) => a + parseFloat(c.monto || 0), 0) })),
     };
   }, [curCl, sGastos, cobros, gastos, months]);
 
@@ -667,7 +668,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
   const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
-  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => mesCobro(c) === clientDetailPeriodo) : curCobros;
+  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => mesCobro(c, gastos) === normalizePeriod(clientDetailPeriodo)) : curCobros;
   const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
   const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
   const curDDisplay = useMemo(() => {
@@ -903,8 +904,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     let gs = [...curGastos], cos = [...curCobros];
     const mesIni = fechaIni ? fechaIni.slice(0, 7) : null;
     const mesFin = fechaFin ? fechaFin.slice(0, 7) : null;
-    if (mesIni) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= mesIni); cos = cos.filter((c) => (mesCobro(c) || "") >= mesIni); }
-    if (mesFin) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= mesFin); cos = cos.filter((c) => (mesCobro(c) || "") <= mesFin); }
+    if (mesIni) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= mesIni); cos = cos.filter((c) => (mesCobro(c, gastos) || "") >= mesIni); }
+    if (mesFin) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= mesFin); cos = cos.filter((c) => (mesCobro(c, gastos) || "") <= mesFin); }
     const wb = XLSX.utils.book_new();
     const curDExp = curCl ? cData(curCl) : { tGar: 0, net: 0 };
     const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", "Código"];
