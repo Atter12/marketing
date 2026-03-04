@@ -138,13 +138,14 @@ export default function ClientDetailView(props) {
           <span style={{ fontSize: 11, color: "#9498a8" }}>Todo el resumen (tarjetas y tablas) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.</span>
         </div>
         ),
-        <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 14, marginBottom: 24 }}>
+        <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 14, marginBottom: 24 }}>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Cobrado</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: Math.min(100, pct) + "%", transition: "width .5s" }} /></div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Total</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#d97706" }}>${fmt((curD.tG || 0) + (curD.tF || 0))}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Garantías</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#7c3aed" }}>{curD.tGar > 0 ? "-$" + fmt(curD.tGar) : "$0"}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div></div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Total (G+C+Gar)</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#1b2559" }}>${fmt((curD.tG || 0) + (curD.tP || 0) + (curD.tGar || 0))}</div></div>
         </div>,
         <div style={{ marginBottom: 8 }}>
           {cCharts.m?.length > 0 && (
@@ -158,7 +159,7 @@ export default function ClientDetailView(props) {
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Cobros Recibidos</h4><ResponsiveContainer width="100%" height={200}><LineChart data={cCharts.co}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2.5} dot={{ r: 5, fill: "#0d9f6e" }} /></LineChart></ResponsiveContainer></div>
         </div>,
         <div className="hm-detail-tabs" style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 22 }}>
-          {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"], ["manual", "Datos Manuales"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
+          {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
         </div>,
         onExportClientPorPeriodo && (
         <div style={{ marginBottom: 20, padding: "14px 18px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 12 }}>
@@ -171,10 +172,7 @@ export default function ClientDetailView(props) {
         </div>
         ),
         effectiveTab === "gastos" && (() => {
-          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"];
-          const curGastosIds = new Set((curGastos || []).map((g) => g.id));
-          const garantiaPorGasto = (gastoId) => (curGars || []).filter((gar) => gar.estado === "Vigente" && gar.gastoId === gastoId).reduce((a, gar) => a + parseFloat(gar.valor || 0), 0);
-          const tGarSoloConGasto = (curGars || []).filter((gar) => gar.estado === "Vigente" && gar.gastoId && curGastosIds.has(gar.gastoId)).reduce((a, gar) => a + parseFloat(gar.valor || 0), 0);
+          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", "Prepago"];
           const byMes = {};
           (curGastos || []).forEach((g) => {
             const m = g.mes || "";
@@ -198,12 +196,12 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "#1b2559", color: "#fff", fontWeight: 700, borderTop: "2px solid #0d1117", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>La columna <strong>Garantía</strong> solo muestra garantías <strong>asociadas a un gasto</strong>. En el Total general, Pendiente = pendiente neto (menos todas las garantías).</p>
+              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>En el Total general, Pendiente = pendiente neto (menos todas las garantías).</p>
               <div className="hm-table-wrap">
                 <table>
                   <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {!curGastos.length && <Empty cols={12} msg="Sin gastos" />}
+                    {!curGastos.length && <Empty cols={11} msg="Sin gastos" />}
                     {curGastos.length > 0 && periods.map((mes) => {
                       const list = byMes[mes];
                       const t = rowTotal(list);
@@ -224,7 +222,6 @@ export default function ClientDetailView(props) {
                               <td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td>
                               <td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td>
                               <td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td>
-                              <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garantiaPorGasto(g.id) > 0 ? "$" + fmt(garantiaPorGasto(g.id)) : "—"}</td>
                               <td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td>
                               <td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td>
                               <td style={TD}>{g.prepago ? "S" : "N"}</td>
@@ -238,7 +235,6 @@ export default function ClientDetailView(props) {
                             <td style={{ ...subRowStyle, ...MN, color: "#0055ff" }}>${fmt(t.fee)}</td>
                             <td style={{ ...subRowStyle, ...MN }}>${fmt(t.total)}</td>
                             <td style={{ ...subRowStyle, ...MN, color: "#0d9f6e" }}>${fmt(t.pagado)}</td>
-                            <td style={subRowStyle}>—</td>
                             <td style={{ ...subRowStyle, ...MN, color: "#dc2640" }}>${fmt(t.pendiente)}</td>
                             <td style={subRowStyle} colSpan={2}>—</td>
                           </tr>
@@ -254,7 +250,6 @@ export default function ClientDetailView(props) {
                         <td style={{ ...totalRowStyle, opacity: 0.95 }}>${fmt(totalAll.fee)}</td>
                         <td style={totalRowStyle}>${fmt(totalAll.total)}</td>
                         <td style={{ ...totalRowStyle, color: "#86efac" }}>${fmt(totalAll.pagado)}</td>
-                        <td style={{ ...totalRowStyle, color: "#c4b5fd" }}>{tGarSoloConGasto > 0 ? "$" + fmt(tGarSoloConGasto) : "—"}</td>
                         <td style={{ ...totalRowStyle, color: "#fca5a5" }} title={curD.tGar > 0 ? `Pendiente bruto: $${fmt(totalAll.pendiente)} − Garantías: $${fmt(curD.tGar)} = Pend. neto` : ""}>${fmt(Math.max(0, totalAll.pendiente - (curD.tGar || 0)))}</td>
                         <td style={totalRowStyle} colSpan={2}>—</td>
                       </tr>

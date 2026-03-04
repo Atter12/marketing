@@ -406,23 +406,24 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       return true;
     });
 
+    const mesIni = (repPerInicio || "").slice(0, 7);
+    const mesFin = (repPerFin || "").slice(0, 7);
     const bc = {};
     gs.forEach((g) => {
       if (!bc[g.clientId]) bc[g.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
       bc[g.clientId].ads += parseFloat(g.gasto || 0);
       bc[g.clientId].fee += g._f;
       bc[g.clientId].total += g._t;
-      bc[g.clientId].paid += g._p;
     });
-    const cobrosSinAsignar = cobros.filter((c) => c.clientId && !c.gastoId);
-    cobrosSinAsignar.forEach((c) => {
-      const f = (c.fecha || "").slice(0, 10);
-      if (!f) return;
-      const inPeriod = repPerInicio && repPerFin ? (f >= repPerInicio && f <= repPerFin) : true;
-      if (!inPeriod) return;
-      if (repCl !== "all" && c.clientId !== repCl) return;
-      if (!bc[c.clientId]) bc[c.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
-      bc[c.clientId].paid += parseFloat(c.monto || 0);
+    /* Cobrado (PAGADO) por período del cobro: mesCobro(c) debe caer en el rango del reporte (igual que en resumen de cliente) */
+    cobros.forEach((c) => {
+      const cid = c.gastoId ? (gastos.find((x) => x.id === c.gastoId)?.clientId) : (c.clientId || null);
+      if (!cid) return;
+      if (repCl !== "all" && cid !== repCl) return;
+      const mes = mesCobro(c, gastos);
+      if (repPerInicio && repPerFin && mesIni && mesFin && (mes < mesIni || mes > mesFin)) return;
+      if (!bc[cid]) bc[cid] = { ads: 0, fee: 0, total: 0, paid: 0 };
+      bc[cid].paid += parseFloat(c.monto || 0);
     });
 
     const rows = Object.entries(bc).map(([cid, d]) => {
