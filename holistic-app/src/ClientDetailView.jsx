@@ -138,11 +138,13 @@ export default function ClientDetailView(props) {
           <span style={{ fontSize: 11, color: "#9498a8" }}>Todo el resumen (tarjetas y tablas) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.</span>
         </div>
         ),
-        <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
+        <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 14, marginBottom: 24 }}>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Gasto Ads</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700 }}>${fmt(curD.tG)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Fees</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0055ff" }}>${fmt(curD.tF)}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Cobrado</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: Math.min(100, pct) + "%", transition: "width .5s" }} /></div></div>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div>{curD.tGar > 0 && <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 6 }}>🛡️ Garantías: -${fmt(curD.tGar)}</div>}</div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Total</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#d97706" }}>${fmt((curD.tG || 0) + (curD.tF || 0))}</div></div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Garantías</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#7c3aed" }}>{curD.tGar > 0 ? "-$" + fmt(curD.tGar) : "$0"}</div></div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div></div>
         </div>,
         <div style={{ marginBottom: 8 }}>
           {cCharts.m?.length > 0 && (
@@ -169,7 +171,10 @@ export default function ClientDetailView(props) {
         </div>
         ),
         effectiveTab === "gastos" && (() => {
-          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago"];
+          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"];
+          const curGastosIds = new Set((curGastos || []).map((g) => g.id));
+          const garantiaPorGasto = (gastoId) => (curGars || []).filter((gar) => gar.estado === "Vigente" && gar.gastoId === gastoId).reduce((a, gar) => a + parseFloat(gar.valor || 0), 0);
+          const tGarSoloConGasto = (curGars || []).filter((gar) => gar.estado === "Vigente" && gar.gastoId && curGastosIds.has(gar.gastoId)).reduce((a, gar) => a + parseFloat(gar.valor || 0), 0);
           const byMes = {};
           (curGastos || []).forEach((g) => {
             const m = g.mes || "";
@@ -193,12 +198,12 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "#1b2559", color: "#fff", fontWeight: 700, borderTop: "2px solid #0d1117", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}><strong>A cobrar</strong> = deuda neta del cliente (total pendiente menos garantías). Es el mismo valor en todas las filas; coincide con la tarjeta «Deuda Neta» de arriba.</p>
+              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>La columna <strong>Garantía</strong> solo muestra garantías <strong>asociadas a un gasto</strong>. En el Total general, Pendiente = pendiente neto (menos todas las garantías).</p>
               <div className="hm-table-wrap">
                 <table>
-                  <thead><tr>{headers.map((h) => <th key={h} style={TH} title={h === "A cobrar" ? "Deuda neta del cliente (total pendiente menos garantías). Mismo valor en todas las filas; coincide con la tarjeta «Deuda Neta» arriba." : undefined}>{h}</th>)}</tr></thead>
+                  <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {!curGastos.length && <Empty cols={13} msg="Sin gastos" />}
+                    {!curGastos.length && <Empty cols={12} msg="Sin gastos" />}
                     {curGastos.length > 0 && periods.map((mes) => {
                       const list = byMes[mes];
                       const t = rowTotal(list);
@@ -219,9 +224,8 @@ export default function ClientDetailView(props) {
                               <td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td>
                               <td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td>
                               <td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td>
-                              <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{curD.tGar > 0 ? "$" + fmt(curD.tGar) : "—"}</td>
+                              <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garantiaPorGasto(g.id) > 0 ? "$" + fmt(garantiaPorGasto(g.id)) : "—"}</td>
                               <td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td>
-                              <td style={{ ...TD, ...MN, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</td>
                               <td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td>
                               <td style={TD}>{g.prepago ? "S" : "N"}</td>
                             </tr>
@@ -236,7 +240,7 @@ export default function ClientDetailView(props) {
                             <td style={{ ...subRowStyle, ...MN, color: "#0d9f6e" }}>${fmt(t.pagado)}</td>
                             <td style={subRowStyle}>—</td>
                             <td style={{ ...subRowStyle, ...MN, color: "#dc2640" }}>${fmt(t.pendiente)}</td>
-                            <td style={subRowStyle} colSpan={3}>—</td>
+                            <td style={subRowStyle} colSpan={2}>—</td>
                           </tr>
                         </React.Fragment>
                       );
@@ -250,9 +254,9 @@ export default function ClientDetailView(props) {
                         <td style={{ ...totalRowStyle, opacity: 0.95 }}>${fmt(totalAll.fee)}</td>
                         <td style={totalRowStyle}>${fmt(totalAll.total)}</td>
                         <td style={{ ...totalRowStyle, color: "#86efac" }}>${fmt(totalAll.pagado)}</td>
-                        <td style={totalRowStyle}>—</td>
-                        <td style={{ ...totalRowStyle, color: "#fca5a5" }}>${fmt(totalAll.pendiente)}</td>
-                        <td style={totalRowStyle} colSpan={3}>—</td>
+                        <td style={{ ...totalRowStyle, color: "#c4b5fd" }}>{tGarSoloConGasto > 0 ? "$" + fmt(tGarSoloConGasto) : "—"}</td>
+                        <td style={{ ...totalRowStyle, color: "#fca5a5" }} title={curD.tGar > 0 ? `Pendiente bruto: $${fmt(totalAll.pendiente)} − Garantías: $${fmt(curD.tGar)} = Pend. neto` : ""}>${fmt(Math.max(0, totalAll.pendiente - (curD.tGar || 0)))}</td>
+                        <td style={totalRowStyle} colSpan={2}>—</td>
                       </tr>
                     )}
                   </tbody>
@@ -262,7 +266,7 @@ export default function ClientDetailView(props) {
           );
         })(),
         effectiveTab === "cobros" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Fecha pago", "Hora", "Cód. cobro", "Cód. gasto", "Período (resumen)", "Monto", "Método", ...(!isCliente ? ["Registrado por", "Registrado"] : []), "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curCobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT ? fmtT(co.hora) : (co.hora || "—")}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td><td style={TD}>{mesCobro && fmtM && gastos ? fmtM(mesCobro(co, gastos)) : (g ? fmtM(g.mes) : "—")}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 18 ? co.created_by.slice(0, 16) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{co.created_at && fmtDt ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td></tr>; })}{!curCobros.length && <Empty cols={isCliente ? 8 : 10} msg="Sin cobros" />}</tbody></table></div></div>,
-        effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={10} msg="Sin garantías" />}</tbody></table></div></div>,
+        effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>Mismo período que Cobros y Gastos (filtro de arriba).</p><div className="hm-table-wrap"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={10} msg="Sin garantías" />}</tbody></table></div></div>,
         <Slot content={manualTabContent} />,
         <span hidden />
       )

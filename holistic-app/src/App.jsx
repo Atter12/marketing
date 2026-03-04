@@ -304,6 +304,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repPerFin, setRepPerFin] = useState(td());
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
+  const [dashboardPeriodo, setDashboardPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
   const [gastosSearch, setGastosSearch] = useState("");
   const [filterPeriodoGarantias, setFilterPeriodoGarantias] = useState("");
@@ -518,6 +519,43 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     methods: (() => { const m = {}; cobros.forEach((c) => { m[c.metodo] = (m[c.metodo] || 0) + parseFloat(c.monto || 0); }); return Object.entries(m).map(([n, v]) => ({ name: n, value: v, color: PC[n] || "#94a3b8" })); })(),
     debt: clients.map((c) => ({ name: c.name, debt: cData(c.id).net })).filter((c) => c.debt > 0).sort((a, b) => b.debt - a.debt).slice(0, 6),
   }), [sGastos, cobros, clients, months, cData]);
+
+  /* Dashboard (resumen general) filtrado por período cuando el usuario elige un mes */
+  const dashboardTots = useMemo(() => {
+    if (!dashboardPeriodo) return tots;
+    const gs = sGastos.filter((g) => g.mes === dashboardPeriodo);
+    const cs = cobros.filter((c) => mesCobro(c, gastos) === normalizePeriod(dashboardPeriodo));
+    const tG = gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
+    const tF = gs.reduce((a, g) => a + g._f, 0);
+    const tP = cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
+    const tGar = garantias.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    return { tG, tF, tP, tGar, net: Math.max(0, tG + tF - tP - tGar) };
+  }, [dashboardPeriodo, tots, sGastos, cobros, gastos, garantias]);
+
+  const dashboardCharts = useMemo(() => {
+    if (!dashboardPeriodo) return dCharts;
+    const gs = sGastos.filter((g) => g.mes === dashboardPeriodo);
+    const cs = cobros.filter((c) => mesCobro(c, gastos) === normalizePeriod(dashboardPeriodo));
+    const one = {
+      name: fmtM(dashboardPeriodo),
+      gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0),
+      fee: gs.reduce((a, g) => a + g._f, 0),
+      cobrado: cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0),
+    };
+    const m = {};
+    cs.forEach((c) => { m[c.metodo] = (m[c.metodo] || 0) + parseFloat(c.monto || 0); });
+    return {
+      monthly: [one],
+      methods: Object.entries(m).map(([n, v]) => ({ name: n, value: v, color: PC[n] || "#94a3b8" })),
+      debt: dCharts.debt,
+    };
+  }, [dashboardPeriodo, dCharts, sGastos, cobros, gastos]);
+
+  const dashboardPendientes = useMemo(() => {
+    let list = sGastos.filter((g) => g._st !== "Pagado");
+    if (dashboardPeriodo) list = list.filter((g) => g.mes === dashboardPeriodo);
+    return list.sort((a, b) => (b.mes || "").localeCompare(a.mes || "z")).slice(0, 10);
+  }, [sGastos, dashboardPeriodo]);
 
   /* Client charts */
   const cCharts = useMemo(() => {
@@ -1188,42 +1226,52 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
             <div>
               <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>Resumen general</h2>
-              <p style={{ fontSize: 12, color: "#9498a8", margin: "4px 0 0", maxWidth: 420 }}>Totales, tendencias y pendientes de cobro. Datos: {months[0]?.label} a {months[months.length - 1]?.label} (últimos 6 meses). Para análisis por período o por cliente, usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
+              <p style={{ fontSize: 12, color: "#9498a8", margin: "4px 0 0", maxWidth: 420 }}>{dashboardPeriodo ? <>Período: <strong>{fmtM(dashboardPeriodo)}</strong>. Totales y gráficos filtrados por ese mes.</> : <>Totales, tendencias y pendientes. Datos: {months[0]?.label} a {months[months.length - 1]?.label} (últimos 6 meses).</>} Para análisis por rango de fechas, usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn></div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: dashboardPeriodo ? "#1b2559" : "#9498a8" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
+                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                <input type="text" placeholder="0125, 02/25, MM/AAAA" value={dashboardPeriodo} onChange={(e) => setDashboardPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setDashboardPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setDashboardPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                {dashboardPeriodo && <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+              </div>
+              <Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>
+            </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
             <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
-              <Stat icon={<DollarSign size={20} />} value={`$${fmt(tots.tG)}`} label="Gasto Total Ads" color="#1b2559" />
-              <Stat icon={<TrendingUp size={20} />} value={`$${fmt(tots.tF)}`} label="Fees Generados" color="#0055ff" />
-              <Stat icon={<Check size={20} />} value={`$${fmt(tots.tP)}`} label="Total Cobrado" color="#0d9f6e" />
-              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(tots.net)}`} label="Deuda Neta" color="#dc2640" sub={tots.tGar > 0 ? `Garantías descontadas: -$${fmt(tots.tGar)}` : ""} />
+              <Stat icon={<DollarSign size={20} />} value={`$${fmt(dashboardTots.tG)}`} label="Gasto Total Ads" color="#1b2559" />
+              <Stat icon={<TrendingUp size={20} />} value={`$${fmt(dashboardTots.tF)}`} label="Fees Generados" color="#0055ff" />
+              <Stat icon={<Check size={20} />} value={`$${fmt(dashboardTots.tP)}`} label="Total Cobrado" color="#0d9f6e" />
+              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(dashboardTots.net)}`} label="Deuda Neta" color="#dc2640" sub={dashboardTots.tGar > 0 ? `Garantías descontadas: -$${fmt(dashboardTots.tGar)}` : ""} />
             </div>
             <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={220}><BarChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={220}><BarChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Métodos de Cobro</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Distribución por medio de pago</p>
-                <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={dCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={dashboardCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dashboardCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
               </div>
             </div>
             <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={220}><LineChart data={dCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={220}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
               </div>
               <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
                 <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={220}><BarChart data={dCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis type="number" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9498a8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="#dc264088" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={220}><BarChart data={dashboardCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis type="number" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9498a8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="#dc264088" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
               </div>
             </div>
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
               <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Fecha de movimiento", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>{sGastos.filter((g) => g._st !== "Pagado").sort((a, b) => (b.mes || "").localeCompare(a.mes || "z")).slice(0, 10).map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
-                {!sGastos.some((g) => g._st !== "Pagado") && <Empty cols={8} msg="🎉 Todo cobrado — sin pendientes" />}</tbody></table></div>
+                <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+                {dashboardPendientes.length === 0 && <Empty cols={8} msg={dashboardPeriodo ? "Sin pendientes en este período" : "🎉 Todo cobrado — sin pendientes"} />}</tbody></table></div>
             </div>
           </div>
         </div>)}
