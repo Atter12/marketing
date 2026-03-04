@@ -192,9 +192,10 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "#1b2559", color: "#fff", fontWeight: 700, borderTop: "2px solid #0d1117", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}><strong>A cobrar</strong> = deuda neta del cliente (total pendiente menos garantías). Es el mismo valor en todas las filas; coincide con la tarjeta «Deuda Neta» de arriba.</p>
               <div className="hm-table-wrap">
                 <table>
-                  <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                  <thead><tr>{headers.map((h) => <th key={h} style={TH} title={h === "A cobrar" ? "Deuda neta del cliente (total pendiente menos garantías). Mismo valor en todas las filas; coincide con la tarjeta «Deuda Neta» arriba." : undefined}>{h}</th>)}</tr></thead>
                   <tbody>
                     {!curGastos.length && <Empty cols={13} msg="Sin gastos" />}
                     {curGastos.length > 0 && periods.map((mes) => {
