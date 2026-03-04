@@ -160,12 +160,23 @@ export default function ClientDetailView(props) {
         <div className="hm-detail-tabs" style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 8 }}>
           {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
         </div>,
-        <div style={{ display: "flex", alignItems: "center", gap: 24, flexWrap: "wrap", marginBottom: 22, padding: "12px 16px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5 }}>Total por columna</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#1b2559" }}>Gastos Ads: <strong style={{ fontFamily: "'IBM Plex Mono',monospace" }}>${fmt((curD.tG || 0) + (curD.tF || 0))}</strong></span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#0d9f6e" }}>Cobros: <strong style={{ fontFamily: "'IBM Plex Mono',monospace" }}>${fmt(curD.tP)}</strong></span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#7c3aed" }}>Garantías: <strong style={{ fontFamily: "'IBM Plex Mono',monospace" }}>${fmt(curD.tGar || 0)}</strong></span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#1b2559" }}>Total: <strong style={{ fontFamily: "'IBM Plex Mono',monospace" }}>${fmt((curD.tG || 0) + (curD.tF || 0) + (curD.tP || 0) + (curD.tGar || 0))}</strong></span>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 22 }}>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Gastos Ads</div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#1b2559" }}>${fmt((curD.tG || 0) + (curD.tF || 0))}</div>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Cobros</div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div>
+          </div>
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Garantías</div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#7c3aed" }}>{curD.tGar > 0 ? "-$" + fmt(curD.tGar) : "$0"}</div>
+          </div>
+          <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", border: "1px solid #1b2559", borderRadius: 10, padding: "14px 18px", textAlign: "center", color: "#fff" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Total (Gastos + Cobros − Garantías)</div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700 }}>${fmt(Math.max(0, (curD.tG || 0) + (curD.tF || 0) + (curD.tP || 0) - (curD.tGar || 0)))}</div>
+          </div>
         </div>,
         onExportClientPorPeriodo && (
         <div style={{ marginBottom: 20, padding: "14px 18px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 12 }}>
