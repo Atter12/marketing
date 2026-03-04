@@ -296,8 +296,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [repPerInput, setRepPerInput] = useState("");
-  const [repPerInicio, setRepPerInicio] = useState("");
-  const [repPerFin, setRepPerFin] = useState("");
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
@@ -374,30 +372,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return [...s].sort().reverse();
   }, [gastos]);
 
-  /* ═══ REPORT DATA (garantías deducted per client) ═══ */
+  /* ═══ REPORT DATA (solo a nivel de mes; garantías deducted per client) ═══ */
   const repData = useMemo(() => {
     let gs = sGastos;
-    if (repPerInicio || repPerFin) {
-      const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
-      gs = gs.filter((g) => {
-        const d = fOp(g);
-        if (!d) return false;
-        if (repPerInicio && d < repPerInicio) return false;
-        if (repPerFin && d > repPerFin) return false;
-        return true;
-      });
-    } else if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    else gs = gs.filter((g) => months.some((m) => m.key === g.mes));
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
-    const reportPeriodEnd = repPer || (repPerFin || "").slice(0, 7);
-    const reportPeriodStart = repPer || (repPerInicio || "").slice(0, 7);
     const garantiasParaReporte = garantias.filter((g) => {
       if (g.estado !== "Vigente") return false;
       const period = g.gastoId ? (gastos.find((x) => x.id === g.gastoId)?.mes) : (g.fechaColocacion || "").slice(0, 7);
       if (!period) return false;
-      if (repPer && !repPerInicio && !repPerFin) return period === repPer;
-      if (reportPeriodStart && reportPeriodEnd) return period >= reportPeriodStart && period <= reportPeriodEnd;
-      return true;
+      if (repPer) return period === repPer;
+      return months.some((m) => m.key === period);
     });
 
     const bc = {};
@@ -408,16 +395,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       bc[g.clientId].total += g._t;
       bc[g.clientId].paid += g._p;
     });
-    /* Cobros sin asignar gasto: sumar al "paid" del cliente si la fecha del cobro cae en el período del reporte */
     const cobrosSinAsignar = cobros.filter((c) => c.clientId && !c.gastoId);
     cobrosSinAsignar.forEach((c) => {
       const f = (c.fecha || "").slice(0, 10);
       if (!f) return;
-      const inPeriod = repPerInicio && repPerFin
-        ? (f >= repPerInicio && f <= repPerFin)
-        : repPer
-          ? f.slice(0, 7) === repPer
-          : true;
+      const inPeriod = repPer ? f.slice(0, 7) === repPer : months.some((m) => f.slice(0, 7) === m.key);
       if (!inPeriod) return;
       if (repCl !== "all" && c.clientId !== repCl) return;
       if (!bc[c.clientId]) bc[c.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
@@ -433,56 +415,43 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
     return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
-  }, [sGastos, repCl, repPer, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
+  }, [sGastos, repCl, repPer, months, clients, garantias, gastos, cobros]);
 
-  /* Reportes: meses del período seleccionado para gráficos */
+  /* Reportes: meses para gráficas (un mes seleccionado o últimos meses = record por mes) */
   const reportMonths = useMemo(() => {
-    if (repPerInicio && repPerFin) {
-      const r = [];
-      let [y, m] = repPerInicio.split("-").map(Number);
-      const [y2, m2] = repPerFin.split("-").map(Number);
-      while (y < y2 || (y === y2 && m <= m2)) {
-        const key = `${y}-${String(m).padStart(2, "0")}`;
-        r.push({ key, label: fmtM(key) });
-        m++; if (m > 12) { m = 1; y++; }
-      }
-      return r;
-    }
     if (repPer) return [{ key: repPer, label: fmtM(repPer) }];
     return months;
-  }, [repPer, repPerInicio, repPerFin, months]);
+  }, [repPer, months]);
 
-  /* Reportes: datos para los 4 bloques de gráficos (mismo criterio de filtro que repData) */
+  /* Reportes: datos para gráficas por mes (record de cada mes) */
   const repCharts = useMemo(() => {
     let gs = sGastos;
-    if (repPerInicio || repPerFin) {
-      const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
-      gs = gs.filter((g) => {
-        const d = fOp(g);
-        if (!d) return false;
-        if (repPerInicio && d < repPerInicio) return false;
-        if (repPerFin && d > repPerFin) return false;
-        return true;
-      });
-    } else if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    if (repPer) gs = gs.filter((g) => g.mes === repPer);
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
+    const mesesReporte = reportMonths.map((x) => x.key);
     const cobrosEnPeriodo = cobros.filter((c) => {
       const f = (c.fecha || "").slice(0, 10);
       if (!f) return false;
-      if (repPerInicio && f < repPerInicio) return false;
-      if (repPerFin && f > repPerFin) return false;
-      if (repPer && !repPerInicio && !repPerFin && f.slice(0, 7) !== repPer) return false;
+      const mes = f.slice(0, 7);
+      if (repPer && mes !== repPer) return false;
+      if (!repPer && !mesesReporte.includes(mes)) return false;
       if (repCl !== "all") {
-        const g = gastos.find((x) => x.id === c.gastoId);
-        if (!g || g.clientId !== repCl) return false;
+        if (c.gastoId) { const g = gastos.find((x) => x.id === c.gastoId); if (!g || g.clientId !== repCl) return false; }
+        else if (c.clientId !== repCl) return false;
       }
       return true;
     });
 
     const monthly = reportMonths.map((m) => {
-      const gsM = gs.filter((g) => g.mes === m.key);
-      const csM = cobrosEnPeriodo.filter((c) => (c.fecha || "").slice(0, 7) === m.key);
+      const gsM = sGastos.filter((g) => g.mes === m.key && (repCl === "all" || g.clientId === repCl));
+      const csM = cobros.filter((c) => {
+        const fm = (c.fecha || "").slice(0, 7);
+        if (fm !== m.key) return false;
+        if (repCl === "all") return true;
+        const g = gastos.find((x) => x.id === c.gastoId);
+        return (g && g.clientId === repCl) || c.clientId === repCl;
+      });
       return {
         name: m.label,
         gasto: gsM.reduce((a, g) => a + parseFloat(g.gasto || 0), 0),
@@ -497,7 +466,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     })();
     const debt = repData.rows.map((r) => ({ name: r.name, debt: r.netPending })).filter((d) => d.debt > 0).sort((a, b) => b.debt - a.debt).slice(0, 10);
     return { monthly, methods, debt };
-  }, [sGastos, cobros, gastos, repCl, repPer, repPerInicio, repPerFin, reportMonths, repData.rows]);
+  }, [sGastos, cobros, gastos, repCl, repPer, reportMonths, repData.rows]);
 
   /* Dashboard charts */
   const dCharts = useMemo(() => ({
@@ -766,8 +735,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
-      setRepPerInicio("");
-      setRepPerFin("");
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -1222,13 +1189,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
-              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por período y por cliente. Filtra arriba y revisa el desglose; los totales corresponden al rango seleccionado.</p></div>
+              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por mes y por cliente. Elige un mes o «Todos» para ver el registro de cada mes en las gráficas.</p></div>
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input type="text" placeholder="MM/AAAA" value={repPerInput !== undefined ? repPerInput : (repPer || "")} onChange={(e) => setRepPerInput(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) { setRepPer(p); setRepPerInput(p); } else setRepPerInput(undefined); }} style={{ width: 100, padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} /><button type="button" onClick={() => { const d = new Date(); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button><button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button><select value={repPer} onChange={(e) => { setRepPer(e.target.value); setRepPerInput(e.target.value || undefined); }} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div></div>
-            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Rango por fecha de operación</label><div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="date" value={repPerInicio} onChange={(e) => setRepPerInicio(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 12 }}>a</span><input type="date" value={repPerFin} onChange={(e) => setRepPerFin(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div></div>
+            <div><label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1, marginBottom: 5 }}>Período (mes)</label><div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}><input type="text" placeholder="MM/AAAA" value={repPerInput !== undefined ? repPerInput : (repPer || "")} onChange={(e) => setRepPerInput(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) { setRepPer(p); setRepPerInput(p); } else setRepPerInput(undefined); }} style={{ width: 100, padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} /><button type="button" onClick={() => { const d = new Date(); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button><button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const key = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); setRepPer(key); setRepPerInput(key); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button><select value={repPer} onChange={(e) => { setRepPer(e.target.value); setRepPerInput(e.target.value || undefined); }} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans'", minWidth: 140, outline: "none", cursor: "pointer" }}><option value="">Todos (últimos meses en gráficas)</option>{allMonths.map((m) => <option key={m} value={m}>{fmtM(m)}</option>)}</select></div></div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
             <div style={{ background: "linear-gradient(135deg, #f0eefe 0%, #eef0f8 100%)", border: "1px solid #c4b5fd", borderRadius: 12, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -1390,7 +1356,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio(""); setRepPerFin(""); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
