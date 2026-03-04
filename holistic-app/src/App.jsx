@@ -735,8 +735,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const saveCobro = async () => {
     const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : (cof.gastoId ? [cof.gastoId] : []);
-    const sinAsignar = !editId && !!cof.sinAsignarGasto;
-    if (!sinAsignar && !ids.length) return alert("Seleccioná al menos un gasto a los que aplicar el pago, o marcá «Ninguna» para registrar un cobro sin asignar.");
+    const sinAsignar = !!cof.sinAsignarGasto;
+    if (!ids.length && !sinAsignar) return alert("Seleccioná al menos un gasto a los que aplicar el pago, o marcá «Ninguna» para registrar un cobro sin asignar.");
     if (sinAsignar && !cof.clientId) return alert("Para un cobro sin asignar a gasto, elegí el cliente.");
     if (!parseFloat(cof.monto) || !cof.metodo) return alert("Completá monto y método de pago.");
     const totalMonto = parseFloat(cof.monto) || 0;
