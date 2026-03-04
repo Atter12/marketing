@@ -27,7 +27,7 @@ function mapGasto(r) {
 function mapCobro(r) {
   if (!r) return r;
   const urls = r.comprobante_urls;
-  return { id: r.id, codigo: r.codigo ?? "", gastoId: r.gasto_id, clientId: r.client_id ?? null, monto: String(r.monto), fecha: r.fecha, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, comprobante_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
+  return { id: r.id, codigo: r.codigo ?? "", gastoId: r.gasto_id, clientId: r.client_id ?? null, monto: String(r.monto), fecha: r.fecha, periodoResumen: r.periodo_resumen ?? null, hora: r.hora ?? null, metodo: r.metodo ?? "", notas: r.notas ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, comprobante_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
 }
 
 function mapGarantia(r) {
@@ -220,7 +220,7 @@ export function useSupabaseData(role, clientId) {
         if (user?.email) created_by = user.email;
       } catch (_) {}
       const genCodigo = () => "C-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
-      const row = { gasto_id: gastoId || null, client_id: !gastoId && clientId ? clientId : null, codigo: genCodigo(), monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
+      const row = { gasto_id: gastoId || null, client_id: !gastoId && clientId ? clientId : null, codigo: genCodigo(), monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), periodo_resumen: payload.periodoResumen || null, metodo: metodo || "Efectivo", notas: notas || null, created_by: created_by || null, hora: hora || null };
       const { data: inserted, error: e } = await supabase.from("cobros").insert(row).select("id").single();
       if (e) throw e;
       await fetchAll();
@@ -228,9 +228,10 @@ export function useSupabaseData(role, clientId) {
     },
     updateCobro: async (id, payload) => {
       if (role !== "gerente") return;
-      const { gastoId, clientId, monto, fecha, hora, metodo, notas } = payload;
-      const row = { gasto_id: gastoId || null, client_id: !gastoId && clientId ? clientId : null, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), hora: hora || null, metodo: metodo || "Efectivo", notas: notas || null };
-      const { error: e } = await supabase.from("cobros").update(row).eq("id", id);
+const { gastoId, clientId, monto, fecha, periodoResumen, hora, metodo, notas } = payload;
+  const row = { gasto_id: gastoId || null, client_id: !gastoId && clientId ? clientId : null, monto: parseFloat(monto) || 0, fecha: fecha || new Date().toISOString().slice(0, 10), periodo_resumen: periodoResumen !== undefined ? periodoResumen : undefined, hora: hora || null, metodo: metodo || "Efectivo", notas: notas || null };
+  const clean = Object.fromEntries(Object.entries(row).filter(([, v]) => v !== undefined));
+  const { error: e } = await supabase.from("cobros").update(clean).eq("id", id);
       if (e) throw e;
       await fetchAll();
     },

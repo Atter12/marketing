@@ -33,8 +33,11 @@ const fmtExcel = (n) => {
 const fmtK = (n) => { const v = parseFloat(n || 0); if (v >= 1e6) return "$" + (v / 1e6).toFixed(2) + "M"; if (v >= 1e3) return "$" + (v / 1e3).toFixed(1) + "K"; return "$" + fmt(v); };
 const td = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
 const tm = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
+const firstDayOfMonth = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-01"; };
+const lastDayOfMonth = (ym) => { const [y, m] = (ym || "").split("-").map(Number); if (!y || !m) return td(); const day = new Date(y, m, 0).getDate(); return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`; };
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
+const mesCobro = (c) => (c.periodoResumen && String(c.periodoResumen).trim()) ? String(c.periodoResumen).trim() : (c.fecha || "").slice(0, 7);
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
 const fmtDt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return d.toLocaleString("es-PE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); };
@@ -296,6 +299,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [repPerInput, setRepPerInput] = useState("");
+  const [repPerInicio, setRepPerInicio] = useState(firstDayOfMonth());
+  const [repPerFin, setRepPerFin] = useState(td());
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [filterCliente, setFilterCliente] = useState({ gastos: "", cobros: "", garantias: "" });
@@ -311,7 +316,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
+  const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), periodoResumen: "", hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -372,19 +377,31 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return [...s].sort().reverse();
   }, [gastos]);
 
-  /* ═══ REPORT DATA (solo a nivel de mes; garantías deducted per client) ═══ */
+  /* ═══ REPORT DATA (por rango de fechas: desde–hasta; garantías deducted per client) ═══ */
   const repData = useMemo(() => {
     let gs = sGastos;
-    if (repPer) gs = gs.filter((g) => g.mes === repPer);
-    else gs = gs.filter((g) => months.some((m) => m.key === g.mes));
+    if (repPerInicio && repPerFin) {
+      const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
+      gs = gs.filter((g) => {
+        const d = fOp(g);
+        if (!d) return false;
+        if (repPerInicio && d < repPerInicio) return false;
+        if (repPerFin && d > repPerFin) return false;
+        return true;
+      });
+    }
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
     const garantiasParaReporte = garantias.filter((g) => {
       if (g.estado !== "Vigente") return false;
       const period = g.gastoId ? (gastos.find((x) => x.id === g.gastoId)?.mes) : (g.fechaColocacion || "").slice(0, 7);
-      if (!period) return false;
-      if (repPer) return period === repPer;
-      return months.some((m) => m.key === period);
+      const dateCol = (g.fechaColocacion || "").slice(0, 10);
+      if (repPerInicio && repPerFin) {
+        if (dateCol) return dateCol >= repPerInicio && dateCol <= repPerFin;
+        if (period) return period >= (repPerInicio || "").slice(0, 7) && period <= (repPerFin || "").slice(0, 7);
+        return false;
+      }
+      return true;
     });
 
     const bc = {};
@@ -399,7 +416,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     cobrosSinAsignar.forEach((c) => {
       const f = (c.fecha || "").slice(0, 10);
       if (!f) return;
-      const inPeriod = repPer ? f.slice(0, 7) === repPer : months.some((m) => f.slice(0, 7) === m.key);
+      const inPeriod = repPerInicio && repPerFin ? (f >= repPerInicio && f <= repPerFin) : true;
       if (!inPeriod) return;
       if (repCl !== "all" && c.clientId !== repCl) return;
       if (!bc[c.clientId]) bc[c.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
@@ -415,27 +432,42 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
     return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
-  }, [sGastos, repCl, repPer, months, clients, garantias, gastos, cobros]);
+  }, [sGastos, repCl, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
 
-  /* Reportes: meses para gráficas (un mes seleccionado o últimos meses = record por mes) */
+  /* Reportes: meses en el rango desde–hasta para gráficas */
   const reportMonths = useMemo(() => {
-    if (repPer) return [{ key: repPer, label: fmtM(repPer) }];
+    if (repPerInicio && repPerFin) {
+      const r = [];
+      let [y, m] = repPerInicio.split("-").map(Number);
+      const [y2, m2] = repPerFin.split("-").map(Number);
+      const endMonth = y2 * 12 + m2;
+      for (let now = y * 12 + m; now <= endMonth; now++) {
+        const yy = Math.floor(now / 12), mm = now % 12 || 12;
+        const key = `${yy}-${String(mm).padStart(2, "0")}`;
+        r.push({ key, label: fmtM(key) });
+      }
+      return r;
+    }
     return months;
-  }, [repPer, months]);
+  }, [repPerInicio, repPerFin, months]);
 
-  /* Reportes: datos para gráficas por mes (record de cada mes) */
+  /* Reportes: datos para gráficas por mes en el rango desde–hasta */
   const repCharts = useMemo(() => {
     let gs = sGastos;
-    if (repPer) gs = gs.filter((g) => g.mes === repPer);
+    if (repPerInicio && repPerFin) {
+      const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
+      gs = gs.filter((g) => {
+        const d = fOp(g);
+        if (!d) return false;
+        return d >= repPerInicio && d <= repPerFin;
+      });
+    }
     if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
 
-    const mesesReporte = reportMonths.map((x) => x.key);
     const cobrosEnPeriodo = cobros.filter((c) => {
       const f = (c.fecha || "").slice(0, 10);
       if (!f) return false;
-      const mes = f.slice(0, 7);
-      if (repPer && mes !== repPer) return false;
-      if (!repPer && !mesesReporte.includes(mes)) return false;
+      if (repPerInicio && repPerFin && (f < repPerInicio || f > repPerFin)) return false;
       if (repCl !== "all") {
         if (c.gastoId) { const g = gastos.find((x) => x.id === c.gastoId); if (!g || g.clientId !== repCl) return false; }
         else if (c.clientId !== repCl) return false;
@@ -444,10 +476,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
 
     const monthly = reportMonths.map((m) => {
-      const gsM = sGastos.filter((g) => g.mes === m.key && (repCl === "all" || g.clientId === repCl));
+      const gsM = sGastos.filter((g) => {
+        if (g.mes !== m.key) return false;
+        if (repCl !== "all" && g.clientId !== repCl) return false;
+        if (repPerInicio && repPerFin) {
+          const d = (g.fechaMovimiento || "").slice(0, 10);
+          return d && d >= repPerInicio && d <= repPerFin;
+        }
+        return true;
+      });
       const csM = cobros.filter((c) => {
-        const fm = (c.fecha || "").slice(0, 7);
-        if (fm !== m.key) return false;
+        if (mesCobro(c) !== m.key) return false;
         if (repCl === "all") return true;
         const g = gastos.find((x) => x.id === c.gastoId);
         return (g && g.clientId === repCl) || c.clientId === repCl;
@@ -466,13 +505,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     })();
     const debt = repData.rows.map((r) => ({ name: r.name, debt: r.netPending })).filter((d) => d.debt > 0).sort((a, b) => b.debt - a.debt).slice(0, 10);
     return { monthly, methods, debt };
-  }, [sGastos, cobros, gastos, repCl, repPer, reportMonths, repData.rows]);
+  }, [sGastos, cobros, gastos, repCl, repPerInicio, repPerFin, reportMonths, repData.rows]);
 
   /* Dashboard charts */
   const dCharts = useMemo(() => ({
     monthly: months.map((m) => {
       const gs = sGastos.filter((g) => g.mes === m.key);
-      const cs = cobros.filter((c) => c.fecha?.slice(0, 7) === m.key);
+      const cs = cobros.filter((c) => mesCobro(c) === m.key);
       return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0), cobrado: cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0) };
     }),
     methods: (() => { const m = {}; cobros.forEach((c) => { m[c.metodo] = (m[c.metodo] || 0) + parseFloat(c.monto || 0); }); return Object.entries(m).map(([n, v]) => ({ name: n, value: v, color: PC[n] || "#94a3b8" })); })(),
@@ -485,7 +524,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const gids = gastos.filter((g) => g.clientId === curCl).map((g) => g.id);
     return {
       m: months.map((m) => { const gs = sGastos.filter((g) => g.clientId === curCl && g.mes === m.key); return { name: m.label, gasto: gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0), fee: gs.reduce((a, g) => a + g._f, 0) }; }),
-      co: months.map((m) => ({ name: m.label, cobrado: cobros.filter((c) => gids.includes(c.gastoId) && c.fecha?.slice(0, 7) === m.key).reduce((a, c) => a + parseFloat(c.monto || 0), 0) })),
+      co: months.map((m) => ({ name: m.label, cobrado: cobros.filter((c) => gids.includes(c.gastoId) && mesCobro(c) === m.key).reduce((a, c) => a + parseFloat(c.monto || 0), 0) })),
     };
   }, [curCl, sGastos, cobros, gastos, months]);
 
@@ -590,7 +629,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
-    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
+    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
   }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
@@ -628,7 +667,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curGars = curCl ? garantias.filter((g) => g.clientId === curCl) : [];
   const curMan = curCl ? manual.filter((m) => m.clientId === curCl).sort((a, b) => (b.fecha || "").localeCompare(a.fecha || "")) : [];
   const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
-  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => (c.fecha || "").slice(0, 7) === clientDetailPeriodo) : curCobros;
+  const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => mesCobro(c) === clientDetailPeriodo) : curCobros;
   const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
   const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
   const curDDisplay = useMemo(() => {
@@ -665,7 +704,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     try {
       setUploadingComprobantes(true);
       if (editId && modal === "cobro") {
-        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.sinAsignarGasto ? (cof.periodoResumen || null) : null, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(editId, f));
@@ -676,7 +715,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         return;
       }
       if (sinAsignar || ids.length === 0) {
-        const id = await mutations.saveCobro({ gastoId: null, clientId: cof.clientId || null, monto: totalMonto, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        const id = await mutations.saveCobro({ gastoId: null, clientId: cof.clientId || null, monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.periodoResumen || null, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
         if (id && cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(id, f));
@@ -735,6 +774,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
+      setRepPerInicio(mesGar + "-01");
+      setRepPerFin(lastDayOfMonth(mesGar));
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -1189,20 +1230,25 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
-              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por mes y por cliente. Elige un mes o «Todos» para ver el registro de cada mes en las gráficas.</p></div>
+              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por rango de fechas (día, mes y año) y por cliente. Elige desde y hasta para ver el desglose y las gráficas.</p></div>
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-            <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "14px 20px", boxShadow: "0 2px 8px rgba(27,37,89,.06)", display: "flex", alignItems: "center", gap: 14 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}><Calendar size={20} strokeWidth={2.2} /></div>
+            <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "16px 22px", boxShadow: "0 2px 8px rgba(27,37,89,.06)", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
+              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 4 }}>Mes</label>
-                  <input type="month" value={repPer || tm()} onChange={(e) => { const v = e.target.value; if (v) { setRepPer(v); setRepPerInput(v); } }} min="2020-01" max={tm()} style={{ padding: "10px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 15, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", color: "#1b2559", outline: "none", cursor: "pointer", minWidth: 160, boxSizing: "border-box", background: "#f8f9fb" }} title="Elegir mes" />
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>Desde</label>
+                  <input type="date" value={repPerInicio || ""} onChange={(e) => setRepPerInicio(e.target.value)} min="2020-01-01" max={td()} style={{ padding: "10px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", color: "#1b2559", outline: "none", cursor: "pointer", minWidth: 152, boxSizing: "border-box", background: "#f8f9fb" }} title="Fecha inicial" />
+                </div>
+                <span style={{ alignSelf: "center", color: "#9498a8", fontSize: 13, fontWeight: 600, marginBottom: 10 }}>hasta</span>
+                <div>
+                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>Hasta</label>
+                  <input type="date" value={repPerFin || ""} onChange={(e) => setRepPerFin(e.target.value)} min={repPerInicio || "2020-01-01"} max={td()} style={{ padding: "10px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", color: "#1b2559", outline: "none", cursor: "pointer", minWidth: 152, boxSizing: "border-box", background: "#f8f9fb" }} title="Fecha final" />
                 </div>
               </div>
-              {repPer && <span style={{ fontSize: 13, color: "#5f6577", fontWeight: 600 }}>{fmtM(repPer)}</span>}
+              {repPerInicio && repPerFin && <span style={{ fontSize: 12, color: "#5f6577", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
@@ -1365,7 +1411,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio((p || tm()) + "-01"); setRepPerFin(lastDayOfMonth(p || tm())); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
@@ -1773,21 +1819,21 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         )}
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
           {editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}
-          <Inp label="Fecha" type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
+          <Inp label={cof.sinAsignarGasto ? "Fecha de pago" : "Fecha"} type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
           <div style={{ marginBottom: 14, minWidth: 0, opacity: !cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: !cof.sinAsignarGasto ? "none" : "auto" }}>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (mes/año)</label>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (mes/año) para el resumen</label>
             <input
               type="text"
-              placeholder="0125, 02/25, MM/AAAA"
-              defaultValue={cof.fecha ? cof.fecha.slice(0, 7) : ""}
-              key={cof.fecha || "period"}
+              placeholder="0125, 03/25, MM/AAAA"
+              value={cof.periodoResumen ?? ""}
+              onChange={(e) => setCof({ ...cof, periodoResumen: e.target.value })}
               disabled={!cof.sinAsignarGasto}
-              onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, fecha: p + "-15" }); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, fecha: p + "-15" }); e.currentTarget.blur(); } } }}
+              onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, periodoResumen: p }); }}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, periodoResumen: p }); e.currentTarget.blur(); } } }}
               style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: !cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
-              title="Escribí 0125, 02/25 o MM/AAAA para que el cobro cuente en ese mes en el resumen"
+              title="Mes en que cuenta este cobro en el resumen del cliente. La fecha de pago arriba no se modifica."
             />
-            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{cof.sinAsignarGasto ? "Define en qué mes aparece en el resumen del cliente. Coincide con la Fecha." : "Solo para cobros sin asignar a gasto. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
+            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{cof.sinAsignarGasto ? "En qué mes debe aparecer en el resumen (ej. marzo). La <strong>Fecha</strong> de pago es independiente: podés pagar en febrero y que cuente para marzo." : "Solo para cobros sin asignar. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
           </div>
           {editId && <span />}
         </div>
