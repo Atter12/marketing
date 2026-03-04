@@ -901,8 +901,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const expClientData = (fechaIni, fechaFin) => {
     let gs = [...curGastos], cos = [...curCobros];
-    if (fechaIni) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= fechaIni.slice(0, 7)); cos = cos.filter((c) => (c.fecha || "").slice(0, 10) >= fechaIni); }
-    if (fechaFin) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= fechaFin.slice(0, 7)); cos = cos.filter((c) => (c.fecha || "").slice(0, 10) <= fechaFin); }
+    const mesIni = fechaIni ? fechaIni.slice(0, 7) : null;
+    const mesFin = fechaFin ? fechaFin.slice(0, 7) : null;
+    if (mesIni) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") >= mesIni); cos = cos.filter((c) => (mesCobro(c) || "") >= mesIni); }
+    if (mesFin) { gs = gs.filter((g) => (g.mes || g.fechaMovimiento?.slice(0, 7) || "") <= mesFin); cos = cos.filter((c) => (mesCobro(c) || "") <= mesFin); }
     const wb = XLSX.utils.book_new();
     const curDExp = curCl ? cData(curCl) : { tGar: 0, net: 0 };
     const hG = ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", "Código"];

@@ -127,7 +127,7 @@ export default function ClientDetailView(props) {
         </div>,
         setClientDetailPeriodo && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Ver período:</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
           <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
             <button type="button" onClick={() => { const base = clientDetailPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setClientDetailPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
             <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: clientDetailPeriodo ? "#1b2559" : "#9498a8" }}>{clientDetailPeriodo ? (fmtM ? fmtM(clientDetailPeriodo) : clientDetailPeriodo) : "Todos"}</div>
@@ -135,7 +135,7 @@ export default function ClientDetailView(props) {
             <input type="text" placeholder="0125, 02/25, MM/AAAA" value={clientDetailPeriodo} onChange={(e) => setClientDetailPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput && parsePeriodoInput(e.target.value); if (p) setClientDetailPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter" && parsePeriodoInput) { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setClientDetailPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
             {clientDetailPeriodo && <button type="button" onClick={() => setClientDetailPeriodo("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
           </div>
-          <span style={{ fontSize: 11, color: "#9498a8" }}>Gastos y cobros se filtran por este período. En cobros, «Período (resumen)» es el mes en que cuenta cada pago; la fecha de pago puede ser distinta.</span>
+          <span style={{ fontSize: 11, color: "#9498a8" }}>Todo el resumen (tarjetas y tablas) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.</span>
         </div>
         ),
         <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginBottom: 24 }}>
