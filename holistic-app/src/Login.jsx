@@ -1,14 +1,164 @@
 import { useState } from "react";
-import { Lock, Mail, AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { solicitarMagicLink } from "./supabase";
 
-const inputStyle = { width: "100%", padding: "12px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontFamily: "inherit", outline: "none", boxSizing: "border-box" };
+const styles = {
+  root: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    background: "#ffffff",
+    color: "#111827",
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    WebkitFontSmoothing: "antialiased",
+    MozOsxFontSmoothing: "grayscale",
+  },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "0 32px",
+    height: 72,
+    flexShrink: 0,
+  },
+  headerLogo: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    textDecoration: "none",
+    color: "inherit",
+  },
+  headerLogoText: {
+    fontSize: 18,
+    fontWeight: 600,
+    color: "#111827",
+    letterSpacing: "-0.01em",
+  },
+  main: {
+    flex: 1,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 24px",
+  },
+  formWrapper: {
+    width: "100%",
+    maxWidth: 448,
+  },
+  formHeading: {
+    fontSize: 30,
+    fontWeight: 600,
+    color: "#000000",
+    lineHeight: 1.2,
+    marginBottom: 8,
+  },
+  formSubtitle: {
+    fontSize: 16,
+    fontWeight: 400,
+    color: "#6B7280",
+    lineHeight: 1.5,
+    marginBottom: 32,
+  },
+  subtitleHighlight: {
+    color: "#3B82F6",
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  inputField: {
+    width: "100%",
+    height: 44,
+    padding: "0 14px",
+    border: "1px solid #E5E7EB",
+    borderRadius: 8,
+    background: "#ffffff",
+    fontFamily: "inherit",
+    fontSize: 16,
+    color: "#111827",
+    outline: "none",
+    boxSizing: "border-box",
+    transition: "border-color 180ms ease, box-shadow 180ms ease",
+  },
+  inputFieldFocus: {
+    borderColor: "#3B82F6",
+    boxShadow: "0 0 0 3px rgba(59, 130, 246, 0.12)",
+  },
+  btn: {
+    width: "100%",
+    height: 44,
+    border: "none",
+    borderRadius: 8,
+    fontFamily: "inherit",
+    fontSize: 16,
+    fontWeight: 500,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    transition: "background-color 180ms ease, opacity 180ms ease",
+  },
+  btnPrimary: {
+    background: "#3B82F6",
+    color: "#ffffff",
+  },
+  btnPrimaryHover: { background: "#2563EB" },
+  btnPrimaryDisabled: {
+    background: "#9CA3AF",
+    cursor: "not-allowed",
+  },
+  hintText: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+    marginTop: 12,
+    lineHeight: 1.5,
+  },
+  successBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 20,
+    padding: "12px 14px",
+    background: "#ECFDF5",
+    color: "#059669",
+    borderRadius: 8,
+    fontSize: 14,
+  },
+  errorBox: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 16,
+    padding: "12px 14px",
+    background: "#FEF2F2",
+    color: "#DC2626",
+    borderRadius: 8,
+    fontSize: 14,
+  },
+  footer: {
+    padding: "20px 0",
+    textAlign: "center",
+    fontSize: 13,
+    color: "#9CA3AF",
+  },
+};
+
+function LogoIcon() {
+  return (
+    <svg width={28} height={28} viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+      <rect width={28} height={28} rx={6} fill="#3B82F6" />
+      <path d="M9 8v12M19 8v12M9 14h10" stroke="#ffffff" strokeWidth={2.2} strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export default function Login({ onSuccess, supabase }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [linkEnviado, setLinkEnviado] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
 
   async function handleEnviarLink(e) {
     e.preventDefault();
@@ -36,42 +186,71 @@ export default function Login({ onSuccess, supabase }) {
   }
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #0f111a 0%, #1a1d26 50%, #0f111a 100%)", fontFamily: "'DM Sans', sans-serif", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 400, background: "#fff", borderRadius: 20, boxShadow: "0 20px 60px rgba(0,0,0,.25)", overflow: "hidden" }}>
-        <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #0055ff 100%)", padding: "32px 28px", textAlign: "center" }}>
-          <div style={{ width: 56, height: 56, margin: "0 auto 14px", background: "rgba(255,255,255,.2)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Lock size={28} color="#fff" />
-          </div>
-          <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: "#fff" }}>Holistic Marketing</h1>
-          <p style={{ margin: "6px 0 0", fontSize: 13, color: "rgba(255,255,255,.85)" }}>Gerente o cliente</p>
-        </div>
+    <div style={styles.root}>
+      <header style={styles.header}>
+        <a href="#" style={styles.headerLogo} onClick={(e) => e.preventDefault()}>
+          <LogoIcon />
+          <span style={styles.headerLogoText}>Holistic Marketing</span>
+        </a>
+      </header>
 
-        {linkEnviado && (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "18px 28px 0", padding: "12px 14px", background: "#eafaf4", color: "#0d9f6e", borderRadius: 10, fontSize: 13 }}>
-            <CheckCircle size={18} style={{ flexShrink: 0 }} />
-            <span>Revisá tu correo. Abrí el enlace para entrar al panel.</span>
-          </div>
-        )}
+      <main style={styles.main}>
+        <div style={styles.formWrapper}>
+          <h1 style={styles.formHeading}>Iniciar sesión</h1>
+          <p style={styles.formSubtitle}>
+            Ingresa tus credenciales para acceder como <span style={styles.subtitleHighlight}>gerente</span> o <span style={styles.subtitleHighlight}>cliente</span>.
+          </p>
 
-        <form onSubmit={handleEnviarLink} style={{ padding: "28px 28px 32px" }}>
-          {error && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 14px", marginBottom: 18, background: "#fdf0f2", color: "#dc2640", borderRadius: 10, fontSize: 13 }}>
-              <AlertCircle size={18} style={{ flexShrink: 0 }} />
-              <span>{error}</span>
+          {linkEnviado && (
+            <div style={styles.successBox}>
+              <CheckCircle size={18} style={{ flexShrink: 0 }} />
+              <span>Revisá tu correo. Abrí el enlace para entrar al panel.</span>
             </div>
           )}
-          <div style={{ marginBottom: 22 }}>
-            <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 6 }}>Correo</label>
-            <div style={{ position: "relative" }}>
-              <Mail size={18} style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} />
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@correo.com" required autoComplete="email" style={{ ...inputStyle, paddingLeft: 44 }} />
+
+          <form onSubmit={handleEnviarLink}>
+            {error && (
+              <div style={styles.errorBox}>
+                <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <div style={styles.inputGroup}>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+                placeholder="Correo electrónico"
+                required
+                autoComplete="email"
+                style={{
+                  ...styles.inputField,
+                  ...(inputFocused ? styles.inputFieldFocus : {}),
+                }}
+              />
             </div>
-          </div>
-          <button type="submit" disabled={loading} style={{ width: "100%", padding: "14px", border: "none", borderRadius: 10, background: loading ? "#9498a8" : "#1b2559", color: "#fff", fontSize: 15, fontWeight: 600, fontFamily: "inherit", cursor: loading ? "not-allowed" : "pointer" }}>
-            {loading ? "Enviando…" : "Enviar enlace al correo"}
-          </button>
-        </form>
-      </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                ...styles.btn,
+                ...styles.btnPrimary,
+                ...(loading ? styles.btnPrimaryDisabled : {}),
+              }}
+            >
+              {loading ? "Enviando…" : "Enviar enlace al correo"}
+            </button>
+
+            <p style={styles.hintText}>Recibirás un enlace mágico en tu correo para acceder.</p>
+          </form>
+        </div>
+      </main>
+
+      <footer style={styles.footer}>© 2026 Holistic Marketing</footer>
     </div>
   );
 }
