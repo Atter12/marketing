@@ -300,8 +300,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [repPerInput, setRepPerInput] = useState("");
-  const [repPerInicio, setRepPerInicio] = useState(firstDayOfMonth());
-  const [repPerFin, setRepPerFin] = useState(td());
+  const [repPeriodoMes, setRepPeriodoMes] = useState(tm());
+  const repPerInicio = repPeriodoMes ? repPeriodoMes + "-01" : "2020-01-01";
+  const repPerFin = repPeriodoMes ? lastDayOfMonth(repPeriodoMes) : td();
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [dashboardPeriodo, setDashboardPeriodo] = useState("");
@@ -814,8 +815,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
-      setRepPerInicio(mesGar + "-01");
-      setRepPerFin(lastDayOfMonth(mesGar));
+      setRepPeriodoMes(mesGar);
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -1282,25 +1282,24 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
               <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
-              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por rango de fechas (día, mes y año) y por cliente. Elige desde y hasta para ver el desglose y las gráficas.</p></div>
+              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por período (mes) y por cliente. Elegí el mes para ver el desglose y las gráficas.</p></div>
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
             <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "16px 22px", boxShadow: "0 2px 8px rgba(27,37,89,.06)", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
               <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
-              <div style={{ display: "flex", alignItems: "flex-end", gap: 16, flexWrap: "wrap" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>Desde</label>
-                  <input type="date" value={repPerInicio || ""} onChange={(e) => setRepPerInicio(e.target.value)} min="2020-01-01" max={td()} style={{ padding: "10px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", color: "#1b2559", outline: "none", cursor: "pointer", minWidth: 152, boxSizing: "border-box", background: "#f8f9fb" }} title="Fecha inicial" />
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#1b2559" : "#9498a8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
                 </div>
-                <span style={{ alignSelf: "center", color: "#9498a8", fontSize: 13, fontWeight: 600, marginBottom: 10 }}>hasta</span>
-                <div>
-                  <label style={{ display: "block", fontSize: 10, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 6 }}>Hasta</label>
-                  <input type="date" value={repPerFin || ""} onChange={(e) => setRepPerFin(e.target.value)} min={repPerInicio || "2020-01-01"} max={td()} style={{ padding: "10px 14px", border: "1px solid #e2e4e9", borderRadius: 10, fontSize: 14, fontWeight: 600, fontFamily: "'DM Sans',sans-serif", color: "#1b2559", outline: "none", cursor: "pointer", minWidth: 152, boxSizing: "border-box", background: "#f8f9fb" }} title="Fecha final" />
-                </div>
+                {repPeriodoMes && <span style={{ fontSize: 12, color: "#5f6577", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
               </div>
-              {repPerInicio && repPerFin && <span style={{ fontSize: 12, color: "#5f6577", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
@@ -1464,7 +1463,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPerInicio((p || tm()) + "-01"); setRepPerFin(lastDayOfMonth(p || tm())); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
