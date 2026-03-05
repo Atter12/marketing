@@ -82,15 +82,15 @@ Sustituir las constantes por datos cargados desde la API.
 
 - [x] **3.2** Eliminar o no ejecutar los arrays hardcodeados actuales cuando existan datos en Supabase; opcional: seed inicial vía migración o script para desarrollo.
 
-- [ ] **3.3** CRUD clientes: insert/update/delete en `tareas_clientes`.
+- [x] **3.3** CRUD clientes: insert/update/delete en `tareas_clientes`.
 
-- [ ] **3.4** CRUD equipo: insert/update en `tareas_equipo`; workload como JSONB o tabla aparte.
+- [x] **3.4** CRUD equipo: insert/update en `tareas_equipo`; workload como JSONB o tabla aparte.
 
-- [ ] **3.5** Kanban: al mover una tarjeta, `update` de `tareas_kanban` (cambiar `columna` y `orden`). Crear/editar tarjeta: insert/update.
+- [x] **3.5** Kanban: al mover una tarjeta, `update` de `tareas_kanban` (cambiar `columna` y `orden`). Crear/editar tarjeta: insert/update.
 
-- [ ] **3.6** Tickets: insert/update en `tareas_tickets`; agregar comentarios en `tareas_ticket_comentarios`.
+- [x] **3.6** Tickets: insert/update en `tareas_tickets`; agregar comentarios en `tareas_ticket_comentarios`.
 
-- [ ] **3.7** Calendario: insert/update/delete en `tareas_calendario`.
+- [x] **3.7** Calendario: insert/update/delete en `tareas_calendario`.
 
 - [ ] **3.8** Workflows: si son solo definiciones, puede bastar con cargar desde tabla o JSON; si se guardan “instancias” de flujo por proyecto, añadir tabla y lógica después.
 

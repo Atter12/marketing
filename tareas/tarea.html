@@ -2305,6 +2305,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       <button class="btn-secondary btn-sm">← Anterior</button>
       <button class="btn-primary btn-sm">Hoy</button>
       <button class="btn-secondary btn-sm">Siguiente →</button>
+      <button class="btn-primary btn-sm" onclick="openModal('calendarEvent')">+ Nuevo evento</button>
     </div>
   </div>
   <div class="card">
@@ -2323,6 +2324,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <button class="tab active">Vista Barras</button>
         <button class="tab">Vista Gantt</button>
       </div>
+      <button class="btn-primary btn-sm" onclick="openModal('equipo')">+ Nuevo miembro</button>
     </div>
   </div>
   <div class="workload-table" id="workloadTable" role="table" aria-label="Carga de trabajo del equipo"></div>
@@ -2633,6 +2635,32 @@ function showTareasLoading(show) {
   else { el.classList.add('hidden'); el.setAttribute('aria-busy', 'false'); }
 }
 
+function reloadTareasData(thenRender) {
+  if (!supabase) return Promise.resolve();
+  return loadTareasData().then(function(data) {
+    if (data) {
+      TEAM = data.TEAM;
+      MT = data.MT;
+      clients = data.clients;
+      KT = data.KT;
+      tickets = data.tickets;
+      workflows = data.workflows;
+      calI = data.calI;
+    }
+    updateBadges();
+    updateDashboardStats();
+    if (thenRender && typeof thenRender === 'function') thenRender();
+    else {
+      renderers.clients?.();
+      renderers.kanban?.();
+      renderers.tickets?.();
+      renderers.calendar?.();
+      renderers.workload?.();
+      renderers.workflows?.();
+    }
+  });
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  HELPERS
 // ══════════════════════════════════════════════════════════════════
@@ -2792,7 +2820,7 @@ renderers.kanban = function() {
       const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
       const dateIcon = t.dc === 'dn' ? '✅' : '📅';
       return `
-        <article class="kanban-card fade-in" data-sv="${t.sv}" role="article">
+        <article class="kanban-card fade-in" data-sv="${t.sv}" data-id="${t.id||''}" role="article">
           <div class="kanban-card-top">
             <span class="service-tag ${t.tg}">${t.sv}</span>
             <div class="priority-dot ${t.pr}" title="Prioridad: ${t.pr === 'hi' ? 'Alta' : t.pr === 'md' ? 'Media' : 'Baja'}"></div>
@@ -2806,6 +2834,7 @@ renderers.kanban = function() {
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
           <div class="card-subtasks">☑ ${t.sb} subtareas</div>
+          ${t.id ? `<div style="margin-top:8px"><select class="form-select form-select-sm" style="font-size:11px;padding:4px 8px" onchange="moveKanbanCard('${t.id}',this.value);this.value=''" aria-label="Mover a columna"><option value="">Mover a…</option><option value="todo">Por hacer</option><option value="progress">En progreso</option><option value="review">Revisión</option><option value="done">Hecho</option></select></div>` : ''}
         </article>`;
     }).join('');
     colEl.innerHTML = `
@@ -2822,28 +2851,41 @@ renderers.kanban = function() {
   });
 };
 
+function moveKanbanCard(cardId, newColumna) {
+  if (!cardId || !newColumna) return;
+  if (supabase) {
+    supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
+      if (r.error) { alert('Error al mover: ' + (r.error.message||'')); return; }
+      reloadTareasData();
+    });
+  } else {
+    var card = KT.find(function(k){ return k.id === cardId; });
+    if (card) { card.col = newColumna; renderers.kanban(); updateBadges(); }
+  }
+}
+
 function filterKanban(sv, btn) {
-  document.querySelectorAll('#view-kanban .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#view-kanban .tab').forEach(function(t){ t.classList.remove('active'); });
   btn.classList.add('active');
-  document.querySelectorAll('.kanban-card').forEach(c => {
+  document.querySelectorAll('.kanban-card').forEach(function(c) {
     c.style.display = (sv === 'all' || c.dataset.sv === sv) ? '' : 'none';
   });
 }
 
 // ─── TICKETS ───
 renderers.tickets = function() {
-  const open   = tickets.filter(t => t.status === 'open').length;
-  const prog   = tickets.filter(t => t.status === 'progress').length;
-  const res    = tickets.filter(t => t.status === 'resolved').length;
-  const breach = tickets.filter(t => t.slaStatus === 'breach').length;
+  var open   = tickets.filter(function(t){ return t.status === 'open'; }).length;
+  var prog   = tickets.filter(function(t){ return t.status === 'progress'; }).length;
+  var res    = tickets.filter(function(t){ return t.status === 'closed'; }).length;
+  var breach = tickets.filter(function(t){ return t.slaStatus === 'breach'; }).length;
 
   document.getElementById('ticketsStats').innerHTML = `
     <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${tickets.length}</div><div class="ticket-stat-lbl">Total</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--color-primary);font-variant-numeric:tabular-nums">${open}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-primary);display:inline-block;margin-right:3px"></span>Abiertos</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--orange2);font-variant-numeric:tabular-nums">${prog}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--orange2);display:inline-block;margin-right:3px"></span>En Proceso</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--red);font-variant-numeric:tabular-nums">${breach}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px"></span>SLA Breach</div></div>
-    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--green);font-variant-numeric:tabular-nums">${res+15}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px"></span>Resueltos (mes)</div></div>
-    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">3.8h</div><div class="ticket-stat-lbl">Tiempo Promedio</div></div>`;
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--green);font-variant-numeric:tabular-nums">${res}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px"></span>Resueltos</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">—</div><div class="ticket-stat-lbl">Tiempo Promedio</div></div>`;
 
   const grid = document.getElementById('ticketsGrid');
   let html = `<div class="tickets-table" role="table">
@@ -2895,7 +2937,7 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${tk.category}</div></div>
           </div>
           <div class="ticket-actions">
-            ${tk.status !== 'resolved' ? `<button class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();resolveTicket('${tk.id}')">✅ Resolver</button>` : ''}
+            ${tk.status !== 'closed' ? `<button class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();resolveTicket('${tk.id}')">✅ Resolver</button>` : ''}
             ${tk.status === 'open' ? `<button class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${tk.id}')">▶ Tomar Ticket</button>` : ''}
             <button class="btn-secondary btn-sm" onclick="event.stopPropagation()">🔄 Reasignar</button>
             ${tk.priority !== 'urgente' ? `<button class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${tk.id}')">⬆ Escalar</button>` : ''}
@@ -2926,35 +2968,87 @@ function toggleTicketDetail(idx) {
   row.setAttribute('aria-expanded', !isOpen);
 }
 function addTicketComment(idx) {
-  const inp = document.getElementById('tkComment-' + idx);
+  var inp = document.getElementById('tkComment-' + idx);
   if (!inp) return;
-  const v = inp.value.trim();
+  var v = inp.value.trim();
   if (!v) return;
-  tickets[idx].timeline.push({who:'Carlos Admin',what:v,when:'Ahora',type:'comment'});
-  inp.value = '';
-  renderers.tickets();
+  var tk = tickets[idx];
+  if (!tk) return;
+  if (supabase && tk.dbId) {
+    supabase.from('tareas_ticket_comentarios').insert({
+      ticket_id: tk.dbId,
+      quien: 'Usuario',
+      que: v,
+      cuando: 'Ahora',
+      tipo: 'comment'
+    }).then(function(r) {
+      if (r.error) { alert('Error al agregar comentario'); return; }
+      inp.value = '';
+      reloadTareasData();
+    });
+  } else {
+    tk.timeline.push({who:'Usuario',what:v,when:'Ahora',type:'comment'});
+    inp.value = '';
+    renderers.tickets();
+  }
 }
 function resolveTicket(id) {
-  const tk = tickets.find(x => x.id === id);
-  if (tk) {
-    tk.status = 'resolved'; tk.slaStatus = 'ok'; tk.slaLeft = 'Resuelto';
-    tk.timeline.push({who:'Carlos Admin',what:'✅ Ticket resuelto y cerrado.',when:'Ahora',type:'resolve'});
+  var tk = tickets.find(function(x){ return x.id === id; });
+  if (!tk) return;
+  if (supabase && tk.dbId) {
+    supabase.from('tareas_tickets').update({ status: 'closed' }).eq('id', tk.dbId).then(function(r) {
+      if (r.error) { alert('Error al resolver ticket'); return; }
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: tk.dbId,
+        quien: 'Sistema',
+        que: '✅ Ticket resuelto y cerrado.',
+        cuando: 'Ahora',
+        tipo: 'system'
+      }).then(function() { reloadTareasData(); });
+    });
+  } else {
+    tk.status = 'closed'; tk.slaStatus = 'ok'; tk.slaLeft = 'Resuelto';
+    tk.timeline.push({who:'Sistema',what:'✅ Ticket resuelto y cerrado.',when:'Ahora',type:'system'});
     renderers.tickets(); updateBadges();
   }
 }
 function progressTicket(id) {
-  const tk = tickets.find(x => x.id === id);
-  if (tk) {
+  var tk = tickets.find(function(x){ return x.id === id; });
+  if (!tk) return;
+  if (supabase && tk.dbId) {
+    supabase.from('tareas_tickets').update({ status: 'progress' }).eq('id', tk.dbId).then(function(r) {
+      if (r.error) { alert('Error al actualizar ticket'); return; }
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: tk.dbId,
+        quien: 'Sistema',
+        que: 'Ticket movido a "En Proceso"',
+        cuando: 'Ahora',
+        tipo: 'system'
+      }).then(function() { reloadTareasData(); });
+    });
+  } else {
     tk.status = 'progress';
     tk.timeline.push({who:'Sistema',what:'Ticket movido a "En Proceso"',when:'Ahora',type:'system'});
     renderers.tickets(); updateBadges();
   }
 }
 function escalateTicket(id) {
-  const tk = tickets.find(x => x.id === id);
-  if (tk) {
+  var tk = tickets.find(function(x){ return x.id === id; });
+  if (!tk) return;
+  if (supabase && tk.dbId) {
+    supabase.from('tareas_tickets').update({ prioridad: 'urgente', sla_horas: 1 }).eq('id', tk.dbId).then(function(r) {
+      if (r.error) { alert('Error al escalar'); return; }
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: tk.dbId,
+        quien: 'Sistema',
+        que: '⬆ Ticket escalado a prioridad URGENTE',
+        cuando: 'Ahora',
+        tipo: 'system'
+      }).then(function() { reloadTareasData(); });
+    });
+  } else {
     tk.priority = 'urgente'; tk.sla = '1h';
-    tk.timeline.push({who:'Carlos Admin',what:'⬆ Ticket escalado a prioridad URGENTE',when:'Ahora',type:'system'});
+    tk.timeline.push({who:'Sistema',what:'⬆ Ticket escalado a prioridad URGENTE',when:'Ahora',type:'system'});
     renderers.tickets(); updateBadges();
   }
 }
@@ -3182,12 +3276,12 @@ function openModal(type) {
       <div class="form-group"><label for="m-name">Nombre</label><input class="form-input" placeholder="Ej: Video Reel — Cliente X" id="m-name"></div>
       <div class="form-group"><label for="m-desc">Descripción</label><textarea class="form-textarea" placeholder="Detalles del entregable..." id="m-desc"></textarea></div>
       <div class="form-row">
-        <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client">${clients.map(c=>`<option>${c.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client"><option value="">— Ninguno —</option>${(clients||[]).map(function(c){return '<option>' + (c.n||'').replace(/</g,'&lt;') + '</option>';}).join('')}</select></div>
         <div class="form-group"><label for="m-service">Servicio</label><select class="form-select" id="m-service"><option value="marketing">Marketing</option><option value="branding">Branding</option><option value="video">Video</option><option value="social">Social</option><option value="design">Diseño</option></select></div>
       </div>
       <div class="form-row-3">
         <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
-        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee">${TEAM.map(m=>`<option value="${m.id}">${m.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${(TEAM||[]).map(function(m){return '<option value="'+(m.id||'')+'">'+(m.n||'').replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
         <div class="form-group"><label for="m-due">Fecha Límite</label><input class="form-input" type="date" id="m-due"></div>
       </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
@@ -3198,12 +3292,12 @@ function openModal(type) {
       <div class="form-group"><label for="tk-name">Título</label><input class="form-input" placeholder="Ej: Cambiar foto del carrusel" id="tk-name"></div>
       <div class="form-group"><label for="tk-desc">Descripción Detallada</label><textarea class="form-textarea" placeholder="¿Qué necesita el cliente exactamente? Contexto, archivos, etc." id="tk-desc"></textarea></div>
       <div class="form-row">
-        <div class="form-group"><label for="tk-client">Cliente</label><select class="form-select" id="tk-client">${clients.map(c=>`<option value="${c.n}">${c.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="tk-client">Cliente</label><select class="form-select" id="tk-client"><option value="">— Ninguno —</option>${(clients||[]).map(function(c){var n=c.n||''; return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
         <div class="form-group"><label for="tk-priority">Prioridad (SLA)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente (1h)</option><option value="alta">🟠 Alta (2h)</option><option value="media" selected>🟡 Media (4h)</option><option value="baja">⚪ Baja (24h)</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign">${TEAM.map(m=>`<option value="${m.id}">${m.n}</option>`).join('')}</select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(TEAM||[]).map(function(m){return '<option value="'+(m.id||'')+'">'+(m.n||'').replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
         <div class="form-group"><label for="tk-channel">Canal</label><select class="form-select" id="tk-channel"><option>WhatsApp</option><option>Email</option><option>Slack</option><option>Llamada</option><option>Presencial</option></select></div>
       </div>
       <div class="form-group"><label for="tk-link">Entregable Vinculado</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${KT.map(k=>`<option>${k.tt}</option>`).join('')}</select></div>`;
@@ -3235,6 +3329,29 @@ function openModal(type) {
       </div>
       <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
+  } else if (type === 'calendarEvent') {
+    var now = new Date();
+    title.textContent = 'Nuevo evento';
+    body.innerHTML = `
+      <div class="form-group"><label for="cal-titulo">Título</label><input class="form-input" id="cal-titulo" placeholder="Ej: Reunión cliente"></div>
+      <div class="form-row-3">
+        <div class="form-group"><label for="cal-dia">Día</label><input class="form-input" type="number" min="1" max="31" value="${now.getDate()}" id="cal-dia"></div>
+        <div class="form-group"><label for="cal-mes">Mes</label><input class="form-input" type="number" min="1" max="12" value="${now.getMonth()+1}" id="cal-mes"></div>
+        <div class="form-group"><label for="cal-anio">Año</label><input class="form-input" type="number" min="2024" max="2030" value="${now.getFullYear()}" id="cal-anio"></div>
+      </div>
+      <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase"><option value="pill-orange">Naranja</option><option value="pill-green">Verde</option><option value="pill-red">Rojo</option><option value="pill-purple">Púrpura</option><option value="pill-pink">Rosa</option></select></div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addCalendarEvent()">Crear evento</button>`;
+  } else if (type === 'equipo') {
+    title.textContent = 'Nuevo miembro del equipo';
+    body.innerHTML = `
+      <div class="form-group"><label for="eq-id">Código (2 letras)</label><input class="form-input" id="eq-id" placeholder="Ej: DG" maxlength="4"></div>
+      <div class="form-group"><label for="eq-nombre">Nombre completo</label><input class="form-input" id="eq-nombre" placeholder="Ej: Diego Gutiérrez"></div>
+      <div class="form-row">
+        <div class="form-group"><label for="eq-rol">Rol</label><input class="form-input" id="eq-rol" placeholder="Ej: Estratega"></div>
+        <div class="form-group"><label for="eq-servicio">Servicio</label><input class="form-input" id="eq-servicio" placeholder="Ej: Marketing"></div>
+      </div>
+      <div class="form-group"><label for="eq-color">Color (hex)</label><input class="form-input" id="eq-color" value="#EA580C" placeholder="#EA580C"></div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addEquipoMember()">Crear miembro</button>`;
   }
 
   overlay.classList.add('show');
@@ -3275,53 +3392,283 @@ function openClientDetail(idx) {
     ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📝 Notas Internas</div>
     <div style="padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);font-size:var(--text-sm)">${c.notes||'Sin notas'}</div>`;
-  document.getElementById('modalFooter').innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cerrar</button>`;
+  var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
+  if (c.id) footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button><button class="btn-primary" style="background:var(--red);border-color:var(--red)" onclick="deleteClient(\'' + c.id + '\')">Eliminar</button>';
+  document.getElementById('modalFooter').innerHTML = footerBtns;
   document.getElementById('modalOverlay').classList.add('show');
 }
 
-// ─── ADD FUNCTIONS ───
+var _editingClientId = null;
+function openEditClient(id) {
+  var c = clients.find(function(x){ return x.id === id; });
+  if (!c) return;
+  _editingClientId = id;
+  var title = document.getElementById('modalTitle');
+  var body = document.getElementById('modalBody');
+  var footer = document.getElementById('modalFooter');
+  title.textContent = 'Editar Cliente';
+  body.innerHTML = `
+    <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" value="${(c.n||'').replace(/"/g,'&quot;')}" id="cl-name"></div>
+    <div class="form-row">
+      <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" value="${(c.tp||'').replace(/"/g,'&quot;')}" id="cl-ind"></div>
+      <div class="form-group"><label for="cl-contact">Contacto Principal</label><input class="form-input" value="${(c.contact||'').replace(/"/g,'&quot;')}" id="cl-contact"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label for="cl-email">Email</label><input class="form-input" type="email" value="${(c.email||'').replace(/"/g,'&quot;')}" id="cl-email"></div>
+      <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" value="${(c.phone||'').replace(/"/g,'&quot;')}" id="cl-phone"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" value="${(c.monthlyFee||c.budget||'').replace(/"/g,'&quot;')}" id="cl-fee"></div>
+      <div class="form-group"><label for="cl-status">Estado</label><select class="form-select" id="cl-status"><option value="activo" ${c.status==='activo'?'selected':''}>Activo</option><option value="onboarding" ${c.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
+    </div>
+    <div class="form-group">
+      <label>Servicios (mantener Ctrl para varios)</label>
+      <select class="form-select" multiple style="height:80px" id="cl-svcs">
+        <option value="tag-mk" ${(c.svcs||[]).indexOf('tag-mk')>=0?'selected':''}>Marketing Digital</option>
+        <option value="tag-br" ${(c.svcs||[]).indexOf('tag-br')>=0?'selected':''}>Branding</option>
+        <option value="tag-vi" ${(c.svcs||[]).indexOf('tag-vi')>=0?'selected':''}>Edición de Video</option>
+        <option value="tag-so" ${(c.svcs||[]).indexOf('tag-so')>=0?'selected':''}>Social Media</option>
+        <option value="tag-de" ${(c.svcs||[]).indexOf('tag-de')>=0?'selected':''}>Diseño</option>
+        <option value="tag-se" ${(c.svcs||[]).indexOf('tag-se')>=0?'selected':''}>SEO</option>
+        <option value="tag-ad" ${(c.svcs||[]).indexOf('tag-ad')>=0?'selected':''}>Paid Ads</option>
+      </select>
+    </div>
+    <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>`;
+  footer.innerHTML = `<button class="btn-secondary" onclick="closeModal();_editingClientId=null">Cancelar</button><button class="btn-primary" onclick="updateClient()">Guardar</button>`;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function updateClient() {
+  if (!_editingClientId) return;
+  var svcsEl = document.getElementById('cl-svcs');
+  var svcs = svcsEl ? Array.from(svcsEl.selectedOptions).map(function(o){ return o.value; }) : [];
+  var row = {
+    nombre: document.getElementById('cl-name').value.trim(),
+    tipo: document.getElementById('cl-ind').value || '',
+    contacto_nombre: document.getElementById('cl-contact').value || '',
+    email: document.getElementById('cl-email').value || '',
+    telefono: document.getElementById('cl-phone').value || '',
+    fee_mensual: document.getElementById('cl-fee').value || '',
+    status: document.getElementById('cl-status').value || 'activo',
+    servicios: svcs,
+    notes: document.getElementById('cl-notes').value || ''
+  };
+  if (!row.nombre) { alert('Nombre requerido'); return; }
+  if (supabase) {
+    supabase.from('tareas_clientes').update(row).eq('id', _editingClientId).then(function(r) {
+      if (r.error) { alert('Error al guardar: ' + (r.error.message||'')); return; }
+      _editingClientId = null;
+      reloadTareasData();
+      closeModal();
+    });
+  } else {
+    var c = clients.find(function(x){ return x.id === _editingClientId; });
+    if (c) { c.n = row.nombre; c.tp = row.tipo; c.contact = row.contacto_nombre; c.email = row.email; c.phone = row.telefono; c.monthlyFee = row.fee_mensual; c.status = row.status; c.svcs = svcs; c.notes = row.notes; }
+    _editingClientId = null;
+    renderers.clients(); updateBadges();
+    closeModal();
+  }
+}
+function deleteClient(id) {
+  if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return;
+  if (supabase) {
+    supabase.from('tareas_clientes').delete().eq('id', id).then(function(r) {
+      if (r.error) { alert('Error al eliminar: ' + (r.error.message||'')); return; }
+      reloadTareasData();
+      closeModal();
+    });
+  } else {
+    clients = clients.filter(function(c){ return c.id !== id; });
+    renderers.clients(); updateBadges();
+    closeModal();
+  }
+}
+
+// ─── ADD FUNCTIONS (persisten en Supabase) ───
 function addTask() {
-  const n = document.getElementById('m-name').value.trim();
+  var n = document.getElementById('m-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
-  const tgMap = {marketing:'tag-mk',branding:'tag-br',video:'tag-vi',social:'tag-so',design:'tag-de'};
-  const sv = document.getElementById('m-service').value;
-  KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg:tgMap[sv],pr:document.getElementById('m-priority').value,du:document.getElementById('m-due').value||'Sin fecha',dc:'',pc:0,tm:[document.getElementById('m-assignee').value],cl:document.getElementById('m-client').value,sb:'0/1'});
-  renderers.kanban(); updateBadges(); closeModal();
+  var tgMap = {marketing:'tag-mk',branding:'tag-br',video:'tag-vi',social:'tag-so',design:'tag-de'};
+  var sv = document.getElementById('m-service').value;
+  var tg = tgMap[sv] || 'tag-mk';
+  var pr = document.getElementById('m-priority').value;
+  var dueVal = document.getElementById('m-due').value;
+  var due = dueVal ? dueVal : null;
+  var equipoId = document.getElementById('m-assignee').value;
+  var clNombre = document.getElementById('m-client').value;
+  if (supabase) {
+    supabase.from('tareas_kanban').insert({
+      columna: 'todo',
+      titulo: n,
+      descripcion: document.getElementById('m-desc').value || '',
+      servicio: tg,
+      prioridad: pr,
+      fecha_entrega: due,
+      progreso: 0,
+      equipo_ids: equipoId ? [equipoId] : [],
+      cliente_nombre: clNombre,
+      subtareas: '0/1',
+      orden: 0
+    }).then(function(r) {
+      if (r.error) { alert('Error al crear entregable: ' + (r.error.message || ''));
+        return; }
+      reloadTareasData(); closeModal();
+    });
+  } else {
+    KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg,pr,du:due||'Sin fecha',dc:'',pc:0,tm:equipoId?[equipoId]:[],cl:clNombre,sb:'0/1'});
+    renderers.kanban(); updateBadges(); closeModal();
+  }
 }
 function addTicket() {
-  const n = document.getElementById('tk-name').value.trim();
+  var n = document.getElementById('tk-name').value.trim();
   if (!n) { alert('Título requerido'); return; }
-  const slaMap = {urgente:'1h',alta:'2h',media:'4h',baja:'24h'};
-  const pr = document.getElementById('tk-priority').value;
-  const clVal = document.getElementById('tk-client').value;
-  tickets.unshift({
-    id:'TK-'+String(tickets.length+1).padStart(3,'0'),title:n,sub:document.getElementById('tk-desc').value||'',
-    client:clVal,clientColor:clients.find(c=>c.n===clVal)?.c||'#666',status:'open',priority:pr,
-    category:document.getElementById('tk-cat').value,channel:document.getElementById('tk-channel').value,
-    assignee:document.getElementById('tk-assign').value,sla:slaMap[pr],slaLeft:slaMap[pr],slaStatus:'ok',
-    created:'Ahora',due:'Pendiente',linkedDeliverable:document.getElementById('tk-link').value||'—',
-    timeline:[{who:'Sistema',what:`Ticket creado — Categoría: ${document.getElementById('tk-cat').value}`,when:'Ahora',type:'system'}]
-  });
-  renderers.tickets(); updateBadges(); closeModal();
+  var slaMap = {urgente:1,alta:2,media:4,baja:24};
+  var pr = document.getElementById('tk-priority').value;
+  var clVal = document.getElementById('tk-client').value;
+  var clColor = (clients.find(function(c){ return c.n === clVal; }) || {}).c || '#666';
+  var cat = document.getElementById('tk-cat').value;
+  var chan = document.getElementById('tk-channel').value;
+  var assignId = document.getElementById('tk-assign').value;
+  var linkDel = document.getElementById('tk-link').value || '';
+  var comentarioSistema = 'Ticket creado — Categoría: ' + cat;
+  if (supabase) {
+    var nums = tickets.map(function(t){ var m = (t.id || '').match(/TK-(\d+)/); return m ? parseInt(m[1],10) : 0; });
+    var nextNum = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
+    var codigo = 'TK-' + String(nextNum).padStart(3, '0');
+    var slaH = slaMap[pr] || 4;
+    var vencimiento = new Date(); vencimiento.setHours(vencimiento.getHours() + slaH);
+    supabase.from('tareas_tickets').insert({
+      codigo: codigo,
+      titulo: n,
+      subtitulo: document.getElementById('tk-desc').value || '',
+      cliente_nombre: clVal,
+      cliente_color: clColor,
+      status: 'open',
+      prioridad: pr,
+      categoria: cat,
+      canal: chan,
+      asignado_id: assignId || null,
+      sla_horas: slaH,
+      sla_vencimiento: vencimiento.toISOString(),
+      sla_status: 'ok',
+      entregable_vinculado: linkDel
+    }).select('id').single().then(function(r) {
+      if (r.error) { alert('Error al crear ticket: ' + (r.error.message || '')); return; }
+      var ticketId = r.data.id;
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: ticketId,
+        quien: 'Sistema',
+        que: comentarioSistema,
+        cuando: 'Ahora',
+        tipo: 'system'
+      }).then(function(r2) {
+        if (r2.error) { /* no bloqueamos */ }
+        reloadTareasData(); closeModal();
+      });
+    });
+  } else {
+    var slaStr = {urgente:'1h',alta:'2h',media:'4h',baja:'24h'}[pr] || '4h';
+    tickets.unshift({
+      id:'TK-'+String(tickets.length+1).padStart(3,'0'),title:n,sub:document.getElementById('tk-desc').value||'',
+      client:clVal,clientColor:clColor,status:'open',priority:pr,
+      category:cat,channel:chan,assignee:assignId,sla:slaStr,slaLeft:slaStr,slaStatus:'ok',
+      created:'Ahora',due:'Pendiente',linkedDeliverable:linkDel||'—',
+      timeline:[{who:'Sistema',what:comentarioSistema,when:'Ahora',type:'system'}]
+    });
+    renderers.tickets(); updateBadges(); closeModal();
+  }
 }
 function addClient() {
-  const n = document.getElementById('cl-name').value.trim();
+  var n = document.getElementById('cl-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
-  const svcs = Array.from(document.getElementById('cl-svcs').selectedOptions).map(o => o.value);
-  const colors = ['#EA580C','#DC2626','#16A34A','#7C3AED','#B45309','#0891B2','#BE185D','#CA8A04'];
-  clients.push({
-    n,tp:document.getElementById('cl-ind').value||'General',c:colors[clients.length%colors.length],
-    phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:0,
-    svcs:svcs.length?svcs:['tag-mk'],team:['DG'],entregables:0,done:0,tickets:0,meetings:0,satisfaction:0,
-    budget:document.getElementById('cl-fee').value||'$0',spent:'$0',
-    contact:document.getElementById('cl-contact').value||n,
-    email:document.getElementById('cl-email').value||'',
-    phone:document.getElementById('cl-phone').value||'',
-    nextAction:'Agendar kickoff meeting',contractStart:'Feb 2026',contractEnd:'Feb 2027',
-    monthlyFee:document.getElementById('cl-fee').value||'$0',health:50,
-    healthTxt:'Nuevo — Pendiente de onboarding',notes:document.getElementById('cl-notes').value||'',status:'onboarding'
-  });
-  renderers.clients(); updateBadges(); closeModal();
+  var svcsEl = document.getElementById('cl-svcs');
+  var svcs = svcsEl ? Array.from(svcsEl.selectedOptions).map(function(o){ return o.value; }) : [];
+  var colors = ['#EA580C','#DC2626','#16A34A','#7C3AED','#B45309','#0891B2','#BE185D','#CA8A04'];
+  var fee = document.getElementById('cl-fee').value || '$0';
+  var row = {
+    nombre: n,
+    tipo: document.getElementById('cl-ind').value || 'General',
+    color: colors[clients.length % colors.length],
+    fases: ['Onboarding','Estrategia','Ejecución','Medición','Optimización'],
+    fase_actual: 0,
+    servicios: svcs.length ? svcs : ['tag-mk'],
+    equipo_ids: [],
+    entregables: 0,
+    entregables_hechos: 0,
+    tickets_count: 0,
+    meetings_count: 0,
+    satisfaccion: null,
+    presupuesto: fee,
+    gastado: '$0',
+    contacto_nombre: document.getElementById('cl-contact').value || n,
+    email: document.getElementById('cl-email').value || '',
+    telefono: document.getElementById('cl-phone').value || '',
+    proxima_accion: 'Agendar kickoff meeting',
+    contrato_inicio: 'Feb 2026',
+    contrato_fin: 'Feb 2027',
+    fee_mensual: fee,
+    health: 50,
+    health_txt: 'Nuevo — Pendiente de onboarding',
+    notes: document.getElementById('cl-notes').value || '',
+    status: 'onboarding'
+  };
+  if (supabase) {
+    supabase.from('tareas_clientes').insert(row).then(function(r) {
+      if (r.error) { alert('Error al crear cliente: ' + (r.error.message || '')); return; }
+      reloadTareasData(); closeModal();
+    });
+  } else {
+    clients.push({
+      n, id: null, tp: row.tipo, c: row.color, phases: row.fases, curr: 0, svcs: row.servicios, team: [],
+      entregables: 0, done: 0, tickets: 0, meetings: 0, satisfaction: null, budget: row.presupuesto, spent: row.gastado,
+      contact: row.contacto_nombre, email: row.email, phone: row.telefono,
+      nextAction: row.proxima_accion, contractStart: row.contrato_inicio, contractEnd: row.contrato_fin,
+      monthlyFee: row.fee_mensual, health: 50, healthTxt: row.health_txt, notes: row.notes, status: row.status
+    });
+    renderers.clients(); updateBadges(); closeModal();
+  }
+}
+
+function addCalendarEvent() {
+  var titulo = document.getElementById('cal-titulo').value.trim();
+  if (!titulo) { alert('Título requerido'); return; }
+  var dia = parseInt(document.getElementById('cal-dia').value, 10) || 1;
+  var mes = parseInt(document.getElementById('cal-mes').value, 10) || new Date().getMonth() + 1;
+  var anio = parseInt(document.getElementById('cal-anio').value, 10) || new Date().getFullYear();
+  var clase = document.getElementById('cal-clase').value || 'pill-orange';
+  if (supabase) {
+    supabase.from('tareas_calendario').insert({ dia: dia, mes: mes, anio: anio, titulo: titulo, clase_css: clase }).then(function(r) {
+      if (r.error) { alert('Error al crear evento: ' + (r.error.message||'')); return; }
+      reloadTareasData(); closeModal();
+    });
+  } else {
+    calI.push({ d: dia, t: titulo, cl: clase });
+    renderers.calendar?.(); closeModal();
+  }
+}
+
+function addEquipoMember() {
+  var id = (document.getElementById('eq-id').value || '').trim().toUpperCase().slice(0, 4);
+  if (!id) { alert('Código requerido (ej: DG)'); return; }
+  var nombre = document.getElementById('eq-nombre').value.trim();
+  if (!nombre) { alert('Nombre requerido'); return; }
+  var row = {
+    id: id,
+    nombre: nombre,
+    rol: document.getElementById('eq-rol').value || '',
+    servicio: document.getElementById('eq-servicio').value || '',
+    color: document.getElementById('eq-color').value || '#EA580C',
+    activo: true
+  };
+  if (supabase) {
+    supabase.from('tareas_equipo').insert(row).then(function(r) {
+      if (r.error) { alert('Error al crear miembro: ' + (r.error.message||'')); return; }
+      reloadTareasData(); closeModal();
+    });
+  } else {
+    TEAM.push({ id: row.id, n: row.nombre, r: row.rol, c: row.color, on: true, att: '—', ci: '—', svc: row.servicio, selfie: true, gps: true, ip: true, code: true });
+    if (!MT[row.id]) MT[row.id] = [];
+    renderers.workload?.(); closeModal();
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
