@@ -27,6 +27,12 @@ if (fs.existsSync(jsFile)) {
   fs.copyFileSync(jsFile, path.join(outDir, 'credito-app.js'));
   console.log('Copied credito-app/credito-app.js');
 }
+// auth-config.js (para protección de /creativos y /tareas)
+const authConfigSrc = path.join(dist, 'credito-app', 'auth-config.js');
+if (fs.existsSync(authConfigSrc)) {
+  fs.copyFileSync(authConfigSrc, path.join(outDir, 'auth-config.js'));
+  console.log('Copied credito-app/auth-config.js');
+}
 // por si en el futuro hay assets/
 const assetsSrc = path.join(dist, 'assets');
 const assetsDest = path.join(outDir, 'assets');

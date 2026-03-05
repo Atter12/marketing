@@ -153,7 +153,7 @@ function LogoIcon() {
   );
 }
 
-export default function Login({ onSuccess, supabase }) {
+export default function Login({ onSuccess, supabase, redirectTo: redirectToProp }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -173,9 +173,9 @@ export default function Login({ onSuccess, supabase }) {
       setError("Indicá un correo válido.");
       return;
     }
+    const redirectTo = redirectToProp || (typeof window !== "undefined" ? window.location.origin + "/credito" : null);
     setLoading(true);
     try {
-      const redirectTo = typeof window !== "undefined" ? window.location.origin + (window.location.pathname || "") : null;
       await solicitarMagicLink(correo, { redirect_to: redirectTo || undefined });
       setLinkEnviado(true);
     } catch (err) {
