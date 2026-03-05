@@ -1317,6 +1317,11 @@ let currentSearchTerm = '';
 let editingId = null;
 let editingType = null;
 
+var supabase = null;
+if (typeof window !== 'undefined' && window.__SUPABASE_URL__ && window.__SUPABASE_ANON_KEY__) {
+  try { supabase = window.supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__); } catch (e) { console.warn('[Creativos] Supabase init:', e); }
+}
+
 const STAGES = ['inspiracion','guion','produccion','revision','entrega'];
 const STAGE_NAMES = { inspiracion:'Inspiración', guion:'Guión', produccion:'Producción', revision:'Revisión', entrega:'Entrega Final' };
 const STAGE_STATUSES = { pending:'Pendiente', in_progress:'En Progreso', in_review:'En Revisión', approved:'Aprobado', changes:'Cambios Solicitados' };
@@ -1378,7 +1383,57 @@ function isProjectComplete(p) {
 }
 
 /* ============================================
-   SEED DATA
+   LOAD FROM SUPABASE (Fase 3)
+   ============================================ */
+function loadCreativosData() {
+  if (!supabase) return Promise.resolve(null);
+  return Promise.all([
+    supabase.from('creativos_clientes').select('*').order('name'),
+    supabase.from('creativos_productos').select('*').order('name'),
+    supabase.from('creativos_editores').select('*').order('name'),
+    supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false })
+  ]).then(function(ress) {
+    var cRes = ress[0], pRes = ress[1], eRes = ress[2], projRes = ress[3];
+    if (cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(cRes.error || pRes.error || eRes.error || projRes.error);
+    var clients = (cRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', company: r.company || '', email: r.email || '', createdAt: r.created_at }; });
+    var products = (pRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', category: r.category || '', createdAt: r.created_at }; });
+    var editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', createdAt: r.created_at }; });
+    var projects = (projRes.data || []).map(function(r) {
+      return {
+        id: r.id,
+        name: r.name || '',
+        clientId: r.client_id,
+        productId: r.product_id,
+        editorId: r.editor_id,
+        type: r.type || '',
+        platform: r.platform || '',
+        format: r.format || '',
+        brief: r.brief || '',
+        stages: r.stages && typeof r.stages === 'object' ? r.stages : createStageData(),
+        cpa: r.cpa || 'pendiente',
+        published: r.published === true,
+        createdAt: r.created_at
+      };
+    });
+    return { clients: clients, products: products, editors: editors, projects: projects };
+  }).catch(function(err) { console.error('[Creativos] loadCreativosData:', err); return null; });
+}
+
+function reloadCreativosData(then) {
+  if (!supabase) { if (then) then(); return Promise.resolve(); }
+  return loadCreativosData().then(function(data) {
+    if (data) {
+      D.clients = data.clients;
+      D.products = data.products;
+      D.editors = data.editors;
+      D.projects = data.projects;
+    }
+    if (then) then();
+  });
+}
+
+/* ============================================
+   SEED DATA (solo si no hay Supabase)
    ============================================ */
 function seedData() {
   const clientNames = [
@@ -2226,88 +2281,93 @@ function closeDrawer() {
 /* ============================================
    STAGE WORKFLOW
    ============================================ */
+function updateProjectStages(pid, stages) {
+  if (supabase) {
+    supabase.from('creativos_proyectos').update({ stages: stages }).eq('id', pid).then(function(r) {
+      if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+      reloadCreativosData(function() { openProjectDrawer(pid); renderPage(currentPage); });
+    });
+  }
+}
 function startStage(pid, stage) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].status = 'in_progress';
   logActivity('review', p.name, STAGE_NAMES[stage]);
-  showToast('success', `${STAGE_NAMES[stage]} iniciada`);
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  showToast('success', STAGE_NAMES[stage] + ' iniciada');
+  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function sendToReview(pid, stage) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].status = 'in_review';
   logActivity('review', p.name, STAGE_NAMES[stage]);
-  showToast('info', `${STAGE_NAMES[stage]} enviada a revisión`);
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  showToast('info', STAGE_NAMES[stage] + ' enviada a revisión');
+  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function approveStage(pid, stage) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].status = 'approved';
   p.stages[stage].reviewedAt = new Date().toISOString();
   p.stages[stage].reviewer = 'Equipo VideoForge';
   logActivity('approved', p.name, STAGE_NAMES[stage]);
-  showToast('success', `${STAGE_NAMES[stage]} aprobada`);
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  showToast('success', STAGE_NAMES[stage] + ' aprobada');
+  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function requestChanges(pid, stage) {
-  const note = prompt('Describe los cambios necesarios:');
+  var note = prompt('Describe los cambios necesarios:');
   if (!note) return;
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].status = 'changes';
   p.stages[stage].reviewNote = note;
   p.stages[stage].reviewedAt = new Date().toISOString();
   logActivity('changes', p.name, STAGE_NAMES[stage]);
   showToast('warning', 'Cambios solicitados');
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function resubmitStage(pid, stage) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].status = 'in_review';
   p.stages[stage].reviewNote = '';
   logActivity('review', p.name, STAGE_NAMES[stage]);
   showToast('info', 'Reenviado a revisión');
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function addStageNote(pid, stage) {
-  const note = prompt('Agregar nota:');
+  var note = prompt('Agregar nota:');
   if (!note) return;
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.stages[stage].note = note;
   showToast('success', 'Nota agregada');
-  openProjectDrawer(pid);
+  if (supabase) updateProjectStages(pid, p.stages); else openProjectDrawer(pid);
 }
-
 function setCPA(pid, value) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.cpa = value;
-  showToast('success', `CPA actualizado: ${CPA_LABELS[value]}`);
-  openProjectDrawer(pid);
-  renderPage(currentPage);
+  showToast('success', 'CPA actualizado: ' + CPA_LABELS[value]);
+  if (supabase) {
+    supabase.from('creativos_proyectos').update({ cpa: value }).eq('id', pid).then(function(r) {
+      if (r.error) { showToast('error', r.error.message); return; }
+      reloadCreativosData(function() { openProjectDrawer(pid); renderPage(currentPage); });
+    });
+  } else { openProjectDrawer(pid); renderPage(currentPage); }
 }
-
 function togglePublish(pid, checked) {
-  const p = D.projects.find(pr => pr.id === pid);
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
   p.published = checked;
   showToast('success', checked ? 'Publicado en portafolio' : 'Removido del portafolio');
-  renderPage(currentPage);
+  if (supabase) {
+    supabase.from('creativos_proyectos').update({ published: checked }).eq('id', pid).then(function(r) {
+      if (r.error) { showToast('error', r.error.message); return; }
+      reloadCreativosData(function() { openProjectDrawer(pid); renderPage(currentPage); });
+    });
+  } else renderPage(currentPage);
 }
 
 /* ============================================
@@ -2373,30 +2433,49 @@ function renderFileList() {
 function removeFile(i) { pendingFiles.splice(i,1); renderFileList(); }
 
 function saveProject() {
-  const name = document.getElementById('projName').value.trim();
+  var name = document.getElementById('projName').value.trim();
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
-  const p = {
-    id: uid(), name,
-    clientId: document.getElementById('projClient').value,
-    productId: document.getElementById('projProduct').value,
-    editorId: document.getElementById('projEditor').value,
-    type: document.getElementById('projType').value,
-    platform: document.getElementById('projPlatform').value,
-    format: document.getElementById('projFormat').value,
-    brief: document.getElementById('projBrief').value,
-    stages: createStageData(),
-    cpa: 'pendiente', published: false,
-    createdAt: new Date().toISOString(),
+  var stages = createStageData();
+  if (pendingFiles.length > 0) stages.inspiracion.files = pendingFiles.slice();
+  var clientId = document.getElementById('projClient').value || null;
+  var productId = document.getElementById('projProduct').value || null;
+  var editorId = document.getElementById('projEditor').value || null;
+  var row = {
+    name: name,
+    client_id: clientId || null,
+    product_id: productId || null,
+    editor_id: editorId || null,
+    type: document.getElementById('projType').value || '',
+    platform: document.getElementById('projPlatform').value || '',
+    format: document.getElementById('projFormat').value || '',
+    brief: document.getElementById('projBrief').value || '',
+    stages: stages,
+    cpa: 'pendiente',
+    published: false
   };
-  if (pendingFiles.length > 0) {
-    p.stages.inspiracion.files = [...pendingFiles];
+  if (supabase) {
+    supabase.from('creativos_proyectos').insert(row).then(function(r) {
+      if (r.error) { showToast('error', r.error.message || 'Error al crear proyecto'); return; }
+      pendingFiles = [];
+      closeModal();
+      showToast('success', 'Proyecto creado');
+      reloadCreativosData(function() { renderPage(currentPage); });
+    });
+  } else {
+    var p = {
+      id: uid(), name: name,
+      clientId: clientId, productId: productId, editorId: editorId,
+      type: row.type, platform: row.platform, format: row.format, brief: row.brief,
+      stages: stages, cpa: 'pendiente', published: false,
+      createdAt: new Date().toISOString()
+    };
+    D.projects.push(p);
+    pendingFiles = [];
+    logActivity('created', p.name);
+    closeModal();
+    showToast('success', 'Proyecto creado');
+    renderPage(currentPage);
   }
-  D.projects.push(p);
-  pendingFiles = [];
-  logActivity('created', p.name);
-  closeModal();
-  showToast('success', `Proyecto "${name}" creado`);
-  renderPage(currentPage);
 }
 
 // CLIENT MODAL
@@ -2412,19 +2491,37 @@ function openClientModal(id) {
   openModal(c ? 'Editar Cliente' : 'Nuevo Cliente', body, footer);
 }
 function saveClient() {
-  const name = document.getElementById('clientName').value.trim();
-  const company = document.getElementById('clientCompany').value.trim();
-  const email = document.getElementById('clientEmail').value.trim();
+  var name = document.getElementById('clientName').value.trim();
+  var company = document.getElementById('clientCompany').value.trim();
+  var email = document.getElementById('clientEmail').value.trim();
   if (!name || !company) { showToast('error', 'Nombre y empresa son requeridos'); return; }
-  if (editingId) {
-    const c = D.clients.find(cl => cl.id === editingId);
-    if (c) { c.name = name; c.company = company; c.email = email; }
-    showToast('success', 'Cliente actualizado');
+  if (supabase) {
+    if (editingId) {
+      supabase.from('creativos_clientes').update({ name: name, company: company, email: email }).eq('id', editingId).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Cliente actualizado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    } else {
+      supabase.from('creativos_clientes').insert({ name: name, company: company, email: email }).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Cliente agregado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    }
   } else {
-    D.clients.push({ id: uid(), name, company, email, createdAt: new Date().toISOString() });
-    showToast('success', `Cliente "${name}" agregado`);
+    if (editingId) {
+      var c = D.clients.find(function(cl) { return cl.id === editingId; });
+      if (c) { c.name = name; c.company = company; c.email = email; }
+      showToast('success', 'Cliente actualizado');
+    } else {
+      D.clients.push({ id: uid(), name: name, company: company, email: email, createdAt: new Date().toISOString() });
+      showToast('success', 'Cliente agregado');
+    }
+    closeModal(); renderPage(currentPage);
   }
-  closeModal(); renderPage(currentPage);
 }
 
 // PRODUCT MODAL
@@ -2439,18 +2536,36 @@ function openProductModal(id) {
   openModal(p ? 'Editar Producto' : 'Nuevo Producto', body, footer);
 }
 function saveProduct() {
-  const name = document.getElementById('prodName').value.trim();
-  const category = document.getElementById('prodCategory').value;
+  var name = document.getElementById('prodName').value.trim();
+  var category = document.getElementById('prodCategory').value;
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
-  if (editingId) {
-    const p = D.products.find(pr => pr.id === editingId);
-    if (p) { p.name = name; p.category = category; }
-    showToast('success', 'Producto actualizado');
+  if (supabase) {
+    if (editingId) {
+      supabase.from('creativos_productos').update({ name: name, category: category }).eq('id', editingId).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Producto actualizado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    } else {
+      supabase.from('creativos_productos').insert({ name: name, category: category }).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Producto agregado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    }
   } else {
-    D.products.push({ id: uid(), name, category, createdAt: new Date().toISOString() });
-    showToast('success', `Producto "${name}" agregado`);
+    if (editingId) {
+      var p = D.products.find(function(pr) { return pr.id === editingId; });
+      if (p) { p.name = name; p.category = category; }
+      showToast('success', 'Producto actualizado');
+    } else {
+      D.products.push({ id: uid(), name: name, category: category, createdAt: new Date().toISOString() });
+      showToast('success', 'Producto agregado');
+    }
+    closeModal(); renderPage(currentPage);
   }
-  closeModal(); renderPage(currentPage);
 }
 
 // EDITOR MODAL
@@ -2465,18 +2580,36 @@ function openEditorModal(id) {
   openModal(e ? 'Editar Editor' : 'Nuevo Editor', body, footer);
 }
 function saveEditor() {
-  const name = document.getElementById('editorName').value.trim();
-  const specialty = document.getElementById('editorSpecialty').value;
+  var name = document.getElementById('editorName').value.trim();
+  var specialty = document.getElementById('editorSpecialty').value;
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
-  if (editingId) {
-    const e = D.editors.find(ed => ed.id === editingId);
-    if (e) { e.name = name; e.specialty = specialty; }
-    showToast('success', 'Editor actualizado');
+  if (supabase) {
+    if (editingId) {
+      supabase.from('creativos_editores').update({ name: name, specialty: specialty }).eq('id', editingId).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Editor actualizado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    } else {
+      supabase.from('creativos_editores').insert({ name: name, specialty: specialty }).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        showToast('success', 'Editor agregado');
+        closeModal();
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    }
   } else {
-    D.editors.push({ id: uid(), name, specialty, createdAt: new Date().toISOString() });
-    showToast('success', `Editor "${name}" agregado`);
+    if (editingId) {
+      var e = D.editors.find(function(ed) { return ed.id === editingId; });
+      if (e) { e.name = name; e.specialty = specialty; }
+      showToast('success', 'Editor actualizado');
+    } else {
+      D.editors.push({ id: uid(), name: name, specialty: specialty, createdAt: new Date().toISOString() });
+      showToast('success', 'Editor agregado');
+    }
+    closeModal(); renderPage(currentPage);
   }
-  closeModal(); renderPage(currentPage);
 }
 
 // EDITOR DETAIL (drawer)
@@ -2780,10 +2913,24 @@ window.addEventListener('hashchange', handleHash);
 /* ============================================
    INITIALIZE
    ============================================ */
-seedData();
-handleHash();
-if (window.location.hash !== '#portfolio') {
-  navigateTo('dashboard');
+function initApp() {
+  activityLog = [];
+  handleHash();
+  if (window.location.hash !== '#portfolio') navigateTo('dashboard');
+}
+if (supabase) {
+  loadCreativosData().then(function(data) {
+    if (data) {
+      D.clients = data.clients;
+      D.products = data.products;
+      D.editors = data.editors;
+      D.projects = data.projects;
+    }
+    initApp();
+  }).catch(function() { seedData(); initApp(); });
+} else {
+  seedData();
+  initApp();
 }
 </script>
 </body>

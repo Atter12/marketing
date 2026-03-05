@@ -30,23 +30,22 @@ Cada **etapa** del proyecto tiene: `status`, `files`, `note`, `reviewer`, `revie
 
 Crear tablas en el mismo proyecto Supabase. Opción: prefijo `creativos_` para no mezclar con Crédito.
 
-- [ ] **1.1** Tabla `creativos_clientes`  
+- [x] **1.1** Tabla `creativos_clientes`  
   - `id` (uuid, PK), `name`, `company`, `email`, `created_at`, `created_by` (opcional: email del gerente que lo creó).
 
-- [ ] **1.2** Tabla `creativos_productos`  
+- [x] **1.2** Tabla `creativos_productos`  
   - `id` (uuid, PK), `name`, `category`, `created_at`, `created_by` (opcional).
 
-- [ ] **1.3** Tabla `creativos_editores`  
+- [x] **1.3** Tabla `creativos_editores`  
   - `id` (uuid, PK), `name`, `specialty`, `created_at`, `created_by` (opcional).
 
-- [ ] **1.4** Tabla `creativos_proyectos`  
+- [x] **1.4** Tabla `creativos_proyectos`  
   - `id` (uuid, PK), `name`, `client_id` (FK), `product_id` (FK), `editor_id` (FK), `type`, `platform`, `format`, `brief` (text), `cpa`, `published` (boolean), `created_at`, `created_by` (opcional).
 
-- [ ] **1.5** Tabla `creativos_etapas` (o JSONB dentro de proyecto)  
-  - Opción A: tabla `creativos_etapas` con `id`, `project_id`, `stage_key` (inspiracion, guion, produccion, revision, entrega), `status`, `note`, `reviewer`, `review_note`, `reviewed_at`, `created_at`, `updated_at`.  
-  - Opción B: columna `stages` (JSONB) en `creativos_proyectos` para no multiplicar filas. Recomendado para empezar: **JSONB** y migrar a tabla si luego se necesitan queries por etapa.
+- [x] **1.5** Tabla `creativos_etapas` (o JSONB dentro de proyecto)  
+  - Opción B implementada: columna `stages` (JSONB) en `creativos_proyectos` con estructura por etapa (inspiracion, guion, produccion, revision, entrega): `status`, `files`, `note`, `reviewer`, `reviewNote`, `reviewedAt`.
 
-- [ ] **1.6** RLS (Row Level Security): solo gerentes (y en el futuro clientes si aplica) pueden leer/escribir. Usar `auth.jwt() ->> 'email'` y tabla `gerentes` para restringir por gerente.
+- [x] **1.6** RLS (Row Level Security): solo gerentes pueden leer/escribir. Usa `public.is_gerente()` (tabla `gerentes`).
 
 - [ ] **1.7** (Opcional) Archivos por etapa: bucket Supabase Storage `creativos-files` con políticas por `project_id` y etapa.
 
@@ -66,23 +65,19 @@ Crear tablas en el mismo proyecto Supabase. Opción: prefijo `creativos_` para n
 
 Sustituir el uso de `D` y `activityLog` por llamadas a Supabase.
 
-- [ ] **3.1** Al cargar la página (tras comprobar sesión), hacer `select` de:
-  - `creativos_clientes`
-  - `creativos_productos`
-  - `creativos_editores`
-  - `creativos_proyectos` (con `stages` en JSONB si se eligió esa opción).
+- [x] **3.1** Al cargar la página (tras comprobar sesión), hacer `select` de clientes, productos, editores, proyectos (con `stages` en JSONB).
 
-- [ ] **3.2** Eliminar o desactivar `seedData()` en producción; opcional: mantener un “seed” solo en desarrollo o con un flag.
+- [x] **3.2** Si hay Supabase se carga desde la API; si no, se ejecuta seedData(). Eliminar o desactivar `seedData()` en producción; opcional: mantener un “seed” solo en desarrollo o con un flag.
 
-- [ ] **3.3** Crear cliente: `supabase.from('creativos_clientes').insert({ name, company, email, ... })`.
+- [x] **3.3** Crear/editar cliente: insert o update en `creativos_clientes`, luego reload.
 
-- [ ] **3.4** Crear producto: `supabase.from('creativos_productos').insert(...)`.
+- [x] **3.4** Crear/editar producto: insert o update en `creativos_productos`, luego reload.
 
-- [ ] **3.5** Crear editor: `supabase.from('creativos_editores').insert(...)`.
+- [x] **3.5** Crear/editar editor: insert o update en `creativos_editores`, luego reload.
 
-- [ ] **3.6** Crear proyecto: `supabase.from('creativos_proyectos').insert({ ..., stages: { ... } })`.
+- [x] **3.6** Crear proyecto: insert en `creativos_proyectos` (con stages), luego reload.
 
-- [ ] **3.7** Actualizar etapa de un proyecto: `update` del proyecto con el objeto `stages` actualizado (o update de fila en `creativos_etapas` si se usó tabla).
+- [x] **3.7** Actualizar etapa: update del proyecto con `stages` (startStage, sendToReview, approveStage, etc.). setCPA y togglePublish también persisten.
 
 - [ ] **3.8** Activity log: puede derivarse de `created_at` / `updated_at` de proyectos y etapas, o añadir una tabla `creativos_activity_log` si se quiere historial explícito.
 

@@ -4,7 +4,17 @@ Objetivo: pasar de **datos hardcodeados en JS** a **datos reales en Supabase**, 
 
 ---
 
-## Estado actual (simulado)
+## Estado del proyecto
+
+**Implementación core terminada (listo para revisión).**
+
+- **Fase 1** — Hecha: tablas `tareas_*` en Supabase + RLS gerentes.
+- **Fase 3** — Hecha: carga inicial desde Supabase, datos vacíos por defecto (sin simulados). CRUD completo: clientes (crear, editar, eliminar), equipo (crear miembro), kanban (crear entregable, mover columna), tickets (crear, resolver, comentarios), calendario (crear evento).
+- **Pendiente opcional:** Fase 2 (traza created_by), 3.8 (workflows instancias), Fase 4 (integración Crédito), Fase 5 (loading/errores, tiempo real, SLA).
+
+---
+
+## Estado actual (simulado) — ya no aplica; datos desde Supabase
 
 - **Una sola página:** `tarea.html` con todo el HTML/CSS/JS.
 - **Datos en constantes:** `TEAM`, `MT`, `clients`, `KT` (kanban), `tickets`, `workflows`, `calI` (calendario). **Nada se persiste**.
