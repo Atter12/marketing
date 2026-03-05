@@ -30,32 +30,32 @@ Entidades actuales (resumido):
 
 Prefijo sugerido: `tareas_` para no mezclar con Crédito/Creativos.
 
-- [ ] **1.1** Tabla `tareas_equipo`  
+- [x] **1.1** Tabla `tareas_equipo`  
   - `id` (text/varchar PK, ej. 'DG'), `nombre`, `rol`, `color`, `servicio`, `activo` (boolean), `created_at`, `updated_at`.  
   - Opcional: campos de asistencia (`asistencia`, `checkin_at`, etc.) si se quiere registrar presencia.
 
-- [ ] **1.2** Tabla `tareas_clientes`  
+- [x] **1.2** Tabla `tareas_clientes`  
   - `id` (uuid PK), `nombre`, `tipo` (SaaS, Cosmética, etc.), `color`, `fases` (JSONB array), `fase_actual` (int), `servicios` (JSONB array de tags), `equipo_ids` (JSONB array), `entregables`, `entregables_hechos`, `tickets_count`, `meetings_count`, `satisfaccion`, `presupuesto`, `gastado`, `contacto_nombre`, `email`, `telefono`, `proxima_accion`, `contrato_inicio`, `contrato_fin`, `fee_mensual`, `health`, `health_txt`, `notes`, `status` (activo, onboarding, etc.), `created_at`, `updated_at`.
 
-- [ ] **1.3** Tabla `tareas_kanban`  
+- [x] **1.3** Tabla `tareas_kanban`  
   - `id` (uuid PK), `columna` (todo, progress, review, done), `titulo`, `descripcion`, `servicio` (tag), `prioridad` (hi, md, lo), `fecha_entrega`, `estado_fecha` (lt, sn, dn), `progreso` (0–100), `equipo_ids` (JSONB), `cliente_nombre` o `cliente_id` (FK opcional), `subtareas` (text ej. '2/5'), `orden` (int para ordenar en columna), `created_at`, `updated_at`.
 
-- [ ] **1.4** Tabla `tareas_tickets`  
+- [x] **1.4** Tabla `tareas_tickets`  
   - `id` (uuid PK), `codigo` (TK-001), `titulo`, `subtitulo`, `cliente_nombre`, `cliente_color`, `status` (open, progress, closed), `prioridad`, `categoria`, `canal`, `asignado_id` (FK a tareas_equipo), `sla_horas`, `sla_vencimiento`, `sla_status`, `entregable_vinculado`, `created_at`, `updated_at`.  
   - Tabla `tareas_ticket_comentarios`: `id`, `ticket_id`, `quien`, `que`, `cuando`, `tipo` (system, comment).
 
-- [ ] **1.5** Tabla `tareas_workload` (tareas por miembro)  
+- [x] **1.5** Tabla `tareas_workload` (tareas por miembro)  
   - `id` (uuid PK), `equipo_id` (FK), `titulo`, `dias` (número), `created_at`.  
   - O bien un JSONB en `tareas_equipo` con la lista de tareas de carga (más simple al inicio).
 
-- [ ] **1.6** Tabla `tareas_calendario`  
+- [x] **1.6** Tabla `tareas_calendario`  
   - `id` (uuid PK), `dia` (int 1–31), `mes` (int), `anio` (int), `titulo`, `clase_css` (pill-green, etc.), `cliente_id` o referencia opcional, `created_at`.
 
-- [ ] **1.7** Tabla `tareas_workflows` (definiciones)  
+- [x] **1.7** Tabla `tareas_workflows` (definiciones)  
   - `id` (uuid PK), `icono`, `titulo`, `descripcion`, `pasos` (JSONB array), `activo` (int), `badges` (JSONB array), `orden`.  
   - Puede quedar como datos de configuración (pocos cambios) y cargarse desde JSON o una tabla.
 
-- [ ] **1.8** RLS: solo gerentes pueden leer/escribir (mismo criterio que Crédito: `auth.jwt() ->> 'email'` y tabla `gerentes`).
+- [x] **1.8** RLS: solo gerentes pueden leer/escribir (mismo criterio que Crédito: `auth.jwt() ->> 'email'` y tabla `gerentes`).
 
 ---
 
@@ -71,7 +71,7 @@ Prefijo sugerido: `tareas_` para no mezclar con Crédito/Creativos.
 
 Sustituir las constantes por datos cargados desde la API.
 
-- [ ] **3.1** Al cargar la página:
+- [x] **3.1** Al cargar la página:
   - `select` de `tareas_equipo` → rellenar TEAM.
   - `select` de `tareas_clientes` → rellenar clients.
   - `select` de `tareas_kanban` ordenado por columna y orden → rellenar KT.
@@ -80,7 +80,7 @@ Sustituir las constantes por datos cargados desde la API.
   - `select` de `tareas_calendario` para el mes actual → rellenar calI.
   - `select` de `tareas_workflows` (o cargar JSON estático) → workflows.
 
-- [ ] **3.2** Eliminar o no ejecutar los arrays hardcodeados actuales cuando existan datos en Supabase; opcional: seed inicial vía migración o script para desarrollo.
+- [x] **3.2** Eliminar o no ejecutar los arrays hardcodeados actuales cuando existan datos en Supabase; opcional: seed inicial vía migración o script para desarrollo.
 
 - [ ] **3.3** CRUD clientes: insert/update/delete en `tareas_clientes`.
 

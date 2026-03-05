@@ -1565,6 +1565,33 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   border: 1px solid var(--color-divider);
 }
 .modal-overlay.show .modal { transform: scale(1) translateY(0); }
+
+/* Loading overlay (carga desde Supabase) */
+#tareas-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,25,23,0.7);
+  backdrop-filter: blur(6px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: var(--sp-4);
+  transition: opacity 0.25s;
+}
+#tareas-loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#tareas-loading-overlay .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-divider);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: tareas-spin 0.8s linear infinite;
+}
+@keyframes tareas-spin { to { transform: rotate(360deg); } }
+#tareas-loading-overlay .loading-msg { color: var(--color-text-secondary); font-size: 0.95rem; }
+
 .modal-header {
   padding: var(--sp-5) var(--sp-6);
   border-bottom: 1px solid var(--color-divider);
@@ -2091,6 +2118,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <!-- Content -->
   <main class="content" id="main-content">
 
+  <div id="tareas-loading-overlay" class="hidden" aria-live="polite" aria-busy="false">
+    <div class="spinner" aria-hidden="true"></div>
+    <span class="loading-msg">Cargando datos…</span>
+  </div>
+
 <!-- ══════════════ DASHBOARD VIEW ══════════════ -->
 <section class="view active" id="view-dashboard" aria-label="Dashboard">
 
@@ -2540,9 +2572,17 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <script>
 'use strict';
 // ══════════════════════════════════════════════════════════════════
-//  DATA — Preserved exactly from v4
+//  SUPABASE (misma BD que Crédito/Creativos)
 // ══════════════════════════════════════════════════════════════════
-const TEAM = [
+var supabase = null;
+if (typeof window !== 'undefined' && window.__SUPABASE_URL__ && window.__SUPABASE_ANON_KEY__) {
+  try { supabase = window.supabase.createClient(window.__SUPABASE_URL__, window.__SUPABASE_ANON_KEY__); } catch (e) { console.warn('[Tareas] Supabase init:', e); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  DATA — Fallback hardcodeado; se reemplaza por Supabase si hay conexión
+// ══════════════════════════════════════════════════════════════════
+let TEAM = [
   {id:'DG',n:'Diego Gutiérrez',r:'Estratega de Marketing',c:'#EA580C',on:true,att:'present',ci:'8:55 AM',svc:'Marketing',selfie:true,gps:true,ip:true,code:true},
   {id:'MG',n:'María García',r:'Editora de Video Sr.',c:'#DC2626',on:true,att:'present',ci:'9:02 AM',svc:'Video',selfie:true,gps:true,ip:true,code:true},
   {id:'AL',n:'Ana López',r:'Diseñadora & Branding',c:'#16A34A',on:true,att:'late',ci:'9:45 AM',svc:'Branding',selfie:true,gps:false,ip:true,code:true},
@@ -2552,7 +2592,7 @@ const TEAM = [
   {id:'CM',n:'Carmen Mendoza',r:'Copywriter',c:'#BE185D',on:false,att:'absent',ci:'—',svc:'Content',selfie:false,gps:false,ip:false,code:false},
   {id:'PR',n:'Pablo Ríos',r:'Community Manager',c:'#0891B2',on:true,att:'present',ci:'8:48 AM',svc:'Social Media',selfie:true,gps:true,ip:true,code:true}
 ];
-const MT = {
+let MT = {
   DG:[{t:'Auditoría SEO TechStart',d:1},{t:'Keyword research Q1',d:1},{t:'Email sequence NovaTech',d:0},{t:'Reporte analytics',d:0}],
   MG:[{t:'Edición Reel Vive Fit #1',d:1},{t:'Edición Reel #2',d:0},{t:'Color grading Tutorial YT',d:1},{t:'Exportar versiones',d:0}],
   AL:[{t:'Moodboard Coach María',d:1},{t:'3 propuestas logo',d:1},{t:'Paleta definitiva',d:1},{t:'Brand Book Méndez',d:0}],
@@ -2562,7 +2602,7 @@ const MT = {
   CM:[{t:'Copy emails NovaTech 1-3',d:1},{t:'Copy emails 4-5',d:0},{t:'Blog post SEO',d:0}],
   PR:[{t:'Responder DMs Luna',d:1},{t:'Moderar comentarios',d:1},{t:'Encuesta Stories',d:0}]
 };
-const clients = [
+let clients = [
   {n:'NovaTech',tp:'SaaS / Tech',c:'#EA580C',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:2,svcs:['tag-mk','tag-ad','tag-se'],team:['DG','CM','JR'],entregables:15,done:9,tickets:2,meetings:3,satisfaction:92,budget:'$4,000',spent:'$2,400',contact:'Pablo Rojas',email:'pablo@novatech.io',phone:'+51 987 654 321',nextAction:'Reunión de resultados Q1 — 1 Mar',contractStart:'Oct 2025',contractEnd:'Oct 2026',monthlyFee:'$4,000',health:88,healthTxt:'Buena — Avance estable pero hay 2 tickets pendientes',notes:'Priorizar email marketing. CEO quiere ver resultados de SEO en Q2.',status:'activo'},
   {n:'Luna Beauty',tp:'Cosmética',c:'#BE185D',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:3,svcs:['tag-so','tag-vi','tag-de'],team:['SP','MG','LV'],entregables:12,done:8,tickets:1,meetings:2,satisfaction:96,budget:'$1,800',spent:'$950',contact:'Isabella Luna',email:'isa@lunabeauty.com',phone:'+51 912 345 678',nextAction:'Aprobación calendario Marzo — 26 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$1,800',health:95,healthTxt:'Excelente — Alta satisfacción, entregas puntuales',notes:'Muy responsive. Les encanta el contenido. Upsell potencial: Paid Ads.',status:'activo'},
   {n:'FitZone Gym',tp:'Fitness',c:'#16A34A',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:4,svcs:['tag-ad','tag-vi'],team:['JR','MG'],entregables:10,done:9,tickets:1,meetings:4,satisfaction:88,budget:'$3,200',spent:'$2,900',contact:'Marco Díaz',email:'marco@fitzone.pe',phone:'+51 998 765 432',nextAction:'Reporte final de campaña — 28 Feb',contractStart:'Nov 2025',contractEnd:'May 2026',monthlyFee:'$3,200',health:78,healthTxt:'Alerta — Presupuesto casi agotado, 1 ticket CTA urgente',notes:'Muy exigente con resultados. Necesita ver ROI constante.',status:'activo'},
@@ -2570,7 +2610,7 @@ const clients = [
   {n:'Dr. Roberto Méndez',tp:'Marca Personal',c:'#B45309',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:2,svcs:['tag-br','tag-so','tag-vi'],team:['AL','SP','MG'],entregables:9,done:5,tickets:1,meetings:2,satisfaction:90,budget:'$2,000',spent:'$1,300',contact:'Roberto Méndez',email:'dr.mendez@gmail.com',phone:'+51 945 678 901',nextAction:'Presentar 3 opciones de logo — 20 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$2,000',health:85,healthTxt:'Buena — En fase de identidad, esperando aprobación logo',notes:'Muy involucrado en el proceso. Prefiere estilo minimalista y premium.',status:'activo'},
   {n:'Coach María Torres',tp:'Marca Personal',c:'#0891B2',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:3,svcs:['tag-br','tag-so'],team:['AL','SP','CM'],entregables:11,done:10,tickets:0,meetings:3,satisfaction:98,budget:'$1,600',spent:'$1,400',contact:'María Torres',email:'maria@coachtorres.com',phone:'+51 923 456 789',nextAction:'Lanzamiento redes — 3 Mar',contractStart:'Dic 2025',contractEnd:'Jun 2026',monthlyFee:'$1,600',health:97,healthTxt:'Excelente — Casi lista para lanzamiento, súper contenta',notes:'Cliente ideal. Referidos potenciales. Ya recomendó 1 persona.',status:'activo'}
 ];
-const KT = [
+let KT = [
   {col:'todo',tt:'Campaña Email NovaTech',ds:'Diseñar secuencia de 5 emails para lanzamiento.',sv:'marketing',tg:'tag-mk',pr:'hi',du:'Feb 13',dc:'lt',pc:20,tm:['DG','CM'],cl:'NovaTech',sb:'1/5'},
   {col:'todo',tt:'Video Testimonial FitZone',ds:'Grabar y editar testimonial de 60 seg.',sv:'video',tg:'tag-vi',pr:'md',du:'Feb 18',dc:'',pc:0,tm:['MG'],cl:'FitZone Gym',sb:'0/4'},
   {col:'todo',tt:'Calendario Editorial Marzo',ds:'30 posts Instagram + TikTok.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 28',dc:'',pc:0,tm:['SP','DG'],cl:'Luna Beauty',sb:'0/3'},
@@ -2584,7 +2624,7 @@ const KT = [
   {col:'done',tt:'Pack 15 Posts Luna Beauty',ds:'Feed Instagram + copies.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 10',dc:'dn',pc:100,tm:['SP'],cl:'Luna Beauty',sb:'15/15'},
   {col:'done',tt:'Setup Meta Ads NovaTech',ds:'Business Manager, píxel, campañas.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 8',dc:'dn',pc:100,tm:['JR','DG'],cl:'NovaTech',sb:'8/8'}
 ];
-const tickets = [
+let tickets = [
   {id:'TK-001',title:'Cambiar copy del post #3',sub:'Luna Beauty pidió ajuste de texto en post de Instagram — no refleja la promo actual',client:'Luna Beauty',clientColor:'#BE185D',status:'open',priority:'media',category:'Cambio',channel:'WhatsApp',assignee:'SP',sla:'4h',slaLeft:'2h 15m',slaStatus:'ok',created:'Hoy 10:42 AM',due:'Hoy 2:42 PM',linkedDeliverable:'Pack 15 Posts Luna Beauty',
    timeline:[{who:'Sistema',what:'Ticket creado automáticamente desde WhatsApp',when:'10:42 AM',type:'system'},{who:'Sofía Pérez',what:'Recibido. Revisando cuál es la promo correcta.',when:'10:55 AM',type:'comment'}]},
   {id:'TK-002',title:'Agregar slide al deck de inversores',sub:'NovaTech necesita una slide extra con proyecciones Q2 para reunión de mañana',client:'NovaTech',clientColor:'#EA580C',status:'progress',priority:'alta',category:'Solicitud',channel:'Email',assignee:'DG',sla:'2h',slaLeft:'35m',slaStatus:'warn',created:'Hoy 9:25 AM',due:'Hoy 11:25 AM',linkedDeliverable:'Estrategia SEO Q1',
@@ -2600,7 +2640,7 @@ const tickets = [
   {id:'TK-007',title:'Revisar ortografía del blog post',sub:'TechStart encontró 3 errores ortográficos en el artículo publicado ayer',client:'TechStart',clientColor:'#7C3AED',status:'open',priority:'media',category:'Error',channel:'Email',assignee:'CM',sla:'4h',slaLeft:'3h 10m',slaStatus:'ok',created:'Hoy 10:15 AM',due:'Hoy 2:15 PM',linkedDeliverable:'Estrategia SEO Q1',
    timeline:[{who:'Sistema',what:'Ticket creado desde email de ana@techstart.co',when:'10:15 AM',type:'system'}]}
 ];
-const workflows = [
+let workflows = [
   {ic:'💡',bg:'var(--color-primary-highlight)',t:'Ideación y Brainstorm',d:'Al crear proyecto, se genera moodboard con brief, referencias y espacio colaborativo.',steps:['Brief recibido','Crear moodboard','Sesión brainstorm','Seleccionar conceptos'],act:3,badges:['Automático']},
   {ic:'✏️',bg:'var(--purple-bg)',t:'Bocetaje y Propuestas',d:'Ideas pasan a bocetaje. 3 opciones mínimo con deadline automático.',steps:['Conceptos aprobados','Boceto A','Boceto B','Boceto C','Presentar'],act:1,badges:['3 opciones']},
   {ic:'🎨',bg:'var(--pink-bg)',t:'Desarrollo Creativo',d:'Propuesta aprobada se desarrolla: verificación de brand y checklist de calidad.',steps:['Aprobada','Desarrollo','Verificar brand','Checklist QA'],act:2,badges:['Checklist']},
@@ -2614,7 +2654,7 @@ const workflows = [
   {ic:'👤',bg:'var(--cyan-bg)',t:'Onboarding Cliente',d:'Workspace, equipo, kickoff, brand guidelines, primer brief.',steps:['Workspace','Equipo','Kickoff','Guidelines','Brief'],act:3,badges:['5 pasos']},
   {ic:'📱',bg:'var(--pink-bg)',t:'Publicación en Redes',d:'Contenido aprobado: formato por plataforma, hashtags, horario óptimo.',steps:['Aprobado','Formato','Programar','Publicar + analytics'],act:1,badges:['Multi-plataforma']}
 ];
-const calI = [
+let calI = [
   {d:3,t:'Post IG Luna',cl:'pill-pink'},{d:5,t:'Camp Luna',cl:'pill-orange'},{d:7,t:'Blog TechStart',cl:'pill-purple'},
   {d:8,t:'✅ Meta Ads',cl:'pill-green'},{d:10,t:'✅ Posts Luna',cl:'pill-green'},{d:10,t:'Reel TikTok',cl:'pill-red'},
   {d:12,t:'⚠ Brand Book',cl:'pill-orange2'},{d:13,t:'⚠ Email Mkt',cl:'pill-orange2'},{d:15,t:'Tutorial YT',cl:'pill-red'},
@@ -2622,6 +2662,101 @@ const calI = [
   {d:18,t:'Testimonial',cl:'pill-red'},{d:20,t:'ID Coach María',cl:'pill-purple'},{d:25,t:'SEO Q1',cl:'pill-purple'},
   {d:28,t:'Cal. Marzo',cl:'pill-green'}
 ];
+
+// ══════════════════════════════════════════════════════════════════
+//  CARGA DESDE SUPABASE (Fase 3.1)
+// ══════════════════════════════════════════════════════════════════
+function formatTicketWhen(d) {
+  if (!d) return '';
+  var dt = typeof d === 'string' ? new Date(d) : d;
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+  var dDay = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  var t = dt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  if (dDay.getTime() === today.getTime()) return 'Hoy ' + t;
+  if (dDay.getTime() === yesterday.getTime()) return 'Ayer ' + t;
+  return dt.toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function formatSlaHours(h) { if (h == null) return ''; if (h < 24) return h + 'h'; return (h / 24) + 'd'; }
+function formatKanbanDate(dateStr) {
+  if (!dateStr) return '';
+  var d = new Date(dateStr);
+  return d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
+}
+
+async function loadTareasData() {
+  if (!supabase) return null;
+  var now = new Date();
+  var mes = now.getMonth() + 1, anio = now.getFullYear();
+  try {
+    var [eqRes, clRes, kbRes, tkRes, wlRes, calRes, wfRes] = await Promise.all([
+      supabase.from('tareas_equipo').select('*').order('id'),
+      supabase.from('tareas_clientes').select('*').order('nombre'),
+      supabase.from('tareas_kanban').select('*').order('columna').order('orden', { ascending: true }),
+      supabase.from('tareas_tickets').select('*').order('created_at', { ascending: false }),
+      supabase.from('tareas_workload').select('*'),
+      supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
+      supabase.from('tareas_workflows').select('*').order('orden')
+    ]);
+    if (eqRes.error) throw eqRes.error;
+    if (clRes.error) throw clRes.error;
+    if (kbRes.error) throw kbRes.error;
+    if (tkRes.error) throw tkRes.error;
+    if (wlRes.error) throw wlRes.error;
+    if (calRes.error) throw calRes.error;
+    if (wfRes.error) throw wfRes.error;
+
+    var TEAM = (eqRes.data || []).map(function(r) {
+      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '—', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', svc: r.servicio || '', selfie: true, gps: true, ip: true, code: true };
+    });
+    var clients = (clRes.data || []).map(function(r) {
+      return { id: r.id, n: r.nombre, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: r.satisfaccion, budget: r.presupuesto || '', spent: r.gastado || '', contact: r.contacto_nombre || '', email: r.email || '', phone: r.telefono || '', nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: r.health, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+    });
+    var KT = (kbRes.data || []).map(function(r) {
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
+    });
+    var MT = {};
+    (wlRes.data || []).forEach(function(r) {
+      if (!MT[r.equipo_id]) MT[r.equipo_id] = [];
+      MT[r.equipo_id].push({ t: r.titulo, d: r.dias || 0 });
+    });
+    TEAM.forEach(function(m) { if (!MT[m.id]) MT[m.id] = []; });
+    var calI = (calRes.data || []).map(function(r) { return { d: r.dia, t: r.titulo, cl: r.clase_css || 'pill-orange' }; });
+    var workflows = (wfRes.data || []).map(function(r) {
+      return { id: r.id, ic: r.icono || '', bg: 'var(--color-primary-highlight)', t: r.titulo, d: r.descripcion || '', steps: Array.isArray(r.pasos) ? r.pasos : [], act: r.activo || 0, badges: Array.isArray(r.badges) ? r.badges : [] };
+    });
+    var ticketIds = (tkRes.data || []).map(function(t) { return t.id; });
+    var comentariosRes = ticketIds.length ? await supabase.from('tareas_ticket_comentarios').select('*').in('ticket_id', ticketIds).order('created_at', { ascending: true }) : { data: [] };
+    var comentarios = comentariosRes.data || [];
+    var tickets = (tkRes.data || []).map(function(t) {
+      var timeline = comentarios.filter(function(c) { return c.ticket_id === t.id; }).map(function(c) {
+        return { who: c.quien, what: c.que, when: c.cuando || formatTicketWhen(c.created_at), type: c.tipo || 'comment' };
+      });
+      var slaLeft = '';
+      if (t.sla_vencimiento) {
+        var due = new Date(t.sla_vencimiento);
+        if (due < now) { slaLeft = 'VENCIDO'; } else {
+          var mins = Math.floor((due - now) / 60000);
+          if (mins >= 60) slaLeft = Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm';
+          else slaLeft = mins + 'm';
+        }
+      }
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
+    });
+    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI };
+  } catch (err) {
+    console.error('[Tareas] loadTareasData:', err);
+    return null;
+  }
+}
+
+function showTareasLoading(show) {
+  var el = document.getElementById('tareas-loading-overlay');
+  if (!el) return;
+  if (show) { el.classList.remove('hidden'); el.setAttribute('aria-busy', 'true'); }
+  else { el.classList.add('hidden'); el.setAttribute('aria-busy', 'false'); }
+}
 
 // ══════════════════════════════════════════════════════════════════
 //  HELPERS
@@ -3122,12 +3257,12 @@ renderers.workflows = function() {
 
 // ─── SIDEBAR BADGE UPDATES ───
 function updateBadges() {
-  const tkOpen = tickets.filter(t => t.status !== 'resolved').length;
-  const el = document.getElementById('badge-tickets');
+  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
+  var el = document.getElementById('badge-tickets');
   if (el) el.textContent = tkOpen;
-  const clEl = document.getElementById('badge-clients');
+  var clEl = document.getElementById('badge-clients');
   if (clEl) clEl.textContent = clients.length;
-  const kbEl = document.getElementById('badge-kanban');
+  var kbEl = document.getElementById('badge-kanban');
   if (kbEl) kbEl.textContent = KT.length;
 }
 
@@ -3420,15 +3555,12 @@ function observeFadeIns(container) {
 // ══════════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  // Render dashboard fade-ins immediately
-  setTimeout(() => {
-    document.querySelectorAll('#view-dashboard .fade-in').forEach((el, i) => {
-      setTimeout(() => el.classList.add('visible'), i * 55);
+function initViews() {
+  setTimeout(function() {
+    document.querySelectorAll('#view-dashboard .fade-in').forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('visible'); }, i * 55);
     });
   }, 100);
-
-  // Pre-render all views so they're ready when navigated to
   renderers.clients?.();
   renderers.kanban?.();
   renderers.tickets?.();
@@ -3436,12 +3568,33 @@ document.addEventListener('DOMContentLoaded', () => {
   renderers.workload?.();
   renderers.attendance?.();
   renderers.workflows?.();
-
-  // Set up observers
   observeFadeIns();
-
-  // Update badges
   updateBadges();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (supabase) {
+    showTareasLoading(true);
+    loadTareasData().then(function(data) {
+      if (data) {
+        TEAM = data.TEAM;
+        MT = data.MT;
+        clients = data.clients;
+        KT = data.KT;
+        tickets = data.tickets;
+        workflows = data.workflows;
+        calI = data.calI;
+      }
+      showTareasLoading(false);
+      initViews();
+    }).catch(function(err) {
+      console.error('[Tareas] Error cargando datos:', err);
+      showTareasLoading(false);
+      initViews();
+    });
+  } else {
+    initViews();
+  }
 });
 </script>
 </body>
