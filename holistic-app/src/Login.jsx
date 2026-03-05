@@ -153,7 +153,7 @@ function LogoIcon() {
   );
 }
 
-export default function Login({ onSuccess, supabase, redirectTo: redirectToProp }) {
+export default function Login({ onSuccess, supabase, redirectTo: redirectToProp, variant = "credito" }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -198,7 +198,9 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp 
         <div style={styles.formWrapper}>
           <h1 style={styles.formHeading}>Iniciar sesión</h1>
           <p style={styles.formSubtitle}>
-            Ingresa tus credenciales para acceder como <span style={styles.subtitleHighlight}>gerente</span> o <span style={styles.subtitleHighlight}>cliente</span>.
+            {variant === "plataforma"
+              ? "Ingresa tu correo para acceder a Creativos y Tareas."
+              : <>Ingresa tus credenciales para acceder como <span style={styles.subtitleHighlight}>gerente</span> o <span style={styles.subtitleHighlight}>cliente</span>.</>}
           </p>
 
           {linkEnviado && (

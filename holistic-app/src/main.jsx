@@ -26,7 +26,7 @@ function getRedirectFromQuery() {
 function AppRoot() {
   if (isLoginOnly) {
     const redirectTo = getRedirectFromQuery();
-    return <Login supabase={supabase} redirectTo={redirectTo || undefined} onSuccess={() => {}} />;
+    return <Login supabase={supabase} redirectTo={redirectTo || undefined} variant="plataforma" onSuccess={() => {}} />;
   }
   return <AuthGate />;
 }
