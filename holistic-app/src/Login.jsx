@@ -173,7 +173,13 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp,
       setError("Indicá un correo válido.");
       return;
     }
-    const redirectTo = redirectToProp || (typeof window !== "undefined" ? window.location.origin + "/credito" : null);
+    // Para creativos/tareas: el magic link siempre va a /credito (Supabase solo permite URLs permitidas).
+    // Guardamos la ruta deseada y en crédito hacemos la redirección en cliente.
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const isCreativosTareas = redirectToProp && (redirectToProp.includes("/creativos") || redirectToProp.includes("/tareas"));
+    const pathToStore = redirectToProp && (redirectToProp.includes("/creativos") ? "/creativos" : redirectToProp.includes("/tareas") ? "/tareas" : null);
+    if (pathToStore && typeof localStorage !== "undefined") localStorage.setItem("afterLoginGoTo", pathToStore);
+    const redirectTo = isCreativosTareas ? origin + "/credito" : (redirectToProp || origin + "/credito");
     setLoading(true);
     try {
       await solicitarMagicLink(correo, { redirect_to: redirectTo || undefined });
