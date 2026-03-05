@@ -67,6 +67,23 @@
         return;
       }
       var supabase = window.supabase.createClient(url, key);
+      var hash = window.location.hash || '';
+      if (hash.indexOf('access_token') !== -1) {
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Creativos…</div>';
+        var params = {};
+        hash.slice(1).split('&').forEach(function(p) {
+          var kv = p.split('=');
+          if (kv[0] && kv[1]) params[kv[0]] = decodeURIComponent(kv[1]);
+        });
+        if (params.access_token && params.refresh_token) {
+          supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
+            .then(function() { window.location.replace('/creativos'); })
+            .catch(function() { window.location.replace('/acceso-creativos'); });
+        } else {
+          window.location.replace('/creativos');
+        }
+        return;
+      }
       var redirectTo = window.location.origin + '/creativos';
       document.getElementById('form').onsubmit = function(e) {
         e.preventDefault();

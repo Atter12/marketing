@@ -1161,6 +1161,14 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   var url=window.__SUPABASE_URL__;var key=window.__SUPABASE_ANON_KEY__;
   if(!url||!key)return;
   var supabase=window.supabase.createClient(url,key);
+  var hash=window.location.hash||'';
+  if(hash.indexOf('access_token')!==-1){
+    var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
+    if(params.access_token&&params.refresh_token){
+      supabase.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token}).then(function(){ window.history.replaceState(null,'','/creativos'); });
+    }
+    return;
+  }
   supabase.auth.getSession().then(function(r){
     if(!r.data.session) window.location.replace('/acceso-creativos');
   });
