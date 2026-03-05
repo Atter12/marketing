@@ -112,16 +112,6 @@ export default function AuthGate() {
     setUserEmail(payload?.userEmail ?? null);
   };
 
-  // Si el usuario entró por /login para creativos o tareas, el magic link lo trajo a /credito; redirigir ahí.
-  useEffect(() => {
-    if (status !== statuses.app || typeof window === "undefined") return;
-    const goTo = localStorage.getItem("afterLoginGoTo");
-    if (goTo === "/creativos" || goTo === "/tareas") {
-      localStorage.removeItem("afterLoginGoTo");
-      window.location.replace(window.location.origin + goTo);
-    }
-  }, [status]);
-
   if (status === statuses.loading) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f111a", fontFamily: "'DM Sans', sans-serif" }}>

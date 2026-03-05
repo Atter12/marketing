@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Acceso Tareas | Holistic Marketing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+    html,body{height:100%;-webkit-font-smoothing:antialiased;}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#111827;min-height:100vh;display:flex;flex-direction:column;}
+    .header{display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:72px;flex-shrink:0;}
+    .header-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;}
+    .header-logo-text{font-size:18px;font-weight:600;color:#111827;letter-spacing:-0.01em;}
+    .main{flex:1;display:flex;align-items:center;justify-content:center;padding:0 24px;}
+    .form-wrapper{width:100%;max-width:448px;}
+    .form-heading{font-size:30px;font-weight:600;color:#000;line-height:1.2;margin-bottom:8px;}
+    .form-subtitle{font-size:16px;font-weight:400;color:#6B7280;line-height:1.5;margin-bottom:32px;}
+    .input-group{margin-bottom:16px;}
+    .input-field{width:100%;height:44px;padding:0 14px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;font-family:inherit;font-size:16px;color:#111827;outline:none;box-sizing:border-box;}
+    .input-field:focus{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,0.12);}
+    .btn{width:100%;height:44px;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;background:#3B82F6;color:#fff;}
+    .btn:hover{background:#2563EB;}
+    .btn:disabled{background:#9CA3AF;cursor:not-allowed;}
+    .hint-text{font-size:14px;color:#9CA3AF;text-align:center;margin-top:12px;line-height:1.5;}
+    .success-box{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding:12px 14px;background:#ECFDF5;color:#059669;border-radius:8px;font-size:14px;}
+    .error-box{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:12px 14px;background:#FEF2F2;color:#DC2626;border-radius:8px;font-size:14px;}
+    .footer{padding:20px 0;text-align:center;font-size:13px;color:#9CA3AF;}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <a href="/tareas" class="header-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden><rect width="28" height="28" rx="6" fill="#3B82F6"/><path d="M9 8v12M19 8v12M9 14h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+      <span class="header-logo-text">Holistic Marketing</span>
+    </a>
+  </header>
+  <main class="main">
+    <div class="form-wrapper">
+      <h1 class="form-heading">Iniciar sesión</h1>
+      <p class="form-subtitle">Ingresa tu correo para acceder a Tareas.</p>
+      <div id="successBox" class="success-box" style="display:none;">
+        <span>Revisá tu correo. Abrí el enlace para entrar a Tareas.</span>
+      </div>
+      <form id="form">
+        <div id="errorBox" class="error-box" style="display:none;"></div>
+        <div class="input-group">
+          <input type="email" id="email" class="input-field" placeholder="Correo electrónico" required autocomplete="email" />
+        </div>
+        <button type="submit" id="btn" class="btn">Enviar enlace al correo</button>
+      </form>
+      <p class="hint-text">Recibirás un enlace en tu correo para acceder.</p>
+    </div>
+  </main>
+  <footer class="footer">© 2026 Holistic Marketing</footer>
+  <script src="/credito-app/auth-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    (function() {
+      var url = window.__SUPABASE_URL__;
+      var key = window.__SUPABASE_ANON_KEY__;
+      if (!url || !key) {
+        document.getElementById('errorBox').style.display = 'flex';
+        document.getElementById('errorBox').textContent = 'Configuración no disponible.';
+        return;
+      }
+      var supabase = window.supabase.createClient(url, key);
+      var redirectTo = window.location.origin + '/tareas';
+      document.getElementById('form').onsubmit = function(e) {
+        e.preventDefault();
+        var emailEl = document.getElementById('email');
+        var btnEl = document.getElementById('btn');
+        var errorBox = document.getElementById('errorBox');
+        var successBox = document.getElementById('successBox');
+        var email = (emailEl.value || '').trim();
+        if (!email || email.indexOf('@') === -1) {
+          errorBox.style.display = 'flex';
+          errorBox.textContent = 'Indicá un correo válido.';
+          return;
+        }
+        errorBox.style.display = 'none';
+        successBox.style.display = 'none';
+        btnEl.disabled = true;
+        btnEl.textContent = 'Enviando…';
+        supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
+          .then(function(r) {
+            var data = r.data && (r.data.data || r.data);
+            var err = r.error || (data && data.error);
+            if (err) {
+              errorBox.style.display = 'flex';
+              errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
+              btnEl.disabled = false;
+              btnEl.textContent = 'Enviar enlace al correo';
+              return;
+            }
+            successBox.style.display = 'flex';
+            btnEl.textContent = 'Enviar enlace al correo';
+            btnEl.disabled = false;
+          })
+          .catch(function(err) {
+            errorBox.style.display = 'flex';
+            errorBox.textContent = err.message || 'Error al enviar el enlace.';
+            btnEl.disabled = false;
+            btnEl.textContent = 'Enviar enlace al correo';
+          });
+      };
+    })();
+  </script>
+</body>
+</html>

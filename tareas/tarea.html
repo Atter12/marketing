@@ -1900,7 +1900,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   if(!url||!key)return;
   var supabase=window.supabase.createClient(url,key);
   supabase.auth.getSession().then(function(r){
-    if(!r.data.session) window.location.replace('/login?redirect='+encodeURIComponent('/tareas'));
+    if(!r.data.session) window.location.replace('/acceso-tareas');
   });
 })();
 </script>

@@ -131,6 +131,14 @@
       "dest": "/login.html"
     },
     {
+      "src": "/acceso-creativos",
+      "dest": "/acceso-creativos.html"
+    },
+    {
+      "src": "/acceso-tareas",
+      "dest": "/acceso-tareas.html"
+    },
+    {
       "src": "/creativos",
       "dest": "/creativos/creativo.html"
     },
