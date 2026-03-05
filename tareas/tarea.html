@@ -1980,7 +1980,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
         </svg>
         Clientes
-        <span class="nav-badge orange" id="badge-clients">6</span>
+        <span class="nav-badge orange" id="badge-clients">0</span>
       </button>
 
       <button class="nav-item" data-view="kanban" onclick="navigate('kanban',this)">
@@ -1990,7 +1990,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <rect x="17" y="3" width="5" height="15" rx="1"/>
         </svg>
         Entregables
-        <span class="nav-badge orange" id="badge-kanban">14</span>
+        <span class="nav-badge orange" id="badge-kanban">0</span>
       </button>
 
       <button class="nav-item" data-view="tickets" onclick="navigate('tickets',this)">
@@ -1998,7 +1998,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/>
         </svg>
         Tickets
-        <span class="nav-badge red" id="badge-tickets">7</span>
+        <span class="nav-badge red" id="badge-tickets">0</span>
       </button>
 
       <button class="nav-item" data-view="calendar" onclick="navigate('calendar',this)">
@@ -2047,7 +2047,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <line x1="4" y1="4" x2="9" y2="9"/>
         </svg>
         Workflows
-        <span class="nav-badge purple" id="badge-workflows">12</span>
+        <span class="nav-badge purple" id="badge-workflows">0</span>
       </button>
     </div>
   </nav>
@@ -2129,24 +2129,24 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <!-- Welcome Banner -->
   <div class="welcome-banner fade-in">
     <div>
-      <div class="welcome-greeting">Buenos días, Carlos 👋</div>
-      <div class="welcome-sub">5 entregables pendientes · 7 tickets por resolver · 2 revisiones hoy</div>
+      <div class="welcome-greeting" id="dashboard-greeting">Dashboard</div>
+      <div class="welcome-sub" id="dashboard-sub"></div>
     </div>
     <div class="welcome-stats">
       <div class="welcome-stat">
-        <div class="welcome-stat-num" style="color:#fff">47</div>
+        <div class="welcome-stat-num" style="color:#fff" id="welcome-stat-entregables">0</div>
         <div class="welcome-stat-lbl">Entregables</div>
       </div>
       <div class="welcome-stat">
-        <div class="welcome-stat-num" style="color:#86EFAC">18</div>
+        <div class="welcome-stat-num" style="color:#86EFAC" id="welcome-stat-done">0</div>
         <div class="welcome-stat-lbl">Completados</div>
       </div>
       <div class="welcome-stat">
-        <div class="welcome-stat-num" style="color:#FCD34D">7</div>
+        <div class="welcome-stat-num" style="color:#FCD34D" id="welcome-stat-tickets">0</div>
         <div class="welcome-stat-lbl">Tickets</div>
       </div>
       <div class="welcome-stat">
-        <div class="welcome-stat-num" style="color:#fff">6/8</div>
+        <div class="welcome-stat-num" style="color:#fff" id="welcome-stat-asistencia">0/0</div>
         <div class="welcome-stat-lbl">Asistencia</div>
       </div>
     </div>
@@ -2159,9 +2159,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <div class="stat-icon" style="background:var(--color-primary-highlight);color:var(--color-primary)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <span class="stat-delta" style="background:var(--green-bg);color:var(--green)">+1</span>
       </div>
-      <div class="stat-value" id="stat-clients">6</div>
+      <div class="stat-value" id="stat-clients">0</div>
       <div class="stat-label">Clientes Activos</div>
     </div>
     <div class="stat-card fade-in">
@@ -2169,9 +2168,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <div class="stat-icon" style="background:var(--green-bg);color:var(--green)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <span class="stat-delta" style="background:var(--green-bg);color:var(--green)">+8%</span>
       </div>
-      <div class="stat-value">18</div>
+      <div class="stat-value" id="stat-done">0</div>
       <div class="stat-label">Completados Mes</div>
     </div>
     <div class="stat-card fade-in">
@@ -2179,9 +2177,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <div class="stat-icon" style="background:var(--red-bg);color:var(--red)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
         </div>
-        <span class="stat-delta" style="background:var(--red-bg);color:var(--red)">2 SLA</span>
       </div>
-      <div class="stat-value" id="stat-tickets">7</div>
+      <div class="stat-value" id="stat-tickets">0</div>
       <div class="stat-label">Tickets Abiertos</div>
     </div>
     <div class="stat-card fade-in">
@@ -2189,9 +2186,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <div class="stat-icon" style="background:var(--orange2-bg);color:var(--orange2)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
-        <span class="stat-delta" style="background:var(--orange2-bg);color:var(--orange2)">-2</span>
       </div>
-      <div class="stat-value">3</div>
+      <div class="stat-value" id="stat-vencidos">0</div>
       <div class="stat-label">Vencidos</div>
     </div>
     <div class="stat-card fade-in">
@@ -2200,7 +2196,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
         </div>
       </div>
-      <div class="stat-value">12</div>
+      <div class="stat-value" id="stat-workflows">0</div>
       <div class="stat-label">Workflows Activos</div>
     </div>
   </div>
@@ -2212,47 +2208,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <h3>Actividad Reciente</h3>
         <button class="btn-secondary btn-sm" onclick="navigate('kanban')">Ver todo</button>
       </div>
-      <div class="card-body">
-        <div class="timeline-item">
-          <div class="timeline-dot tl-green">✓</div>
-          <div class="timeline-content">
-            <h4>Video Reel — Luna Beauty</h4>
-            <p>María completó edición final.</p>
-            <div class="tm">Hace 25 min</div>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-dot tl-orange">●</div>
-          <div class="timeline-content">
-            <h4>SEO Q1 — TechStart</h4>
-            <p>Diego movió a revisión.</p>
-            <div class="tm">Hace 1h</div>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-dot tl-red">!</div>
-          <div class="timeline-content">
-            <h4>TK-003 — CTA FitZone</h4>
-            <p>⚠️ SLA breach. Escalado a director.</p>
-            <div class="tm">Hace 2h</div>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-dot tl-green">✓</div>
-          <div class="timeline-content">
-            <h4>TK-006 — Audiencia Meta NovaTech</h4>
-            <p>Juan tomó el ticket. En proceso.</p>
-            <div class="tm">Hace 2h</div>
-          </div>
-        </div>
-        <div class="timeline-item">
-          <div class="timeline-dot tl-purple">⚡</div>
-          <div class="timeline-content">
-            <h4>Workflow: Onboarding TechStart</h4>
-            <p>Paso 3/5 completado — Kickoff realizado.</p>
-            <div class="tm">Hace 3h</div>
-          </div>
-        </div>
+      <div class="card-body" id="dashboard-activity">
+        <p class="empty-state" style="color:var(--color-text-muted);font-size:0.875rem;margin:0">No hay actividad reciente.</p>
       </div>
     </div>
 
@@ -2279,17 +2236,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         </div>
         <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-lg)">
           <div style="font-size:0.5625rem;font-weight:700;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:var(--sp-3)">Próximos Vencimientos</div>
-          <div class="deadline-item">
-            <span>Tutorial YT Streaming</span>
-            <span style="color:var(--red);font-weight:600;font-size:0.625rem">Hoy</span>
-          </div>
-          <div class="deadline-item">
-            <span>TK-003 CTA FitZone</span>
-            <span style="color:var(--red);font-weight:600;font-size:0.625rem">SLA breach</span>
-          </div>
-          <div class="deadline-item">
-            <span>TK-005 Videos Coach</span>
-            <span style="color:var(--orange2);font-weight:600;font-size:0.625rem">SLA 2h</span>
+          <div id="dashboard-deadlines">
+            <p class="empty-state" style="color:var(--color-text-muted);font-size:0.8125rem;margin:0">Ninguno</p>
           </div>
         </div>
       </div>
@@ -2580,88 +2528,15 @@ if (typeof window !== 'undefined' && window.__SUPABASE_URL__ && window.__SUPABAS
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  DATA — Fallback hardcodeado; se reemplaza por Supabase si hay conexión
+//  DATA — Vacío por defecto; se rellena solo desde Supabase
 // ══════════════════════════════════════════════════════════════════
-let TEAM = [
-  {id:'DG',n:'Diego Gutiérrez',r:'Estratega de Marketing',c:'#EA580C',on:true,att:'present',ci:'8:55 AM',svc:'Marketing',selfie:true,gps:true,ip:true,code:true},
-  {id:'MG',n:'María García',r:'Editora de Video Sr.',c:'#DC2626',on:true,att:'present',ci:'9:02 AM',svc:'Video',selfie:true,gps:true,ip:true,code:true},
-  {id:'AL',n:'Ana López',r:'Diseñadora & Branding',c:'#16A34A',on:true,att:'late',ci:'9:45 AM',svc:'Branding',selfie:true,gps:false,ip:true,code:true},
-  {id:'JR',n:'Juan Ramírez',r:'Paid Media Specialist',c:'#B45309',on:true,att:'present',ci:'8:50 AM',svc:'Paid Ads',selfie:true,gps:true,ip:true,code:true},
-  {id:'SP',n:'Sofía Pérez',r:'Social Media Manager',c:'#CA8A04',on:false,att:'remote',ci:'9:10 AM',svc:'Social Media',selfie:true,gps:false,ip:false,code:true},
-  {id:'LV',n:'Luis Vargas',r:'Motion Graphics',c:'#57534E',on:true,att:'present',ci:'9:00 AM',svc:'Video',selfie:true,gps:true,ip:true,code:true},
-  {id:'CM',n:'Carmen Mendoza',r:'Copywriter',c:'#BE185D',on:false,att:'absent',ci:'—',svc:'Content',selfie:false,gps:false,ip:false,code:false},
-  {id:'PR',n:'Pablo Ríos',r:'Community Manager',c:'#0891B2',on:true,att:'present',ci:'8:48 AM',svc:'Social Media',selfie:true,gps:true,ip:true,code:true}
-];
-let MT = {
-  DG:[{t:'Auditoría SEO TechStart',d:1},{t:'Keyword research Q1',d:1},{t:'Email sequence NovaTech',d:0},{t:'Reporte analytics',d:0}],
-  MG:[{t:'Edición Reel Vive Fit #1',d:1},{t:'Edición Reel #2',d:0},{t:'Color grading Tutorial YT',d:1},{t:'Exportar versiones',d:0}],
-  AL:[{t:'Moodboard Coach María',d:1},{t:'3 propuestas logo',d:1},{t:'Paleta definitiva',d:1},{t:'Brand Book Méndez',d:0}],
-  JR:[{t:'Config pixel Meta Ads',d:1},{t:'Audiencias lookalike',d:1},{t:'Reporte Google Ads',d:0}],
-  SP:[{t:'Diseño posts semana 7',d:1},{t:'Programar posts',d:1},{t:'Calendario Marzo',d:0}],
-  LV:[{t:'Lower thirds Tutorial YT',d:1},{t:'Intro animada',d:0},{t:'Transiciones motion',d:0}],
-  CM:[{t:'Copy emails NovaTech 1-3',d:1},{t:'Copy emails 4-5',d:0},{t:'Blog post SEO',d:0}],
-  PR:[{t:'Responder DMs Luna',d:1},{t:'Moderar comentarios',d:1},{t:'Encuesta Stories',d:0}]
-};
-let clients = [
-  {n:'NovaTech',tp:'SaaS / Tech',c:'#EA580C',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:2,svcs:['tag-mk','tag-ad','tag-se'],team:['DG','CM','JR'],entregables:15,done:9,tickets:2,meetings:3,satisfaction:92,budget:'$4,000',spent:'$2,400',contact:'Pablo Rojas',email:'pablo@novatech.io',phone:'+51 987 654 321',nextAction:'Reunión de resultados Q1 — 1 Mar',contractStart:'Oct 2025',contractEnd:'Oct 2026',monthlyFee:'$4,000',health:88,healthTxt:'Buena — Avance estable pero hay 2 tickets pendientes',notes:'Priorizar email marketing. CEO quiere ver resultados de SEO en Q2.',status:'activo'},
-  {n:'Luna Beauty',tp:'Cosmética',c:'#BE185D',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:3,svcs:['tag-so','tag-vi','tag-de'],team:['SP','MG','LV'],entregables:12,done:8,tickets:1,meetings:2,satisfaction:96,budget:'$1,800',spent:'$950',contact:'Isabella Luna',email:'isa@lunabeauty.com',phone:'+51 912 345 678',nextAction:'Aprobación calendario Marzo — 26 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$1,800',health:95,healthTxt:'Excelente — Alta satisfacción, entregas puntuales',notes:'Muy responsive. Les encanta el contenido. Upsell potencial: Paid Ads.',status:'activo'},
-  {n:'FitZone Gym',tp:'Fitness',c:'#16A34A',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:4,svcs:['tag-ad','tag-vi'],team:['JR','MG'],entregables:10,done:9,tickets:1,meetings:4,satisfaction:88,budget:'$3,200',spent:'$2,900',contact:'Marco Díaz',email:'marco@fitzone.pe',phone:'+51 998 765 432',nextAction:'Reporte final de campaña — 28 Feb',contractStart:'Nov 2025',contractEnd:'May 2026',monthlyFee:'$3,200',health:78,healthTxt:'Alerta — Presupuesto casi agotado, 1 ticket CTA urgente',notes:'Muy exigente con resultados. Necesita ver ROI constante.',status:'activo'},
-  {n:'TechStart',tp:'Startup',c:'#7C3AED',phases:['Onboarding','Estrategia','Ejecución','Medición','Optimización'],curr:2,svcs:['tag-se','tag-mk'],team:['DG','CM'],entregables:15,done:6,tickets:0,meetings:1,satisfaction:85,budget:'$1,500',spent:'$600',contact:'Ana Vega',email:'ana@techstart.co',phone:'+51 976 543 210',nextAction:'Entrega auditoría SEO — 5 Mar',contractStart:'Feb 2026',contractEnd:'Feb 2027',monthlyFee:'$1,500',health:82,healthTxt:'Buena — Cliente nuevo, avance inicial correcto',notes:'Startup recién fondeada. Foco total en SEO y content marketing.',status:'onboarding'},
-  {n:'Dr. Roberto Méndez',tp:'Marca Personal',c:'#B45309',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:2,svcs:['tag-br','tag-so','tag-vi'],team:['AL','SP','MG'],entregables:9,done:5,tickets:1,meetings:2,satisfaction:90,budget:'$2,000',spent:'$1,300',contact:'Roberto Méndez',email:'dr.mendez@gmail.com',phone:'+51 945 678 901',nextAction:'Presentar 3 opciones de logo — 20 Feb',contractStart:'Ene 2026',contractEnd:'Jul 2026',monthlyFee:'$2,000',health:85,healthTxt:'Buena — En fase de identidad, esperando aprobación logo',notes:'Muy involucrado en el proceso. Prefiere estilo minimalista y premium.',status:'activo'},
-  {n:'Coach María Torres',tp:'Marca Personal',c:'#0891B2',phases:['Discovery','Identidad','Contenido','Lanzamiento','Growth'],curr:3,svcs:['tag-br','tag-so'],team:['AL','SP','CM'],entregables:11,done:10,tickets:0,meetings:3,satisfaction:98,budget:'$1,600',spent:'$1,400',contact:'María Torres',email:'maria@coachtorres.com',phone:'+51 923 456 789',nextAction:'Lanzamiento redes — 3 Mar',contractStart:'Dic 2025',contractEnd:'Jun 2026',monthlyFee:'$1,600',health:97,healthTxt:'Excelente — Casi lista para lanzamiento, súper contenta',notes:'Cliente ideal. Referidos potenciales. Ya recomendó 1 persona.',status:'activo'}
-];
-let KT = [
-  {col:'todo',tt:'Campaña Email NovaTech',ds:'Diseñar secuencia de 5 emails para lanzamiento.',sv:'marketing',tg:'tag-mk',pr:'hi',du:'Feb 13',dc:'lt',pc:20,tm:['DG','CM'],cl:'NovaTech',sb:'1/5'},
-  {col:'todo',tt:'Video Testimonial FitZone',ds:'Grabar y editar testimonial de 60 seg.',sv:'video',tg:'tag-vi',pr:'md',du:'Feb 18',dc:'',pc:0,tm:['MG'],cl:'FitZone Gym',sb:'0/4'},
-  {col:'todo',tt:'Calendario Editorial Marzo',ds:'30 posts Instagram + TikTok.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 28',dc:'',pc:0,tm:['SP','DG'],cl:'Luna Beauty',sb:'0/3'},
-  {col:'todo',tt:'Brand Book Dr. Méndez',ds:'Logo, paleta, tipografías, tono de voz.',sv:'branding',tg:'tag-br',pr:'hi',du:'Feb 12',dc:'lt',pc:65,tm:['AL'],cl:'Dr. Roberto Méndez',sb:'4/6'},
-  {col:'progress',tt:'3 Reels "Vive Fit"',ds:'Edición con motion graphics.',sv:'video',tg:'tag-vi',pr:'hi',du:'Feb 16',dc:'sn',pc:45,tm:['MG','LV'],cl:'FitZone Gym',sb:'2/6'},
-  {col:'progress',tt:'Estrategia SEO Q1',ds:'Auditoría técnica, keywords, contenidos.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 25',dc:'',pc:60,tm:['DG'],cl:'TechStart',sb:'4/7'},
-  {col:'progress',tt:'Landing Summit 2026',ds:'Diseño responsivo con registro.',sv:'design',tg:'tag-de',pr:'lo',du:'Mar 5',dc:'',pc:30,tm:['AL','SP'],cl:'NovaTech',sb:'3/8'},
-  {col:'review',tt:'Identidad Visual Coach María',ds:'Logo, iconografía, plantillas redes.',sv:'branding',tg:'tag-br',pr:'hi',du:'Feb 20',dc:'',pc:90,tm:['AL'],cl:'Coach María Torres',sb:'9/10'},
-  {col:'review',tt:'Reporte Google Ads FitZone',ds:'Métricas, ROI, recomendaciones.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 17',dc:'',pc:80,tm:['JR'],cl:'FitZone Gym',sb:'3/4'},
-  {col:'review',tt:'Tutorial Setup Streaming',ds:'Video 12 min con animaciones.',sv:'video',tg:'tag-vi',pr:'md',du:'Feb 15',dc:'sn',pc:85,tm:['MG','LV'],cl:'FitZone Gym',sb:'5/6'},
-  {col:'done',tt:'Pack 15 Posts Luna Beauty',ds:'Feed Instagram + copies.',sv:'social',tg:'tag-so',pr:'lo',du:'Feb 10',dc:'dn',pc:100,tm:['SP'],cl:'Luna Beauty',sb:'15/15'},
-  {col:'done',tt:'Setup Meta Ads NovaTech',ds:'Business Manager, píxel, campañas.',sv:'marketing',tg:'tag-mk',pr:'md',du:'Feb 8',dc:'dn',pc:100,tm:['JR','DG'],cl:'NovaTech',sb:'8/8'}
-];
-let tickets = [
-  {id:'TK-001',title:'Cambiar copy del post #3',sub:'Luna Beauty pidió ajuste de texto en post de Instagram — no refleja la promo actual',client:'Luna Beauty',clientColor:'#BE185D',status:'open',priority:'media',category:'Cambio',channel:'WhatsApp',assignee:'SP',sla:'4h',slaLeft:'2h 15m',slaStatus:'ok',created:'Hoy 10:42 AM',due:'Hoy 2:42 PM',linkedDeliverable:'Pack 15 Posts Luna Beauty',
-   timeline:[{who:'Sistema',what:'Ticket creado automáticamente desde WhatsApp',when:'10:42 AM',type:'system'},{who:'Sofía Pérez',what:'Recibido. Revisando cuál es la promo correcta.',when:'10:55 AM',type:'comment'}]},
-  {id:'TK-002',title:'Agregar slide al deck de inversores',sub:'NovaTech necesita una slide extra con proyecciones Q2 para reunión de mañana',client:'NovaTech',clientColor:'#EA580C',status:'progress',priority:'alta',category:'Solicitud',channel:'Email',assignee:'DG',sla:'2h',slaLeft:'35m',slaStatus:'warn',created:'Hoy 9:25 AM',due:'Hoy 11:25 AM',linkedDeliverable:'Estrategia SEO Q1',
-   timeline:[{who:'Sistema',what:'Ticket creado desde email de pablo@novatech.io',when:'9:25 AM',type:'system'},{who:'Diego Gutiérrez',what:'Preparando la slide con datos de proyección.',when:'9:40 AM',type:'comment'},{who:'Sistema',what:'⚠ SLA al 70% — 35 min restantes',when:'10:50 AM',type:'system'}]},
-  {id:'TK-003',title:'Corregir CTA del landing page',sub:'FitZone reportó que el botón de registro no redirige al formulario correcto',client:'FitZone Gym',clientColor:'#16A34A',status:'open',priority:'urgente',category:'Error',channel:'Llamada',assignee:'AL',sla:'1h',slaLeft:'VENCIDO',slaStatus:'breach',created:'Hoy 8:00 AM',due:'Hoy 9:00 AM',linkedDeliverable:'Landing Summit 2026',
-   timeline:[{who:'Sistema',what:'Ticket urgente creado — SLA 1 hora',when:'8:00 AM',type:'system'},{who:'Sistema',what:'🚨 SLA BREACH — Escalado a Carlos (Director)',when:'9:00 AM',type:'system'},{who:'Carlos Admin',what:'Ana, por favor prioriza esto inmediatamente.',when:'9:05 AM',type:'comment'}]},
-  {id:'TK-004',title:'Reemplazar foto del carrusel',sub:'Dr. Méndez quiere cambiar foto 3 del carrusel IG por una más profesional',client:'Dr. Roberto Méndez',clientColor:'#B45309',status:'progress',priority:'baja',category:'Cambio',channel:'WhatsApp',assignee:'MG',sla:'24h',slaLeft:'18h',slaStatus:'ok',created:'Ayer 4:00 PM',due:'Hoy 4:00 PM',linkedDeliverable:'Brand Book Dr. Méndez',
-   timeline:[{who:'Sistema',what:'Ticket creado desde WhatsApp',when:'Ayer 4:00 PM',type:'system'},{who:'María García',what:'Recibido. ¿Tiene la foto nueva o necesitamos coordinar sesión?',when:'Ayer 4:30 PM',type:'comment'},{who:'Dr. Méndez',what:'Envié 3 opciones al WhatsApp de María.',when:'Ayer 5:15 PM',type:'comment'},{who:'María García',what:'Editando. Entrego hoy antes de las 2pm.',when:'Hoy 9:30 AM',type:'comment'}]},
-  {id:'TK-005',title:'Exportar video en formato vertical',sub:'Coach María necesita versión 9:16 del video de presentación para Reels',client:'Coach María Torres',clientColor:'#0891B2',status:'open',priority:'media',category:'Solicitud',channel:'Email',assignee:'LV',sla:'4h',slaLeft:'VENCIDO',slaStatus:'breach',created:'Ayer 10:00 AM',due:'Ayer 2:00 PM',linkedDeliverable:'Identidad Visual Coach María',
-   timeline:[{who:'Sistema',what:'Ticket creado desde email',when:'Ayer 10:00 AM',type:'system'},{who:'Sistema',what:'🚨 SLA BREACH — Vencido sin resolución',when:'Ayer 6:00 PM',type:'system'}]},
-  {id:'TK-006',title:'Ajustar audiencia de campaña Meta',sub:'NovaTech quiere excluir audiencia menor de 25 años en campaña de conversión',client:'NovaTech',clientColor:'#EA580C',status:'progress',priority:'alta',category:'Cambio',channel:'Slack',assignee:'JR',sla:'2h',slaLeft:'1h 20m',slaStatus:'ok',created:'Hoy 9:50 AM',due:'Hoy 11:50 AM',linkedDeliverable:'Setup Meta Ads NovaTech',
-   timeline:[{who:'Sistema',what:'Ticket creado desde Slack #novatech',when:'9:50 AM',type:'system'},{who:'Juan Ramírez',what:'Ajustando segmentación ahora mismo. Excluyo menores de 25 y agrego lookalike.',when:'10:05 AM',type:'comment'}]},
-  {id:'TK-007',title:'Revisar ortografía del blog post',sub:'TechStart encontró 3 errores ortográficos en el artículo publicado ayer',client:'TechStart',clientColor:'#7C3AED',status:'open',priority:'media',category:'Error',channel:'Email',assignee:'CM',sla:'4h',slaLeft:'3h 10m',slaStatus:'ok',created:'Hoy 10:15 AM',due:'Hoy 2:15 PM',linkedDeliverable:'Estrategia SEO Q1',
-   timeline:[{who:'Sistema',what:'Ticket creado desde email de ana@techstart.co',when:'10:15 AM',type:'system'}]}
-];
-let workflows = [
-  {ic:'💡',bg:'var(--color-primary-highlight)',t:'Ideación y Brainstorm',d:'Al crear proyecto, se genera moodboard con brief, referencias y espacio colaborativo.',steps:['Brief recibido','Crear moodboard','Sesión brainstorm','Seleccionar conceptos'],act:3,badges:['Automático']},
-  {ic:'✏️',bg:'var(--purple-bg)',t:'Bocetaje y Propuestas',d:'Ideas pasan a bocetaje. 3 opciones mínimo con deadline automático.',steps:['Conceptos aprobados','Boceto A','Boceto B','Boceto C','Presentar'],act:1,badges:['3 opciones']},
-  {ic:'🎨',bg:'var(--pink-bg)',t:'Desarrollo Creativo',d:'Propuesta aprobada se desarrolla: verificación de brand y checklist de calidad.',steps:['Aprobada','Desarrollo','Verificar brand','Checklist QA'],act:2,badges:['Checklist']},
-  {ic:'✅',bg:'var(--green-bg)',t:'Aprobación de Contenido',d:'Todo contenido pasa por: creador → revisor → director → publicación.',steps:['Creación','Revisión interna','Aprobación director','Publicar'],act:1,badges:['Obligatorio']},
-  {ic:'🔄',bg:'var(--orange2-bg)',t:'Ciclo de Revisiones',d:'Cliente pide cambios: máximo 3 rondas incluidas con tracking.',steps:['Feedback','Aplicar cambios','Re-enviar','Aprobación final'],act:0,badges:['Máx 3 rondas']},
-  {ic:'📦',bg:'var(--cyan-bg)',t:'Entrega Final y Cierre',d:'Archivos finales, QA, envío al cliente y archivo con métricas.',steps:['Archivos','QA final','Enviar','Archivar + métricas'],act:0,badges:['Auto-archivo']},
-  {ic:'📥',bg:'var(--color-primary-highlight)',t:'Brief → Entregable',d:'Solicitud recibida crea entregable, asigna equipo y notifica.',steps:['Solicitud','Crear entregable','Asignar','Notificar'],act:2,badges:['Auto']},
-  {ic:'🎫',bg:'var(--red-bg)',t:'Ticket → Resolución',d:'SLA automático: Urgente=1h, Alta=2h, Media=4h, Baja=24h.',steps:['Creado','Asignar + SLA','Resolver','Confirmar cierre'],act:1,badges:['SLA auto']},
-  {ic:'⏰',bg:'var(--orange2-bg)',t:'Alerta de Vencimiento',d:'24h antes: aviso. Vencido: escala al director + prioridad urgente.',steps:['24h: aviso','Vencido: escalar','Reasignar','Reporte atraso'],act:0,badges:['Escalamiento']},
-  {ic:'📊',bg:'var(--purple-bg)',t:'Reporte Semanal',d:'Viernes 5pm: reporte por cliente con métricas y horas. Email auto.',steps:['Recopilar','Generar PDF','Enviar','Archivar'],act:0,badges:['Viernes 5pm']},
-  {ic:'👤',bg:'var(--cyan-bg)',t:'Onboarding Cliente',d:'Workspace, equipo, kickoff, brand guidelines, primer brief.',steps:['Workspace','Equipo','Kickoff','Guidelines','Brief'],act:3,badges:['5 pasos']},
-  {ic:'📱',bg:'var(--pink-bg)',t:'Publicación en Redes',d:'Contenido aprobado: formato por plataforma, hashtags, horario óptimo.',steps:['Aprobado','Formato','Programar','Publicar + analytics'],act:1,badges:['Multi-plataforma']}
-];
-let calI = [
-  {d:3,t:'Post IG Luna',cl:'pill-pink'},{d:5,t:'Camp Luna',cl:'pill-orange'},{d:7,t:'Blog TechStart',cl:'pill-purple'},
-  {d:8,t:'✅ Meta Ads',cl:'pill-green'},{d:10,t:'✅ Posts Luna',cl:'pill-green'},{d:10,t:'Reel TikTok',cl:'pill-red'},
-  {d:12,t:'⚠ Brand Book',cl:'pill-orange2'},{d:13,t:'⚠ Email Mkt',cl:'pill-orange2'},{d:15,t:'Tutorial YT',cl:'pill-red'},
-  {d:15,t:'Summit Ads',cl:'pill-orange'},{d:16,t:'Reels Vive Fit',cl:'pill-red'},{d:17,t:'Reporte Ads',cl:'pill-orange'},
-  {d:18,t:'Testimonial',cl:'pill-red'},{d:20,t:'ID Coach María',cl:'pill-purple'},{d:25,t:'SEO Q1',cl:'pill-purple'},
-  {d:28,t:'Cal. Marzo',cl:'pill-green'}
-];
+let TEAM = [];
+let MT = {};
+let clients = [];
+let KT = [];
+let tickets = [];
+let workflows = [];
+let calI = [];
 
 // ══════════════════════════════════════════════════════════════════
 //  CARGA DESDE SUPABASE (Fase 3.1)
@@ -3264,6 +3139,32 @@ function updateBadges() {
   if (clEl) clEl.textContent = clients.length;
   var kbEl = document.getElementById('badge-kanban');
   if (kbEl) kbEl.textContent = KT.length;
+  var wfEl = document.getElementById('badge-workflows');
+  if (wfEl) wfEl.textContent = workflows.filter(function(w) { return (w.act || 0) > 0; }).length;
+}
+
+function updateDashboardStats() {
+  var total = KT.length;
+  var done = KT.filter(function(k) { return k.col === 'done'; }).length;
+  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
+  var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
+  var wfAct = workflows.filter(function(w) { return (w.act || 0) > 0; }).length;
+  var present = TEAM.filter(function(m) { return m.att === 'present' || m.att === 'remote' || m.att === 'late'; }).length;
+  var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
+  set('stat-clients', clients.length);
+  set('stat-tickets', tkOpen);
+  set('stat-done', done);
+  set('stat-vencidos', vencidos);
+  set('stat-workflows', wfAct);
+  set('welcome-stat-entregables', total);
+  set('welcome-stat-done', done);
+  set('welcome-stat-tickets', tkOpen);
+  set('welcome-stat-asistencia', present + '/' + TEAM.length);
+  var sub = document.getElementById('dashboard-sub');
+  if (sub) {
+    if (total === 0 && tkOpen === 0) sub.textContent = '';
+    else sub.textContent = (total ? total + ' entregables' : '') + (total && tkOpen ? ' · ' : '') + (tkOpen ? tkOpen + ' tickets abiertos' : '');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -3570,6 +3471,7 @@ function initViews() {
   renderers.workflows?.();
   observeFadeIns();
   updateBadges();
+  updateDashboardStats();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
