@@ -9,10 +9,28 @@ Login sin contraseña para gerentes y clientes con acceso (tablas `gerentes` y `
 
 ## Plantilla de correo para código (OTP)
 
-Para que la opción **Código de 6 dígitos** funcione, en **Supabase Dashboard → Authentication → Email Templates**, la plantilla que use el flujo de “Magic Link” / OTP debe incluir el token de 6 dígitos, por ejemplo:
+Cuando el usuario elige **“Código de 6 dígitos”**, el correo lo envía **Supabase** (no Resend). Por defecto Supabase usa una plantilla con **enlace** (`{{ .ConfirmationURL }}`), por eso a veces sigue llegando un link en vez del código.
+
+### Pasos en Supabase
+
+1. Entrá a **[Supabase Dashboard](https://supabase.com/dashboard)** → tu proyecto.
+2. **Authentication** → **Email Templates**.
+3. Abrí la plantilla **“Confirm signup”** o **“Magic Link”** (la que use el login por correo).
+4. En el **cuerpo del mensaje**, hacé que se vea el **código de 6 dígitos** usando la variable `{{ .Token }}`.
+
+### Ejemplo de plantilla para que llegue el código
+
+Reemplazá el contenido (o al menos la parte del cuerpo) por algo como:
 
 ```html
-<p>Tu código para entrar: <strong>{{ .Token }}</strong></p>
+<h2>Tu código para entrar</h2>
+<p>Hola,</p>
+<p>Usá este código de 6 dígitos para entrar a tu panel (caduca en 1 hora):</p>
+<p style="margin: 24px 0; font-size: 24px; letter-spacing: 4px; font-weight: 600;">{{ .Token }}</p>
+<p style="color: #666; font-size: 13px;">Si no pediste este código, podés ignorar este correo.</p>
 ```
 
-Si la plantilla solo tiene el enlace de confirmación, Supabase enviará un link y no un código. Con `{{ .Token }}` se envía el código que el usuario ingresa en la app.
+- Si en la plantilla usás **`{{ .ConfirmationURL }}`** o un botón con el link → el usuario recibe **enlace** (como ahora).
+- Si usás **`{{ .Token }}`** → el usuario recibe el **código** que ingresa en la app.
+
+Guardá la plantilla. La próxima vez que alguien elija “Código de 6 dígitos” y pida el envío, el correo que mande Supabase incluirá el código.

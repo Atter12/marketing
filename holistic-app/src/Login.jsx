@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { solicitarMagicLink, solicitarCodigoLogin, verificarCodigoLogin } from "./supabase";
 
@@ -202,6 +202,7 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp,
   const [linkEnviado, setLinkEnviado] = useState(false);
   const [codigoEnviado, setCodigoEnviado] = useState(false);
   const [method, setMethod] = useState("link"); // "link" | "code"
+  const methodRef = useRef("link"); // actualizado al instante al cambiar de pestaña, para evitar que el submit use el valor viejo
   const [inputFocused, setInputFocused] = useState(false);
 
   async function handleEnviarLink(e) {
@@ -349,7 +350,10 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp,
               </p>
             </form>
           ) : (
-            <form onSubmit={method === "link" ? handleEnviarLink : handleEnviarCodigo}>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              (methodRef.current === "link" ? handleEnviarLink : handleEnviarCodigo)(e);
+            }}>
               {error && (
                 <div style={styles.errorBox}>
                   <AlertCircle size={18} style={{ flexShrink: 0 }} />
@@ -360,14 +364,14 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp,
               <div style={styles.methodTabs}>
                 <button
                   type="button"
-                  onClick={() => { setMethod("link"); setError(""); setLinkEnviado(false); }}
+                  onClick={() => { setMethod("link"); methodRef.current = "link"; setError(""); setLinkEnviado(false); }}
                   style={{ ...styles.methodTab, ...(method === "link" ? styles.methodTabActive : {}) }}
                 >
                   Enlace al correo
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setMethod("code"); setError(""); }}
+                  onClick={() => { setMethod("code"); methodRef.current = "code"; setError(""); }}
                   style={{ ...styles.methodTab, ...(method === "code" ? styles.methodTabActive : {}) }}
                 >
                   Código de 6 dígitos
