@@ -330,6 +330,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
   const [cobroEditComprobantePaths, setCobroEditComprobantePaths] = useState([]);
   const [cobroEditSignedUrls, setCobroEditSignedUrls] = useState({});
+  const [cobroPreviewViewer, setCobroPreviewViewer] = useState(null);
   const [cofGastosQuery, setCofGastosQuery] = useState("");
   const [cofFilterCliente, setCofFilterCliente] = useState("");
   const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
@@ -653,6 +654,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setCobroComprobanteFiles([]);
     setCobroEditComprobantePaths([]);
     setCobroEditSignedUrls({});
+    setCobroPreviewViewer(null);
     setCofGastosQuery("");
     setCofFilterCliente("");
     setCofFilterPeriodo("");
@@ -1917,11 +1919,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                 const url = cobroEditSignedUrls[path];
                 const name = path.split("/").pop() || `Archivo ${i + 1}`;
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
+                const canPreview = !!url;
                 return (
                   <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
-                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
+                      onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && e.preventDefault() && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      title={canPreview ? "Clic para ver en grande" : ""}
+                    >
                       {url && isImage ? (
-                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" />
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
                         <FileText size={28} style={{ color: "#5f6577" }} />
                       ) : (
@@ -1929,7 +1939,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
                       )}
                     </div>
                     <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={name}>{name}</span>
-                    <button type="button" onClick={() => setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
               })}
@@ -1952,6 +1962,34 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           )}
         </div>
       </Mdl>
+
+      {cobroPreviewViewer && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Vista previa del comprobante"
+          onClick={() => setCobroPreviewViewer(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box" }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "95vw", maxHeight: "95vh", display: "flex", flexDirection: "column", alignItems: "center", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #e2e4e9", width: "100%", background: "#f8f9fb" }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#1b2559", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(95vw - 100px)" }}>{cobroPreviewViewer.name}</span>
+              <button type="button" onClick={() => setCobroPreviewViewer(null)} style={{ width: 36, height: 36, border: "none", background: "#e2e4e9", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} aria-label="Cerrar"><X size={18} style={{ color: "#5f6577" }} /></button>
+            </div>
+            <div style={{ padding: 16, maxHeight: "85vh", overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {cobroPreviewViewer.isPdf ? (
+                <div style={{ textAlign: "center", padding: "24px 32px" }}>
+                  <FileText size={48} style={{ color: "#5f6577", marginBottom: 12 }} />
+                  <p style={{ fontSize: 14, color: "#5f6577", marginBottom: 16 }}>PDF — abrirlo para ver el contenido</p>
+                  <a href={cobroPreviewViewer.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#0055ff", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={16} /> Abrir en nueva pestaña</a>
+                </div>
+              ) : (
+                <img src={cobroPreviewViewer.url} alt="" style={{ maxWidth: "85vw", maxHeight: "80vh", width: "auto", height: "auto", objectFit: "contain", display: "block" }} referrerPolicy="no-referrer" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={!accesoResultado ? <><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={() => submitDarAcceso(false)} disabled={savingAcceso}>{savingAcceso ? "Enviando…" : "Enviar link por email"}</Btn></> : <><Btn variant="outline" onClick={() => { setAccesoResultado(null); }} style={{ display: accesoResultado?.link ? "inline-flex" : "none" }}>Enviar otro</Btn><Btn onClick={closeMdl}>Cerrar</Btn></>}>
         {editId && (() => {
