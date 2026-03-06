@@ -328,6 +328,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [cof, setCof] = useState(emptyCof);
   const [gaf, setGaf] = useState(emptyGaf);
   const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
+  const [cobroEditComprobantePaths, setCobroEditComprobantePaths] = useState([]);
   const [cofGastosQuery, setCofGastosQuery] = useState("");
   const [cofFilterCliente, setCofFilterCliente] = useState("");
   const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
@@ -639,7 +640,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [cof.gastoIds, cof.monto, cof.distribucion, sGastos]);
 
   /* ═══ MODALS ═══ */
-  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
+  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); setCobroEditComprobantePaths([]); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
   const closeMdl = () => {
     setModal(null);
     setEditId(null);
@@ -649,6 +650,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setGaf({ ...emptyGaf, clientId: curCl || "" });
     setAccesoResultado(null);
     setCobroComprobanteFiles([]);
+    setCobroEditComprobantePaths([]);
     setCofGastosQuery("");
     setCofFilterCliente("");
     setCofFilterPeriodo("");
@@ -670,7 +672,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
     else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
-    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); }
+    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) { setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); const urls = co.comprobante_urls; setCobroEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
   }, [modal, editId, clients, garantias, cobros]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
@@ -746,12 +748,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setUploadingComprobantes(true);
       if (editId && modal === "cobro") {
         await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.sinAsignarGasto ? (cof.periodoResumen || null) : null, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
-        if (cobroComprobanteFiles.length > 0) {
-          const paths = [];
-          for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(editId, f));
-          const existing = cobros.find((c) => c.id === editId)?.comprobante_urls || [];
-          await mutations.setCobroComprobantes(editId, [...(Array.isArray(existing) ? existing : existing ? [existing] : []), ...paths]);
-        }
+        const newPaths = [];
+        for (const f of cobroComprobanteFiles) newPaths.push(await uploadComprobanteCobro(editId, f));
+        const finalPaths = [...cobroEditComprobantePaths, ...newPaths];
+        await mutations.setCobroComprobantes(editId, finalPaths);
         closeMdl();
         return;
       }
@@ -1027,7 +1027,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
 
   const goTo = (p, cid = null) => {
-    if (p === "client-detail" && page === "reportes" && repPeriodoMes) setClientDetailPeriodo(repPeriodoMes);
+    if (p === "client-detail" && repPeriodoMes && ((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente))) setClientDetailPeriodo(repPeriodoMes);
     setPage(p);
     if (cid != null) setCurCl(cid);
     if (p === "client-detail" && isCliente && clientId) setCurCl(clientId);
@@ -1896,6 +1896,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         <div style={{ marginTop: 8 }}>
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
           <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
+          {editId && cobroEditComprobantePaths.length > 0 && (
+            <ul style={{ marginBottom: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
+              {cobroEditComprobantePaths.map((path, i) => (
+                <li key={path} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                  <Paperclip size={14} style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{path.split("/").pop() || `Archivo ${i + 1}`}</span>
+                  <button type="button" onClick={() => setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 8px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Quitar</button>
+                </li>
+              ))}
+            </ul>
+          )}
           <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #0055ff", borderRadius: 10, background: "#f0f4ff", color: "#0055ff", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
             <Paperclip size={16} />
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setCobroComprobanteFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
