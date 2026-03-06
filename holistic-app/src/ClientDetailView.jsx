@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { CreditCard, Plus, ChevronLeft, ChevronRight, Edit3, Camera, Trash2, KeyRound, Download } from "lucide-react";
+import { CreditCard, Plus, ChevronLeft, ChevronRight, Edit3, Camera, Trash2, KeyRound, Download, Paperclip } from "lucide-react";
 
 const Slot = ({ content }) => content;
 
@@ -44,6 +44,7 @@ export default function ClientDetailView(props) {
     setClientDetailPeriodo,
     parsePeriodoInput,
     tm,
+    setComprobanteViewer,
   } = props;
 
   const [photoUrl, setPhotoUrl] = useState(curC.avatar_url || "");
@@ -277,7 +278,66 @@ export default function ClientDetailView(props) {
             </div>
           );
         })(),
-        effectiveTab === "cobros" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><div className="hm-table-wrap"><table><thead><tr>{["Fecha pago", "Hora", "Cód. cobro", "Cód. gasto", "Período (resumen)", "Monto", "Método", ...(!isCliente ? ["Registrado por", "Registrado"] : []), "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curCobros.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return <tr key={co.id}><td style={TD}>{fmtD(co.fecha)}</td><td style={TD}>{fmtT ? fmtT(co.hora) : (co.hora || "—")}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td><td style={TD}>{mesCobro && fmtM && gastos ? fmtM(mesCobro(co, gastos)) : (g ? fmtM(g.mes) : "—")}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td><td style={TD}><PayB method={co.metodo} /></td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 18 ? co.created_by.slice(0, 16) + "…" : co.created_by) : "—"}</td>}{!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{co.created_at && fmtDt ? fmtDt(co.created_at) : "—"}</td>}<td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td></tr>; })}{!curCobros.length && <Empty cols={isCliente ? 8 : 10} msg="Sin cobros" />}</tbody></table></div></div>,
+        effectiveTab === "cobros" && (
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
+              Cada fila es un pago: <strong>Fecha de pago</strong> (día en que se realizó), <strong>Período que cubre</strong> (mes al que se aplica) y <strong>Comprobantes</strong> (vouchers o capturas subidos). Podés abrir los archivos desde el botón en la columna Comprobantes.
+            </p>
+            <div className="hm-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    {["Fecha de pago", "Hora", "Cód. cobro", "Cód. gasto", "Período que cubre", "Monto", "Método", "Comprobantes", ...(!isCliente ? ["Registrado por", "Registrado"] : []), "Notas"].map((h) => <th key={h} style={TH}>{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {curCobros.map((co) => {
+                    const g = gastos.find((x) => x.id === co.gastoId);
+                    const periodoStr = mesCobro && fmtM && gastos ? fmtM(mesCobro(co, gastos)) : (g ? fmtM(g.mes) : "—");
+                    const paths = co.comprobante_urls || [];
+                    const nPaths = paths.length;
+                    return (
+                      <tr key={co.id}>
+                        <td style={{ ...TD, fontWeight: 600 }} title="Día en que se realizó el pago">{fmtD(co.fecha)}</td>
+                        <td style={TD}>{fmtT ? fmtT(co.hora) : (co.hora || "—")}</td>
+                        <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
+                        <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
+                        <td style={{ ...TD, color: "#1b2559", fontWeight: 600 }} title="Mes al que se aplica este pago">{periodoStr}</td>
+                        <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
+                        <td style={TD}><PayB method={co.metodo} /></td>
+                        <td style={TD}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
+                            <div style={{ fontSize: 11, color: "#5f6577", lineHeight: 1.3 }}>
+                              <span style={{ fontWeight: 600, color: "#1a1d26" }}>Pago:</span> {fmtD(co.fecha)}
+                              {periodoStr && periodoStr !== "—" && <><span style={{ margin: "0 4px" }}>·</span><span style={{ fontWeight: 600, color: "#1a1d26" }}>Período:</span> {periodoStr}</>}
+                            </div>
+                            {nPaths > 0 && setComprobanteViewer ? (
+                              <button
+                                type="button"
+                                onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })}
+                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                                title={`Ver ${nPaths} comprobante(s) de pago · ${fmtD(co.fecha)} · Período ${periodoStr} · $${fmt(co.monto)}`}
+                              >
+                                <Paperclip size={14} />
+                                Ver {nPaths} comprobante{nPaths !== 1 ? "s" : ""}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11.5, color: "#9498a8" }}>— Sin voucher</span>
+                            )}
+                          </div>
+                        </td>
+                        {!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{co.created_by ? (co.created_by.length > 18 ? co.created_by.slice(0, 16) + "…" : co.created_by) : "—"}</td>}
+                        {!isCliente && <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{co.created_at && fmtDt ? fmtDt(co.created_at) : "—"}</td>}
+                        <td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{co.notas || "—"}</td>
+                      </tr>
+                    );
+                  })}
+                  {!curCobros.length && <Empty cols={isCliente ? 9 : 11} msg="Sin cobros" />}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ),
         effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>Mismo período que Cobros y Gastos (filtro de arriba).</p><div className="hm-table-wrap"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={10} msg="Sin garantías" />}</tbody></table></div></div>,
         <Slot content={manualTabContent} />,
         <span hidden />

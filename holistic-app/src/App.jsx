@@ -1441,6 +1441,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             updateClientAvatar={mutations.updateClientAvatar}
             uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
             onExportClientPorPeriodo={expClientDataPorPeriodo}
+            setComprobanteViewer={setComprobanteViewer}
           />
         )}
 
