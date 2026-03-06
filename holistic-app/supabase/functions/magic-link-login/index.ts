@@ -1,5 +1,6 @@
-// Edge Function: login por OTP (magic link) para gerentes y clientes con acceso.
-// Recibe email; si está en gerentes o en clientes_acceso, genera magic link y lo envía por Resend.
+// Edge Function: login por magic link o por código (OTP) para gerentes y clientes con acceso.
+// method: "link" (default) → genera magic link y lo envía por Resend.
+// method: "code" → solo valida que el email esté en gerentes/clientes_acceso; el cliente enviará el OTP con signInWithOtp.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -46,6 +47,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const rawEmail = body.email ?? body.e ?? "";
     const email = normalizeEmail(rawEmail);
+    const method = (body.method ?? "link") === "code" ? "code" : "link";
     if (!email || !email.includes("@")) {
       return new Response(JSON.stringify({ error: "Indicá un correo válido." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -60,72 +62,55 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
     });
 
-    // Solo enviar link a correos que están en gerentes o en clientes_acceso
+    // Solo permitir correos que están en gerentes o en clientes_acceso
     const { data: gerenteRow } = await supabase.from("gerentes").select("email").ilike("email", email).maybeSingle();
-    if (gerenteRow) {
-      // Es gerente: generar magic link y enviar
-      const appUrl = body.redirect_to || getAppUrl();
-      const redirectTo = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email: gerenteRow.email,
-        options: { redirectTo },
-      });
-      if (linkError) {
-        return new Response(JSON.stringify({ error: linkError.message || "Error al generar el link" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const actionLink = linkData?.properties?.action_link;
-      if (!actionLink) {
-        return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const sendResult = await sendEmailResend(gerenteRow.email, actionLink);
-      if (sendResult.ok) {
-        return new Response(
-          JSON.stringify({ ok: true, message: "Revisá tu correo. Abrí el enlace para entrar al panel." }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      const resendHint = /testing|resend\.dev|domain|verify/i.test(sendResult.error || "")
-        ? " Con el dominio de prueba de Resend solo se puede enviar al correo de tu cuenta."
-        : "";
-      return new Response(
-        JSON.stringify({ ok: true, message: "No se pudo enviar el correo (" + (sendResult.error || "") + ")." + resendHint, link: actionLink }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     const { data: accesoRow } = await supabase.from("clientes_acceso").select("email").ilike("email", email).maybeSingle();
-    if (accesoRow) {
-      const appUrl = body.redirect_to || getAppUrl();
-      const redirectTo = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
-      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email: accesoRow.email,
-        options: { redirectTo },
-      });
-      if (linkError) {
-        return new Response(JSON.stringify({ error: linkError.message || "Error al generar el link" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const actionLink = linkData?.properties?.action_link;
-      if (!actionLink) {
-        return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const sendResult = await sendEmailResend(accesoRow.email, actionLink);
-      if (sendResult.ok) {
-        return new Response(
-          JSON.stringify({ ok: true, message: "Revisá tu correo. Abrí el enlace para entrar al panel." }),
-          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    const allowed = !!(gerenteRow || accesoRow);
+
+    if (!allowed) {
       return new Response(
-        JSON.stringify({ ok: true, message: "No se pudo enviar el correo. Usá este enlace:", link: actionLink }),
+        JSON.stringify({ error: "Correo no registrado. Solo pueden entrar gerentes y clientes con acceso." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Si eligió código: solo validamos; el cliente enviará el OTP con signInWithOtp
+    if (method === "code") {
+      return new Response(
+        JSON.stringify({ ok: true, use_otp: true, message: "Correo autorizado. Enviá el código desde la app." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // method === "link": generar magic link y enviar por Resend
+    const row = gerenteRow || accesoRow!;
+    const appUrl = body.redirect_to || getAppUrl();
+    const redirectTo = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
+    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
+      email: row.email,
+      options: { redirectTo },
+    });
+    if (linkError) {
+      return new Response(JSON.stringify({ error: linkError.message || "Error al generar el link" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const actionLink = linkData?.properties?.action_link;
+    if (!actionLink) {
+      return new Response(JSON.stringify({ error: "No se pudo generar el link" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const sendResult = await sendEmailResend(row.email, actionLink);
+    if (sendResult.ok) {
+      return new Response(
+        JSON.stringify({ ok: true, message: "Revisá tu correo. Abrí el enlace para entrar al panel." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const resendHint = /testing|resend\.dev|domain|verify/i.test(sendResult.error || "")
+      ? " Con el dominio de prueba de Resend solo se puede enviar al correo de tu cuenta."
+      : "";
     return new Response(
-      JSON.stringify({ error: "Correo no registrado. Solo pueden entrar gerentes y clientes con acceso." }),
-      { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ ok: true, message: "No se pudo enviar el correo (" + (sendResult.error || "") + ")." + resendHint, link: actionLink }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
     console.error("[magic-link-login]", e);

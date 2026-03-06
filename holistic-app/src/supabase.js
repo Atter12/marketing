@@ -98,18 +98,44 @@ export function loginToEmail(value) {
   return trimmed;
 }
 
-/** Solicita magic link (OTP) para entrar al panel. Solo envía si el email está en gerentes o clientes_acceso. */
+/** Solicita magic link para entrar al panel. Solo envía si el email está en gerentes o clientes_acceso. */
 export async function solicitarMagicLink(email, options = {}) {
   if (!supabase) throw new Error("App no configurada");
   const e = String(email || "").trim();
   if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
   const { data, error } = await supabase.functions.invoke("magic-link-login", {
-    body: { email: e, redirect_to: options.redirect_to || null },
+    body: { email: e, redirect_to: options.redirect_to || null, method: "link" },
   });
   if (error) throw new Error(error.message || "Error al enviar el enlace");
   const body = data?.data ?? data;
   if (body?.error) throw new Error(body.error);
   return body;
+}
+
+/** Valida que el email pueda entrar (gerentes/clientes_acceso). Si ok, el cliente puede llamar signInWithOtp y luego verifyOtp. */
+export async function solicitarCodigoLogin(email) {
+  if (!supabase) throw new Error("App no configurada");
+  const e = String(email || "").trim();
+  if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
+  const { data, error } = await supabase.functions.invoke("magic-link-login", {
+    body: { email: e, method: "code" },
+  });
+  if (error) throw new Error(error.message || "Error al verificar el correo");
+  const body = data?.data ?? data;
+  if (body?.error) throw new Error(body.error);
+  return body;
+}
+
+/** Verifica el código de 6 dígitos enviado por Supabase (signInWithOtp) y crea la sesión. */
+export async function verificarCodigoLogin(email, token) {
+  if (!supabase) throw new Error("App no configurada");
+  const e = String(email || "").trim();
+  const t = String(token || "").trim().replace(/\s/g, "");
+  if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
+  if (!t || t.length < 4) throw new Error("Ingresá el código que recibiste por correo.");
+  const { data, error } = await supabase.auth.verifyOtp({ email: e, token: t, type: "email" });
+  if (error) throw new Error(error.message || "Código inválido o expirado.");
+  return data;
 }
 
 /** Da acceso al panel: envía un email al cliente (correo de la ficha) con un link mágico. Al abrirlo entra al panel.
