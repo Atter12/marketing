@@ -592,14 +592,21 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return list.sort((a, b) => (parseFloat(b._t) || 0) - (parseFloat(a._t) || 0));
   }, [sGastos, filterCliente.gastos, expRango.gastos.ini, expRango.gastos.fin, gastosSearch, clients]);
 
-  /* Cobros filtrados por cliente (para tabla) */
+  /* Cobros filtrados por cliente y por rango de fechas (para tabla y Excel) */
   const cobrosFiltrados = useMemo(() => {
-    if (!filterCliente.cobros) return cobros;
-    return cobros.filter((co) => {
-      const g = gastos.find((x) => x.id === co.gastoId);
-      return (g && g.clientId === filterCliente.cobros) || co.clientId === filterCliente.cobros;
-    });
-  }, [cobros, gastos, filterCliente.cobros]);
+    let list = cobros;
+    if (filterCliente.cobros) {
+      list = list.filter((co) => {
+        const g = gastos.find((x) => x.id === co.gastoId);
+        return (g && g.clientId === filterCliente.cobros) || co.clientId === filterCliente.cobros;
+      });
+    }
+    const ini = expRango.cobros.ini;
+    const fin = expRango.cobros.fin;
+    if (ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= ini);
+    if (fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= fin);
+    return list;
+  }, [cobros, gastos, filterCliente.cobros, expRango.cobros.ini, expRango.cobros.fin]);
 
   /* Garantías filtradas por cliente y período (para tabla) */
   const garantiasFiltradas = useMemo(() => {
@@ -938,9 +945,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     exportToExcel("gastos_" + td(), "Gastos", headers, rows);
   };
   const expCobros = () => {
-    let list = [...cobros];
-    if (expRango.cobros.ini) list = list.filter((c) => (c.fecha || "").slice(0, 10) >= expRango.cobros.ini);
-    if (expRango.cobros.fin) list = list.filter((c) => (c.fecha || "").slice(0, 10) <= expRango.cobros.fin);
+    const list = cobrosFiltrados;
     const headers = ["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Notas"];
     const rows = list.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); const c = co.clientId ? clients.find((x) => x.id === co.clientId) : (g ? clients.find((x) => x.id === g.clientId) : null); return [c?.name || "—", co.codigo || "—", g?.codigo || "—", fmtD(co.fecha), fmtT(co.hora) || "—", g ? fmtM(g.mes) + " " + (g.camp || "") : "—", fmtExcel(co.monto), co.metodo || "—", co.created_by || "—", co.notas || "—"]; });
     exportToExcel("cobros_" + td(), "Cobros", headers, rows);
@@ -1108,7 +1113,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     </div>
   ) : null;
 
-  const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros");
+  const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (expRango.cobros.ini || expRango.cobros.fin) && !cobrosFiltrados.length ? "Sin cobros en el rango de fechas" : filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros";
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
   return (
@@ -1534,11 +1539,15 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
-                {filterCliente.cobros ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
+              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Filtrado por cliente y/o rango de fechas">
+                {(filterCliente.cobros || expRango.cobros.ini || expRango.cobros.fin) ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
               <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} /></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Filtrar por fecha de pago (también filtra la tabla)">
+                <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
+                <span style={{ color: "#9498a8", fontSize: 11 }}>a</span>
+                <input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
+              </div>
               <Btn variant="outline" size="sm" onClick={expCobros}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
             </div>
