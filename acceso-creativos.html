@@ -146,20 +146,22 @@
         successBox.style.display = 'none';
         btnEl.disabled = true;
         btnEl.textContent = 'Enviando…';
-        var body = { email: email, method: method };
-        if (method === 'link') body.redirect_to = redirectTo;
+        var isCodeTab = document.getElementById('tabCode').classList.contains('active');
+        var chosenMethod = isCodeTab ? 'code' : 'link';
+        var body = { email: email, method: chosenMethod };
+        if (chosenMethod === 'link') body.redirect_to = redirectTo;
         supabase.functions.invoke('magic-link-login', { body: body })
           .then(function(r) {
             var data = r.data && (r.data.data || r.data);
             var err = r.error || (data && data.error);
             if (err) {
               errorBox.style.display = 'flex';
-              errorBox.textContent = err.message || err || (method === 'link' ? 'Error al enviar el enlace.' : 'Error al verificar el correo.');
+              errorBox.textContent = err.message || err || (chosenMethod === 'link' ? 'Error al enviar el enlace.' : 'Error al verificar el correo.');
               btnEl.disabled = false;
-              btnEl.textContent = method === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
+              btnEl.textContent = chosenMethod === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
               return;
             }
-            if (method === 'code') {
+            if (chosenMethod === 'code') {
               return supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } })
                 .then(function() {
                   emailStep.classList.add('hide');
@@ -181,9 +183,9 @@
           })
           .catch(function(err) {
             errorBox.style.display = 'flex';
-            errorBox.textContent = err.message || (method === 'link' ? 'Error al enviar el enlace.' : 'Error al enviar el código.');
+            errorBox.textContent = err.message || (chosenMethod === 'link' ? 'Error al enviar el enlace.' : 'Error al enviar el código.');
             btnEl.disabled = false;
-            btnEl.textContent = method === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
+            btnEl.textContent = chosenMethod === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
           });
       };
 
