@@ -147,37 +147,8 @@ export default function ClientDetailView(props) {
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Garantías</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: "#7c3aed" }}>{curD.tGar > 0 ? "-$" + fmt(curD.tGar) : "$0"}</div></div>
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "18px 20px" }}><div style={{ fontSize: 11, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: .8, marginBottom: 8 }}>Deuda Neta</div><div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 22, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(curD.net)}</div></div>
         </div>,
-        <div style={{ marginBottom: 8 }}>
-          {cCharts.m?.length > 0 && (
-            <p style={{ fontSize: 12, color: "#9498a8", margin: 0 }}>
-              Período de los gráficos: <strong style={{ color: "#5f6577" }}>{cCharts.m[0]?.name}</strong> a <strong style={{ color: "#5f6577" }}>{cCharts.m[cCharts.m.length - 1]?.name}</strong> (últimos 6 meses)
-            </p>
-          )}
-        </div>,
-        <div className="hm-detail-charts" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Gasto Mensual</h4><ResponsiveContainer width="100%" height={200}><BarChart data={cCharts.m}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="gasto" name="Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Cobros Recibidos</h4><ResponsiveContainer width="100%" height={200}><LineChart data={cCharts.co}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2.5} dot={{ r: 5, fill: "#0d9f6e" }} /></LineChart></ResponsiveContainer></div>
-        </div>,
         <div className="hm-detail-tabs" style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 8 }}>
           {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
-        </div>,
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 22 }}>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Gastos Ads</div>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#1b2559" }}>${fmt((curD.tG || 0) + (curD.tF || 0))}</div>
-          </div>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Cobros</div>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#0d9f6e" }}>${fmt(curD.tP)}</div>
-          </div>
-          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 18px", textAlign: "center" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Garantías</div>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700, color: "#7c3aed" }}>{curD.tGar > 0 ? "-$" + fmt(curD.tGar) : "$0"}</div>
-          </div>
-          <div style={{ background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", border: "1px solid #1b2559", borderRadius: 10, padding: "14px 18px", textAlign: "center", color: "#fff" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.85)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Total (Gastos + Cobros − Garantías)</div>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 18, fontWeight: 700 }}>${fmt(Math.max(0, (curD.tG || 0) + (curD.tF || 0) + (curD.tP || 0) - (curD.tGar || 0)))}</div>
-          </div>
         </div>,
         onExportClientPorPeriodo && (
         <div style={{ marginBottom: 20, padding: "14px 18px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 12 }}>
@@ -340,6 +311,17 @@ export default function ClientDetailView(props) {
         ),
         effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>Mismo período que Cobros y Gastos (filtro de arriba).</p><div className="hm-table-wrap"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={10} msg="Sin garantías" />}</tbody></table></div></div>,
         <Slot content={manualTabContent} />,
+        <div style={{ marginTop: 28, marginBottom: 24 }}>
+          {cCharts.m?.length > 0 && (
+            <p style={{ fontSize: 12, color: "#9498a8", margin: "0 0 8px" }}>
+              Período de los gráficos: <strong style={{ color: "#5f6577" }}>{cCharts.m[0]?.name}</strong> a <strong style={{ color: "#5f6577" }}>{cCharts.m[cCharts.m.length - 1]?.name}</strong> (últimos 6 meses)
+            </p>
+          )}
+          <div className="hm-detail-charts" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Gasto Mensual</h4><ResponsiveContainer width="100%" height={200}><BarChart data={cCharts.m}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} /><Bar dataKey="gasto" name="Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer></div>
+            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}><h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16 }}>Cobros Recibidos</h4><ResponsiveContainer width="100%" height={200}><LineChart data={cCharts.co}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2.5} dot={{ r: 5, fill: "#0d9f6e" }} /></LineChart></ResponsiveContainer></div>
+          </div>
+        </div>,
         <span hidden />
       )
     )
