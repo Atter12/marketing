@@ -1808,7 +1808,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
         </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente (filtrar)</label><SearchSelect compact options={[{ value: "", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cofFilterCliente} onChange={(id) => setCofFilterCliente(id || "")} placeholder="Todos..." emptyMessage="Ningún cliente" /></div>
+          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{cof.sinAsignarGasto ? "Cliente del cobro *" : "Cliente (filtrar)"}</label><SearchSelect compact options={[{ value: "", label: cof.sinAsignarGasto ? "Elegir cliente..." : "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.sinAsignarGasto ? cof.clientId : cofFilterCliente} onChange={(id) => { const v = id || ""; if (cof.sinAsignarGasto) setCof({ ...cof, clientId: v }); setCofFilterCliente(v); }} placeholder={cof.sinAsignarGasto ? "Buscar cliente..." : "Todos..."} emptyMessage="Ningún cliente" /></div>
           <div style={{ opacity: cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
             <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -1827,18 +1827,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos</label>
           <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
           <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: cof.sinAsignarGasto ? "#fef3c7" : "transparent", border: cof.sinAsignarGasto ? "1px solid #f59e0b" : "1px solid #e2e4e9" }}>
-            <input type="radio" name="cof-gasto-mode" checked={cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: true, gastoIds: [] })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#d97706" }} />
+            <input type="radio" name="cof-gasto-mode" checked={cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: true, gastoIds: [], clientId: cofFilterCliente || cof.clientId || "" })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#d97706" }} />
             <span style={{ fontSize: 13, fontWeight: cof.sinAsignarGasto ? 600 : 500, color: cof.sinAsignarGasto ? "#92400e" : "#1a1d26" }}>Ninguna — cobro sin asignar a ningún gasto</span>
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: !cof.sinAsignarGasto && (cof.gastoIds || []).length > 0 ? "#e6f7f0" : "transparent", border: !cof.sinAsignarGasto ? "1px solid #e2e4e9" : "1px solid #e2e4e9" }}>
             <input type="radio" name="cof-gasto-mode" checked={!cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: false })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
             <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1d26" }}>Asignar a uno o más gastos (elegir abajo)</span>
           </label>
-          {cof.sinAsignarGasto && (
+          {editId && cof.sinAsignarGasto && (
             <div style={{ marginBottom: 12 }}>
               <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente del cobro *</label>
               <SearchSelect options={[{ value: "", label: "Elegir cliente..." }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.clientId} onChange={(id) => setCof({ ...cof, clientId: id || "" })} placeholder="Buscar por nombre..." emptyMessage="Ningún cliente coincide" />
-              <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Se mostrará en la tabla de Cobros para identificar a quién corresponde.</p>
             </div>
           )}
           <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
