@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
@@ -331,6 +331,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [cobroEditComprobantePaths, setCobroEditComprobantePaths] = useState([]);
   const [cobroEditSignedUrls, setCobroEditSignedUrls] = useState({});
   const [cobroPreviewViewer, setCobroPreviewViewer] = useState(null);
+  const [cobroNewFileUrls, setCobroNewFileUrls] = useState([]);
+  const cobroNewFileUrlsRef = useRef([]);
   const [cofGastosQuery, setCofGastosQuery] = useState("");
   const [cofFilterCliente, setCofFilterCliente] = useState("");
   const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
@@ -700,6 +702,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setCobroEditSignedUrls({});
     }
   }, [modal, editId, cobroEditComprobantePaths]);
+
+  useEffect(() => {
+    cobroNewFileUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    const urls = cobroComprobanteFiles.map((f) => URL.createObjectURL(f));
+    cobroNewFileUrlsRef.current = urls;
+    setCobroNewFileUrls(urls);
+  }, [cobroComprobanteFiles]);
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
@@ -1951,13 +1960,35 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
             Añadir archivos
           </label>
           {cobroComprobanteFiles.length > 0 && (
-            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
-              {cobroComprobanteFiles.map((f, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  {f.name} ({(f.size / 1024).toFixed(1)} KB)
-                  <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
-                </li>
-              ))}
+            <ul style={{ marginTop: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {cobroComprobanteFiles.map((f, i) => {
+                const url = cobroNewFileUrls[i];
+                const isImage = f.type && f.type.startsWith("image/");
+                const isPdf = f.type === "application/pdf";
+                const canPreview = !!url;
+                return (
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf, name: f.name })}
+                      onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf, name: f.name }))}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      title={canPreview ? "Clic para ver en grande" : ""}
+                    >
+                      {url && isImage ? (
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+                      ) : url && isPdf ? (
+                        <FileText size={28} style={{ color: "#5f6577" }} />
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#9498a8" }}>…</span>
+                      )}
+                    </div>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={f.name}>{f.name}</span>
+                    <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -2072,15 +2103,34 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <Mdl open={!!comprobanteViewer} onClose={() => setComprobanteViewer(null)} title={comprobanteViewer?.type === "garantia" ? "Imágenes de la garantía" : "Comprobantes de pago"}>
         <div style={{ padding: "8px 0" }}>
           {comprobanteViewer?.paths?.length ? (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexWrap: "wrap", gap: 12 }}>
               {comprobanteViewer.paths.map((path, i) => {
                 const url = viewerSignedUrls[i];
                 const name = path.split("/").pop() || `Archivo ${i + 1}`;
+                const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
+                const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < comprobanteViewer.paths.length - 1 ? "1px solid #e2e4e9" : "none" }}>
-                    <Paperclip size={16} style={{ color: "#5f6577", flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: "#1b2559", flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{name}</span>
-                    {url ? <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 12px", background: "#0055ff", color: "#fff", borderRadius: 8, fontSize: 12, fontWeight: 600, textDecoration: "none" }}><Eye size={12} /> Ver</a> : <span style={{ fontSize: 12, color: "#9498a8" }}>Cargando…</span>}
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
+                      onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf: !isImage, name }))}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      title={canPreview ? "Clic para ver en grande" : ""}
+                    >
+                      {url && isImage ? (
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
+                      ) : url && !isImage ? (
+                        <FileText size={28} style={{ color: "#5f6577" }} />
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#9498a8" }}>Cargando…</span>
+                      )}
+                    </div>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={name}>{name}</span>
+                    {url && !isImage && (
+                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", background: "#0055ff", color: "#fff", borderRadius: 6, fontSize: 11, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={12} /> Abrir</a>
+                    )}
                   </li>
                 );
               })}
