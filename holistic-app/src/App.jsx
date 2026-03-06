@@ -1027,6 +1027,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
 
   const goTo = (p, cid = null) => {
+    if (p === "client-detail" && page === "reportes" && repPeriodoMes) setClientDetailPeriodo(repPeriodoMes);
     setPage(p);
     if (cid != null) setCurCl(cid);
     if (p === "client-detail" && isCliente && clientId) setCurCl(clientId);
