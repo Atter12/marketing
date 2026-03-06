@@ -329,6 +329,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [gaf, setGaf] = useState(emptyGaf);
   const [cobroComprobanteFiles, setCobroComprobanteFiles] = useState([]);
   const [cobroEditComprobantePaths, setCobroEditComprobantePaths] = useState([]);
+  const [cobroEditSignedUrls, setCobroEditSignedUrls] = useState({});
   const [cofGastosQuery, setCofGastosQuery] = useState("");
   const [cofFilterCliente, setCofFilterCliente] = useState("");
   const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
@@ -651,6 +652,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setAccesoResultado(null);
     setCobroComprobanteFiles([]);
     setCobroEditComprobantePaths([]);
+    setCobroEditSignedUrls({});
     setCofGastosQuery("");
     setCofFilterCliente("");
     setCofFilterPeriodo("");
@@ -683,6 +685,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setViewerSignedUrls(comprobanteViewer.paths.map(() => null));
     Promise.all(comprobanteViewer.paths.map((p) => getComprobanteSignedUrl(p))).then((urls) => setViewerSignedUrls(urls));
   }, [comprobanteViewer]);
+
+  useEffect(() => {
+    if (modal === "cobro" && editId && cobroEditComprobantePaths.length > 0) {
+      const pathList = cobroEditComprobantePaths;
+      Promise.all(pathList.map((p) => getComprobanteSignedUrl(p))).then((urls) => {
+        const next = {};
+        pathList.forEach((p, i) => { next[p] = urls?.[i] ?? null; });
+        setCobroEditSignedUrls((prev) => ({ ...prev, ...next }));
+      });
+    } else {
+      setCobroEditSignedUrls({});
+    }
+  }, [modal, editId, cobroEditComprobantePaths]);
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
@@ -1897,14 +1912,27 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
           <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
           {editId && cobroEditComprobantePaths.length > 0 && (
-            <ul style={{ marginBottom: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
-              {cobroEditComprobantePaths.map((path, i) => (
-                <li key={path} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <Paperclip size={14} style={{ flexShrink: 0 }} />
-                  <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis" }}>{path.split("/").pop() || `Archivo ${i + 1}`}</span>
-                  <button type="button" onClick={() => setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 8px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Quitar</button>
-                </li>
-              ))}
+            <ul style={{ marginBottom: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {cobroEditComprobantePaths.map((path, i) => {
+                const url = cobroEditSignedUrls[path];
+                const name = path.split("/").pop() || `Archivo ${i + 1}`;
+                const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
+                return (
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                    <div style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {url && isImage ? (
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" />
+                      ) : url && !isImage ? (
+                        <FileText size={28} style={{ color: "#5f6577" }} />
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#9498a8" }}>Cargando…</span>
+                      )}
+                    </div>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={name}>{name}</span>
+                    <button type="button" onClick={() => setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                  </li>
+                );
+              })}
             </ul>
           )}
           <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #0055ff", borderRadius: 10, background: "#f0f4ff", color: "#0055ff", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
