@@ -153,7 +153,6 @@ export default function ClientDetailView(props) {
         onExportClientPorPeriodo && (
         <div style={{ marginBottom: 20, padding: "14px 18px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 12 }}>
           <p style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577", margin: "0 0 10px" }}>Descargar según el período mostrado arriba</p>
-          <p style={{ fontSize: 11.5, color: "#9498a8", margin: "0 0 12px" }}>Se exportarán Gastos Ads, Cobros, Garantías y Datos manuales del período {clientDetailPeriodo ? (fmtM ? fmtM(clientDetailPeriodo) : clientDetailPeriodo) : "Todos"}.</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button type="button" onClick={() => onExportClientPorPeriodo(true, false)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", border: "1px solid #0d9f6e", borderRadius: 8, background: "#eafaf4", color: "#0d9f6e", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}><Download size={16} /> Descargar Excel</button>
             <button type="button" onClick={() => onExportClientPorPeriodo(false, true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", border: "1px solid #dc2640", borderRadius: 8, background: "#fdf0f2", color: "#dc2640", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}><Download size={16} /> Descargar PDF</button>
@@ -185,7 +184,6 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "#1b2559", color: "#fff", fontWeight: 700, borderTop: "2px solid #0d1117", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>En el Total general, Pendiente = pendiente neto (menos todas las garantías).</p>
               <div className="hm-table-wrap">
                 <table>
                   <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
