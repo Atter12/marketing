@@ -104,7 +104,7 @@ export async function solicitarMagicLink(email, options = {}) {
   const e = String(email || "").trim();
   if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
   const { data, error } = await supabase.functions.invoke("magic-link-login", {
-    body: { email: e, redirect_to: options.redirect_to || null, method: "link" },
+    body: { email: e, redirect_to: options.redirect_to || null },
   });
   if (error) throw new Error(error.message || "Error al enviar el enlace");
   const body = data?.data ?? data;

@@ -28,13 +28,6 @@
     .success-box{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding:12px 14px;background:#ECFDF5;color:#059669;border-radius:8px;font-size:14px;}
     .error-box{display:flex;align-items:center;gap:8px;margin-bottom:16px;padding:12px 14px;background:#FEF2F2;color:#DC2626;border-radius:8px;font-size:14px;}
     .footer{padding:20px 0;text-align:center;font-size:13px;color:#9CA3AF;}
-    .method-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;background:#F9FAFB;}
-    .method-tab{flex:1;padding:10px 16px;border:none;background:transparent;font-family:inherit;font-size:14px;font-weight:500;color:#6B7280;cursor:pointer;}
-    .method-tab.active{background:#fff;color:#111827;box-shadow:0 1px 2px rgba(0,0,0,0.05);}
-    .code-step{display:none;}
-    .code-step.show{display:block;}
-    .email-step.hide{display:none;}
-    .code-input{text-align:center;letter-spacing:6px;font-size:20px;}
   </style>
 </head>
 <body>
@@ -49,33 +42,16 @@
       <h1 class="form-heading">Iniciar sesión</h1>
       <p class="form-subtitle">Ingresa tu correo para acceder a Tareas.</p>
       <div id="successBox" class="success-box" style="display:none;">
-        <span id="successText">Revisá tu correo. Abrí el enlace para entrar a Tareas.</span>
+        <span>Revisá tu correo. Abrí el enlace para entrar a Tareas.</span>
       </div>
-      <div id="emailStep" class="email-step">
-        <div class="method-tabs">
-          <button type="button" id="tabLink" class="method-tab active">Enlace al correo</button>
-          <button type="button" id="tabCode" class="method-tab">Código de 6 dígitos</button>
+      <form id="form">
+        <div id="errorBox" class="error-box" style="display:none;"></div>
+        <div class="input-group">
+          <input type="email" id="email" class="input-field" placeholder="Correo electrónico" required autocomplete="email" />
         </div>
-        <form id="form">
-          <div id="errorBox" class="error-box" style="display:none;"></div>
-          <div class="input-group">
-            <input type="email" id="email" class="input-field" placeholder="Correo electrónico" required autocomplete="email" />
-          </div>
-          <button type="submit" id="btn" class="btn">Enviar enlace al correo</button>
-        </form>
-        <p class="hint-text" id="hintText">Recibirás un enlace en tu correo para acceder.</p>
-      </div>
-      <div id="codeStep" class="code-step">
-        <p class="form-subtitle" style="margin-bottom:16px;">Ingresá el código de 6 dígitos que te enviamos por correo.</p>
-        <form id="formCode">
-          <div id="errorBoxCode" class="error-box" style="display:none;"></div>
-          <div class="input-group">
-            <input type="text" id="code" class="input-field code-input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
-          </div>
-          <button type="submit" id="btnCode" class="btn">Verificar código</button>
-        </form>
-        <p class="hint-text"><button type="button" id="backToEmail" style="background:none;border:none;color:#3B82F6;cursor:pointer;padding:0;font:inherit;text-decoration:underline;">Volver a ingresar correo</button></p>
-      </div>
+        <button type="submit" id="btn" class="btn">Enviar enlace al correo</button>
+      </form>
+      <p class="hint-text">Recibirás un enlace en tu correo para acceder.</p>
     </div>
   </main>
   <footer class="footer">© 2026 Holistic Marketing</footer>
@@ -109,28 +85,8 @@
         return;
       }
       var redirectTo = window.location.origin + '/tareas';
-      var method = 'link';
-      var emailStep = document.getElementById('emailStep');
-      var codeStep = document.getElementById('codeStep');
       var successBox = document.getElementById('successBox');
-      var successText = document.getElementById('successText');
-      var hintText = document.getElementById('hintText');
       var btnEl = document.getElementById('btn');
-
-      document.getElementById('tabLink').onclick = function() {
-        method = 'link';
-        document.getElementById('tabLink').classList.add('active');
-        document.getElementById('tabCode').classList.remove('active');
-        btnEl.textContent = 'Enviar enlace al correo';
-        hintText.textContent = 'Recibirás un enlace en tu correo para acceder.';
-      };
-      document.getElementById('tabCode').onclick = function() {
-        method = 'code';
-        document.getElementById('tabCode').classList.add('active');
-        document.getElementById('tabLink').classList.remove('active');
-        btnEl.textContent = 'Enviar código al correo';
-        hintText.textContent = 'Recibirás un código de 6 dígitos para ingresar acá.';
-      };
 
       document.getElementById('form').onsubmit = function(e) {
         e.preventDefault();
@@ -146,76 +102,27 @@
         successBox.style.display = 'none';
         btnEl.disabled = true;
         btnEl.textContent = 'Enviando…';
-        var isCodeTab = document.getElementById('tabCode').classList.contains('active');
-        var chosenMethod = isCodeTab ? 'code' : 'link';
-        var body = { email: email, method: chosenMethod };
-        if (chosenMethod === 'link') body.redirect_to = redirectTo;
-        supabase.functions.invoke('magic-link-login', { body: body })
+        supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
           .then(function(r) {
             var data = r.data && (r.data.data || r.data);
             var err = r.error || (data && data.error);
             if (err) {
               errorBox.style.display = 'flex';
-              errorBox.textContent = err.message || err || (chosenMethod === 'link' ? 'Error al enviar el enlace.' : 'Error al verificar el correo.');
+              errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
               btnEl.disabled = false;
-              btnEl.textContent = chosenMethod === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
+              btnEl.textContent = 'Enviar enlace al correo';
               return;
             }
-            if (chosenMethod === 'code') {
-              return supabase.auth.signInWithOtp({ email: email, options: { shouldCreateUser: false } })
-                .then(function() {
-                  emailStep.classList.add('hide');
-                  codeStep.classList.add('show');
-                  document.getElementById('code').value = '';
-                  document.getElementById('errorBoxCode').style.display = 'none';
-                })
-                .catch(function(otpErr) {
-                  errorBox.style.display = 'flex';
-                  errorBox.textContent = otpErr.message || 'Error al enviar el código.';
-                  btnEl.disabled = false;
-                  btnEl.textContent = 'Enviar código al correo';
-                });
-            }
             successBox.style.display = 'flex';
-            successText.textContent = 'Revisá tu correo. Abrí el enlace para entrar a Tareas.';
             btnEl.disabled = false;
             btnEl.textContent = 'Enviar enlace al correo';
           })
           .catch(function(err) {
             errorBox.style.display = 'flex';
-            errorBox.textContent = err.message || (chosenMethod === 'link' ? 'Error al enviar el enlace.' : 'Error al enviar el código.');
+            errorBox.textContent = err.message || 'Error al enviar el enlace.';
             btnEl.disabled = false;
-            btnEl.textContent = chosenMethod === 'link' ? 'Enviar enlace al correo' : 'Enviar código al correo';
+            btnEl.textContent = 'Enviar enlace al correo';
           });
-      };
-
-      document.getElementById('formCode').onsubmit = function(e) {
-        e.preventDefault();
-        var email = (document.getElementById('email').value || '').trim();
-        var code = (document.getElementById('code').value || '').trim().replace(/\s/g, '');
-        var errorBoxCode = document.getElementById('errorBoxCode');
-        var btnCode = document.getElementById('btnCode');
-        if (!code || code.length < 4) {
-          errorBoxCode.style.display = 'flex';
-          errorBoxCode.textContent = 'Ingresá el código de 6 dígitos.';
-          return;
-        }
-        errorBoxCode.style.display = 'none';
-        btnCode.disabled = true;
-        btnCode.textContent = 'Verificando…';
-        supabase.auth.verifyOtp({ email: email, token: code, type: 'email' })
-          .then(function() { window.location.replace('/tareas'); })
-          .catch(function(err) {
-            errorBoxCode.style.display = 'flex';
-            errorBoxCode.textContent = err.message || 'Código inválido o expirado.';
-            btnCode.disabled = false;
-            btnCode.textContent = 'Verificar código';
-          });
-      };
-
-      document.getElementById('backToEmail').onclick = function() {
-        codeStep.classList.remove('show');
-        emailStep.classList.remove('hide');
       };
     })();
   </script>
