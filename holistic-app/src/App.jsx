@@ -1487,12 +1487,27 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Gastos Ads · Mensuales</h2>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
-                {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 68, display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            {/* Fila 1: título + acciones principales (siempre visibles, no tapan la tabla) */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, paddingTop: 14, paddingBottom: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+                <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0 }}>Gastos Ads · Mensuales</h2>
+                {!isCliente && (
+                  <>
+                    <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>
+                    <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>
+                  </>
+                )}
               </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div style={{ background: "#f8fafc", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
+                  {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
+                </div>
+                <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
+              </div>
+            </div>
+            {/* Fila 2: filtros (buscar cliente, búsqueda, fechas, reportes) */}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 14 }}>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ position: "relative" }}>
                 <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
@@ -1500,14 +1515,11 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                   value={gastosSearch}
                   onChange={(e) => setGastosSearch(e.target.value)}
                   placeholder="Buscar por cliente, campaña o código..."
-                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f8fafc", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }}
+                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }}
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#94a3b8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
-              <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
-              {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
-              {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
