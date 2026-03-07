@@ -106,33 +106,36 @@ function Av({ name, size = 34, avatarUrl }) {
 }
 
 const Bdg = ({ type = "n", children, style: customStyle }) => {
-  const m = { ok: ["#ecfdf5", "#059669"], err: ["#fef2f2", "#dc2626"], warn: ["#fffbeb", "#d97706"], acc: ["#eff6ff", "#2563eb"], n: ["#f8fafc", "#64748b"], gar: ["#f5f3ff", "#7c3aed"] };
-  const [bg, fg] = m[type] || m.n;
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, fontSize: 12.5, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap", letterSpacing: -0.1, ...customStyle }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0, opacity: 0.8 }} />{children}</span>;
+  const m = { ok: ["#ecfdf5", "#059669", "#d1fae5"], err: ["#fef2f2", "#dc2626", "#fecaca"], warn: ["#fffbeb", "#d97706", "#fde68a"], acc: ["#eff6ff", "#2563eb", "#bfdbfe"], n: ["#f8fafc", "#64748b", "#e2e8f0"], gar: ["#f5f3ff", "#7c3aed", "#ddd6fe"] };
+  const [bg, fg, ring] = m[type] || m.n;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap", letterSpacing: -0.1, border: `1px solid ${ring}`, ...customStyle }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0 }} />{children}</span>;
 };
 
 const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: (PC[method] || "#94a3b8") + "14", color: PC[method] || "#64748b", letterSpacing: -0.1 }}>{PI[method] || "💰"} {method}</span>;
 
 const Stat = ({ icon, value, label, color, sub }) => (
-  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "26px 28px", transition: "all .2s ease" }}>
-    <div style={{ width: 44, height: 44, borderRadius: 12, background: color + "10", color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>{icon}</div>
-    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 30, fontWeight: 700, letterSpacing: -1, color: "#0f172a", marginBottom: 6, lineHeight: 1.1 }}>{value}</div>
-    <div style={{ fontSize: 13.5, color: "#94a3b8", fontWeight: 500, letterSpacing: -0.1 }}>{label}</div>
-    {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>{sub}</div>}
+  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "28px 28px 24px", transition: "all .25s cubic-bezier(.4,0,.2,1)", position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: color + "08", pointerEvents: "none" }} />
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      <div style={{ width: 46, height: 46, borderRadius: 14, background: `linear-gradient(135deg, ${color}18, ${color}08)`, color, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${color}20` }}>{icon}</div>
+    </div>
+    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 32, fontWeight: 700, letterSpacing: -1.2, color: "#0f172a", marginBottom: 6, lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 500, letterSpacing: 0.2, textTransform: "uppercase" }}>{label}</div>
+    {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 8, padding: "4px 0", borderTop: "1px solid #f1f5f9" }}>{sub}</div>}
   </div>
 );
 
 const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
-    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.6)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto" }}>
-      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, width: "94%", maxWidth: 640, boxShadow: "0 25px 80px rgba(0,0,0,.16)", border: "1px solid #e5e7eb", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "#f8fafc", borderBottom: "1px solid #e5e7eb", borderRadius: "20px 20px 0 0", minWidth: 0 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.3 }}>{title}</h3>
-          <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", color: "#64748b", borderRadius: 10, cursor: "pointer", fontSize: 16, transition: "all .15s" }} aria-label="Cerrar">✕</button>
+    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.65)", backdropFilter: "blur(12px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto", animation: "fadeSlideIn .2s ease-out" }}>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 22, width: "94%", maxWidth: 640, boxShadow: "0 32px 100px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.05)", border: "none", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0, animation: "fadeSlideIn .25s ease-out" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 28px", background: "linear-gradient(180deg, #f8fafc, #fff)", borderBottom: "1px solid #e5e7eb", borderRadius: "22px 22px 0 0", minWidth: 0 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.4 }}>{title}</h3>
+          <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", color: "#94a3b8", borderRadius: 10, cursor: "pointer", fontSize: 16, transition: "all .15s" }} aria-label="Cerrar">✕</button>
         </div>
         <div style={{ padding: "24px 28px", overflowX: "hidden", minWidth: 0, boxSizing: "border-box" }}>{children}</div>
-        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "18px 28px 22px", background: "#f8fafc", borderTop: "1px solid #e5e7eb", borderRadius: "0 0 20px 20px" }}>{footer}</div>}
+        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "18px 28px 22px", background: "linear-gradient(0deg, #f8fafc, #fff)", borderTop: "1px solid #e5e7eb", borderRadius: "0 0 22px 22px" }}>{footer}</div>}
       </div>
     </div>
   );
@@ -140,9 +143,9 @@ const Mdl = ({ open, onClose, title, children, footer }) => {
 
 const Inp = ({ label, hint, ...p }) => (
   <div style={{ marginBottom: 16, minWidth: 0 }}>
-    {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6, letterSpacing: -0.1 }}>{label}</label>}
-    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", resize: "vertical", minHeight: 68, transition: "border-color .15s", ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 36, transition: "border-color .15s", ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", transition: "border-color .15s", ...(p.style || {}) }} />}
-    {hint && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>{hint}</div>}
+    {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 7, letterSpacing: -0.1 }}>{label}</label>}
+    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", resize: "vertical", minHeight: 72, transition: "all .2s", ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 36, transition: "all .2s", ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", transition: "all .2s", ...(p.style || {}) }} />}
+    {hint && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 5, lineHeight: 1.4 }}>{hint}</div>}
   </div>
 );
 
@@ -196,9 +199,15 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
 }
 
 const Btn = ({ variant = "primary", size, children, ...p }) => {
-  const vs = { primary: { bg: "#0f172a", color: "#fff", border: "none" }, accent: { bg: "#2563eb", color: "#fff", border: "none" }, outline: { bg: "#fff", color: "#0f172a", border: "1.5px solid #e2e8f0" }, ghost: { bg: "transparent", color: "#94a3b8", border: "none" }, danger: { bg: "#fef2f2", color: "#dc2626", border: "none" } };
+  const vs = {
+    primary: { bg: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", border: "none", shadow: "0 2px 8px rgba(15,23,42,.2)" },
+    accent: { bg: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", border: "none", shadow: "0 2px 8px rgba(37,99,235,.25)" },
+    outline: { bg: "#fff", color: "#0f172a", border: "1.5px solid #e2e8f0", shadow: "none" },
+    ghost: { bg: "transparent", color: "#94a3b8", border: "none", shadow: "none" },
+    danger: { bg: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", shadow: "none" }
+  };
   const s = vs[variant] || vs.primary;
-  return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: size === "sm" ? "8px 14px" : "10px 20px", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 13 : 14, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s", letterSpacing: -0.2, ...(p.style || {}) }}>{children}</button>;
+  return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: size === "sm" ? "8px 14px" : "10px 22px", borderRadius: 11, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 13 : 14, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .2s cubic-bezier(.4,0,.2,1)", letterSpacing: -0.2, boxShadow: s.shadow, ...(p.style || {}) }}>{children}</button>;
 };
 
 const PREFIXES = [{ c: "+51", l: "PE" }, { c: "+1", l: "US/CA" }, { c: "+52", l: "MX" }, { c: "+57", l: "CO" }, { c: "+34", l: "ES" }, { c: "+54", l: "AR" }, { c: "+55", l: "BR" }, { c: "+56", l: "CL" }, { c: "+58", l: "VE" }, { c: "+593", l: "EC" }, { c: "+598", l: "UY" }, { c: "+595", l: "PY" }, { c: "+591", l: "BO" }, { c: "+507", l: "PA" }, { c: "+506", l: "CR" }, { c: "+502", l: "GT" }, { c: "+503", l: "SV" }, { c: "+504", l: "HN" }, { c: "+505", l: "NI" }];
@@ -232,7 +241,7 @@ const MultiPhone = ({ values, onChange }) => (
   </div>
 );
 
-const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 8, cursor: "pointer", color: danger ? "#dc2626" : "#94a3b8", transition: "all .15s", ...s }}>{icon}</button>;
+const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: danger ? "#fef2f2" : "#f8fafc", borderRadius: 10, cursor: "pointer", color: danger ? "#dc2626" : "#64748b", transition: "all .2s cubic-bezier(.4,0,.2,1)", ...s }}>{icon}</button>;
 
 const Empty = ({ cols, msg }) => <tr><td colSpan={cols} style={{ textAlign: "center", padding: 56, color: "#94a3b8", fontSize: 14 }}>{msg}</td></tr>;
 
@@ -1101,7 +1110,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
       <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#94a3b8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
       {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8fafc", borderTop: "1px solid #f1f5f9", flexWrap: "wrap" }}>
         <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
@@ -1120,16 +1129,45 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif", background: "#f8fafc", color: "#0f172a", WebkitFontSmoothing: "antialiased" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
 *{box-sizing:border-box}
-.stat-card{transition:all .2s ease} .stat-card:hover{box-shadow:0 8px 24px rgba(15,23,42,.08);transform:translateY(-2px)}
+
+/* === STAT CARDS === */
+.stat-card{transition:all .25s cubic-bezier(.4,0,.2,1)}
+.stat-card:hover{box-shadow:0 12px 40px rgba(15,23,42,.1);transform:translateY(-4px);border-color:#cbd5e1!important}
+
+/* === TABLES === */
 table{width:100%;border-collapse:collapse;min-width:600px}
-tbody tr{transition:background .1s} tbody tr:hover{background:#f8fafc} tbody tr:last-child td{border-bottom:none}
+tbody tr{transition:all .15s ease}
+tbody tr:hover{background:linear-gradient(90deg,#f8fafc,#f1f5f9)!important}
+tbody tr:last-child td{border-bottom:none}
+thead th{position:relative}
+
+/* === MODALS === */
 .hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
 .hm-modal-box .hm-form-grid>div{min-width:0}
-input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.1)!important}
-.hm-nav-item{transition:all .15s ease;border-radius:10px}
-.hm-nav-item:hover{background:#f1f5f9!important}
+
+/* === FOCUS STATES (blue glow) === */
+input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shadow:0 0 0 4px rgba(37,99,235,.12)!important;outline:none!important}
+
+/* === SIDEBAR NAV === */
+.hm-nav-item{transition:all .2s cubic-bezier(.4,0,.2,1);border-radius:12px;position:relative}
+.hm-nav-item:hover{background:#f1f5f9!important;transform:translateX(2px)}
+.hm-nav-item:active{transform:translateX(0) scale(.98)}
+
+/* === BUTTONS === */
+button{transition:all .15s ease}
+.stat-card button,.hm-table-wrap button,.hm-modal-box button{transition:all .15s ease}
+
+/* === PAGE TRANSITIONS === */
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.hm-page-content{animation:fadeSlideIn .3s ease-out}
+
+/* === CHART CONTAINERS === */
+.hm-chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:26px 28px;transition:all .2s ease}
+.hm-chart-card:hover{box-shadow:0 8px 30px rgba(15,23,42,.06);border-color:#cbd5e1}
+
+/* === RESPONSIVE === */
 @media (max-width:768px){
-  .hm-sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:200;box-shadow:4px 0 24px rgba(0,0,0,.1)}
+  .hm-sidebar{transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;box-shadow:8px 0 30px rgba(0,0,0,.15)}
   .hm-app.menu-open .hm-sidebar{transform:translateX(0)}
   .hm-sidebar-overlay{display:block}
   .hm-app.menu-open .hm-sidebar-overlay{opacity:1;pointer-events:auto}
@@ -1137,7 +1175,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
   .hm-mobile-header{display:flex!important}
   .hm-page-header{top:60px!important;padding:0 20px!important;flex-wrap:wrap;gap:10px!important;min-height:auto!important;height:auto!important;padding:14px 20px!important}
   .hm-page-content{padding:20px 16px!important}
-  .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+  .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:14px!important}
   .hm-charts-grid-2{grid-template-columns:1fr!important}
   .hm-charts-grid-2-1{grid-template-columns:1fr!important}
   .hm-report-grid{grid-template-columns:1fr!important}
@@ -1162,23 +1200,37 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
   .hm-stats-grid{grid-template-columns:1fr!important}
   .hm-detail-stats{grid-template-columns:1fr!important}
 }
-.hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s}
-.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:#fff;border-bottom:1px solid #e5e7eb;align-items:center;padding:0 20px;z-index:101;gap:14px}
+
+/* === OVERLAY === */
+.hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:150;opacity:0;pointer-events:none;transition:opacity .3s}
+
+/* === MOBILE HEADER === */
+.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;align-items:center;padding:0 20px;z-index:101;gap:14px}
+
+/* === TABLE WRAPS === */
 .hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
 .hm-table-wrap table{min-width:0}
 .hm-table-wrap.hm-table-clientes table{min-width:1100px}
-.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:118px;box-shadow:-6px 0 12px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:118px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
 .hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:#f8fafc}
-.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#f8fafc}
+.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#f1f5f9}
 .hm-table-wrap.hm-table-clientes th{font-size:11.5px}
-.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:130px;box-shadow:-6px 0 12px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:130px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
 .hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions{background:#f8fafc}
-.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions{background:#f8fafc}
+.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions{background:#f1f5f9}
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
-::-webkit-scrollbar{width:6px;height:6px}
+
+/* === SCROLLBARS === */
+::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+
+/* === SELECTION COLOR === */
+::selection{background:rgba(37,99,235,.15);color:#0f172a}
+
+/* === PAGINATION HOVER === */
+.hm-page-content button:hover{opacity:.85}
 `}</style>
 
       {/* Overlay móvil al abrir menú */}
@@ -1201,7 +1253,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
       </header>
 
       {/* ═══ SIDEBAR ═══ */}
-      <aside className="hm-sidebar" style={{ width: 280, background: "#fff", borderRight: "1px solid #e5e7eb", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
+      <aside className="hm-sidebar" style={{ width: 280, background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)", borderRight: "1px solid #e5e7eb", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 22px 20px", borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
@@ -1249,15 +1301,19 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
           <div>
-            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#fff", padding: "56px 48px 64px", textAlign: "center" }}>
-              <div style={{ maxWidth: 680, margin: "0 auto" }}>
+            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", color: "#fff", padding: "64px 48px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+              <div style={{ maxWidth: 680, margin: "0 auto", position: "relative" }}>
                 <h1 style={{ fontSize: "clamp(30px, 4vw, 42px)", fontWeight: 800, letterSpacing: -0.8, marginBottom: 14, lineHeight: 1.1 }}>Crédito</h1>
                 <p style={{ fontSize: 17, opacity: 0.85, lineHeight: 1.7 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
                 <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 28, padding: "14px 28px", background: "#fff", color: "#0f172a", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
               </div>
             </div>
             <div className="hm-credito-content" style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 32, textAlign: "center", color: "#64748b", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 22, padding: "48px 40px", textAlign: "center", color: "#64748b", lineHeight: 1.7, fontSize: 16, boxShadow: "0 4px 20px rgba(15,23,42,.06)", position: "relative", overflow: "hidden" }}>
+                <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 16, background: "linear-gradient(135deg, #2563eb15, #7c3aed10)", display: "flex", alignItems: "center", justifyContent: "center" }}><CreditCard size={28} style={{ color: "#2563eb" }} /></div>
+                Próximamente más información sobre opciones de crédito.
+              </div>
             </div>
           </div>
         )}
@@ -1308,8 +1364,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                 <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis type="number" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="rgba(220,38,38,.25)" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
               </div>
             </div>
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
-              <div style={{ padding: "20px 26px", borderBottom: "1px solid #f1f5f9" }}><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Pendientes de Cobro</h3></div>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+              <div style={{ padding: "20px 26px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #dc2626, #f97316)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Pendientes de Cobro</h3></div>
               <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Fecha de movimiento", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                 <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2626" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
                 {dashboardPendientes.length === 0 && <Empty cols={8} msg={dashboardPeriodo ? "Sin pendientes en este período" : "🎉 Todo cobrado — sin pendientes"} />}</tbody></table></div>
@@ -1319,10 +1375,12 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
         {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
-          <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", padding: "32px 48px 28px", color: "#fff" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", maxWidth: 1440, margin: "0 auto" }}>
-              <div style={{ width: 48, height: 48, background: "rgba(255,255,255,.1)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800 }}>H</div>
-              <div><h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>Relación de Cuentas</h2><p style={{ fontSize: 14, opacity: 0.8, marginTop: 4 }}>Análisis por período y por cliente. Elegí el mes para ver el desglose.</p></div>
+          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", padding: "36px 48px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(37,99,235,.08)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(124,58,237,.05)", pointerEvents: "none" }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", maxWidth: 1440, margin: "0 auto", position: "relative" }}>
+              <div style={{ width: 52, height: 52, background: "rgba(255,255,255,.08)", backdropFilter: "blur(8px)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, border: "1px solid rgba(255,255,255,.1)" }}>H</div>
+              <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6 }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400 }}>Análisis detallado por período y cliente</p></div>
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
@@ -1343,7 +1401,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "32px 48px 48px", maxWidth: 1440, margin: "0 auto" }}>
-            <div style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #eff6ff 100%)", border: "1px solid #c4b5fd", borderRadius: 14, padding: "16px 22px", marginBottom: 28, display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <div style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #eff6ff 50%, #f0fdf4 100%)", border: "1px solid #c4b5fd", borderRadius: 16, padding: "18px 24px", marginBottom: 28, display: "flex", alignItems: "flex-start", gap: 14, boxShadow: "0 2px 12px rgba(124,58,237,.06)" }}>
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
@@ -1357,8 +1415,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#dc2626" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
             </div>
             <div className="hm-report-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
-                <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f5f9" }}><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Desglose por Usuario</h3></div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+                <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Desglose por Usuario</h3></div>
                 <div className="hm-table-wrap"><table><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
                     {repData.rows.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2626", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
@@ -1401,7 +1459,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Clientes</h2>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de clientes">
+              <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1e40af", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'", border: "1px solid #bfdbfe" }} title="Total de clientes">
                 {search.trim() ? `${clientsFilteredAndSorted.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -1418,7 +1476,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
@@ -1500,7 +1558,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                 )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <div style={{ background: "#f8fafc", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
+                <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1e40af", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'", border: "1px solid #bfdbfe" }} title="Total de filas">
                   {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
                 </div>
                 <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
@@ -1522,7 +1580,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.gastos, totalPages);
@@ -1559,7 +1617,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Cobros</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Filtrado por cliente y/o rango de fechas">
+              <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1e40af", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'", border: "1px solid #bfdbfe" }} title="Filtrado por cliente y/o rango de fechas">
                 {(filterCliente.cobros || expRango.cobros.ini || expRango.cobros.fin) ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
               <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
@@ -1572,7 +1630,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(cobrosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.cobros, totalPages);
@@ -1630,7 +1688,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Garantías</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
+              <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1e40af", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'", border: "1px solid #bfdbfe" }} title="Total de filas">
                 {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
@@ -1639,7 +1697,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(garantiasFiltradas.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.garantias, totalPages);
