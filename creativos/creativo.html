@@ -1161,8 +1161,9 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   var url=window.__SUPABASE_URL__;var key=window.__SUPABASE_ANON_KEY__;
   if(!url||!key){ console.warn('[Creativos] auth: faltan URL o KEY (auth-config.js)'); return; }
   var lib=window.supabase;
-  if(!lib||typeof lib.createClient!=='function'){ console.warn('[Creativos] auth: librería Supabase no cargada'); return; }
-  var supabase=lib.createClient(url,key);
+  var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
+  if(!lib||typeof createClientFn!=='function'){ console.warn('[Creativos] auth: createClient no encontrado en window.supabase'); return; }
+  var supabase=createClientFn(url,key);
   var hash=window.location.hash||'';
   if(hash.indexOf('access_token')!==-1){
     var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
@@ -1325,8 +1326,9 @@ var supabase = null;
   var url = window.__SUPABASE_URL__, key = window.__SUPABASE_ANON_KEY__;
   if (!url || !key) { console.warn('[Creativos] Faltan __SUPABASE_URL__ o __SUPABASE_ANON_KEY__. ¿Está cargado /credito-app/auth-config.js?'); return; }
   var lib = window.supabase;
-  if (!lib || typeof lib.createClient !== 'function') { console.warn('[Creativos] Librería Supabase no cargada (window.supabase). ¿El script de @supabase/supabase-js se cargó?'); return; }
-  try { supabase = lib.createClient(url, key); console.log('[Creativos] Supabase OK'); } catch (e) { console.warn('[Creativos] Supabase init:', e); }
+  var createClientFn = lib && (lib.createClient || (lib.default && (lib.default.createClient || lib.default)));
+  if (!lib || typeof createClientFn !== 'function') { console.warn('[Creativos] createClient no encontrado en window.supabase'); return; }
+  try { supabase = createClientFn(url, key); console.log('[Creativos] Supabase OK'); } catch (e) { console.warn('[Creativos] Supabase init:', e); }
 })();
 
 const STAGES = ['inspiracion','guion','produccion','revision','entrega'];
