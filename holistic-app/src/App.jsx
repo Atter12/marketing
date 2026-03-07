@@ -42,7 +42,7 @@ const mesCobro = (c, gastosList) => { if (c.periodoResumen && String(c.periodoRe
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
 const fmtDt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return d.toLocaleString("es-PE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); };
-const COLORS = ["#0055ff", "#0d9f6e", "#d97706", "#dc2640", "#7c3aed", "#e1306c", "#0891b2", "#c2410c"];
+const COLORS = ["#635bff", "#0d9f6e", "#d97706", "#dc2626", "#7c3aed", "#e1306c", "#0891b2", "#c2410c"];
 const PC = { "Mercury Bank": "#5542f6", BCP: "#ff6200", Interbank: "#00a651", Binance: "#f0b90b", Efectivo: "#94a3b8", Stripe: "#635bff", Yape: "#6c2cb2", Plin: "#00d4aa" };
 const PI = { "Mercury Bank": "🏦", BCP: "🟠", Interbank: "🟢", Binance: "💛", Efectivo: "💵", Stripe: "💳", Yape: "💜", Plin: "💚" };
 const PM = ["Mercury Bank", "BCP", "Interbank", "Binance", "Efectivo", "Stripe", "Yape", "Plin"];
@@ -97,7 +97,7 @@ function Av({ name, size = 34, avatarUrl }) {
   const [imgError, setImgError] = useState(false);
   const c = clr(name);
   const s = Math.round(size * AVATAR_SIZE_SCALE);
-  const style = { width: s, height: s, borderRadius: s > 40 ? 14 : 8, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "14", color: c, fontWeight: 700, fontSize: s * 0.36, letterSpacing: -0.3 };
+  const style = { width: s, height: s, borderRadius: s > 40 ? 16 : 10, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "12", color: c, fontWeight: 700, fontSize: s * 0.34, letterSpacing: -0.3 };
   const showImg = avatarUrl && avatarUrl.trim() && !imgError;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
   const imgSrc = showImg ? (avatarUrl.replace(/&amp;/gi, "&")) : "";
@@ -106,43 +106,43 @@ function Av({ name, size = 34, avatarUrl }) {
 }
 
 const Bdg = ({ type = "n", children, style: customStyle }) => {
-  const m = { ok: ["#eafaf4", "#0d9f6e"], err: ["#fdf0f2", "#dc2640"], warn: ["#fef9ec", "#d97706"], acc: ["#edf2ff", "#0055ff"], n: ["#f4f5f7", "#5f6577"], gar: ["#f0eefe", "#7c3aed"] };
+  const m = { ok: ["#ecfdf5", "#059669"], err: ["#fef2f2", "#dc2626"], warn: ["#fffbeb", "#d97706"], acc: ["#eff6ff", "#2563eb"], n: ["#f8fafc", "#64748b"], gar: ["#f5f3ff", "#7c3aed"] };
   const [bg, fg] = m[type] || m.n;
-  return <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "4px 11px", borderRadius: 6, fontSize: 12.5, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap", ...customStyle }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0 }} />{children}</span>;
+  return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 12px", borderRadius: 8, fontSize: 12.5, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap", letterSpacing: -0.1, ...customStyle }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0, opacity: 0.8 }} />{children}</span>;
 };
 
-const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 6, fontSize: 11.5, fontWeight: 600, background: (PC[method] || "#94a3b8") + "18", color: PC[method] || "#64748b" }}>{PI[method] || "💰"} {method}</span>;
+const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: (PC[method] || "#94a3b8") + "14", color: PC[method] || "#64748b", letterSpacing: -0.1 }}>{PI[method] || "💰"} {method}</span>;
 
 const Stat = ({ icon, value, label, color, sub }) => (
-  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-    <div style={{ width: 38, height: 38, borderRadius: 10, background: color + "14", color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 12 }}>{icon}</div>
-    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 26, fontWeight: 700, letterSpacing: -0.5, color: color || "#1a1d26", marginBottom: 4 }}>{value}</div>
-    <div style={{ fontSize: 12.5, color: "#9498a8", fontWeight: 500 }}>{label}</div>
-    {sub && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>{sub}</div>}
+  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "26px 28px", transition: "all .2s ease" }}>
+    <div style={{ width: 44, height: 44, borderRadius: 12, background: color + "10", color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>{icon}</div>
+    <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 30, fontWeight: 700, letterSpacing: -1, color: "#0f172a", marginBottom: 6, lineHeight: 1.1 }}>{value}</div>
+    <div style={{ fontSize: 13.5, color: "#94a3b8", fontWeight: 500, letterSpacing: -0.1 }}>{label}</div>
+    {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 6 }}>{sub}</div>}
   </div>
 );
 
 const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
-    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,17,26,.5)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 50, overflowY: "auto" }}>
-      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, width: "92%", maxWidth: 560, boxShadow: "0 20px 60px rgba(0,0,0,.12)", border: "1px solid #e2e4e9", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", background: "#f8f9fb", borderBottom: "1px solid #e2e4e9", borderRadius: "16px 16px 0 0", minWidth: 0 }}>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1b2559", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{title}</h3>
-          <button onClick={onClose} style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fff", color: "#5f6577", borderRadius: 8, cursor: "pointer", fontSize: 18, boxShadow: "0 1px 3px rgba(0,0,0,.08)" }} aria-label="Cerrar">✕</button>
+    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.6)", backdropFilter: "blur(8px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto" }}>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 20, width: "94%", maxWidth: 640, boxShadow: "0 25px 80px rgba(0,0,0,.16)", border: "1px solid #e5e7eb", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 28px", background: "#f8fafc", borderBottom: "1px solid #e5e7eb", borderRadius: "20px 20px 0 0", minWidth: 0 }}>
+          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.3 }}>{title}</h3>
+          <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", color: "#64748b", borderRadius: 10, cursor: "pointer", fontSize: 16, transition: "all .15s" }} aria-label="Cerrar">✕</button>
         </div>
-        <div style={{ padding: "20px 24px", overflowX: "hidden", minWidth: 0, boxSizing: "border-box" }}>{children}</div>
-        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "16px 24px 20px", background: "#f8f9fb", borderTop: "1px solid #e2e4e9", borderRadius: "0 0 16px 16px" }}>{footer}</div>}
+        <div style={{ padding: "24px 28px", overflowX: "hidden", minWidth: 0, boxSizing: "border-box" }}>{children}</div>
+        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "18px 28px 22px", background: "#f8fafc", borderTop: "1px solid #e5e7eb", borderRadius: "0 0 20px 20px" }}>{footer}</div>}
       </div>
     </div>
   );
 };
 
 const Inp = ({ label, hint, ...p }) => (
-  <div style={{ marginBottom: 14, minWidth: 0 }}>
-    {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
-    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", resize: "vertical", minHeight: 60, ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 32, ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none", ...(p.style || {}) }} />}
-    {hint && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{hint}</div>}
+  <div style={{ marginBottom: 16, minWidth: 0 }}>
+    {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 6, letterSpacing: -0.1 }}>{label}</label>}
+    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", resize: "vertical", minHeight: 68, transition: "border-color .15s", ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 36, transition: "border-color .15s", ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "11px 14px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 14, outline: "none", transition: "border-color .15s", ...(p.style || {}) }} />}
+    {hint && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 4 }}>{hint}</div>}
   </div>
 );
 
@@ -196,9 +196,9 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
 }
 
 const Btn = ({ variant = "primary", size, children, ...p }) => {
-  const vs = { primary: { bg: "#1b2559", color: "#fff", border: "none" }, accent: { bg: "#0055ff", color: "#fff", border: "none" }, outline: { bg: "#fff", color: "#1a1d26", border: "1px solid #e2e4e9" }, ghost: { bg: "transparent", color: "#9498a8", border: "none" }, danger: { bg: "#fdf0f2", color: "#dc2640", border: "none" } };
+  const vs = { primary: { bg: "#0f172a", color: "#fff", border: "none" }, accent: { bg: "#2563eb", color: "#fff", border: "none" }, outline: { bg: "#fff", color: "#0f172a", border: "1.5px solid #e2e8f0" }, ghost: { bg: "transparent", color: "#94a3b8", border: "none" }, danger: { bg: "#fef2f2", color: "#dc2626", border: "none" } };
   const s = vs[variant] || vs.primary;
-  return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: size === "sm" ? "6px 12px" : "8px 18px", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 12 : 13, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s", ...(p.style || {}) }}>{children}</button>;
+  return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: size === "sm" ? "8px 14px" : "10px 20px", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: size === "sm" ? 13 : 14, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .15s", letterSpacing: -0.2, ...(p.style || {}) }}>{children}</button>;
 };
 
 const PREFIXES = [{ c: "+51", l: "PE" }, { c: "+1", l: "US/CA" }, { c: "+52", l: "MX" }, { c: "+57", l: "CO" }, { c: "+34", l: "ES" }, { c: "+54", l: "AR" }, { c: "+55", l: "BR" }, { c: "+56", l: "CL" }, { c: "+58", l: "VE" }, { c: "+593", l: "EC" }, { c: "+598", l: "UY" }, { c: "+595", l: "PY" }, { c: "+591", l: "BO" }, { c: "+507", l: "PA" }, { c: "+506", l: "CR" }, { c: "+502", l: "GT" }, { c: "+503", l: "SV" }, { c: "+504", l: "HN" }, { c: "+505", l: "NI" }];
@@ -232,14 +232,14 @@ const MultiPhone = ({ values, onChange }) => (
   </div>
 );
 
-const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", background: "#fff", borderRadius: 6, cursor: "pointer", color: danger ? "#dc2640" : "#9498a8", transition: "all .15s", ...s }}>{icon}</button>;
+const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 8, cursor: "pointer", color: danger ? "#dc2626" : "#94a3b8", transition: "all .15s", ...s }}>{icon}</button>;
 
-const Empty = ({ cols, msg }) => <tr><td colSpan={cols} style={{ textAlign: "center", padding: 48, color: "#9498a8", fontSize: 13.5 }}>{msg}</td></tr>;
+const Empty = ({ cols, msg }) => <tr><td colSpan={cols} style={{ textAlign: "center", padding: 56, color: "#94a3b8", fontSize: 14 }}>{msg}</td></tr>;
 
 /* ═══════ TABLE STYLES ═══════ */
-const TH = { textAlign: "left", padding: "10px 18px", fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 0.8, background: "#f8f9fb", borderBottom: "1px solid #e2e4e9" };
-const TD = { padding: "12px 18px", fontSize: 13.5, borderBottom: "1px solid #eff0f3", verticalAlign: "middle" };
-const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, fontWeight: 600 };
+const TH = { textAlign: "left", padding: "14px 24px", fontSize: 11.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, background: "#f8fafc", borderBottom: "1px solid #e5e7eb" };
+const TD = { padding: "16px 24px", fontSize: 14, borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" };
+const MN = { fontFamily: "'IBM Plex Mono',monospace", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
 
 /* ═══════ MAIN APP ═══════ */
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
