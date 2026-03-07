@@ -2663,7 +2663,9 @@ async function loadTareasData() {
       var contact = credito ? credito.contacto_nombre : (r.contacto_nombre || '');
       var email = credito ? credito.email : (r.email || '');
       var phone = credito ? credito.telefono : (r.telefono || '');
-      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: r.satisfaccion, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: r.health, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+      var healthVal = r.health != null && r.health !== '' ? Number(r.health) : null;
+      var satVal = r.satisfaccion != null && r.satisfaccion !== '' ? Number(r.satisfaccion) : null;
+      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
@@ -2809,31 +2811,35 @@ renderers.clients = function() {
   grid.innerHTML = '';
   clients.forEach((c, ci) => {
     const pct = c.entregables > 0 ? Math.round(c.done / c.entregables * 100) : 0;
-    const hcl = c.health >= 90 ? 'var(--green)' : c.health >= 75 ? 'var(--color-primary)' : 'var(--red)';
-    const hbg = c.health >= 90 ? 'var(--green-bg)' : c.health >= 75 ? 'var(--color-primary-highlight)' : 'var(--red-bg)';
+    const healthNum = c.health != null ? Number(c.health) : 50;
+    const satNum = c.satisfaction != null ? Number(c.satisfaction) : null;
+    const hcl = healthNum >= 90 ? 'var(--green)' : healthNum >= 75 ? 'var(--color-primary)' : 'var(--red)';
+    const hbg = healthNum >= 90 ? 'var(--green-bg)' : healthNum >= 75 ? 'var(--color-primary-highlight)' : 'var(--red-bg)';
     const svcHtml = c.svcs.map(s => `<span class="service-tag ${s}" style="margin-left:2px">${svcNames[s]||s}</span>`).join('');
     const teamHtml = c.team.map(id => makeAvatar(id, 24)).join('');
     const phasesHtml = c.phases.map((p,i) => `<div class="phase-item ${i<c.curr?'phase-done':i===c.curr?'phase-curr':'phase-pend'}" title="${p}">${p}</div>`).join('');
-    const satPill = c.satisfaction >= 95 ? 'pill-green' : c.satisfaction >= 85 ? 'pill-orange' : 'pill-orange2';
+    const satPill = satNum != null && satNum >= 95 ? 'pill-green' : satNum != null && satNum >= 85 ? 'pill-orange' : 'pill-orange2';
+    const satLabel = satNum != null ? (satNum + '%') : '—';
+    const healthLabel = c.healthTxt && c.healthTxt.trim() ? c.healthTxt : (healthNum === 50 ? 'Sincronizado desde Crédito' : '—');
 
     const card = document.createElement('article');
     card.className = 'client-card fade-in';
     card.dataset.status = c.status;
     card.innerHTML = `
       <div class="client-header">
-        <div class="client-avatar" style="background:${c.c}" aria-hidden="true">${c.n[0]}</div>
+        <div class="client-avatar" style="background:${c.c}" aria-hidden="true">${(c.n && c.n[0]) || '?'}</div>
         <div style="flex:1;min-width:0">
-          <div class="client-name">${c.n}</div>
-          <div class="client-type">${c.tp} · ${svcHtml}</div>
+          <div class="client-name">${c.n || '—'}</div>
+          <div class="client-type">${c.tp || ''} · ${svcHtml}</div>
         </div>
-        <span class="pill ${satPill}" title="Satisfacción">${c.satisfaction}%</span>
+        <span class="pill ${satPill}" title="Satisfacción">${satLabel}</span>
       </div>
       <div class="client-body">
         <div class="health-bar" style="background:${hbg}">
-          <div class="health-ring" style="background:${hcl}" aria-label="Health score ${c.health}">${c.health}</div>
+          <div class="health-ring" style="background:${hcl}" aria-label="Health score ${healthNum}">${healthNum}</div>
           <div class="health-info">
             <h5 style="color:${hcl}">Health Score</h5>
-            <p>${c.healthTxt}</p>
+            <p>${healthLabel}</p>
           </div>
         </div>
         <div class="client-phase" role="list" aria-label="Fases del proyecto">${phasesHtml}</div>
@@ -2844,18 +2850,18 @@ renderers.clients = function() {
           <div class="metric-item"><div class="metric-num" style="font-variant-numeric:tabular-nums">${c.meetings}</div><div class="metric-lbl">Reuniones</div></div>
         </div>
         <div class="client-contacts">
-          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>${c.contact}</span></div>
-          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${c.email}</span></div>
-          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.8 19.79 19.79 0 0 1 1.61 1.21 2 2 0 0 1 3.6.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 7.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>${c.phone}</span></div>
-          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>${c.spent} / ${c.budget}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>${c.contact || '—'}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${c.email || '—'}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.8 19.79 19.79 0 0 1 1.61 1.21 2 2 0 0 1 3.6.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 7.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>${c.phone || '—'}</span></div>
+          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>${c.spent || '—'} / ${c.budget || '—'}</span></div>
         </div>
         <div class="next-action">
           <h5>📌 Próxima Acción</h5>
-          <p>${c.nextAction}</p>
+          <p>${c.nextAction || '—'}</p>
         </div>
-        <div class="client-notes">📝 <strong>Notas:</strong> ${c.notes}</div>
+        <div class="client-notes">📝 <strong>Notas:</strong> ${c.notes || '—'}</div>
         <div style="font-size:0.625rem;color:var(--color-text-faint);margin-bottom:var(--sp-3)">
-          📄 Contrato: ${c.contractStart} — ${c.contractEnd} · Mensual: ${c.monthlyFee}
+          📄 Contrato: ${c.contractStart || '—'} — ${c.contractEnd || '—'} · Mensual: ${c.monthlyFee || '—'}
         </div>
         <div class="client-footer">
           <div class="team-avatars" aria-label="Equipo asignado">${teamHtml}</div>
@@ -3447,19 +3453,23 @@ function openClientDetail(idx) {
   if (!c) return;
   const relTk  = tickets.filter(tk => tk.client === c.n);
   const relDel = KT.filter(k => k.cl === c.n);
-  const hcl = c.health >= 90 ? 'var(--green)' : c.health >= 75 ? 'var(--color-primary)' : 'var(--red)';
+  const healthNum = c.health != null ? Number(c.health) : 50;
+  const satNum = c.satisfaction != null ? Number(c.satisfaction) : null;
+  const hcl = healthNum >= 90 ? 'var(--green)' : healthNum >= 75 ? 'var(--color-primary)' : 'var(--red)';
+  const healthLabel = healthNum >= 90 ? 'Excelente' : healthNum >= 75 ? 'Buena' : 'Alerta';
+  const satLabel = satNum != null ? (satNum + '%') : '—';
 
-  document.getElementById('modalTitle').textContent = c.n + ' — Detalle';
+  document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5)">
-      <div class="client-avatar" style="background:${c.c};width:50px;height:50px;font-size:1.25rem" aria-hidden="true">${c.n[0]}</div>
-      <div><div style="font-size:var(--text-xl);font-weight:700">${c.n}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp} · ${c.contact} · ${c.email}</div></div>
+      <div class="client-avatar" style="background:${c.c};width:50px;height:50px;font-size:1.25rem" aria-hidden="true">${(c.n && c.n[0]) || '?'}</div>
+      <div><div style="font-size:var(--text-xl);font-weight:700">${c.n || '—'}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp || ''} · ${c.contact || ''} · ${c.email || ''}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
-      <div class="info-item"><div class="lbl">Health Score</div><div class="val" style="color:${hcl}">● ${c.health}/100 — ${c.health>=90?'Excelente':c.health>=75?'Buena':'Alerta'}</div></div>
-      <div class="info-item"><div class="lbl">Contrato</div><div class="val">${c.contractStart} → ${c.contractEnd}</div></div>
-      <div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent} de ${c.budget} (${c.monthlyFee}/mes)</div></div>
-      <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${c.satisfaction}%</div></div>
+      <div class="info-item"><div class="lbl">Health Score</div><div class="val" style="color:${hcl}">● ${healthNum}/100 — ${healthLabel}</div></div>
+      <div class="info-item"><div class="lbl">Contrato</div><div class="val">${c.contractStart || '—'} → ${c.contractEnd || '—'}</div></div>
+      <div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>
+      <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${satLabel}</div></div>
     </div>
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
     ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
