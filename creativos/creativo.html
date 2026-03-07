@@ -1321,15 +1321,38 @@ let editingId = null;
 let editingType = null;
 
 var supabase = null;
-(function initSupabase() {
-  if (typeof window === 'undefined') return;
+function tryInitSupabaseCreativos(retryCount) {
+  retryCount = retryCount || 0;
   var url = window.__SUPABASE_URL__, key = window.__SUPABASE_ANON_KEY__;
-  if (!url || !key) { console.warn('[Creativos] Faltan __SUPABASE_URL__ o __SUPABASE_ANON_KEY__. ¿Está cargado /credito-app/auth-config.js?'); return; }
+  if (!url || !key) { console.warn('[Creativos] Faltan __SUPABASE_URL__ o __SUPABASE_ANON_KEY__.'); return; }
   var lib = window.supabase;
-  var createClientFn = lib && (lib.createClient || (lib.default && (lib.default.createClient || lib.default)));
-  if (!lib || typeof createClientFn !== 'function') { console.warn('[Creativos] createClient no encontrado en window.supabase'); return; }
-  try { supabase = createClientFn(url, key); console.log('[Creativos] Supabase OK'); } catch (e) { console.warn('[Creativos] Supabase init:', e); }
-})();
+  if (lib == null || typeof lib !== 'object') {
+    if (retryCount === 0 && document.querySelector('script[src*="supabase-js"]')) {
+      console.warn('[Creativos] window.supabase es null. Cargando script dinámicamente...');
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+      s.onload = function() { tryInitSupabaseCreativos(1); };
+      s.onerror = function() { console.error('[Creativos] Error cargando script Supabase.'); };
+      document.head.appendChild(s);
+      return;
+    }
+    if (retryCount < 4) {
+      setTimeout(function() { tryInitSupabaseCreativos(retryCount + 1); }, 500);
+    }
+    return;
+  }
+  var createClientFn = lib.createClient || (lib.default && (lib.default.createClient || lib.default));
+  if (typeof createClientFn !== 'function') {
+    if (retryCount < 3) setTimeout(function() { tryInitSupabaseCreativos(retryCount + 1); }, 400);
+    return;
+  }
+  try {
+    supabase = createClientFn(url, key);
+    console.log('[Creativos] Supabase OK');
+    if (window.__creativosTriggerLoad) window.__creativosTriggerLoad();
+  } catch (e) { console.warn('[Creativos] Supabase init:', e); }
+}
+if (typeof window !== 'undefined') tryInitSupabaseCreativos(0);
 
 const STAGES = ['inspiracion','guion','produccion','revision','entrega'];
 const STAGE_NAMES = { inspiracion:'Inspiración', guion:'Guión', produccion:'Producción', revision:'Revisión', entrega:'Entrega Final' };
@@ -2945,18 +2968,26 @@ function initApp() {
   handleHash();
   if (window.location.hash !== '#portfolio') navigateTo('dashboard');
 }
-if (supabase) {
+function doCreativosInitialLoad() {
+  if (!supabase) return;
   loadCreativosData().then(function(data) {
     if (data) {
       D.clients = data.clients;
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
+      console.log('[Creativos] Clientes cargados:', (data.clients || []).length);
     }
     initApp();
-  }).catch(function() { initApp(); });
+  }).catch(function(e) { console.warn('[Creativos] loadCreativosData:', e); initApp(); });
+}
+window.__creativosTriggerLoad = doCreativosInitialLoad;
+if (supabase) {
+  doCreativosInitialLoad();
 } else {
   initApp();
+  var t = setInterval(function() { if (supabase) { clearInterval(t); doCreativosInitialLoad(); } }, 400);
+  setTimeout(function() { clearInterval(t); }, 8000);
 }
 </script>
 </body>
