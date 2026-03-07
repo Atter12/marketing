@@ -758,8 +758,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
 
   /* Early returns only after all hooks have run */
-  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#5f6577", fontSize: 14 }}>Cargando datos…</div></div>);
-  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f4f5f7", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 360 }}><p style={{ color: "#dc2640", fontSize: 14, marginBottom: 16 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "10px 20px", border: "none", borderRadius: 8, background: "#1b2559", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
+  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", fontFamily: "'DM Sans',sans-serif" }}><div style={{ color: "#64748b", fontSize: 15 }}>Cargando datos…</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "#dc2626", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#0f172a", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
   const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, codigo: cf.codigo || "", name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
@@ -1117,60 +1117,68 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
   return (
-    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,sans-serif", background: "#f4f5f7", color: "#1a1d26", WebkitFontSmoothing: "antialiased" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-.stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.07);transform:translateY(-1px)} table{width:100%;border-collapse:collapse;min-width:600px} tbody tr:hover{background:#fafbfc} tbody tr:last-child td{border-bottom:none}
+    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'DM Sans',-apple-system,BlinkMacSystemFont,sans-serif", background: "#f8fafc", color: "#0f172a", WebkitFontSmoothing: "antialiased" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+*{box-sizing:border-box}
+.stat-card{transition:all .2s ease} .stat-card:hover{box-shadow:0 8px 24px rgba(15,23,42,.08);transform:translateY(-2px)}
+table{width:100%;border-collapse:collapse;min-width:600px}
+tbody tr{transition:background .1s} tbody tr:hover{background:#f8fafc} tbody tr:last-child td{border-bottom:none}
 .hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
 .hm-modal-box .hm-form-grid>div{min-width:0}
+input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.1)!important}
+.hm-nav-item{transition:all .15s ease;border-radius:10px}
+.hm-nav-item:hover{background:#f1f5f9!important}
 @media (max-width:768px){
-  .hm-sidebar{transform:translateX(-100%);transition:transform .2s ease;z-index:200;box-shadow:4px 0 20px rgba(0,0,0,.08)}
+  .hm-sidebar{transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);z-index:200;box-shadow:4px 0 24px rgba(0,0,0,.1)}
   .hm-app.menu-open .hm-sidebar{transform:translateX(0)}
   .hm-sidebar-overlay{display:block}
   .hm-app.menu-open .hm-sidebar-overlay{opacity:1;pointer-events:auto}
-  .hm-main{margin-left:0!important;padding-top:56px!important}
+  .hm-main{margin-left:0!important;padding-top:60px!important}
   .hm-mobile-header{display:flex!important}
-  .hm-page-header{top:56px!important;padding:0 16px!important;flex-wrap:wrap;gap:8px!important;min-height:auto!important;height:auto!important;padding:12px 16px!important}
-  .hm-page-content{padding:16px 12px!important}
-  .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+  .hm-page-header{top:60px!important;padding:0 20px!important;flex-wrap:wrap;gap:10px!important;min-height:auto!important;height:auto!important;padding:14px 20px!important}
+  .hm-page-content{padding:20px 16px!important}
+  .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
   .hm-charts-grid-2{grid-template-columns:1fr!important}
   .hm-charts-grid-2-1{grid-template-columns:1fr!important}
   .hm-report-grid{grid-template-columns:1fr!important}
-  .hm-credito-hero{padding:32px 20px 40px!important}
-  .hm-credito-content{padding:24px 16px!important}
+  .hm-credito-hero{padding:36px 20px 44px!important}
+  .hm-credito-content{padding:28px 20px!important}
   .hm-detail-stats{grid-template-columns:repeat(2,1fr)!important}
   .hm-detail-charts{grid-template-columns:1fr!important}
   .hm-detail-tabs{flex-wrap:wrap;width:100%!important}
-  .hm-detail-tabs button{padding:6px 12px;font-size:11.5px}
+  .hm-detail-tabs button{padding:8px 14px;font-size:12.5px}
   .hm-modal-outer{padding:12px 12px 24px!important;align-items:flex-start!important}
   .hm-modal-box{width:100%!important;max-width:100%!important;margin-bottom:20px!important;overflow:hidden!important;box-sizing:border-box!important}
   .hm-modal-box *{box-sizing:border-box!important}
   .hm-modal-box .hm-form-grid>div,.hm-modal-box [style*="flex:"]{min-width:0!important}
-  .hm-form-grid{grid-template-columns:1fr!important;gap:12px!important}
-  .hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{min-height:44px!important;padding:12px 14px!important;font-size:16px!important;max-width:100%!important}
-  .hm-modal-box textarea{min-height:80px!important}
-  .hm-modal-box label{font-size:13px!important}
-  .hm-modal-box .hm-modal-footer{flex-wrap:wrap;gap:8px!important}
+  .hm-form-grid{grid-template-columns:1fr!important;gap:14px!important}
+  .hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{min-height:48px!important;padding:14px 16px!important;font-size:16px!important;max-width:100%!important}
+  .hm-modal-box textarea{min-height:88px!important}
+  .hm-modal-box label{font-size:14px!important}
+  .hm-modal-box .hm-modal-footer{flex-wrap:wrap;gap:10px!important}
 }
 @media (max-width:480px){
   .hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{min-height:48px!important}
-}
-@media (max-width:480px){
   .hm-stats-grid{grid-template-columns:1fr!important}
   .hm-detail-stats{grid-template-columns:1fr!important}
 }
-.hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,17,26,.4);z-index:150;opacity:0;pointer-events:none;transition:opacity .2s}
-.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:56px;background:#fff;border-bottom:1px solid #e2e4e9;align-items:center;padding:0 16px;z-index:101;gap:12px}
+.hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:150;opacity:0;pointer-events:none;transition:opacity .25s}
+.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:#fff;border-bottom:1px solid #e5e7eb;align-items:center;padding:0 20px;z-index:101;gap:14px}
 .hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px}
 .hm-table-wrap table{min-width:0}
 .hm-table-wrap.hm-table-clientes table{min-width:1100px}
-.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:118px;box-shadow:-6px 0 12px rgba(0,0,0,.06);z-index:1}
-.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:#f8f9fb}
-.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#fafbfc}
+.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:118px;box-shadow:-6px 0 12px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:#f8fafc}
+.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#f8fafc}
 .hm-table-wrap.hm-table-clientes th{font-size:11.5px}
-.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:130px;box-shadow:-6px 0 12px rgba(0,0,0,.06);z-index:1}
-.hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions{background:#f8f9fb}
-.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions{background:#fafbfc}
+.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:130px;box-shadow:-6px 0 12px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions{background:#f8fafc}
+.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions{background:#f8fafc}
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 `}</style>
 
       {/* Overlay móvil al abrir menú */}
@@ -1178,8 +1186,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
       {/* Cabecera móvil */}
       <header className="hm-mobile-header">
-        <button onClick={() => setMenuOpen(true)} style={{ width: 40, height: 40, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#f4f5f7", borderRadius: 10, color: "#1b2559", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
-        <span style={{ fontSize: 16, fontWeight: 700, color: "#1a1d26", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
+        <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 12, color: "#0f172a", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
+        <span style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.3 }}>{pageTitles[page] || "Holistic"}</span>
         {!isCliente && (
           <div style={{ flexShrink: 0 }}>
             <Av name={displayName} size={36} avatarUrl={gerenteAvatarUrl} />
@@ -1193,12 +1201,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       </header>
 
       {/* ═══ SIDEBAR ═══ */}
-      <aside className="hm-sidebar" style={{ width: 260, background: "#fff", borderRight: "1px solid #e2e4e9", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
-        <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid #eff0f3" }}>
+      <aside className="hm-sidebar" style={{ width: 280, background: "#fff", borderRight: "1px solid #e5e7eb", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
+        <div style={{ padding: "24px 22px 20px", borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 51, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
+            <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, paddingTop: 14, borderTop: "1px solid #eff0f3" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9" }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               {isCliente ? (
                 <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
@@ -1207,36 +1215,36 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
               )}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "#1a1d26", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
-              {subLabel && <div style={{ fontSize: 11, color: "#9498a8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subLabel}</div>}
+              <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
+              {subLabel && <div style={{ fontSize: 12, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2 }}>{subLabel}</div>}
             </div>
           </div>
         </div>
-        <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px" }}>General</div>
+        <nav style={{ flex: 1, padding: "18px 14px", overflowY: "auto" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px" }}>General</div>
           {nav.map((it) => (
             <div key={it.id}>
-              {it.section && <div style={{ fontSize: 10.5, fontWeight: 700, color: "#9498a8", textTransform: "uppercase", letterSpacing: 1.4, padding: "8px 12px 6px", marginTop: 12 }}>{it.section}</div>}
+              {it.section && <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px", marginTop: 16 }}>{it.section}</div>}
               {it.external ? (
-                <a href={it.external} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: 500, color: "#5f6577", background: "transparent", cursor: "pointer", margin: "1px 0", textDecoration: "none" }}>
-                  {it.icon}<span>{it.label}</span><ExternalLink size={12} style={{ marginLeft: "auto", opacity: 0.6 }} />
+                <a href={it.external} target="_blank" rel="noopener noreferrer" className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 10, fontSize: 14, fontWeight: 500, color: "#64748b", background: "transparent", cursor: "pointer", margin: "2px 0", textDecoration: "none" }}>
+                  {it.icon}<span>{it.label}</span><ExternalLink size={13} style={{ marginLeft: "auto", opacity: 0.5 }} />
                 </a>
               ) : (
-                <div onClick={() => goTo(it.id)} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", borderRadius: 8, fontSize: 13.5, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#1b2559" : "#5f6577", background: page === it.id ? "#eef0f8" : "transparent", cursor: "pointer", margin: "1px 0" }}>
+                <div onClick={() => goTo(it.id)} className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 10, fontSize: 14, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#0f172a" : "#64748b", background: page === it.id ? "#f1f5f9" : "transparent", cursor: "pointer", margin: "2px 0" }}>
                   {it.icon}<span>{it.label}</span>
-                  {it.badge > 0 && <span style={{ marginLeft: "auto", background: "#dc2640", color: "#fff", fontSize: 10.5, fontWeight: 700, padding: "1px 7px", borderRadius: 10 }}>{it.badge}</span>}
+                  {it.badge > 0 && <span style={{ marginLeft: "auto", background: "#dc2626", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 12, minWidth: 20, textAlign: "center" }}>{it.badge}</span>}
                 </div>
               )}
             </div>
           ))}
         </nav>
-        <div style={{ padding: "14px 20px", borderTop: "1px solid #eff0f3" }}>
-          <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, width: "100%", padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#5f6577", fontSize: 12, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}><LogOut size={14} /> Cerrar sesión</button>
+        <div style={{ padding: "16px 22px", borderTop: "1px solid #f1f5f9" }}>
+          <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#64748b", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", transition: "all .15s" }}><LogOut size={15} /> Cerrar sesión</button>
         </div>
       </aside>
 
       {/* ═══ MAIN ═══ */}
-      <main className="hm-main" style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
+      <main className="hm-main" style={{ flex: 1, marginLeft: 280, minHeight: "100vh" }}>
 
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
