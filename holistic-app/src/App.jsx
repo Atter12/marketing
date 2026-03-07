@@ -173,7 +173,7 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
   }, [query, filtered, onChange]);
   return (
     <div style={{ marginBottom: compact ? 0 : 14, minWidth: 0, position: "relative" }}>
-      {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{label}</label>}
+      {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>{label}</label>}
       <input
         type="text"
         value={displayText}
@@ -181,16 +181,16 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => { applySingleMatch(); setOpen(false); }, 180)}
         placeholder={placeholder}
-        style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, color: "#1a1d26", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
+        style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, color: "#0f172a", fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
       />
       {open && filtered.length > 0 && (
-        <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, margin: 0, padding: 4, listStyle: "none", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 100, maxHeight: 220, overflowY: "auto" }}>
+        <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, margin: 0, padding: 4, listStyle: "none", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 100, maxHeight: 220, overflowY: "auto" }}>
           {filtered.map((o) => (
-            <li key={o.value} onMouseDown={() => { onChange(o.value); setQuery(""); setOpen(false); }} style={{ padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13.5, color: o.value === value ? "#0055ff" : "#1a1d26", fontWeight: o.value === value ? 600 : 400, background: o.value === value ? "#f0f4ff" : "transparent" }}>{o.label}</li>
+            <li key={o.value} onMouseDown={() => { onChange(o.value); setQuery(""); setOpen(false); }} style={{ padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13.5, color: o.value === value ? "#2563eb" : "#1a1d26", fontWeight: o.value === value ? 600 : 400, background: o.value === value ? "#f0f4ff" : "transparent" }}>{o.label}</li>
           ))}
         </ul>
       )}
-      {open && query.trim() && filtered.length === 0 && <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, padding: "12px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, color: "#9498a8", zIndex: 100 }}>{emptyMessage}</div>}
+      {open && query.trim() && filtered.length === 0 && <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, padding: "12px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, color: "#94a3b8", zIndex: 100 }}>{emptyMessage}</div>}
     </div>
   );
 }
@@ -207,11 +207,11 @@ const Multi = ({ values, onChange, placeholder, type = "text" }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
     {values.map((v, i) => (
       <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
-        <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2640", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
+        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+        <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2626", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
       </div>
     ))}
-    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#0055ff", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#2563eb", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
   </div>
 );
 const MultiPhone = ({ values, onChange }) => (
@@ -220,15 +220,15 @@ const MultiPhone = ({ values, onChange }) => (
       const { prefix, num } = parsePhone(v);
       return (
         <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
-          <select value={prefix} onChange={(e) => { const n = [...values]; n[i] = (e.target.value + " " + num).trim(); onChange(n); }} style={{ width: 88, flexShrink: 0, padding: "9px 8px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", cursor: "pointer" }}>
+          <select value={prefix} onChange={(e) => { const n = [...values]; n[i] = (e.target.value + " " + num).trim(); onChange(n); }} style={{ width: 88, flexShrink: 0, padding: "9px 8px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans',sans-serif", outline: "none", cursor: "pointer" }}>
             {PREFIXES.map((p) => <option key={p.c} value={p.c}>{p.c} {p.l}</option>)}
           </select>
-          <input type="tel" value={num} onChange={(e) => { const n = [...values]; n[i] = (prefix + " " + e.target.value).trim(); onChange(n); }} placeholder="999 999 999" style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
-          <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2640", borderRadius: 6, cursor: "pointer", fontSize: 16 }}>×</button>
+          <input type="tel" value={num} onChange={(e) => { const n = [...values]; n[i] = (prefix + " " + e.target.value).trim(); onChange(n); }} placeholder="999 999 999" style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13.5, fontFamily: "'DM Sans',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2626", borderRadius: 6, cursor: "pointer", fontSize: 16 }}>×</button>
         </div>
       );
     })}
-    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#0055ff", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#2563eb", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif" }}>+ Agregar</button>
   </div>
 );
 
@@ -440,7 +440,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
-    return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#0d9f6e" }, { name: "FEE", value: t.fee, color: "#1b2559" }].filter((d) => d.value > 0) };
+    return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "#0f172a" }].filter((d) => d.value > 0) };
   }, [sGastos, repCl, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
 
   /* Reportes: meses en el rango desde–hasta para gráficas */
@@ -1101,13 +1101,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
-    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-      <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#9498a8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
-      {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8f9fb", borderTop: "1px solid #eff0f3", flexWrap: "wrap" }}>
-        <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#9498a8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+      <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#94a3b8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></div>
+      {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f8fafc", borderTop: "1px solid #f1f5f9", flexWrap: "wrap" }}>
+        <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'DM Sans'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
         <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
       </div>}
     </div>
@@ -1187,7 +1187,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
       {/* Cabecera móvil */}
       <header className="hm-mobile-header">
         <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 12, color: "#0f172a", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
-        <span style={{ fontSize: 17, fontWeight: 700, color: "#0f172a", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.3 }}>{pageTitles[page] || "Holistic"}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, color: "#0f172a", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
         {!isCliente && (
           <div style={{ flexShrink: 0 }}>
             <Av name={displayName} size={36} avatarUrl={gerenteAvatarUrl} />
@@ -1249,69 +1249,69 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
           <div>
-            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #1b2559 0%, #0d1842 100%)", color: "#fff", padding: "48px 36px 56px", textAlign: "center" }}>
-              <div style={{ maxWidth: 640, margin: "0 auto" }}>
-                <h1 style={{ fontSize: "clamp(28px, 4vw, 38px)", fontWeight: 800, letterSpacing: -0.5, marginBottom: 12 }}>Crédito</h1>
-                <p style={{ fontSize: 16, opacity: 0.9, lineHeight: 1.6 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
-                <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 24, padding: "12px 24px", background: "#fff", color: "#1b2559", borderRadius: 10, fontWeight: 700, fontSize: 14, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
+            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#fff", padding: "56px 48px 64px", textAlign: "center" }}>
+              <div style={{ maxWidth: 680, margin: "0 auto" }}>
+                <h1 style={{ fontSize: "clamp(30px, 4vw, 42px)", fontWeight: 800, letterSpacing: -0.8, marginBottom: 14, lineHeight: 1.1 }}>Crédito</h1>
+                <p style={{ fontSize: 17, opacity: 0.85, lineHeight: 1.7 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
+                <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 28, padding: "14px 28px", background: "#fff", color: "#0f172a", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
               </div>
             </div>
             <div className="hm-credito-content" style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 16, padding: 32, textAlign: "center", color: "#5f6577", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: 32, textAlign: "center", color: "#64748b", lineHeight: 1.7 }}>Próximamente más información sobre opciones de crédito.</div>
             </div>
           </div>
         )}
 
         {/* ══ DASHBOARD: cliente = Resumen actual; gerente = vista Reportes (Relación de Cuentas) ══ */}
         {page === "dashboard" && isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", minHeight: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, position: "sticky", top: 0, zIndex: 50 }}>
             <div>
-              <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>Resumen general</h2>
-              <p style={{ fontSize: 12, color: "#9498a8", margin: "4px 0 0", maxWidth: 420 }}>{dashboardPeriodo ? <>Período: <strong>{fmtM(dashboardPeriodo)}</strong>. Totales y gráficos filtrados por ese mes.</> : <>Totales, tendencias y pendientes. Datos: {months[0]?.label} a {months[months.length - 1]?.label} (últimos 6 meses).</>} Para análisis por rango de fechas, usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.3 }}>Resumen general</h2>
+              <p style={{ fontSize: 13, color: "#94a3b8", margin: "4px 0 0", maxWidth: 480 }}>{dashboardPeriodo ? <>Período: <strong style={{ color: "#0f172a" }}>{fmtM(dashboardPeriodo)}</strong></> : <>Últimos 6 meses: {months[0]?.label} — {months[months.length - 1]?.label}</>}. Para análisis detallado usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#64748b" }}>Filtrar por período (mes):</span>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: dashboardPeriodo ? "#1b2559" : "#9498a8" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
-                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                <input type="text" placeholder="0125, 02/25, MM/AAAA" value={dashboardPeriodo} onChange={(e) => setDashboardPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setDashboardPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setDashboardPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                {dashboardPeriodo && <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                <div style={{ minWidth: 100, textAlign: "center", padding: "8px 14px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, fontSize: 13, fontWeight: 600, color: dashboardPeriodo ? "#0f172a" : "#94a3b8" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
+                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                <input type="text" placeholder="MM/AAAA" value={dashboardPeriodo} onChange={(e) => setDashboardPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setDashboardPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setDashboardPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 100, boxSizing: "border-box", padding: "8px 12px", border: "1.5px solid #e2e8f0", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} title="MM/AAAA" />
+                {dashboardPeriodo && <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "7px 12px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#94a3b8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
               </div>
               <Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
-            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
-              <Stat icon={<DollarSign size={20} />} value={`$${fmt(dashboardTots.tG)}`} label="Gasto Total Ads" color="#1b2559" />
-              <Stat icon={<TrendingUp size={20} />} value={`$${fmt(dashboardTots.tF)}`} label="Fees Generados" color="#0055ff" />
-              <Stat icon={<Check size={20} />} value={`$${fmt(dashboardTots.tP)}`} label="Total Cobrado" color="#0d9f6e" />
-              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(dashboardTots.net)}`} label="Deuda Neta" color="#dc2640" sub={dashboardTots.tGar > 0 ? `Garantías descontadas: -$${fmt(dashboardTots.tGar)}` : ""} />
+          <div className="hm-page-content" style={{ padding: "32px 48px 48px", maxWidth: 1440, margin: "0 auto" }}>
+            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 20, marginBottom: 32 }}>
+              <Stat icon={<DollarSign size={22} />} value={`$${fmt(dashboardTots.tG)}`} label="Gasto Total Ads" color="#0f172a" />
+              <Stat icon={<TrendingUp size={22} />} value={`$${fmt(dashboardTots.tF)}`} label="Fees Generados" color="#2563eb" />
+              <Stat icon={<Check size={22} />} value={`$${fmt(dashboardTots.tP)}`} label="Total Cobrado" color="#059669" />
+              <Stat icon={<AlertCircle size={22} />} value={`$${fmt(dashboardTots.net)}`} label="Deuda Neta" color="#dc2626" sub={dashboardTots.tGar > 0 ? `Garantías descontadas: -$${fmt(dashboardTots.tGar)}` : ""} />
             </div>
-            <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={220}><BarChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
+            <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 32 }}>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Inversión + fees por mes</p>
+                <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#2563eb" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Métodos de Cobro</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Distribución por medio de pago</p>
-                <ResponsiveContainer width="100%" height={220}><PieChart><Pie data={dashboardCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dashboardCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
-              </div>
-            </div>
-            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={220}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
-              </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={220}><BarChart data={dashboardCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis type="number" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9498a8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="#dc264088" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Distribución por medio de pago</p>
+                <ResponsiveContainer width="100%" height={240}><PieChart><Pie data={dashboardCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{dashboardCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
               </div>
             </div>
-            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-              <div style={{ padding: "18px 22px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Pendientes de Cobro</h3></div>
+            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 32 }}>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Evolución mensual</p>
+                <ResponsiveContainer width="100%" height={240}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
+              </div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Incluye descuento de garantías</p>
+                <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis type="number" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="rgba(220,38,38,.25)" radius={[0, 6, 6, 0]} /></BarChart></ResponsiveContainer>
+              </div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+              <div style={{ padding: "20px 26px", borderBottom: "1px solid #f1f5f9" }}><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Pendientes de Cobro</h3></div>
               <div className="hm-table-wrap"><table><thead><tr>{["Cliente", "Fecha de movimiento", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+                <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2626" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
                 {dashboardPendientes.length === 0 && <Empty cols={8} msg={dashboardPeriodo ? "Sin pendientes en este período" : "🎉 Todo cobrado — sin pendientes"} />}</tbody></table></div>
             </div>
           </div>
@@ -1319,78 +1319,78 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
         {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
-          <div style={{ background: "linear-gradient(135deg, #1b2559, #0d1842)", padding: "28px 36px 24px", color: "#fff" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-              <div style={{ width: 44, height: 44, background: "rgba(255,255,255,.12)", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 800 }}>H</div>
-              <div><h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3 }}>Relación de Cuentas</h2><p style={{ fontSize: 13, opacity: 0.85, marginTop: 4 }}>Análisis por período (mes) y por cliente. Elegí el mes para ver el desglose y las gráficas.</p></div>
+          <div style={{ background: "linear-gradient(135deg, #0f172a, #1e293b)", padding: "32px 48px 28px", color: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap", maxWidth: 1440, margin: "0 auto" }}>
+              <div style={{ width: 48, height: 48, background: "rgba(255,255,255,.1)", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 800 }}>H</div>
+              <div><h2 style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.5 }}>Relación de Cuentas</h2><p style={{ fontSize: 14, opacity: 0.8, marginTop: 4 }}>Análisis por período y por cliente. Elegí el mes para ver el desglose.</p></div>
             </div>
           </div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "16px 36px", display: "flex", gap: 24, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-            <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "16px 22px", boxShadow: "0 2px 8px rgba(27,37,89,.06)", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 10, background: "linear-gradient(135deg, #1b2559 0%, #2d3a7b 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
+            <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>Período:</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#1b2559" : "#9498a8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#0f172a" : "#94a3b8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
                 </div>
-                {repPeriodoMes && <span style={{ fontSize: 12, color: "#5f6577", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                {repPeriodoMes && <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
               </div>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px 40px" }}>
-            <div style={{ background: "linear-gradient(135deg, #f0eefe 0%, #eef0f8 100%)", border: "1px solid #c4b5fd", borderRadius: 12, padding: "14px 20px", marginBottom: 24, display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px 48px", maxWidth: 1440, margin: "0 auto" }}>
+            <div style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #eff6ff 100%)", border: "1px solid #c4b5fd", borderRadius: 14, padding: "16px 22px", marginBottom: 28, display: "flex", alignItems: "flex-start", gap: 14 }}>
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
                 <p style={{ margin: 0, fontSize: 12.5, color: "#6b21a8", lineHeight: 1.5 }}>Las garantías vigentes que agregás en <strong>Garantías</strong> se descuentan aquí: en la columna <strong>GARANTÍA</strong> (con signo negativo) y reducen el <strong>PEND. NETO</strong> de cada cliente. También bajan la columna <strong>A cobrar</strong> en Gastos. Si acabas de guardar una garantía, ya está reflejada.</p>
               </div>
             </div>
-            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 28 }}>
-              <Stat icon={<DollarSign size={20} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#1b2559" />
-              <Stat icon={<Percent size={20} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#0055ff" />
-              <Stat icon={<Check size={20} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#0d9f6e" />
-              <Stat icon={<AlertCircle size={20} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#dc2640" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
+            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 20, marginBottom: 32 }}>
+              <Stat icon={<DollarSign size={22} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#0f172a" />
+              <Stat icon={<Percent size={22} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#2563eb" />
+              <Stat icon={<Check size={22} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#059669" />
+              <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#dc2626" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
             </div>
             <div className="hm-report-grid" style={{ display: "grid", gridTemplateColumns: "3fr 2fr", gap: 16 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-                <div style={{ padding: "16px 20px", borderBottom: "1px solid #eff0f3" }}><h3 style={{ fontSize: 15, fontWeight: 700 }}>Desglose por Usuario</h3></div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
+                <div style={{ padding: "18px 24px", borderBottom: "1px solid #f1f5f9" }}><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Desglose por Usuario</h3></div>
                 <div className="hm-table-wrap"><table><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {repData.rows.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#0055ff" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
-                    <tr style={{ background: "#f8f9fb" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#0055ff", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#0055ff", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+                    {repData.rows.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2626", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
+                    <tr style={{ background: "#f8fafc" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2626", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
                     {!repData.rows.length && <Empty cols={8} msg="Sin datos para este período" />}
                   </tbody></table></div>
               </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, alignSelf: "flex-start" }}>Composición de Cuentas</h4>
-                <ResponsiveContainer width="100%" height={240}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 11.5 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
-                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 30, fontWeight: 700, marginTop: 4 }}>{fmtK(repData.t.total)}</div>
-                <div style={{ fontSize: 12, color: "#9498a8" }}>Total General</div>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2, alignSelf: "flex-start" }}>Composición de Cuentas</h4>
+                <ResponsiveContainer width="100%" height={240}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 34, fontWeight: 700, marginTop: 8, letterSpacing: -1 }}>{fmtK(repData.t.total)}</div>
+                <div style={{ fontSize: 13, color: "#94a3b8" }}>Total General</div>
               </div>
             </div>
             <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 28, marginBottom: 28 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={220}><BarChart data={repCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#0055ff" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Inversión + fees por mes</p>
+                <ResponsiveContainer width="100%" height={240}><BarChart data={repCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#2563eb" radius={[6, 6, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[6, 6, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Métodos de Cobro</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Distribución por medio de pago</p>
-                <ResponsiveContainer width="100%" height={220}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 11 }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9498a8", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Distribución por medio de pago</p>
+                <ResponsiveContainer width="100%" height={240}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
               </div>
             </div>
-            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 28 }}>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={220}><LineChart data={repCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis tick={{ fontSize: 11, fill: "#9498a8" }} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} /><Legend wrapperStyle={{ fontSize: 11.5 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#0d9f6e" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#0055ff" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
+            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 32 }}>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Evolución mensual</p>
+                <ResponsiveContainer width="100%" height={240}><LineChart data={repCharts.monthly}><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={2} dot={{ r: 4 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#2563eb" strokeWidth={2} dot={{ r: 4 }} /></LineChart></ResponsiveContainer>
               </div>
-              <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, padding: "20px 22px" }}>
-                <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 12, color: "#9498a8", marginBottom: 16 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={220}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#eff0f3" /><XAxis type="number" tick={{ fontSize: 11, fill: "#9498a8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#9498a8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 8, fontSize: 12 }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="#dc264088" radius={[0, 6, 6, 0]} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#9498a8", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
+              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "24px 26px" }}>
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Incluye descuento de garantías</p>
+                <ResponsiveContainer width="100%" height={240}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical"><CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" /><XAxis type="number" tick={{ fontSize: 11, fill: "#94a3b8" }} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#94a3b8" }} width={80} /><Tooltip contentStyle={{ borderRadius: 10, fontSize: 13, border: "1px solid #e5e7eb" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="rgba(220,38,38,.25)" radius={[0, 6, 6, 0]} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -1398,27 +1398,27 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ CLIENTES (solo gerente) ══ */}
         {page === "clientes" && !isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Clientes</h2>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Clientes</h2>
             <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de clientes">
+              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de clientes">
                 {search.trim() ? `${clientsFilteredAndSorted.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", whiteSpace: "nowrap" }}>Ordenar:</label>
-                <select value={sortClientesBy} onChange={(e) => { setSortClientesBy(e.target.value); setPageNum((p) => ({ ...p, clientes: 1 })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", background: "#fff", color: "#1a1d26", outline: "none", cursor: "pointer", minWidth: 160 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", whiteSpace: "nowrap" }}>Ordenar:</label>
+                <select value={sortClientesBy} onChange={(e) => { setSortClientesBy(e.target.value); setPageNum((p) => ({ ...p, clientes: 1 })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer", minWidth: 160 }}>
                   <option value="nombre">Nombre (A-Z)</option>
                   <option value="deuda">Quien más debe</option>
                   <option value="gasto">Mayor gasto</option>
                   <option value="cobrado">Más cobrado</option>
                 </select>
               </div>
-              <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div>
+              <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "#f8fafc", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }} /></div>
               <Btn variant="outline" size="sm" onClick={expClientes}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
@@ -1426,11 +1426,11 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               return (
                 <>
                   <div className="hm-table-wrap hm-table-clientes"><table><thead><tr>{["Cliente", "Código", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 10 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#9498a8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, fontWeight: 600, color: "#1b2559" }}>{c.codigo || "—"}</td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f4f5f7", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#0055ff" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#0d9f6e" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2640" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#0d9f6e" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#94a3b8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{c.codigo || "—"}</td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f8fafc", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f8fafc", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#2563eb" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={{ ...TDC, ...MN, color: "#dc2626" }}>${fmt(d.net)}</td><td style={TDC}><Bdg type={st}>{stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#059669" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></div>
                   {totalPages > 1 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, clientes: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, clientes: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "#0f172a" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans'", transition: "all .15s" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1487,30 +1487,30 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Gastos Ads · Mensuales</h2>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Gastos Ads · Mensuales</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
+              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
                 {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ position: "relative" }}>
-                <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#9498a8" }} />
+                <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
                 <input
                   value={gastosSearch}
                   onChange={(e) => setGastosSearch(e.target.value)}
                   placeholder="Buscar por cliente, campaña o código..."
-                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f4f5f7", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }}
+                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f8fafc", border: "1px solid transparent", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", outline: "none" }}
                 />
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#9498a8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#94a3b8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} title="Fecha hasta" /></div>
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
               <Btn variant="outline" size="sm" onClick={expGastos}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("filtered")}><Percent size={14} /> Fee masivo</Btn>}
               {!isCliente && <Btn onClick={() => openMdl("gasto")}><Plus size={16} /> Nuevo Gasto</Btn>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
             {(() => {
               const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.gastos, totalPages);
@@ -1522,17 +1522,17 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               return (
                 <>
                   {!isCliente && (selectedIds.gastos.length > 0) && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
-                      <Btn variant="outline" size="sm" onClick={delGastosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.gastos.length})</Btn>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e5e7eb" }}>
+                      <Btn variant="outline" size="sm" onClick={delGastosBulk} style={{ color: "#dc2626", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.gastos.length})</Btn>
                       <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("selected")}><Percent size={14} /> Editar Fee ({selectedIds.gastos.length})</Btn>
                     </div>
                   )}
                   <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined} title={h === "A cobrar" ? "Deuda neta del cliente: total pendiente menos garantías vigentes. Es el mismo monto en todas las filas de ese cliente (lo que falta cobrarle)." : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigo || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#0055ff" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td><td style={{ ...TD, ...MN, fontWeight: 700, color: netCobrar > 0 ? "#dc2640" : "#0d9f6e" }} title={garVal > 0 ? "Pendiente menos garantía del cliente" : "Igual al pendiente (sin garantía)"}>${fmt(netCobrar)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#0d9f6e" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></div>
+                    <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{g.codigo || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>${fmt(g._f)}</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#dc2626" }}>${fmt(g._pend)}</td><td style={{ ...TD, ...MN, fontWeight: 700, color: netCobrar > 0 ? "#dc2640" : "#0d9f6e" }} title={garVal > 0 ? "Pendiente menos garantía del cliente" : "Igual al pendiente (sin garantía)"}>${fmt(netCobrar)}</td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? "S" : "N"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#059669" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></div>
                   {totalPages > 1 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, gastos: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, gastos: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "#0f172a" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans'", transition: "all .15s" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1544,23 +1544,23 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ COBROS (solo gerente; cliente no ve ni registra cobros) ══ */}
         {page === "cobros" && !isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Cobros</h2>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Cobros</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Filtrado por cliente y/o rango de fechas">
+              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Filtrado por cliente y/o rango de fechas">
                 {(filterCliente.cobros || expRango.cobros.ini || expRango.cobros.fin) ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
               <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Filtrar por fecha de pago (también filtra la tabla)">
-                <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
-                <span style={{ color: "#9498a8", fontSize: 11 }}>a</span>
-                <input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
+                <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
+                <span style={{ color: "#94a3b8", fontSize: 11 }}>a</span>
+                <input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none" }} />
               </div>
               <Btn variant="outline" size="sm" onClick={expCobros}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
             {(() => {
               const totalPages = Math.ceil(cobrosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.cobros, totalPages);
@@ -1571,8 +1571,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               return (
                 <>
                   {selectedIds.cobros.length > 0 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
-                      <Btn variant="outline" size="sm" onClick={delCobrosBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.cobros.length})</Btn>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e5e7eb" }}>
+                      <Btn variant="outline" size="sm" onClick={delCobrosBulk} style={{ color: "#dc2626", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.cobros.length})</Btn>
                     </div>
                   )}
                   <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr><th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("cobros", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>{["Cliente", "Cód. cobro", "Cód. gasto", "Fecha", "Hora", "Ref.", "Monto", "Método", "Registrado por", "Registrado", "Notas", "Comprob.", ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
@@ -1585,25 +1585,25 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                         <tr key={co.id}>
                           <td style={TD}><input type="checkbox" checked={sel.includes(co.id)} onChange={() => toggleSelect("cobros", co.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>
                           <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{co.codigo || "—"}</td>
-                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{g?.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{co.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#64748b" }}>{g?.codigo || "—"}</td>
                           <td style={TD}>{fmtD(co.fecha)}</td>
                           <td style={TD}>{fmtT(co.hora)}</td>
                           <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
-                          <td style={{ ...TD, ...MN, color: "#0d9f6e", fontWeight: 700 }}>+${fmt(co.monto)}</td>
+                          <td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>+${fmt(co.monto)}</td>
                           <td style={TD}><PayB method={co.metodo} /></td>
-                          <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={co.created_by || ""}>{createdByStr}</td>
-                          <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
-                          <td style={{ ...TD, fontSize: 12.5, color: "#9498a8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
-                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={co.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "#94a3b8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12.5, color: "#94a3b8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas || "—"}</td>
+                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e5e7eb", borderRadius: 6, background: "#f0f4ff", color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td className="hm-col-actions" style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("cobro", co.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></div></td>
                         </tr>
                       );
                     })}{!cobrosPaginated.length && <Empty cols={14} msg={emptyCobrosMsg} />}</tbody></table></div>
                   {totalPages > 1 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, cobros: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, cobros: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "#0f172a" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans'", transition: "all .15s" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1615,19 +1615,19 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700 }}>Garantías</h2>
+          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 68, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50 }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3 }}>Garantías</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-              <div style={{ background: "#f0f4ff", color: "#1b2559", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
+              <div style={{ background: "#f0f4ff", color: "#0f172a", padding: "6px 14px", borderRadius: 10, fontSize: 13, fontWeight: 700, fontFamily: "'DM Sans'" }} title="Total de filas">
                 {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-              {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
+              {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
               <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "28px 36px" }}><div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: 1440, margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, overflow: "hidden" }}>
             {(() => {
               const totalPages = Math.ceil(garantiasFiltradas.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.garantias, totalPages);
@@ -1639,8 +1639,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               return (
                 <>
                   {!isCliente && selectedIds.garantias.length > 0 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e2e4e9" }}>
-                      <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2640", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #e5e7eb" }}>
+                      <Btn variant="outline" size="sm" onClick={delGarantiasBulk} style={{ color: "#dc2626", borderColor: "#dc2640" }}><Trash2 size={14} /> Eliminar seleccionados ({selectedIds.garantias.length})</Btn>
                     </div>
                   )}
                   <div className="hm-table-wrap hm-table-sticky-actions"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("garantias", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Cód. verificación", "Cód. gasto", "Gasto ($)", "Tipo", "Descripción", "Valor", "Estado", "Fecha colocación", "Registrado por", "Registrado", "Imágenes", ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
@@ -1654,25 +1654,25 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                         <tr key={g.id}>
                           {!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("garantias", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}
                           <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#1b2559" }}>{g.codigoVerificacion || "—"}</td>
-                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{g.codigoVerificacion || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: "#64748b" }}>{gastoAsoc?.codigo || "—"}</td>
                           <td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td>
                           <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
-                          <td style={{ ...TD, color: "#5f6577", maxWidth: 200 }}>{g.desc || "—"}</td>
+                          <td style={{ ...TD, color: "#64748b", maxWidth: 200 }}>{g.desc || "—"}</td>
                           <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
                           <td style={TD}><Bdg type={estadoBdg}>{g.estado}</Bdg></td>
                           <td style={TD}>{g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"}</td>
-                          <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td>
-                          <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }} title={g.created_at ? fmtDt(g.created_at) : ""}>{g.created_at ? fmtDt(g.created_at) : "—"}</td>
-                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e2e4e9", borderRadius: 6, background: "#f0eefe", color: "#7c3aed", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={g.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "#94a3b8" }} title={g.created_at ? fmtDt(g.created_at) : ""}>{g.created_at ? fmtDt(g.created_at) : "—"}</td>
+                          <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "4px 8px", border: "1px solid #e5e7eb", borderRadius: 6, background: "#f0eefe", color: "#7c3aed", fontSize: 12, fontWeight: 600, cursor: "pointer" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
                         </tr>
                       );
                     })}{!garantiasPaginated.length && <Empty cols={colsCount + 1} msg={emptyGarantiasMsg} />}</tbody></table></div>
                   {totalPages > 1 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e2e4e9", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, garantias: n }))} style={{ minWidth: 32, height: 32, padding: "0 8px", border: "1px solid #e2e4e9", borderRadius: 8, background: n === currentPage ? "#1b2559" : "#fff", color: n === currentPage ? "#fff" : "#1b2559", fontWeight: n === currentPage ? 700 : 500, fontSize: 13, cursor: "pointer", fontFamily: "'DM Sans'" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, garantias: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "#0f172a" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'DM Sans'", transition: "all .15s" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1687,21 +1687,21 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
         <Inp label="Código de cliente" value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Podés editarlo para identificar al cliente."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario" /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Teléfonos / WhatsApp</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Teléfonos / WhatsApp</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
         <Inp label="Negocio" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce..." />
         <Inp label="Notas" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional..." />
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Foto de perfil</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Foto de perfil</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
             <div style={{ flex: "1 1 200px", minWidth: 0 }}><Inp value={cf.avatar_url} onChange={(e) => setCf({ ...cf, avatar_url: e.target.value })} placeholder="URL (opcional)" /></div>
             {editId && (
               <>
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#f4f5f7", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#1b2559", cursor: "pointer", whiteSpace: "nowrap" }}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#0f172a", cursor: "pointer", whiteSpace: "nowrap" }}>
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={async (e) => { const f = e.target.files?.[0]; if (!f) return; try { setUploadingAvatar(true); const url = await uploadAvatar(editId, f); setCf((p) => ({ ...p, avatar_url: url })); } catch (err) { alert(err?.message || "Error al subir"); } finally { setUploadingAvatar(false); e.target.value = ""; }} } />
                   {uploadingAvatar ? "Subiendo…" : "Cambiar foto"}
                 </label>
-                {cf.avatar_url && <button type="button" onClick={() => setCf((p) => ({ ...p, avatar_url: "" }))} style={{ padding: "8px 14px", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#dc2640", background: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>Eliminar foto</button>}
+                {cf.avatar_url && <button type="button" onClick={() => setCf((p) => ({ ...p, avatar_url: "" }))} style={{ padding: "8px 14px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#dc2626", background: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>Eliminar foto</button>}
               </>
             )}
           </div>
@@ -1710,7 +1710,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente *</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Cliente *</label>
           {(() => {
             const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
             const resolveClient = (txt) => { if (!txt.trim()) return null; const exact = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (exact) return exact; const list = clients.filter((c) => norm(c.name || "").includes(norm(txt))); return list.length === 1 ? list[0] : null; };
@@ -1721,59 +1721,59 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
             return (
             <>
           <div style={{ position: "relative" }}>
-            <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
+            <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
             {showSuggestions && (
-            <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
-              <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "#9498a8", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
+            <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
+              <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "#94a3b8", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
               {sug.map((c) => (
-                <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#1a1d26", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#f0f4ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
+                <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'DM Sans',sans-serif", fontSize: 13, color: "#0f172a", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#f0f4ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
               ))}
             </div>
             )}
           </div>
-          <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>
+          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>
             </>
             );
           })()}
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período *</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Período *</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
-            <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f0f4ff", color: "#0055ff", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button>
-            <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#f4f5f7", color: "#5f6577", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button>
-            <span style={{ fontSize: 12, color: "#9498a8" }}>o</span>
-            <input id="gf-periodo-date" type="date" value={gf.fechaMovimiento || (gf.mes ? gf.mes + "-15" : td())} onChange={(e) => { const v = e.target.value; if (v) setGf({ ...gf, fechaMovimiento: v, mes: v.slice(0, 7), periodoInput: v.slice(0, 7) }); }} style={{ width: 150, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} title="Calendario" />
+            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
+            <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f0f4ff", color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button>
+            <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f8fafc", color: "#64748b", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button>
+            <span style={{ fontSize: 12, color: "#94a3b8" }}>o</span>
+            <input id="gf-periodo-date" type="date" value={gf.fechaMovimiento || (gf.mes ? gf.mes + "-15" : td())} onChange={(e) => { const v = e.target.value; if (v) setGf({ ...gf, fechaMovimiento: v, mes: v.slice(0, 7), periodoInput: v.slice(0, 7) }); }} style={{ width: 150, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} title="Calendario" />
           </div>
-          <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>Escribí mes/año (ej. 01/2025) o usá los botones / calendario</div>
+          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Escribí mes/año (ej. 01/2025) o usá los botones / calendario</div>
         </div>
         <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#1b2559" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#5f6577", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#0f172a" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#64748b", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
         <Inp label="Gasto en Ads ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Inversión en TikTok Ads (u otra red)" />
         <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} hint="Porcentaje sobre el gasto" />
-        <div style={{ background: "#eef0f8", padding: "12px 14px", borderRadius: 10, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, textAlign: "center", marginBottom: 16, color: "#1b2559" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))} → Total a cobrar: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</div>
+        <div style={{ background: "#eef0f8", padding: "12px 14px", borderRadius: 10, fontFamily: "'IBM Plex Mono'", fontSize: 13, fontWeight: 600, textAlign: "center", marginBottom: 16, color: "#0f172a" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))} → Total a cobrar: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</div>
         <Inp label="Notas" type="textarea" value={gf.notas} onChange={(e) => setGf({ ...gf, notas: e.target.value })} placeholder="Detalles del gasto o campaña..." />
         {editId && gf.prepago && !isCliente && (() => {
           const g = sGastos.find((x) => x.id === editId);
           if (!g || g._st === "Pagado") return null;
           const clienteNombre = clients.find((c) => c.id === g.clientId)?.name || "este gasto";
           return (
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #eff0f3" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 8 }}>Cobro para este gasto (prepago)</div>
-              <button type="button" onClick={() => openCobroForGastoId(editId)} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 18px", border: "1px dashed #0d9f6e", borderRadius: 10, background: "#e6f7f0", color: "#0d9f6e", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center", transition: "background .15s, color .15s" }} onMouseOver={(e) => { e.currentTarget.style.background = "#cceee2"; e.currentTarget.style.color = "#0a7d5a"; }} onMouseOut={(e) => { e.currentTarget.style.background = "#e6f7f0"; e.currentTarget.style.color = "#0d9f6e"; }}>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>Cobro para este gasto (prepago)</div>
+              <button type="button" onClick={() => openCobroForGastoId(editId)} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "12px 18px", border: "1px dashed #0d9f6e", borderRadius: 10, background: "#e6f7f0", color: "#059669", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center", transition: "background .15s, color .15s" }} onMouseOver={(e) => { e.currentTarget.style.background = "#cceee2"; e.currentTarget.style.color = "#0a7d5a"; }} onMouseOut={(e) => { e.currentTarget.style.background = "#e6f7f0"; e.currentTarget.style.color = "#0d9f6e"; }}>
                 <CreditCard size={20} /> Añadir cobro — {clienteNombre} · {g.codigo || fmtM(g.mes)} (pendiente ${fmt(g._pend)})
               </button>
-              <div style={{ fontSize: 11, color: "#9498a8", marginTop: 6 }}>Se abre el formulario de cobro con este gasto y el monto pendiente ya cargados.</div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>Se abre el formulario de cobro con este gasto y el monto pendiente ya cargados.</div>
             </div>
           );
         })()}
         {gf.clientId && !isCliente && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #eff0f3" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#5f6577", marginBottom: 8 }}>Garantía para este cliente</div>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>Garantía para este cliente</div>
             <button type="button" onClick={() => openGarantiaForClientId(gf.clientId)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #7c3aed", borderRadius: 10, background: "#f0eefe", color: "#7c3aed", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center" }}>
               <Shield size={18} /> Añadir garantía para {clients.find((c) => c.id === gf.clientId)?.name || "este cliente"}
             </button>
-            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 6 }}>Las garantías se descuentan de la deuda al calcular el pendiente neto.</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>Las garantías se descuentan de la deuda al calcular el pendiente neto.</div>
           </div>
         )}
       </Mdl>
@@ -1784,7 +1784,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         title="Edición masiva de Fee"
         footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={applyBulkFee} disabled={!bulkFee.trim()}>Aplicar</Btn></>}
       >
-        <div style={{ marginBottom: 12, fontSize: 12.5, color: "#5f6577" }}>
+        <div style={{ marginBottom: 12, fontSize: 12.5, color: "#64748b" }}>
           Elegí si querés actualizar solo los gastos seleccionados o todos los que están filtrados en la tabla, y luego defini el nuevo porcentaje de Fee.
         </div>
         <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -1800,7 +1800,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
             <span>
               Solo gastos seleccionados
               {" "}
-              <span style={{ color: "#9498a8" }}>({selectedIds.gastos.length} seleccionado(s))</span>
+              <span style={{ color: "#94a3b8" }}>({selectedIds.gastos.length} seleccionado(s))</span>
             </span>
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
@@ -1814,7 +1814,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
             <span>
               Todos los gastos filtrados en la tabla
               {" "}
-              <span style={{ color: "#9498a8" }}>({gastosFiltrados.length} gasto(s))</span>
+              <span style={{ color: "#94a3b8" }}>({gastosFiltrados.length} gasto(s))</span>
             </span>
           </label>
         </div>
@@ -1827,7 +1827,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           onChange={(e) => setBulkFee(e.target.value)}
           hint="Se aplicará este porcentaje al gasto de cada fila incluida en el alcance elegido."
         />
-        <div style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>
+        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>
           El total a cobrar de cada gasto se recalculará automáticamente según el nuevo Fee.
         </div>
       </Mdl>
@@ -1844,49 +1844,49 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           <p style={{ fontSize: 11, color: "#166534", marginTop: 8, marginBottom: 0 }}>Con este monto el sistema te mostrará qué gastos se cubren (total o parcial) y el resumen exacto del voucher.</p>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577", display: "block", marginBottom: 6 }}>Aplicar monto</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 6 }}>Aplicar monto</span>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "orden"} onChange={() => setCof({ ...cof, distribucion: "orden" })} />En orden (primero el más antiguo)</label>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "proporcional"} onChange={() => setCof({ ...cof, distribucion: "proporcional" })} />Proporcional al pendiente</label>
           </div>
-          <p style={{ fontSize: 11, color: "#9498a8", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
+          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
         </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>{cof.sinAsignarGasto ? "Cliente del cobro *" : "Cliente (filtrar)"}</label><SearchSelect compact options={[{ value: "", label: cof.sinAsignarGasto ? "Elegir cliente..." : "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.sinAsignarGasto ? cof.clientId : cofFilterCliente} onChange={(id) => { const v = id || ""; if (cof.sinAsignarGasto) setCof({ ...cof, clientId: v }); setCofFilterCliente(v); }} placeholder={cof.sinAsignarGasto ? "Buscar cliente..." : "Todos..."} emptyMessage="Ningún cliente" /></div>
+          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>{cof.sinAsignarGasto ? "Cliente del cobro *" : "Cliente (filtrar)"}</label><SearchSelect compact options={[{ value: "", label: cof.sinAsignarGasto ? "Elegir cliente..." : "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.sinAsignarGasto ? cof.clientId : cofFilterCliente} onChange={(id) => { const v = id || ""; if (cof.sinAsignarGasto) setCof({ ...cof, clientId: v }); setCofFilterCliente(v); }} placeholder={cof.sinAsignarGasto ? "Buscar cliente..." : "Todos..."} emptyMessage="Ningún cliente" /></div>
           <div style={{ opacity: cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar)</label>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Período (filtrar)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: cof.sinAsignarGasto ? "#f4f5f7" : "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#1b2559" : "#9498a8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
-              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#1b2559", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
-              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} disabled={cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none", background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff" }} title="Escribí 0125, 01/25 o MM/AAAA" />
-              {cofFilterPeriodo && <button type="button" disabled={cof.sinAsignarGasto} onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button>}
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: cof.sinAsignarGasto ? "#f8fafc" : "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#0f172a" : "#94a3b8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
+              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} disabled={cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none", background: cof.sinAsignarGasto ? "#f8fafc" : "#fff" }} title="Escribí 0125, 01/25 o MM/AAAA" />
+              {cofFilterPeriodo && <button type="button" disabled={cof.sinAsignarGasto} onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button>}
             </div>
-            {cof.sinAsignarGasto && <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>Deshabilitado cuando el cobro es sin asignar. Usá «Período (mes/año)» más abajo.</div>}
+            {cof.sinAsignarGasto && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>Deshabilitado cuando el cobro es sin asignar. Usá «Período (mes/año)» más abajo.</div>}
           </div>
         </div>
         </>
         )}
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Gastos</label>
-          <p style={{ fontSize: 11, color: "#9498a8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: cof.sinAsignarGasto ? "#fef3c7" : "transparent", border: cof.sinAsignarGasto ? "1px solid #f59e0b" : "1px solid #e2e4e9" }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Gastos</label>
+          <p style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: cof.sinAsignarGasto ? "#fef3c7" : "transparent", border: cof.sinAsignarGasto ? "1px solid #f59e0b" : "1px solid #e5e7eb" }}>
             <input type="radio" name="cof-gasto-mode" checked={cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: true, gastoIds: [], clientId: cofFilterCliente || cof.clientId || "" })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#d97706" }} />
             <span style={{ fontSize: 13, fontWeight: cof.sinAsignarGasto ? 600 : 500, color: cof.sinAsignarGasto ? "#92400e" : "#1a1d26" }}>Ninguna — cobro sin asignar a ningún gasto</span>
           </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: !cof.sinAsignarGasto && (cof.gastoIds || []).length > 0 ? "#e6f7f0" : "transparent", border: !cof.sinAsignarGasto ? "1px solid #e2e4e9" : "1px solid #e2e4e9" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: !cof.sinAsignarGasto && (cof.gastoIds || []).length > 0 ? "#e6f7f0" : "transparent", border: !cof.sinAsignarGasto ? "1px solid #e5e7eb" : "1px solid #e5e7eb" }}>
             <input type="radio" name="cof-gasto-mode" checked={!cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: false })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#1a1d26" }}>Asignar a uno o más gastos (elegir abajo)</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "#0f172a" }}>Asignar a uno o más gastos (elegir abajo)</span>
           </label>
           {editId && cof.sinAsignarGasto && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Cliente del cobro *</label>
+              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Cliente del cobro *</label>
               <SearchSelect options={[{ value: "", label: "Elegir cliente..." }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.clientId} onChange={(id) => setCof({ ...cof, clientId: id || "" })} placeholder="Buscar por nombre..." emptyMessage="Ningún cliente coincide" />
             </div>
           )}
-          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
-          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e2e4e9", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
-            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#9498a8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f8fafc" : "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
+            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 6, cursor: "pointer", background: checked ? "#e6f7f0" : "transparent" }}>
                 <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, sinAsignarGasto: false, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
                 <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} · {g.camp || "—"} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
@@ -1895,19 +1895,19 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           </div>
           {(cof.gastoIds || []).length > 0 && (
           <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#0d9f6e" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</span>
-            {!editId && <button type="button" onClick={() => { const sum = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, monto: sum > 0 ? sum.toFixed(2) : cof.monto }); }} style={{ padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "1px solid #0d9f6e", borderRadius: 6, background: "#fff", color: "#0d9f6e", cursor: "pointer" }}>Rellenar monto con pendiente sumado</button>}
+            <span style={{ fontSize: 12, fontWeight: 600, color: "#059669" }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</span>
+            {!editId && <button type="button" onClick={() => { const sum = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, monto: sum > 0 ? sum.toFixed(2) : cof.monto }); }} style={{ padding: "4px 10px", fontSize: 11, fontWeight: 600, border: "1px solid #0d9f6e", borderRadius: 6, background: "#fff", color: "#059669", cursor: "pointer" }}>Rellenar monto con pendiente sumado</button>}
           </div>
           )}
         </div>
         {!editId && (cof.gastoIds || []).length > 0 && parseFloat(cof.monto) > 0 && (
-        <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", border: "1px solid #e2e4e9", borderRadius: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#1b2559", marginBottom: 10 }}>Resumen de aplicación (voucher exacto)</div>
-          <div style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Total pagado: <strong style={{ color: "#0d9f6e" }}>${fmt(parseFloat(cof.monto) || 0)}</strong> — Se aplica a:</div>
+        <div style={{ marginBottom: 14, padding: "12px 14px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a", marginBottom: 10 }}>Resumen de aplicación (voucher exacto)</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Total pagado: <strong style={{ color: "#059669" }}>${fmt(parseFloat(cof.monto) || 0)}</strong> — Se aplica a:</div>
           <div style={{ overflowX: "auto", maxHeight: 200, overflowY: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead><tr style={{ borderBottom: "1px solid #e2e4e9" }}><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Campaña</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Período</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Código</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Pend. antes</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#0d9f6e", fontWeight: 600 }}>Monto aplicado</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#5f6577", fontWeight: 600 }}>Pend. después</th></tr></thead>
-              <tbody>{resumenCobro.lineas.filter((l) => l.montoAplicado > 0).map((l) => <tr key={l.gastoId} style={{ borderBottom: "1px solid #eee" }}><td style={{ padding: "6px 8px" }}>{l.camp}</td><td style={{ padding: "6px 8px" }}>{fmtM(l.mes)}</td><td style={{ padding: "6px 8px", fontFamily: "'IBM Plex Mono',monospace" }}>{l.codigo}</td><td style={{ padding: "6px 8px", textAlign: "right" }}>${fmt(l.pendienteAntes)}</td><td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#0d9f6e" }}>${fmt(l.montoAplicado)}</td><td style={{ padding: "6px 8px", textAlign: "right", color: l.pendienteDespues > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(l.pendienteDespues)}</td></tr>)}</tbody>
+              <thead><tr style={{ borderBottom: "1px solid #e5e7eb" }}><th style={{ textAlign: "left", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Campaña</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Período</th><th style={{ textAlign: "left", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Código</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Pend. antes</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#059669", fontWeight: 600 }}>Monto aplicado</th><th style={{ textAlign: "right", padding: "6px 8px", color: "#64748b", fontWeight: 600 }}>Pend. después</th></tr></thead>
+              <tbody>{resumenCobro.lineas.filter((l) => l.montoAplicado > 0).map((l) => <tr key={l.gastoId} style={{ borderBottom: "1px solid #eee" }}><td style={{ padding: "6px 8px" }}>{l.camp}</td><td style={{ padding: "6px 8px" }}>{fmtM(l.mes)}</td><td style={{ padding: "6px 8px", fontFamily: "'IBM Plex Mono',monospace" }}>{l.codigo}</td><td style={{ padding: "6px 8px", textAlign: "right" }}>${fmt(l.pendienteAntes)}</td><td style={{ padding: "6px 8px", textAlign: "right", fontWeight: 700, color: "#059669" }}>${fmt(l.montoAplicado)}</td><td style={{ padding: "6px 8px", textAlign: "right", color: l.pendienteDespues > 0 ? "#dc2640" : "#0d9f6e" }}>${fmt(l.pendienteDespues)}</td></tr>)}</tbody>
             </table>
           </div>
           {resumenCobro.excedente > 0 && <div style={{ marginTop: 10, padding: "10px 12px", background: "#fef3c7", border: "1px solid #f59e0b", borderRadius: 8, fontSize: 12, color: "#92400e", fontWeight: 600 }}>⚠️ Excedente ${fmt(resumenCobro.excedente)} se registrará como garantía para el mes siguiente.</div>}
@@ -1917,7 +1917,7 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           {editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}
           <Inp label={cof.sinAsignarGasto ? "Fecha de pago" : "Fecha"} type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
           <div style={{ marginBottom: 14, minWidth: 0, opacity: !cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: !cof.sinAsignarGasto ? "none" : "auto" }}>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (mes/año) para el resumen</label>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Período (mes/año) para el resumen</label>
             <input
               type="text"
               placeholder="0125, 03/25, MM/AAAA"
@@ -1926,10 +1926,10 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
               disabled={!cof.sinAsignarGasto}
               onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, periodoResumen: p }); }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, periodoResumen: p }); e.currentTarget.blur(); } } }}
-              style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: !cof.sinAsignarGasto ? "#f4f5f7" : "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
+              style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: !cof.sinAsignarGasto ? "#f8fafc" : "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }}
               title="Mes en que cuenta este cobro en el resumen del cliente. La fecha de pago arriba no se modifica."
             />
-            <div style={{ fontSize: 11, color: "#9498a8", marginTop: 3 }}>{cof.sinAsignarGasto ? "En qué mes debe aparecer en el resumen (ej. marzo). La <strong>Fecha</strong> de pago es independiente: podés pagar en febrero y que cuente para marzo." : "Solo para cobros sin asignar. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
+            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>{cof.sinAsignarGasto ? "En qué mes debe aparecer en el resumen (ej. marzo). La <strong>Fecha</strong> de pago es independiente: podés pagar en febrero y que cuente para marzo." : "Solo para cobros sin asignar. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
           </div>
           {editId && <span />}
         </div>
@@ -1937,8 +1937,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
-          <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
+          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
           {editId && cobroEditComprobantePaths.length > 0 && (
             <ul style={{ marginBottom: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
               {cobroEditComprobantePaths.map((path, i) => {
@@ -1947,31 +1947,31 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
                 const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && e.preventDefault() && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
-                        <FileText size={28} style={{ color: "#5f6577" }} />
+                        <FileText size={28} style={{ color: "#64748b" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#9498a8" }}>Cargando…</span>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={name}>{name}</span>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
               })}
             </ul>
           )}
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #0055ff", borderRadius: 10, background: "#f0f4ff", color: "#0055ff", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
+          <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #2563eb", borderRadius: 10, background: "#f0f4ff", color: "#2563eb", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
             <Paperclip size={16} />
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setCobroComprobanteFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
             Añadir archivos
@@ -1984,25 +1984,25 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                 const isPdf = f.type === "application/pdf";
                 const canPreview = !!url;
                 return (
-                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf, name: f.name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf, name: f.name }))}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
                       ) : url && isPdf ? (
-                        <FileText size={28} style={{ color: "#5f6577" }} />
+                        <FileText size={28} style={{ color: "#64748b" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#9498a8" }}>…</span>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={f.name}>{f.name}</span>
-                    <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={f.name}>{f.name}</span>
+                    <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
               })}
@@ -2020,16 +2020,16 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box" }}
         >
           <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "95vw", maxHeight: "95vh", display: "flex", flexDirection: "column", alignItems: "center", background: "#fff", borderRadius: 12, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #e2e4e9", width: "100%", background: "#f8f9fb" }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#1b2559", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(95vw - 100px)" }}>{cobroPreviewViewer.name}</span>
-              <button type="button" onClick={() => setCobroPreviewViewer(null)} style={{ width: 36, height: 36, border: "none", background: "#e2e4e9", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} aria-label="Cerrar"><X size={18} style={{ color: "#5f6577" }} /></button>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #e5e7eb", width: "100%", background: "#f8fafc" }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(95vw - 100px)" }}>{cobroPreviewViewer.name}</span>
+              <button type="button" onClick={() => setCobroPreviewViewer(null)} style={{ width: 36, height: 36, border: "none", background: "#e5e7eb", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} aria-label="Cerrar"><X size={18} style={{ color: "#64748b" }} /></button>
             </div>
             <div style={{ padding: 16, maxHeight: "85vh", overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {cobroPreviewViewer.isPdf ? (
                 <div style={{ textAlign: "center", padding: "24px 32px" }}>
-                  <FileText size={48} style={{ color: "#5f6577", marginBottom: 12 }} />
-                  <p style={{ fontSize: 14, color: "#5f6577", marginBottom: 16 }}>PDF — abrirlo para ver el contenido</p>
-                  <a href={cobroPreviewViewer.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#0055ff", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={16} /> Abrir en nueva pestaña</a>
+                  <FileText size={48} style={{ color: "#64748b", marginBottom: 12 }} />
+                  <p style={{ fontSize: 14, color: "#64748b", marginBottom: 16 }}>PDF — abrirlo para ver el contenido</p>
+                  <a href={cobroPreviewViewer.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#2563eb", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={16} /> Abrir en nueva pestaña</a>
                 </div>
               ) : (
                 <img src={cobroPreviewViewer.url} alt="" style={{ maxWidth: "85vw", maxHeight: "80vh", width: "auto", height: "auto", objectFit: "contain", display: "block" }} referrerPolicy="no-referrer" />
@@ -2047,30 +2047,30 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
           if (accesoResultado) {
             return (
               <div style={{ padding: "16px 0" }}>
-                <p style={{ fontSize: 13, color: "#0d9f6e", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.message}</p>
-                <div style={{ background: "#f4f5f7", borderRadius: 10, padding: 16, fontSize: 14 }}>
-                  <div style={{ marginBottom: 8 }}><span style={{ color: "#5f6577", fontSize: 12 }}>Correo:</span> <strong style={{ color: "#1a1d26" }}>{accesoResultado.email}</strong></div>
+                <p style={{ fontSize: 13, color: "#059669", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.message}</p>
+                <div style={{ background: "#f8fafc", borderRadius: 10, padding: 16, fontSize: 14 }}>
+                  <div style={{ marginBottom: 8 }}><span style={{ color: "#64748b", fontSize: 12 }}>Correo:</span> <strong style={{ color: "#0f172a" }}>{accesoResultado.email}</strong></div>
                   {accesoResultado.link && (
                     <div style={{ marginTop: 12 }}>
-                      <span style={{ fontSize: 12, color: "#5f6577", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
-                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "monospace", background: "#fff" }} />
+                      <span style={{ fontSize: 12, color: "#64748b", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
+                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "monospace", background: "#fff" }} />
                     </div>
                   )}
                 </div>
                 {accesoResultado.alreadyHadAccess && !accesoResultado.link && (
-                  <p style={{ fontSize: 11, color: "#9498a8", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "#0055ff", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
+                  <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
                 )}
               </div>
             );
           }
           return (
             <>
-              <p style={{ marginBottom: 14, fontSize: 13, color: "#5f6577" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
+              <p style={{ marginBottom: 14, fontSize: 13, color: "#64748b" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
               <div style={{ background: "#eef0f8", borderRadius: 10, padding: 12, marginBottom: 14 }}>
-                <span style={{ fontSize: 12, color: "#5f6577" }}>Correo al que se enviará: </span>
-                <strong style={{ color: "#1b2559" }}>{firstEmail || "—"}</strong>
+                <span style={{ fontSize: 12, color: "#64748b" }}>Correo al que se enviará: </span>
+                <strong style={{ color: "#0f172a" }}>{firstEmail || "—"}</strong>
               </div>
-              {(!firstEmail || !String(firstEmail).includes("@")) && <p style={{ fontSize: 12, color: "#dc2640", marginBottom: 8 }}>Este cliente no tiene correo. Agrega uno en Editar cliente.</p>}
+              {(!firstEmail || !String(firstEmail).includes("@")) && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 8 }}>Este cliente no tiene correo. Agrega uno en Editar cliente.</p>}
             </>
           );
         })()}
@@ -2080,8 +2080,8 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
         {gaf.clientId && (
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#5f6577", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
-          <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#64748b", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
+          <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} />
         </div>
         )}
         <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).filter((g) => !gafFilterPeriodo || g.mes === gafFilterPeriodo).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp + " " : ""}· ${fmt(g.gasto)}</option>)}</Inp>
@@ -2092,28 +2092,28 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
         <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
         <Inp label="Fecha de colocación (opcional)" type="date" value={gaf.fechaColocacion || ""} onChange={(e) => setGaf({ ...gaf, fechaColocacion: e.target.value })} hint="Cuándo el cliente te depositó la garantía" />
         <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
-        <div style={{ background: "#eef0f8", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 12, color: "#1b2559", border: "1px solid #c7d2fe" }}>
+        <div style={{ background: "#eef0f8", borderRadius: 10, padding: "12px 14px", marginBottom: 14, fontSize: 12, color: "#0f172a", border: "1px solid #c7d2fe" }}>
           <strong>Se verá reflejada en:</strong> Reportes (columna Garantía y Pend. neto) y en Gastos (columna A cobrar). Al guardar, te llevamos a Reportes para que lo veas al instante.
         </div>
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#1b2559", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
-          <p style={{ fontSize: 12, color: "#5f6577", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
+          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
           <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 16px", border: "1px dashed #7c3aed", borderRadius: 10, background: "#f0eefe", color: "#7c3aed", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer" }}>
             <Paperclip size={16} />
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setGarantiaImagenNewFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
             Añadir archivos
           </label>
           {garantiaImagenNewFiles.length > 0 && (
-            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#1b2559" }}>
+            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#0f172a" }}>
               {garantiaImagenNewFiles.map((f, i) => (
                 <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                   {f.name} ({(f.size / 1024).toFixed(1)} KB)
-                  <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2640", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
+                  <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
                 </li>
               ))}
             </ul>
           )}
-          {editId && (() => { const gar = garantias.find((g) => g.id === editId); const paths = gar?.imagen_urls || []; return paths.length > 0 ? <p style={{ marginTop: 8, fontSize: 12, color: "#5f6577" }}>Ya hay {paths.length} archivo(s) subidos para esta garantía. Los nuevos se añadirán.</p> : null; })()}
+          {editId && (() => { const gar = garantias.find((g) => g.id === editId); const paths = gar?.imagen_urls || []; return paths.length > 0 ? <p style={{ marginTop: 8, fontSize: 12, color: "#64748b" }}>Ya hay {paths.length} archivo(s) subidos para esta garantía. Los nuevos se añadirán.</p> : null; })()}
         </div>
       </Mdl>
 
@@ -2127,26 +2127,26 @@ input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shado
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
                 const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 10, minWidth: 0 }}>
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf: !isImage, name }))}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e2e4e9", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #0055ff" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
-                        <FileText size={28} style={{ color: "#5f6577" }} />
+                        <FileText size={28} style={{ color: "#64748b" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#9498a8" }}>Cargando…</span>
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#1b2559", minWidth: 0 }} title={name}>{name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
                     {url && !isImage && (
-                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", background: "#0055ff", color: "#fff", borderRadius: 6, fontSize: 11, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={12} /> Abrir</a>
+                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", background: "#2563eb", color: "#fff", borderRadius: 6, fontSize: 11, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={12} /> Abrir</a>
                     )}
                   </li>
                 );
