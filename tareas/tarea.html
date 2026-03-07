@@ -2538,8 +2538,9 @@ function tryInitSupabase(retryCount) {
     hasUrl: !!url,
     hasKey: !!key,
     urlPrefix: url ? url.replace(/https?:\/\//, '').split('/')[0] : null,
-    windowSupabase: typeof window.supabase,
-    windowSupabaseKeys: window.supabase ? Object.keys(window.supabase).slice(0, 5) : null,
+    windowSupabaseIsNull: window.supabase === null,
+    windowSupabaseType: typeof window.supabase,
+    windowSupabaseKeys: window.supabase && typeof window.supabase === 'object' ? Object.keys(window.supabase).slice(0, 6) : null,
     scriptTagsWithSupabase: scripts
   });
   if (!url || !key) {
@@ -2547,21 +2548,28 @@ function tryInitSupabase(retryCount) {
     return;
   }
   var lib = window.supabase;
-  if (!lib || typeof lib !== 'object') {
-    if (retryCount < 3) {
-      console.warn('[Tareas] Supabase: window.supabase no es objeto. Reintento en 400ms (' + (retryCount + 1) + '/3)');
-      setTimeout(function() { tryInitSupabase(retryCount + 1); }, 400);
+  if (lib == null || typeof lib !== 'object') {
+    if (retryCount === 0 && document.querySelector('script[src*="supabase-js"]')) {
+      console.warn('[Tareas] Supabase: window.supabase es null (el script del head puede no haber cargado). Cargando script dinámicamente...');
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+      s.onload = function() { console.log('[Tareas] Script Supabase cargado por fallback.'); tryInitSupabase(1); };
+      s.onerror = function() { console.error('[Tareas] Error cargando script Supabase desde CDN.'); };
+      document.head.appendChild(s);
+      return;
+    }
+    if (retryCount < 4) {
+      console.warn('[Tareas] Supabase: window.supabase aún null (intento ' + (retryCount + 1) + '). Reintento en 500ms.');
+      setTimeout(function() { tryInitSupabase(retryCount + 1); }, 500);
     } else {
-      console.error('[Tareas] Supabase: window.supabase no disponible tras 3 reintentos.');
+      console.error('[Tareas] Supabase: no disponible tras reintentos. Comprueba pestaña Network: ¿el script supabase.js devuelve 200?');
     }
     return;
   }
   var createClientFn = lib.createClient || (lib.default && (lib.default.createClient || lib.default));
   if (typeof createClientFn !== 'function') {
-    console.warn('[Tareas] Supabase: createClient no encontrado en window.supabase. Keys:', Object.keys(lib), 'default keys:', lib.default ? Object.keys(lib.default).slice(0, 8) : 'no default');
-    if (retryCount < 3) {
-      setTimeout(function() { tryInitSupabase(retryCount + 1); }, 400);
-    }
+    console.warn('[Tareas] Supabase: createClient no encontrado. Keys:', Object.keys(lib));
+    if (retryCount < 3) setTimeout(function() { tryInitSupabase(retryCount + 1); }, 400);
     return;
   }
   try {
