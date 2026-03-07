@@ -1274,18 +1274,19 @@ button{transition:all .15s ease}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f8fafc, #eff6ff)", margin: "18px -22px 0", padding: "16px 22px", borderRadius: "0 0 0 0" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f5f3ff 100%)", margin: "18px -22px 0", padding: "18px 20px", borderRadius: 14, boxShadow: "0 2px 12px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8)" }}>
             <div style={{ position: "relative", flexShrink: 0 }}>
               {isCliente ? (
                 <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
               ) : (
                 <Av name={displayName} size={48} avatarUrl={gerenteAvatarUrl} />
               )}
-              <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff" }} />
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
             </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Bienvenido, {displayName}</div>
-              {subLabel && <div style={{ fontSize: 12, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}><span style={{ fontSize: 8, color: "#22c55e" }}>●</span> {subLabel}</div>}
+            <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Bienvenido</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "break-word" }}>{displayName}</div>
+              {subLabel && <div style={{ marginTop: 8 }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#059669", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 8, letterSpacing: 0.3 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981" }} /> {subLabel}</span></div>}
             </div>
           </div>
         </div>
