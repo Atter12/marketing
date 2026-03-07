@@ -1395,7 +1395,8 @@ function loadCreativosData() {
     supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false })
   ]).then(function(ress) {
     var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4];
-    if (creditoRes.error || cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(creditoRes.error?.message || cRes.error?.message || pRes.error?.message || eRes.error?.message || projRes.error?.message);
+    if (cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(cRes.error?.message || pRes.error?.message || eRes.error?.message || projRes.error?.message);
+    if (creditoRes.error) console.warn('[Creativos] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message, '- Se muestran solo clientes de Creativos.');
     var creditoById = {};
     (creditoRes.data || []).forEach(function(c) {
       var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';

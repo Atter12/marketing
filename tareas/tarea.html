@@ -2577,7 +2577,7 @@ async function loadTareasData() {
       supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
       supabase.from('tareas_workflows').select('*').order('orden')
     ]);
-    if (creditoRes.error) throw creditoRes.error;
+    if (creditoRes.error) console.warn('[Tareas] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
     if (eqRes.error) throw eqRes.error;
     if (clRes.error) throw clRes.error;
     if (kbRes.error) throw kbRes.error;
