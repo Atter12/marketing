@@ -1388,14 +1388,30 @@ function isProjectComplete(p) {
 function loadCreativosData() {
   if (!supabase) return Promise.resolve(null);
   return Promise.all([
+    supabase.from('clientes').select('id, name, biz, emails').order('name'),
     supabase.from('creativos_clientes').select('*').order('name'),
     supabase.from('creativos_productos').select('*').order('name'),
     supabase.from('creativos_editores').select('*').order('name'),
     supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false })
   ]).then(function(ress) {
-    var cRes = ress[0], pRes = ress[1], eRes = ress[2], projRes = ress[3];
-    if (cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(cRes.error || pRes.error || eRes.error || projRes.error);
-    var clients = (cRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', company: r.company || '', email: r.email || '', createdAt: r.created_at }; });
+    var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4];
+    if (creditoRes.error || cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(creditoRes.error?.message || cRes.error?.message || pRes.error?.message || eRes.error?.message || projRes.error?.message);
+    var creditoById = {};
+    (creditoRes.data || []).forEach(function(c) {
+      var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
+      creditoById[c.id] = { name: c.name || '', company: c.biz || c.name || '', email: firstEmail };
+    });
+    var clients = (cRes.data || []).map(function(r) {
+      var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
+      return {
+        id: r.id,
+        name: credito ? credito.name : (r.name || ''),
+        company: credito ? credito.company : (r.company || ''),
+        email: credito ? credito.email : (r.email || ''),
+        creditoClientId: r.credito_client_id || null,
+        createdAt: r.created_at
+      };
+    });
     var products = (pRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', category: r.category || '', createdAt: r.created_at }; });
     var editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', createdAt: r.created_at }; });
     var projects = (projRes.data || []).map(function(r) {

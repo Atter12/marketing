@@ -2567,7 +2567,8 @@ async function loadTareasData() {
   var now = new Date();
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
-    var [eqRes, clRes, kbRes, tkRes, wlRes, calRes, wfRes] = await Promise.all([
+    var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes, wfRes] = await Promise.all([
+      supabase.from('clientes').select('id, name, phones, emails').order('name'),
       supabase.from('tareas_equipo').select('*').order('id'),
       supabase.from('tareas_clientes').select('*').order('nombre'),
       supabase.from('tareas_kanban').select('*').order('columna').order('orden', { ascending: true }),
@@ -2576,6 +2577,7 @@ async function loadTareasData() {
       supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
       supabase.from('tareas_workflows').select('*').order('orden')
     ]);
+    if (creditoRes.error) throw creditoRes.error;
     if (eqRes.error) throw eqRes.error;
     if (clRes.error) throw clRes.error;
     if (kbRes.error) throw kbRes.error;
@@ -2584,11 +2586,23 @@ async function loadTareasData() {
     if (calRes.error) throw calRes.error;
     if (wfRes.error) throw wfRes.error;
 
+    var creditoById = {};
+    (creditoRes.data || []).forEach(function(c) {
+      var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
+      var firstPhone = (c.phones && (Array.isArray(c.phones) ? c.phones[0] : (typeof c.phones === 'string' ? c.phones : null))) || '';
+      creditoById[c.id] = { nombre: c.name || '', contacto_nombre: c.name || '', email: firstEmail, telefono: firstPhone };
+    });
+
     var TEAM = (eqRes.data || []).map(function(r) {
       return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '—', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', svc: r.servicio || '', selfie: true, gps: true, ip: true, code: true };
     });
     var clients = (clRes.data || []).map(function(r) {
-      return { id: r.id, n: r.nombre, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: r.satisfaccion, budget: r.presupuesto || '', spent: r.gastado || '', contact: r.contacto_nombre || '', email: r.email || '', phone: r.telefono || '', nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: r.health, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+      var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
+      var n = credito ? credito.nombre : (r.nombre || '');
+      var contact = credito ? credito.contacto_nombre : (r.contacto_nombre || '');
+      var email = credito ? credito.email : (r.email || '');
+      var phone = credito ? credito.telefono : (r.telefono || '');
+      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: r.satisfaccion, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: r.health, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
