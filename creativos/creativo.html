@@ -1445,6 +1445,7 @@ function loadCreativosData() {
       var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
       creditoById[c.id] = { name: c.name || '', company: c.biz || c.name || '', email: firstEmail };
     });
+    var creditoIdsInCreativos = (cRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
     var clients = (cRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
       return {
@@ -1476,7 +1477,7 @@ function loadCreativosData() {
         createdAt: r.created_at
       };
     });
-    return { clients: clients, products: products, editors: editors, projects: projects };
+    return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos };
   }).catch(function(err) { console.error('[Creativos] loadCreativosData:', err); return null; });
 }
 
@@ -1488,6 +1489,7 @@ function reloadCreativosData(then) {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
+      if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
     if (then) then();
   });
@@ -2543,13 +2545,69 @@ function saveProject() {
 function openClientModal(id) {
   const c = id ? D.clients.find(cl => cl.id === id) : null;
   editingId = id || null; editingType = 'client';
+  const importLine = c ? '' : `<p class="form-hint" style="margin-bottom:1rem;font-size:var(--text-sm);color:var(--color-text-muted)">¿Ya es cliente en Crédito? <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:0.8125rem" onclick="showImportFromCreditoCreativos()">Importar desde Crédito</button></p>`;
   const body = `
+    ${importLine}
     <div class="form-group"><label class="form-label">Nombre Completo</label><input class="form-input" id="clientName" value="${c ? esc(c.name) : ''}" placeholder="Ej: María López"></div>
     <div class="form-group"><label class="form-label">Empresa</label><input class="form-input" id="clientCompany" value="${c ? esc(c.company) : ''}" placeholder="Ej: TechVista Solutions"></div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="clientEmail" type="email" value="${c ? esc(c.email) : ''}" placeholder="Ej: maria@techvista.com"></div>
   `;
   const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveClient()">${c ? 'Guardar Cambios' : 'Agregar Cliente'}</button>`;
   openModal(c ? 'Editar Cliente' : 'Nuevo Cliente', body, footer);
+}
+function showImportFromCreditoCreativos() {
+  var titleEl = document.getElementById('modalTitle');
+  var bodyEl = document.getElementById('modalBody');
+  var footerEl = document.getElementById('modalFooter');
+  if (!titleEl || !bodyEl || !footerEl) return;
+  titleEl.textContent = 'Importar desde Crédito';
+  bodyEl.innerHTML = '<p style="color:var(--color-text-muted);margin-bottom:1rem">Cargando clientes de Crédito…</p>';
+  footerEl.innerHTML = '<button class="btn btn-secondary" onclick="openClientModal()">← Volver</button>';
+  if (!supabase) {
+    bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">No hay conexión. Los clientes de Crédito se cargan desde la misma base de datos.</p>';
+    return;
+  }
+  var idsInCreativos = window.creditoIdsInCreativos || [];
+  supabase.from('clientes').select('id, name, biz, emails').order('name').then(function(r) {
+    if (r.error) {
+      bodyEl.innerHTML = '<p style="color:var(--color-error)">Error al cargar: ' + (r.error.message || '') + '</p>';
+      return;
+    }
+    var list = (r.data || []).filter(function(c) { return idsInCreativos.indexOf(c.id) === -1; });
+    window._creditoImportListCreativos = list;
+    if (list.length === 0) {
+      bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">Todos los clientes de Crédito ya están en Creativos, o no hay clientes en Crédito.</p>';
+      return;
+    }
+    var html = '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:1rem">Elige un cliente para importarlo a Creativos (se vinculará por Crédito):</p><div style="display:flex;flex-direction:column;gap:0.5rem;max-height:320px;overflow-y:auto">';
+    list.forEach(function(c) {
+      var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
+      var name = (c.name || '').replace(/</g, '&lt;');
+      var company = (c.biz || '').replace(/</g, '&lt;');
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--color-surface-offset);border-radius:var(--radius-md)"><div><strong>' + name + '</strong>' + (company ? ' — ' + company : '') + (firstEmail ? '<br><span style="font-size:var(--text-xs);color:var(--color-text-muted)">' + String(firstEmail).replace(/</g, '&lt;') + '</span>' : '') + '</div><button type="button" class="btn btn-primary" style="padding:4px 12px" onclick="importClienteFromCreditoCreativos(\'' + c.id + '\')">Importar</button></div>';
+    });
+    html += '</div>';
+    bodyEl.innerHTML = html;
+  });
+}
+function importClienteFromCreditoCreativos(creditoId) {
+  if (!supabase) return;
+  var list = window._creditoImportListCreativos || [];
+  var c = list.find(function(x) { return x.id === creditoId; });
+  if (!c) { showToast('error', 'Cliente no encontrado'); return; }
+  var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
+  var row = {
+    credito_client_id: creditoId,
+    name: c.name || 'Cliente Crédito',
+    company: c.biz || c.name || '',
+    email: firstEmail
+  };
+  supabase.from('creativos_clientes').insert(row).then(function(r) {
+    if (r.error) { showToast('error', r.error.message || 'Error al importar'); return; }
+    showToast('success', 'Cliente importado desde Crédito');
+    closeModal();
+    reloadCreativosData(function() { renderPage(currentPage); });
+  });
 }
 function saveClient() {
   var name = document.getElementById('clientName').value.trim();
@@ -2987,6 +3045,7 @@ function doCreativosInitialLoad() {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
+      if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
       console.log('[Creativos] Clientes cargados:', (data.clients || []).length);
     }
     initApp();
