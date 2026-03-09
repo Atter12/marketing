@@ -234,11 +234,13 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 }
 
 .sidebar-logo {
-  display: flex; align-items: center; gap: var(--space-3);
-  padding: var(--space-6) var(--space-5);
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-5) var(--space-5);
   border-bottom: 1px solid var(--sidebar-border);
   text-decoration: none; color: inherit;
+  min-height: 56px;
 }
+.sidebar-logo img { flex-shrink: 0; object-fit: contain; width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: var(--radius-md); }
 .sidebar-logo svg { flex-shrink: 0; }
 .sidebar-logo-text { font-size: var(--text-lg); font-weight: 700; letter-spacing: -0.02em; }
 .sidebar-logo-text span { color: var(--color-primary); }
@@ -1198,7 +1200,7 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <a href="#" class="sidebar-logo" onclick="navigateTo('dashboard');return false;">
-      <img src="/creativos/logo/logoh.png" alt="" width="32" height="32" style="flex-shrink:0;object-fit:contain">
+      <img src="/creativos/logo/logoh.png" alt="Creativos Holistic" width="44" height="44">
       <div class="sidebar-logo-text">Creativos <span>Holistic</span></div>
     </a>
     <nav class="sidebar-nav">
