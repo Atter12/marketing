@@ -2298,19 +2298,19 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 </section>
 
 <!-- ══════════════ CALENDAR VIEW ══════════════ -->
-<section class="view" id="view-calendar" aria-label="Calendario editorial">
+<section class="view" id="view-calendar" aria-label="Calendario Editorial">
   <div class="section-header">
-    <h3>Calendario Editorial — Febrero 2026</h3>
+    <h3 id="calendarTitle">Calendario Editorial</h3>
     <div class="section-actions">
-      <button class="btn-secondary btn-sm">← Anterior</button>
-      <button class="btn-primary btn-sm">Hoy</button>
-      <button class="btn-secondary btn-sm">Siguiente →</button>
-      <button class="btn-primary btn-sm" onclick="openModal('calendarEvent')">+ Nuevo evento</button>
+      <button type="button" class="btn-secondary btn-sm" onclick="calendarPrevMonth()" aria-label="Mes anterior">← Anterior</button>
+      <button type="button" class="btn-primary btn-sm" onclick="calendarGoToday()" aria-label="Ir a hoy">Hoy</button>
+      <button type="button" class="btn-secondary btn-sm" onclick="calendarNextMonth()" aria-label="Mes siguiente">Siguiente →</button>
+      <button type="button" class="btn-primary btn-sm" onclick="openModal('calendarEvent')">+ Nuevo evento</button>
     </div>
   </div>
   <div class="card">
     <div class="card-body" style="padding:var(--sp-4)">
-      <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Calendario de Febrero 2026"></div>
+      <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Calendario editorial"></div>
     </div>
   </div>
 </section>
@@ -2590,6 +2590,9 @@ let KT = [];
 let tickets = [];
 let workflows = [];
 let calI = [];
+var creditoIdsInTareas = [];
+let calendarViewMonth = new Date().getMonth() + 1;
+let calendarViewYear = new Date().getFullYear();
 
 // ══════════════════════════════════════════════════════════════════
 //  CARGA DESDE SUPABASE (Fase 3.1)
@@ -2695,7 +2698,8 @@ async function loadTareasData() {
       }
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
     });
-    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI };
+    var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
+    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
     return null;
@@ -2720,6 +2724,10 @@ function reloadTareasData(thenRender) {
       tickets = data.tickets;
       workflows = data.workflows;
       calI = data.calI;
+      if (data.creditoIdsInTareas) creditoIdsInTareas = data.creditoIdsInTareas;
+      var now = new Date();
+      calendarViewMonth = now.getMonth() + 1;
+      calendarViewYear = now.getFullYear();
     }
     updateBadges();
     updateDashboardStats();
@@ -3144,33 +3152,85 @@ function filterTickets(s, btn) {
   });
 }
 
-// ─── CALENDAR ───
+// ─── CALENDAR (Calendario Editorial) ───
+var MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function updateCalendarHeaderTitle() {
+  var el = document.getElementById('calendarTitle');
+  if (el) el.textContent = 'Calendario Editorial — ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear;
+  var grid = document.getElementById('calendarGrid');
+  if (grid) grid.setAttribute('aria-label', 'Calendario ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear);
+}
+function loadCalendarMonth(mes, anio, thenRender) {
+  if (supabase) {
+    supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia').then(function(r) {
+      if (!r.error) calI = (r.data || []).map(function(row) { return { id: row.id, d: row.dia, t: row.titulo, cl: row.clase_css || 'pill-orange' }; });
+      if (typeof thenRender === 'function') thenRender(); else renderers.calendar?.();
+      updateCalendarHeaderTitle();
+    });
+  } else {
+    if (typeof thenRender === 'function') thenRender(); else renderers.calendar?.();
+    updateCalendarHeaderTitle();
+  }
+}
+function calendarPrevMonth() {
+  calendarViewMonth--;
+  if (calendarViewMonth < 1) { calendarViewMonth = 12; calendarViewYear--; }
+  loadCalendarMonth(calendarViewMonth, calendarViewYear);
+}
+function calendarNextMonth() {
+  calendarViewMonth++;
+  if (calendarViewMonth > 12) { calendarViewMonth = 1; calendarViewYear++; }
+  loadCalendarMonth(calendarViewMonth, calendarViewYear);
+}
+function calendarGoToday() {
+  var now = new Date();
+  calendarViewMonth = now.getMonth() + 1;
+  calendarViewYear = now.getFullYear();
+  loadCalendarMonth(calendarViewMonth, calendarViewYear);
+}
+
 renderers.calendar = function() {
-  const grid = document.getElementById('calendarGrid');
+  var grid = document.getElementById('calendarGrid');
+  if (!grid) return;
   grid.innerHTML = '';
-  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(d => {
-    const h = document.createElement('div');
+  ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'].forEach(function(d) {
+    var h = document.createElement('div');
     h.className = 'cal-header-day'; h.textContent = d; h.setAttribute('role','columnheader');
     grid.appendChild(h);
   });
-  // Previous month overflow (Jan 26 days to fill Mon-Sat = 6 days)
-  for (let i = 0; i < 6; i++) {
-    const d = document.createElement('div');
-    d.className = 'cal-day other'; d.setAttribute('role','gridcell');
-    d.innerHTML = `<div class="cal-day-num">${25+i}</div>`;
-    grid.appendChild(d);
+  var first = new Date(calendarViewYear, calendarViewMonth - 1, 1);
+  var lastDay = new Date(calendarViewYear, calendarViewMonth, 0).getDate();
+  var firstDayOffset = (first.getDay() + 6) % 7;
+  var prevMonthLast = new Date(calendarViewYear, calendarViewMonth - 1, 0).getDate();
+  var today = new Date();
+  var isToday = function(d) { return d === today.getDate() && calendarViewMonth === today.getMonth() + 1 && calendarViewYear === today.getFullYear(); };
+
+  for (var i = 0; i < firstDayOffset; i++) {
+    var prevD = prevMonthLast - firstDayOffset + 1 + i;
+    var cell = document.createElement('div');
+    cell.className = 'cal-day other'; cell.setAttribute('role','gridcell');
+    cell.innerHTML = '<div class="cal-day-num">' + prevD + '</div>';
+    grid.appendChild(cell);
   }
-  for (let day = 1; day <= 28; day++) {
-    const items = calI.filter(x => x.d === day);
-    const d = document.createElement('div');
-    d.className = 'cal-day'; d.setAttribute('role','gridcell');
-    d.setAttribute('aria-label',`${day} de febrero${items.length?', '+items.length+' evento'+(items.length>1?'s':''):''}`);
-    d.innerHTML = (day === 15
-      ? `<div class="cal-day-num today" aria-current="date">${day}</div>`
-      : `<div class="cal-day-num">${day}</div>`)
-      + items.map(i => `<div class="cal-event pill ${i.cl}">${i.t}</div>`).join('');
-    grid.appendChild(d);
+  for (var day = 1; day <= lastDay; day++) {
+    var items = calI.filter(function(x) { return x.d === day; });
+    var cell = document.createElement('div');
+    cell.className = 'cal-day'; cell.setAttribute('role','gridcell');
+    cell.setAttribute('aria-label', day + ' ' + MONTH_NAMES[calendarViewMonth - 1] + (items.length ? ', ' + items.length + ' evento' + (items.length > 1 ? 's' : '') : ''));
+    cell.innerHTML = (isToday(day) ? '<div class="cal-day-num today" aria-current="date">' + day + '</div>' : '<div class="cal-day-num">' + day + '</div>') +
+      items.map(function(i) { return '<div class="cal-event pill ' + (i.cl || 'pill-orange') + '">' + (i.t || '').replace(/</g,'&lt;') + '</div>'; }).join('');
+    grid.appendChild(cell);
   }
+  var totalCells = firstDayOffset + lastDay;
+  var trailing = totalCells % 7 ? (7 - totalCells % 7) : 0;
+  for (var j = 0; j < trailing; j++) {
+    var nextD = j + 1;
+    var cell = document.createElement('div');
+    cell.className = 'cal-day other'; cell.setAttribute('role','gridcell');
+    cell.innerHTML = '<div class="cal-day-num">' + nextD + '</div>';
+    grid.appendChild(cell);
+  }
+  updateCalendarHeaderTitle();
 };
 
 // ─── WORKLOAD ───
@@ -3384,6 +3444,7 @@ function openModal(type) {
   } else if (type === 'client') {
     title.textContent = 'Nuevo Cliente';
     body.innerHTML = `
+      <p class="form-hint" style="margin-bottom:var(--sp-4);font-size:var(--text-sm);color:var(--color-text-muted)">¿Ya es cliente en Crédito? <button type="button" class="btn-secondary btn-sm" onclick="showImportFromCredito()">Importar desde Crédito</button></p>
       <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" placeholder="Ej: Luna Beauty" id="cl-name"></div>
       <div class="form-row">
         <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" placeholder="Cosmética" id="cl-ind"></div>
@@ -3409,13 +3470,17 @@ function openModal(type) {
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
   } else if (type === 'calendarEvent') {
     var now = new Date();
+    var defMes = typeof calendarViewMonth !== 'undefined' ? calendarViewMonth : now.getMonth() + 1;
+    var defAnio = typeof calendarViewYear !== 'undefined' ? calendarViewYear : now.getFullYear();
+    var defDia = (defMes === now.getMonth() + 1 && defAnio === now.getFullYear()) ? now.getDate() : 1;
+    var maxDia = new Date(defAnio, defMes, 0).getDate();
     title.textContent = 'Nuevo evento';
     body.innerHTML = `
       <div class="form-group"><label for="cal-titulo">Título</label><input class="form-input" id="cal-titulo" placeholder="Ej: Reunión cliente"></div>
       <div class="form-row-3">
-        <div class="form-group"><label for="cal-dia">Día</label><input class="form-input" type="number" min="1" max="31" value="${now.getDate()}" id="cal-dia"></div>
-        <div class="form-group"><label for="cal-mes">Mes</label><input class="form-input" type="number" min="1" max="12" value="${now.getMonth()+1}" id="cal-mes"></div>
-        <div class="form-group"><label for="cal-anio">Año</label><input class="form-input" type="number" min="2024" max="2030" value="${now.getFullYear()}" id="cal-anio"></div>
+        <div class="form-group"><label for="cal-dia">Día</label><input class="form-input" type="number" min="1" max="31" value="${defDia}" id="cal-dia"></div>
+        <div class="form-group"><label for="cal-mes">Mes</label><input class="form-input" type="number" min="1" max="12" value="${defMes}" id="cal-mes"></div>
+        <div class="form-group"><label for="cal-anio">Año</label><input class="form-input" type="number" min="2024" max="2030" value="${defAnio}" id="cal-anio"></div>
       </div>
       <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase"><option value="pill-orange">Naranja</option><option value="pill-green">Verde</option><option value="pill-red">Rojo</option><option value="pill-purple">Púrpura</option><option value="pill-pink">Rosa</option></select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addCalendarEvent()">Crear evento</button>`;
@@ -3659,6 +3724,58 @@ function addTicket() {
     renderers.tickets(); updateBadges(); closeModal();
   }
 }
+function showImportFromCredito() {
+  var title = document.getElementById('modalTitle');
+  var body = document.getElementById('modalBody');
+  var footer = document.getElementById('modalFooter');
+  title.textContent = 'Importar desde Crédito';
+  body.innerHTML = '<p style="color:var(--color-text-muted);margin-bottom:var(--sp-4)">Cargando clientes de Crédito…</p>';
+  footer.innerHTML = '<button class="btn-secondary" onclick="openModal(\'client\')">← Volver</button>';
+  if (!supabase) {
+    body.innerHTML = '<p style="color:var(--color-text-muted)">No hay conexión a Supabase. Los clientes de Crédito se cargan desde la misma base de datos.</p>';
+    return;
+  }
+  supabase.from('clientes').select('id, name, emails, phones').order('name').then(function(r) {
+    if (r.error) {
+      body.innerHTML = '<p style="color:var(--red)">Error al cargar: ' + (r.error.message || '') + '</p>';
+      return;
+    }
+    var list = (r.data || []).filter(function(c) { return creditoIdsInTareas.indexOf(c.id) === -1; });
+    window._creditoImportList = list;
+    if (list.length === 0) {
+      body.innerHTML = '<p style="color:var(--color-text-muted)">Todos los clientes de Crédito ya están en Tareas, o no hay clientes en Crédito.</p>';
+      return;
+    }
+    var html = '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-4)">Elige un cliente para importarlo a Tareas (se vinculará por Crédito):</p><div style="display:flex;flex-direction:column;gap:var(--sp-2);max-height:320px;overflow-y:auto">';
+    list.forEach(function(c) {
+      var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
+      var name = (c.name || '').replace(/</g, '&lt;');
+      html += '<div class="card-body" style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3)"><div><strong>' + name + '</strong>' + (firstEmail ? '<br><span style="font-size:var(--text-xs);color:var(--color-text-muted)">' + String(firstEmail).replace(/</g, '&lt;') + '</span>' : '') + '</div><button type="button" class="btn-primary btn-sm" onclick="importClienteFromCredito(\'' + c.id + '\')">Importar</button></div>';
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  });
+}
+
+function importClienteFromCredito(creditoId) {
+  if (!supabase) return;
+  var c = (window._creditoImportList || []).find(function(x) { return x.id === creditoId; });
+  if (!c) { alert('Cliente no encontrado'); return; }
+  var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
+  var row = {
+    credito_client_id: creditoId,
+    nombre: c.name || 'Cliente Crédito',
+    contacto_nombre: c.name || '',
+    email: firstEmail,
+    status: 'activo'
+  };
+  supabase.from('tareas_clientes').insert(row).then(function(r) {
+    if (r.error) { alert('Error al importar: ' + (r.error.message || '')); return; }
+    reloadTareasData();
+    closeModal();
+  });
+}
+
 function addClient() {
   var n = document.getElementById('cl-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
@@ -3720,7 +3837,8 @@ function addCalendarEvent() {
   if (supabase) {
     supabase.from('tareas_calendario').insert({ dia: dia, mes: mes, anio: anio, titulo: titulo, clase_css: clase }).then(function(r) {
       if (r.error) { alert('Error al crear evento: ' + (r.error.message||'')); return; }
-      reloadTareasData(); closeModal();
+      loadCalendarMonth(calendarViewMonth, calendarViewYear);
+      closeModal();
     });
   } else {
     calI.push({ d: dia, t: titulo, cl: clase });
