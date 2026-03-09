@@ -236,26 +236,21 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .sidebar-brand {
   padding: var(--sp-5) var(--sp-5);
   display: flex;
-  align-items: center;
-  gap: var(--sp-4);
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
   border-bottom: 1px solid var(--sidebar-border);
   flex-shrink: 0;
-  min-height: 56px;
 }
-.sidebar-logo {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  flex-shrink: 0;
+.sidebar-brand .sidebar-logo {
+  height: 48px;
+  width: 200px;
+  max-width: 100%;
   object-fit: contain;
-  border-radius: var(--r-md);
+  display: block;
 }
 .sidebar-wordmark {
-  display: flex;
-  align-items: baseline;
-  gap: var(--sp-2);
-  flex: 1;
+  text-align: center;
   min-width: 0;
 }
 .sidebar-wordmark h1 {
@@ -266,6 +261,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  margin: 0;
 }
 .sidebar-pro {
   font-size: 0.5rem;
@@ -1961,7 +1957,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════ SIDEBAR ══════ -->
 <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navegación principal">
   <div class="sidebar-brand">
-    <img class="sidebar-logo" src="/tareas/logo/logoh.png" alt="Tareas Holistic" width="44" height="44">
+    <img class="sidebar-logo" src="/tareas/logo/logoh.png" alt="Holistic Marketing" style="height: 48px; width: 200px; max-width: 100%; object-fit: contain; display: block;">
     <div class="sidebar-wordmark">
       <h1>Tareas Holistic</h1>
     </div>
