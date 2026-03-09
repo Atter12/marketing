@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgencyFlow v5 — Gestión para Agencias</title>
+<title>Tareas Holistic</title>
+<link rel="icon" href="logo/logoh.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -29,7 +30,7 @@
   --color-text-faint:      #A8A29E;
   --color-text-inverse:    #FAFAF9;
 
-  /* Primary accent — AgencyFlow Orange */
+  /* Primary accent — Tareas Holistic Orange */
   --color-primary:         #EA580C;
   --color-primary-hover:   #C2410C;
   --color-primary-active:  #9A3412;
@@ -244,6 +245,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   width: 32px;
   height: 32px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 .sidebar-wordmark {
   display: flex;
@@ -1955,14 +1957,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════ SIDEBAR ══════ -->
 <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navegación principal">
   <div class="sidebar-brand">
-    <!-- AgencyFlow Logo — Paul Rand-inspired lightning bolt -->
-    <svg class="sidebar-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#EA580C"/>
-      <path d="M19 5L10 17h7l-4 10 12-14h-8l3-8z" fill="#fff"/>
-    </svg>
+    <img class="sidebar-logo" src="logo/logoh.png" alt="" width="32" height="32">
     <div class="sidebar-wordmark">
-      <h1>AgencyFlow</h1>
-      <span class="sidebar-pro">PRO</span>
+      <h1>Tareas Holistic</h1>
     </div>
   </div>
 
@@ -2057,9 +2054,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 
   <div class="sidebar-footer">
     <div class="user-card" role="button" tabindex="0">
-      <div class="user-avatar" aria-hidden="true">CA</div>
+      <div class="user-avatar" aria-hidden="true">VM</div>
       <div>
-        <div class="user-name">Carlos Admin</div>
+        <div class="user-name">Victor Minas</div>
         <div class="user-role">Director de Agencia</div>
       </div>
     </div>
@@ -2079,7 +2076,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       </button>
       <h2 class="topbar-title" id="pageTitle">Dashboard</h2>
       <div class="breadcrumb" aria-label="Navegación de ruta">
-        AgencyFlow <span>›</span> <span id="pageCrumb">Dashboard</span>
+        Tareas Holistic <span>›</span> <span id="pageCrumb">Dashboard</span>
       </div>
     </div>
     <div class="topbar-right">
@@ -2132,8 +2129,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <!-- Welcome Banner -->
   <div class="welcome-banner fade-in">
     <div>
-      <div class="welcome-greeting" id="dashboard-greeting">Dashboard</div>
-      <div class="welcome-sub" id="dashboard-sub"></div>
+      <div class="welcome-greeting" id="dashboard-greeting">Hola, Victor</div>
+      <div class="welcome-sub" id="dashboard-sub">Bienvenido al dashboard</div>
     </div>
     <div class="welcome-stats">
       <div class="welcome-stat">
