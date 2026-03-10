@@ -1208,19 +1208,32 @@ button{transition:all .15s ease}
 /* === MOBILE HEADER === */
 .hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;align-items:center;padding:0 20px;z-index:101;gap:14px}
 
-/* === TABLE WRAPS === Mismo criterio que Desglose por Usuario: 100% ancho, sin min-width que fuerce scroll === */
+/* === TABLE WRAPS === Desglose/reportes: 100% ancho. Clientes/Gastos/Garantías: min-width para no colapsar columnas finales === */
 .hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px;position:relative}
-.hm-table-wrap table{width:100%;min-width:0;table-layout:auto;border-collapse:collapse}
-/* Padding más compacto para que entren más columnas sin scroll (TH/TD inline usan 24px; aquí ganamos espacio) */
+.hm-table-wrap table{border-collapse:collapse}
+/* Reportes y similares: tabla fluida */
+.hm-table-wrap:not(.hm-table-clientes):not(.hm-table-gastos):not(.hm-table-garantias) table{width:100%;min-width:0;table-layout:auto}
+/* Clientes / Gastos / Garantías: ancho según contenido → scroll horizontal si hace falta; así Prepago, Registrado por, Imágenes y acciones NO se pierden */
+.hm-table-wrap.hm-table-clientes table,.hm-table-wrap.hm-table-gastos table,.hm-table-wrap.hm-table-garantias table{width:max-content;min-width:100%;table-layout:auto}
+/* Padding compacto */
 .hm-table-wrap table th,.hm-table-wrap table td{padding:10px 12px!important;font-size:12px!important;vertical-align:middle}
 .hm-table-wrap table th{font-size:11px!important;letter-spacing:.04em}
-/* Sticky columna acciones se mantiene; el resto de columnas se reparte en el ancho disponible */
-.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:100px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
+/* Columna acciones: sticky + ancho mínimo real (3 botones clientes; varios iconos gastos/garantías). overflow:hidden en el card rompe sticky → .hm-card-table */
+.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:148px;width:148px;box-shadow:-8px 0 16px rgba(0,0,0,.06);z-index:2;white-space:nowrap}
 .hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:#f8fafc}
 .hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#f1f5f9}
-.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:110px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:168px;width:168px;box-shadow:-8px 0 16px rgba(0,0,0,.06);z-index:2;white-space:nowrap}
 .hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions{background:#f8fafc}
 .hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions{background:#f1f5f9}
+/* Prepago / Registrado por / Imágenes: no colapsar a 0 */
+.hm-table-wrap.hm-table-gastos th:nth-last-child(3),.hm-table-wrap.hm-table-gastos td:nth-last-child(3),
+.hm-table-wrap.hm-table-gastos th:nth-last-child(2),.hm-table-wrap.hm-table-gastos td:nth-last-child(2){min-width:72px;white-space:nowrap}
+.hm-table-wrap.hm-table-garantias th:nth-last-child(2),.hm-table-wrap.hm-table-garantias td:nth-last-child(2){min-width:90px;white-space:nowrap}
+/* Card que envuelve la tabla: sin overflow hidden para que sticky funcione; scroll horizontal en el wrap */
+.hm-card-table{overflow-x:auto;overflow-y:visible;border-radius:18px}
+.hm-card-table .hm-table-wrap{margin-bottom:0}
+/* Paginación debajo de la tabla dentro del card */
+.hm-card-table > div:last-child{border-radius:0 0 18px 18px}
 /* Flechitas de scroll horizontal quitadas: supervisores prefieren ver todo con zoom/scroll nativo */
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
 
@@ -1508,7 +1521,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div className="hm-card-table" style={{ background: "#fff", border: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
@@ -1612,7 +1625,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'DM Sans'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div className="hm-card-table" style={{ background: "#fff", border: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.gastos, totalPages);
@@ -1729,7 +1742,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div className="hm-card-table" style={{ background: "#fff", border: "1px solid #e5e7eb", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(garantiasFiltradas.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.garantias, totalPages);
