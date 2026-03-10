@@ -326,6 +326,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [selectedIds, setSelectedIds] = useState({ clientes: [], gastos: [], cobros: [], garantias: [] });
   const [pageNum, setPageNum] = useState({ clientes: 1, gastos: 1, cobros: 1, garantias: 1 });
   const [sortClientesBy, setSortClientesBy] = useState("nombre");
+  /** Orden del Desglose por Usuario (Reportes), mismo criterio que Clientes */
+  const [sortReportDesgloseBy, setSortReportDesgloseBy] = useState("nombre");
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
@@ -452,6 +454,28 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
     return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "#0f172a" }].filter((d) => d.value > 0) };
   }, [sGastos, repCl, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
+
+  /* Filas del desglose ordenadas (mismo criterio que lista Clientes) */
+  const repDataRowsSorted = useMemo(() => {
+    const rows = [...repData.rows];
+    if (!rows.length) return rows;
+    switch (sortReportDesgloseBy) {
+      case "nombre":
+        return rows.sort((a, b) => (a.name || "").localeCompare(b.name || "", "es"));
+      case "deuda":
+        return rows.sort((a, b) => (b.netPending || 0) - (a.netPending || 0));
+      case "deuda_menos":
+        return rows.sort((a, b) => (a.netPending || 0) - (b.netPending || 0));
+      case "total":
+        return rows.sort((a, b) => (b.total || 0) - (a.total || 0));
+      case "pagado":
+        return rows.sort((a, b) => (b.paid || 0) - (a.paid || 0));
+      case "ads":
+        return rows.sort((a, b) => (b.ads || 0) - (a.ads || 0));
+      default:
+        return rows;
+    }
+  }, [repData.rows, sortReportDesgloseBy]);
 
   /* Reportes: meses en el rango desde–hasta para gráficas */
   const reportMonths = useMemo(() => {
@@ -1455,10 +1479,25 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
               <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
-                <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Desglose por Usuario</h3></div>
+                <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2, margin: 0 }}>Desglose por Usuario</h3></div>
+                  {repData.rows.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", whiteSpace: "nowrap" }}>Ordenar:</label>
+                      <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'DM Sans'", background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer", minWidth: 200 }}>
+                        <option value="nombre">Nombre (A-Z)</option>
+                        <option value="deuda">Quien más debe (Pend. neto ↓)</option>
+                        <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
+                        <option value="total">Mayor total (Ads+Fee)</option>
+                        <option value="pagado">Más cobrado</option>
+                        <option value="ads">Mayor gasto Ads</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
                 <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }}><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {repData.rows.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
+                    {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
                     <tr style={{ background: "linear-gradient(90deg, #f8fafc, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
                     {!repData.rows.length && <Empty cols={8} msg="Sin datos para este período" />}
                   </tbody></table></TableScrollWrap>
