@@ -379,6 +379,16 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .user-avatar img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .user-name { color: #0f172a; font-size: 0.75rem; font-weight: 600; }
 .user-role { color: #94a3b8; font-size: 0.625rem; }
+.user-role-hint { font-size: 0.5625rem; margin-top: 2px; opacity: 0.9; }
+.user-avatar-camera {
+  position: absolute; right: -2px; bottom: -2px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--color-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  pointer-events: none;
+}
+.user-avatar img ~ .user-avatar-camera { display: none; }
 
 /* ══════════════════════════════════════════════
    MAIN AREA
@@ -2064,10 +2074,14 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       <div class="user-avatar" id="tareasUserAvatar" aria-hidden="true">
         <img id="tareasUserAvatarImg" src="" alt="" style="display:none" />
         <span id="tareasUserAvatarIniciales">VM</span>
+        <span class="user-avatar-camera" aria-hidden="true" title="Clic para poner tu foto">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </span>
       </div>
       <div>
         <div class="user-name">Victor Minas</div>
         <div class="user-role">Director de Agencia</div>
+        <div class="user-role user-role-hint">Clic para poner tu foto</div>
       </div>
     </div>
   </div>
@@ -2139,7 +2153,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <!-- Welcome Banner -->
   <div class="welcome-banner fade-in">
     <div>
-      <div class="welcome-greeting" id="dashboard-greeting">Hola, Victor</div>
+      <div class="welcome-greeting" id="dashboard-greeting">Hola, Victor Minas</div>
       <div class="welcome-sub" id="dashboard-sub">Bienvenido al dashboard</div>
     </div>
     <div class="welcome-stats">

@@ -1192,6 +1192,9 @@ button{transition:all .15s ease}
 /* === CHART CONTAINERS === */
 .hm-chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:26px 28px;transition:all .2s ease}
 .hm-chart-card:hover{box-shadow:0 8px 30px rgba(15,23,42,.06);border-color:#cbd5e1}
+@keyframes debtCardEnter{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.hm-debt-chart-card{animation:debtCardEnter .5s cubic-bezier(0.34,1.56,0.64,1) both}
+.hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:#f87171!important}
 
 /* === RESPONSIVE === */
 @media (max-width:768px){
@@ -1352,10 +1355,16 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <Av name={displayName} size={48} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
               )}
               <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
+              {!isCliente && (
+                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px rgba(37,99,235,.4)", pointerEvents: "none" }} title="Clic para poner tu foto">
+                  <Camera size={11} strokeWidth={2.2} />
+                </div>
+              )}
             </div>
             <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Bienvenido</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "break-word" }}>{displayName}</div>
+              {!isCliente && <div style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 4 }}>Clic para poner tu foto</div>}
               {subLabel && <div style={{ marginTop: 8 }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#059669", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 8, letterSpacing: 0.3 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981" }} /> {subLabel}</span></div>}
             </div>
           </div>
@@ -1448,9 +1457,19 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Evolución mensual</p>
                 <ResponsiveContainer width="100%" height={240}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "#fff", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#3b82f6" strokeWidth={3} dot={{ r: 5, fill: "#3b82f6", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#3b82f6", stroke: "#fff", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.debt} layout="vertical"><defs><linearGradient id="debtGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis type="number" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={80} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradient)" radius={[0, 8, 8, 0]} /></BarChart></ResponsiveContainer>
+              <div className="hm-chart-card hm-debt-chart-card" style={{ background: "linear-gradient(180deg, #fff 0%, #fef2f2 100%)", border: "1px solid #fecaca", borderRadius: 18, padding: "28px 24px 32px", transition: "transform .25s cubic-bezier(0.34,1.56,0.64,1), box-shadow .25s ease", boxShadow: "0 4px 20px rgba(220,38,38,.06)", marginBottom: 8 }}>
+                <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, letterSpacing: -0.2, color: "#0f172a" }}>Deuda Neta por Cliente</h4>
+                <p style={{ fontSize: 12.5, color: "#64748b", marginBottom: 24, lineHeight: 1.4 }}>Incluye descuento de garantías. Clientes con saldo pendiente.</p>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={dashboardCharts.debt} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
+                    <defs><linearGradient id="debtGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="4 4" stroke="#fecaca" vertical={false} />
+                    <XAxis type="number" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12.5, fill: "#0f172a", fontWeight: 500 }} axisLine={false} tickLine={false} width={100} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "1px solid #fecaca", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "12px 16px" }} formatter={(v) => [`$${fmt(v)}`, "Deuda neta"]} />
+                    <Bar dataKey="debt" fill="url(#debtGradient)" radius={[0, 10, 10, 0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
             <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
@@ -1915,15 +1934,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           })()}
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período *</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período * (solo mes y año)</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 140, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
+            <input type="month" value={gf.mes || tm()} onChange={(e) => { const v = e.target.value; if (v) setGf((p) => ({ ...p, mes: v, fechaMovimiento: v + "-15", periodoInput: v })); }} style={{ width: 160, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} title="Mes y año" />
             <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f0f4ff", color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Este mes</button>
             <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f8fafc", color: "#64748b", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Mes pasado</button>
             <span style={{ fontSize: 12, color: "#94a3b8" }}>o</span>
-            <input id="gf-periodo-date" type="date" value={gf.fechaMovimiento || (gf.mes ? gf.mes + "-15" : td())} onChange={(e) => { const v = e.target.value; if (v) setGf({ ...gf, fechaMovimiento: v, mes: v.slice(0, 7), periodoInput: v.slice(0, 7) }); }} style={{ width: 150, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} title="Calendario" />
+            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 120, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13.5, outline: "none" }} />
           </div>
-          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Escribí mes/año (ej. 01/2025) o usá los botones / calendario</div>
+          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Solo mes y año. La fecha de movimiento se guarda como día 15 del mes.</div>
         </div>
         <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#0f172a" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#64748b", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
