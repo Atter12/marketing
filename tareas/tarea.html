@@ -51,13 +51,13 @@
   --pink:                  #DB2777;
   --pink-bg:               #FDF2F8;
 
-  /* Sidebar — rich warm dark */
-  --sidebar-bg:            #1C1917;
-  --sidebar-hover:         #292524;
-  --sidebar-active:        #3D3530;
-  --sidebar-border:        rgba(255,255,255,0.07);
-  --sidebar-text:          rgba(255,255,255,0.45);
-  --sidebar-text-active:   #FFFFFF;
+  /* Sidebar — mismo estilo que Crédito: fondo blanco, textos acoplados */
+  --sidebar-bg:            #ffffff;
+  --sidebar-hover:         #f1f5f9;
+  --sidebar-active:        rgba(234,88,12,0.12);
+  --sidebar-border:        #e5e7eb;
+  --sidebar-text:          #64748b;
+  --sidebar-text-active:   #0f172a;
 
   /* Radius */
   --r-sm:   0.375rem;
@@ -133,12 +133,13 @@
   --pink:                  #F472B6;
   --pink-bg:               rgba(244,114,182,0.10);
 
-  --sidebar-bg:            #121214;
-  --sidebar-hover:         #1C1C20;
-  --sidebar-active:        #26262C;
-  --sidebar-border:        rgba(255,255,255,0.06);
-  --sidebar-text:          rgba(255,255,255,0.38);
-  --sidebar-text-active:   #F0EFEC;
+  /* Sidebar siempre claro (como Crédito) */
+  --sidebar-bg:            #ffffff;
+  --sidebar-hover:         #f1f5f9;
+  --sidebar-active:        rgba(251,146,60,0.12);
+  --sidebar-border:        #e5e7eb;
+  --sidebar-text:          #64748b;
+  --sidebar-text-active:   #0f172a;
 
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.25);
   --shadow-md: 0 1px 3px oklch(0 0 0 / 0.30), 0 4px 12px oklch(0 0 0 / 0.25);
@@ -162,9 +163,9 @@
     --purple:#C084FC; --purple-bg:rgba(192,132,252,0.10);
     --cyan:#22D3EE; --cyan-bg:rgba(34,211,238,0.10);
     --pink:#F472B6; --pink-bg:rgba(244,114,182,0.10);
-    --sidebar-bg:#121214; --sidebar-hover:#1C1C20; --sidebar-active:#26262C;
-    --sidebar-border:rgba(255,255,255,0.06); --sidebar-text:rgba(255,255,255,0.38);
-    --sidebar-text-active:#F0EFEC;
+    --sidebar-bg:#ffffff; --sidebar-hover:#f1f5f9; --sidebar-active:rgba(251,146,60,0.12);
+    --sidebar-border:#e5e7eb; --sidebar-text:#64748b;
+    --sidebar-text-active:#0f172a;
     --shadow-sm:0 1px 2px oklch(0 0 0 / 0.25);
     --shadow-md:0 1px 3px oklch(0 0 0 / 0.30), 0 4px 12px oklch(0 0 0 / 0.25);
     --shadow-lg:0 2px 4px oklch(0 0 0 / 0.25), 0 12px 32px oklch(0 0 0 / 0.40);
@@ -222,7 +223,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
    SIDEBAR
 ══════════════════════════════════════════════ */
 .sidebar {
-  background: var(--sidebar-bg);
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, #f8fafc 100%);
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -256,7 +257,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .sidebar-wordmark h1 {
   font-size: clamp(0.95rem, 0.9rem + 0.25vw, 1.1rem);
   font-weight: 800;
-  color: #fff;
+  color: #0f172a;
   letter-spacing: -0.3px;
   white-space: nowrap;
   overflow: hidden;
@@ -284,7 +285,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   font-size: 0.5625rem;
   text-transform: uppercase;
   letter-spacing: 1.4px;
-  color: rgba(255,255,255,0.2);
+  color: #94a3b8;
   padding: 0 var(--sp-3);
   margin-bottom: var(--sp-2);
   font-weight: 700;
@@ -304,10 +305,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   user-select: none;
   text-decoration: none;
 }
-.nav-item:hover { background: var(--sidebar-hover); color: rgba(255,255,255,0.75); }
+.nav-item:hover { background: var(--sidebar-hover); color: #0f172a; }
 .nav-item.active {
   background: var(--sidebar-active);
   color: var(--sidebar-text-active);
+  font-weight: 600;
 }
 .nav-item.active::before {
   content: '';
@@ -371,8 +373,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   font-size: 0.625rem;
   flex-shrink: 0;
 }
-.user-name { color: #fff; font-size: 0.75rem; font-weight: 600; }
-.user-role { color: rgba(255,255,255,0.4); font-size: 0.625rem; }
+.user-name { color: #0f172a; font-size: 0.75rem; font-weight: 600; }
+.user-role { color: #94a3b8; font-size: 0.625rem; }
 
 /* ══════════════════════════════════════════════
    MAIN AREA
