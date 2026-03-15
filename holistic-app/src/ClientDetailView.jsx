@@ -152,11 +152,10 @@ export default function ClientDetailView(props) {
           {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'DM Sans'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
         </div>,
         onExportClientPorPeriodo && (
-        <div style={{ marginBottom: 20, padding: "14px 18px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 12 }}>
-          <p style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577", margin: "0 0 10px" }}>Descargar según el período mostrado arriba</p>
+        <div style={{ marginBottom: 20, padding: "14px 18px", background: "linear-gradient(135deg, #f8f9fb 0%, #fef2f2 100%)", border: "1px solid #fecaca", borderRadius: 12 }}>
+          <p style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577", margin: "0 0 10px" }}>Descargar PDF según el período mostrado arriba</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <button type="button" onClick={() => onExportClientPorPeriodo(true, false)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", border: "1px solid #0d9f6e", borderRadius: 8, background: "#eafaf4", color: "#0d9f6e", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}><Download size={16} /> Descargar Excel</button>
-            <button type="button" onClick={() => onExportClientPorPeriodo(false, true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "9px 16px", border: "1px solid #dc2640", borderRadius: 8, background: "#fdf0f2", color: "#dc2640", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif" }}><Download size={16} /> Descargar PDF</button>
+            <button type="button" onClick={() => onExportClientPorPeriodo(false, true)} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px", border: "1px solid #dc2626", borderRadius: 8, background: "#fff", color: "#dc2626", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans',sans-serif", boxShadow: "0 1px 3px rgba(220,38,38,.1)" }}><Download size={16} /> Descargar PDF</button>
           </div>
         </div>
         ),

@@ -798,7 +798,22 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc", fontFamily: "'DM Sans',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "#dc2626", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#0f172a", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
-  const saveClient = async () => { if (!cf.name.trim()) return alert("Nombre obligatorio"); const c = { id: editId || undefined, codigo: cf.codigo || "", name: cf.name.trim(), ig: cf.ig || "", phones: cf.phones.filter(Boolean), emails: cf.emails.filter(Boolean), biz: cf.biz || "", notes: cf.notes || "", avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl(); };
+  const validateEmail = (e) => typeof e === "string" && e.trim().includes("@") && e.trim().length >= 5;
+  const saveClient = async () => {
+    const name = cf.name.trim();
+    const phones = cf.phones.filter(Boolean);
+    const emails = cf.emails.filter(Boolean);
+    const validEmails = emails.filter(validateEmail);
+    if (!name) return alert("Nombre obligatorio. Completá el nombre del cliente.");
+    if (!validEmails.length) return alert("Correo obligatorio (es el dato más importante). Agregá al menos un correo válido que contenga @ y esté completo.");
+    if (!phones.length) return alert("Teléfono obligatorio. Agregá al menos un número de teléfono o WhatsApp.");
+    const codigo = (cf.codigo || "").trim();
+    if (editId && !codigo) return alert("Código de cliente obligatorio. Completá el código.");
+    if (!(cf.ig || "").trim()) return alert("Completá Instagram (ej. @usuario o — si no aplica).");
+    if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
+    if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
+    const c = { id: editId || undefined, codigo: codigo || "", name, ig: (cf.ig || "").trim(), phones, emails, biz: (cf.biz || "").trim(), notes: (cf.notes || "").trim(), avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl();
+  };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
   const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstEmail = (client?.emails || []).filter(Boolean)[0]; if (!firstEmail || !String(firstEmail).includes("@")) { alert("Este cliente no tiene correo. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const redirectTo = typeof window !== "undefined" ? (window.location.origin + "/credito") : ""; const res = await darAccesoCliente(editId, { regenerate, redirect_to: redirectTo }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
@@ -1052,16 +1067,43 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     }
 
     if (openPdfWindow) {
-      const curDExp = curDDisplay || { tGar: 0, net: 0 };
+      const curDExp = curDDisplay || { tG: 0, tF: 0, tP: 0, tGar: 0, net: 0 };
       const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
       let y = 14;
       doc.setFontSize(16);
       doc.setTextColor(26, 29, 38);
-      doc.text(curC.name || "Cliente", 14, y); y += 8;
-      doc.setFontSize(10);
+      doc.text(curC.name || "Cliente", 14, y); y += 6;
+      doc.setFontSize(9);
       doc.setTextColor(95, 101, 119);
-      doc.text(`Período: ${periodoLabel} · Generado ${fmtD(td())}`, 14, y); y += 12;
+      if (curC.codigo) { doc.text("Código: " + curC.codigo, 14, y); y += 5; }
+      const phonesStr = (curC.phones || []).filter(Boolean).join(" · ");
+      if (phonesStr) { doc.text("Tel: " + phonesStr, 14, y); y += 5; }
+      const emailsStr = (curC.emails || []).filter(Boolean).join(" · ");
+      if (emailsStr) { doc.text("Correo: " + emailsStr, 14, y); y += 5; }
+      if (curC.ig) { doc.text("Instagram: " + curC.ig, 14, y); y += 5; }
+      if (curC.biz) { doc.text("Negocio: " + curC.biz, 14, y); y += 5; }
+      if (curC.notes) { doc.text("Notas: " + (curC.notes.length > 80 ? curC.notes.slice(0, 77) + "…" : curC.notes), 14, y); y += 5; }
+      y += 2;
+      doc.text(`Período: ${periodoLabel} · Generado ${fmtD(td())}`, 14, y); y += 8;
+      doc.autoTable({
+        startY: y,
+        head: [["Concepto", "Monto"]],
+        body: [
+          ["Gasto Ads", "$" + fmt(curDExp.tG || 0)],
+          ["Fees", "$" + fmt(curDExp.tF || 0)],
+          ["Total", "$" + fmt((curDExp.tG || 0) + (curDExp.tF || 0))],
+          ["Cobrado", "$" + fmt(curDExp.tP || 0)],
+          ["Garantías", curDExp.tGar > 0 ? "-$" + fmt(curDExp.tGar) : "$0"],
+          ["Deuda Neta", "$" + fmt(curDExp.net || 0)],
+        ],
+        theme: "grid",
+        headStyles: { fillColor: [248, 249, 251], textColor: [95, 101, 119], fontStyle: "bold", fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        margin: { left: 14 },
+        tableWidth: 60,
+      });
+      y = doc.lastAutoTable.finalY + 12;
 
       const addTable = (title, headers, rows) => {
         if (y > 250) { doc.addPage(); y = 14; }
@@ -1423,14 +1465,16 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)" }} />Resumen general</h2>
               <p style={{ fontSize: 13, color: "#94a3b8", margin: "4px 0 0", maxWidth: 480 }}>{dashboardPeriodo ? <>Período: <strong style={{ color: "#0f172a" }}>{fmtM(dashboardPeriodo)}</strong></> : <>Últimos 6 meses: {months[0]?.label} — {months[months.length - 1]?.label}</>}. Para análisis detallado usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#64748b" }}>Filtrar por período (mes):</span>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                <div style={{ minWidth: 100, textAlign: "center", padding: "8px 14px", background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: 10, fontSize: 13, fontWeight: 600, color: dashboardPeriodo ? "#0f172a" : "#94a3b8" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
-                <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                <input type="text" placeholder="MM/AAAA" value={dashboardPeriodo} onChange={(e) => setDashboardPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setDashboardPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setDashboardPeriodo(p); e.currentTarget.blur(); } }} style={{ width: 100, boxSizing: "border-box", padding: "8px 12px", border: "1.5px solid #e2e8f0", borderRadius: 10, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} title="MM/AAAA" />
-                {dashboardPeriodo && <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "7px 12px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#94a3b8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              <div className="hm-dashboard-periodo-tablita" style={{ display: "inline-flex", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", borderRight: "1px solid #e2e8f0", padding: "8px 14px", background: "#f8fafc", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.6 }}>Período (mes)</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={15} /></button>
+                <div style={{ minWidth: 88, textAlign: "center", padding: "6px 12px", fontSize: 12.5, fontWeight: 600, color: dashboardPeriodo ? "#0f172a" : "#94a3b8", fontFamily: "'DM Sans',sans-serif" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={15} /></button>
+                  <input type="month" value={dashboardPeriodo || tm()} onChange={(e) => { const v = e.target.value; if (v) setDashboardPeriodo(v); }} style={{ width: 118, boxSizing: "border-box", padding: "6px 10px", border: "none", borderRight: "1px solid #e2e8f0", fontFamily: "'DM Sans',sans-serif", fontSize: 12, outline: "none", background: "#fff" }} title="Elegir mes" />
+                {dashboardPeriodo ? <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "6px 12px", border: "none", background: "#f1f5f9", color: "#64748b", fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans'" }}>Todos</button> : null}
+                </div>
               </div>
               <Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>
             </div>
@@ -1603,7 +1647,28 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
+            {(() => {
+              const sinCorreoValido = clients.filter((c) => !(c.emails || []).some((e) => typeof e === "string" && e.trim().includes("@") && e.trim().length >= 5));
+              const sinTelefono = clients.filter((c) => !(c.phones || []).filter(Boolean).length);
+              const sinDatos = clients.filter((c) => !(c.name || "").trim() || !(c.codigo || "").trim() || !(c.ig || "").trim() || !(c.biz || "").trim() || !(c.notes || "").trim());
+              const hayAviso = sinCorreoValido.length > 0 || sinTelefono.length > 0 || sinDatos.length > 0;
+              return hayAviso ? (
+                <div style={{ marginBottom: 20, padding: "14px 20px", background: "linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%)", border: "1px solid #fecaca", borderRadius: 12, display: "flex", alignItems: "flex-start", gap: 12 }}>
+                  <AlertCircle size={22} style={{ color: "#dc2626", flexShrink: 0, marginTop: 2 }} />
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#991b1b", marginBottom: 6 }}>Datos incompletos en algunos clientes</div>
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#b91c1c", lineHeight: 1.6 }}>
+                      {sinCorreoValido.length > 0 && <li><strong>{sinCorreoValido.length}</strong> sin correo válido (agregá al menos uno con @)</li>}
+                      {sinTelefono.length > 0 && <li><strong>{sinTelefono.length}</strong> sin teléfono</li>}
+                      {sinDatos.length > 0 && <li><strong>{sinDatos.length}</strong> con nombre, código, Instagram, negocio o notas faltantes</li>}
+                    </ul>
+                    <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>Entrá a cada cliente y usá <strong>Editar</strong> para completar los datos. El correo es el más importante.</p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
@@ -1882,12 +1947,12 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
-        <Inp label="Código de cliente" value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Podés editarlo para identificar al cliente."} />
-        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario" /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Teléfonos / WhatsApp</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Emails</label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /></div>
-        <Inp label="Negocio" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce..." />
-        <Inp label="Notas" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional..." />
+        <Inp label={editId ? "Código de cliente *" : "Código de cliente"} value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Obligatorio al editar."} />
+        <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram *" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario o —" /></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Al menos un número.</p></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Correos * <span style={{ fontWeight: 500, color: "#dc2626" }}>(más importante)</span></label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /><p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Al menos un correo válido (con @).</p></div>
+        <Inp label="Negocio *" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce... o —" />
+        <Inp label="Notas *" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional... o —" />
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Foto de perfil</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
