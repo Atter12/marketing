@@ -264,6 +264,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   text-overflow: ellipsis;
   margin: 0;
 }
+.sidebar-wordmark-accent { color: var(--color-primary); }
 .sidebar-pro {
   font-size: 0.5rem;
   font-weight: 700;
@@ -372,7 +373,10 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   font-weight: 700;
   font-size: 0.625rem;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
 }
+.user-avatar img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .user-name { color: #0f172a; font-size: 0.75rem; font-weight: 600; }
 .user-role { color: #94a3b8; font-size: 0.625rem; }
 
@@ -1961,7 +1965,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <div class="sidebar-brand">
     <img class="sidebar-logo" src="/tareas/logo/logoh.png" alt="Holistic Marketing" style="height: 48px; width: 200px; max-width: 100%; object-fit: contain; display: block;">
     <div class="sidebar-wordmark">
-      <h1>Tareas Holistic</h1>
+      <h1>Tareas <span class="sidebar-wordmark-accent">Holistic</span></h1>
     </div>
   </div>
 
@@ -2055,8 +2059,12 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   </nav>
 
   <div class="sidebar-footer">
-    <div class="user-card" role="button" tabindex="0">
-      <div class="user-avatar" aria-hidden="true">VM</div>
+    <input type="file" id="tareasAvatarInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+    <div class="user-card user-card-avatar" role="button" tabindex="0" title="Clic para cambiar foto">
+      <div class="user-avatar" id="tareasUserAvatar" aria-hidden="true">
+        <img id="tareasUserAvatarImg" src="" alt="" style="display:none" />
+        <span id="tareasUserAvatarIniciales">VM</span>
+      </div>
       <div>
         <div class="user-name">Victor Minas</div>
         <div class="user-role">Director de Agencia</div>
@@ -4023,6 +4031,33 @@ function initViews() {
   updateDashboardStats();
 }
 
+function initTareasAvatar() {
+  var key = 'tareas_avatar_url';
+  var imgEl = document.getElementById('tareasUserAvatarImg');
+  var iniEl = document.getElementById('tareasUserAvatarIniciales');
+  var inp = document.getElementById('tareasAvatarInput');
+  if (!inp || !imgEl || !iniEl) return;
+  function applyPhoto(dataUrl) {
+    if (!dataUrl) return;
+    try { localStorage.setItem(key, dataUrl); } catch (e) {}
+    imgEl.src = dataUrl;
+    imgEl.style.display = 'block';
+    iniEl.style.display = 'none';
+  }
+  var stored = localStorage.getItem(key);
+  if (stored) { imgEl.src = stored; imgEl.style.display = 'block'; iniEl.style.display = 'none'; }
+  inp.onchange = function() {
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function() { applyPhoto(r.result); };
+    r.readAsDataURL(f);
+    this.value = '';
+  };
+  var card = document.querySelector('.sidebar-footer .user-card-avatar');
+  if (card) card.addEventListener('click', function() { inp.click(); });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   if (supabase) {
     showTareasLoading(true);
@@ -4038,13 +4073,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       showTareasLoading(false);
       initViews();
+      initTareasAvatar();
     }).catch(function(err) {
       console.error('[Tareas] Error cargando datos:', err);
       showTareasLoading(false);
       initViews();
+      initTareasAvatar();
     });
   } else {
     initViews();
+    initTareasAvatar();
   }
 });
 </script>

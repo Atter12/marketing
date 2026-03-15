@@ -258,7 +258,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const isCliente = role === "cliente";
   const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
   const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
+  const [localGerenteAvatarUrl, setLocalGerenteAvatarUrl] = useState(() => { try { if (typeof window === "undefined") return ""; return localStorage.getItem("hm_gerente_avatar_url") || ""; } catch { return ""; } });
   const [uploadingGerenteAvatar, setUploadingGerenteAvatar] = useState(false);
+  const avatarInputRef = useRef(null);
   const [savingAcceso, setSavingAcceso] = useState(false);
   const [accesoResultado, setAccesoResultado] = useState(null);
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (gerenteNombre.trim() || (userEmail ? (userEmail.split("@")[0] || userEmail) : "") || "Gerente");
@@ -1301,7 +1303,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, color: "#0f172a", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
         {!isCliente && (
           <div style={{ flexShrink: 0 }}>
-            <Av name={displayName} size={36} avatarUrl={gerenteAvatarUrl} />
+            <Av name={displayName} size={36} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
           </div>
         )}
         {isCliente && clients[0] && (
@@ -1317,12 +1319,37 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f5f3ff 100%)", margin: "18px -22px 0", padding: "18px 20px", borderRadius: 14, boxShadow: "0 2px 12px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8)" }}>
+          <div
+            role={!isCliente ? "button" : undefined}
+            tabIndex={!isCliente ? 0 : undefined}
+            onClick={!isCliente ? () => avatarInputRef.current?.click() : undefined}
+            onKeyDown={!isCliente ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avatarInputRef.current?.click(); } } : undefined}
+            style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f5f3ff 100%)", margin: "18px -22px 0", padding: "18px 20px", borderRadius: 14, boxShadow: "0 2px 12px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8)", cursor: !isCliente ? "pointer" : undefined }}
+            title={!isCliente ? "Clic para cambiar foto" : undefined}
+          >
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (!f || isCliente) return;
+                const r = new FileReader();
+                r.onload = () => {
+                  const dataUrl = r.result;
+                  try { localStorage.setItem("hm_gerente_avatar_url", dataUrl); } catch (_) {}
+                  setLocalGerenteAvatarUrl(dataUrl);
+                };
+                r.readAsDataURL(f);
+                e.target.value = "";
+              }}
+            />
             <div style={{ position: "relative", flexShrink: 0 }}>
               {isCliente ? (
                 <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
               ) : (
-                <Av name={displayName} size={48} avatarUrl={gerenteAvatarUrl} />
+                <Av name={displayName} size={48} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
               )}
               <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
             </div>
