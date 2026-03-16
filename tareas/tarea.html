@@ -2901,18 +2901,15 @@ renderers.kanban = function(snapshot) {
   if (items.length === 0) {
     _kanbanLog('renderers.kanban: items.length=0, pintando tablero vacío');
   }
-  board.innerHTML = '';
   const cols = [
     {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
     {k:'progress',l:'En Progreso',d:'var(--color-primary)'},
     {k:'review',l:'En Revisión',d:'var(--orange2)'},
     {k:'done',l:'Completado',d:'var(--green)'}
   ];
+  var fullHtml = '';
   cols.forEach(col => {
     const tasks = items.filter(t => t && t.col === col.k);
-    const colEl = document.createElement('div');
-    colEl.className = 'kanban-col';
-    colEl.dataset.col = col.k;
     const cardsHtml = tasks.map(t => {
       const avsHtml = (t.tm || []).map(id => makeAvatar(id, 16)).join('');
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
@@ -2935,7 +2932,7 @@ renderers.kanban = function(snapshot) {
           <div class="card-subtasks">☑ ${t.sb} subtareas</div>
         </article>`;
     }).join('');
-    colEl.innerHTML = `
+    fullHtml += `<div class="kanban-col" data-col="${col.k}">
       <div class="kanban-col-header">
         <div class="kanban-col-title">
           <div class="col-dot" style="background:${col.d}"></div>
@@ -2944,9 +2941,10 @@ renderers.kanban = function(snapshot) {
         </div>
         ${col.k !== 'done' ? `<button class="col-add" onclick="openModal('task')" title="Agregar entregable" aria-label="Agregar entregable a ${col.l}">+</button>` : ''}
       </div>
-      <div class="kanban-cards">${cardsHtml}</div>`;
-    board.appendChild(colEl);
+      <div class="kanban-cards">${cardsHtml}</div>
+    </div>`;
   });
+  board.innerHTML = fullHtml;
   _kanbanLog('renderers.kanban SALIDA', { totalCards: items.length, columnas: cols.length });
   initKanbanDrag();
 };
