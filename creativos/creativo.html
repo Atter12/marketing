@@ -645,6 +645,13 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .file-item .file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-item .file-remove { color: var(--color-text-faint); cursor: pointer; }
 .file-item .file-remove:hover { color: var(--color-error); }
+.upload-zone-pro { min-height: 120px; padding: var(--space-8); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2); }
+.upload-zone-pro .upload-zone-icon { width: 48px; height: 48px; color: var(--color-primary); opacity: 0.9; }
+.upload-zone-pro .upload-zone-icon svg { width: 100%; height: 100%; }
+.upload-zone-pro .upload-zone-title { font-size: var(--text-base); font-weight: 600; margin: 0; }
+.file-list-pro { margin-top: var(--space-3); border: 1px solid var(--color-divider); border-radius: var(--radius-md); overflow: hidden; }
+.file-list-pro .file-item { border-bottom: 1px solid var(--color-divider); }
+.file-list-pro .file-item:last-child { border-bottom: none; }
 
 /* ============================================
    DRAWER (slide-in from right)
@@ -1316,10 +1323,6 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
         Analíticas
       </button>
-      <button class="nav-item" data-page="portfolio" onclick="navigateTo('portfolio')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="m10 8 6 4-6 4z"/></svg>
-        Portafolio
-      </button>
     </nav>
     <div class="sidebar-footer">
       <input type="file" id="creativosAvatarInput" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
@@ -1382,6 +1385,7 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   </div>
   <div class="drawer-body" id="drawerBody"></div>
 </div>
+<input type="file" id="deliverableFileInput" style="display:none" data-pid="" data-stage="" onchange="onDeliverableFileSelect(this)">
 
 <!-- MODAL for create/edit forms -->
 <div class="modal-overlay" id="modalOverlay">
@@ -1512,7 +1516,7 @@ function timeAgo(iso) {
 
 function createStageData() {
   const s = {};
-  STAGES.forEach(st => { s[st] = { status:'pending', files:[], note:'', notes:[], reviewer:'', reviewNote:'', reviewedAt:null }; });
+  STAGES.forEach(st => { s[st] = { status:'pending', files:[], note:'', notes:[], reviewer:'', reviewNote:'', reviewedAt:null, deliverables:[] }; });
   return s;
 }
 
@@ -1731,17 +1735,14 @@ function seedData() {
    NAVIGATION
    ============================================ */
 function navigateTo(page) {
-  if (page === 'portfolio') {
-    window.location.hash = 'portfolio';
-    return;
-  }
+  if (page === 'portfolio') { page = 'dashboard'; }
   window.location.hash = '';
   currentPage = page;
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.toggle('active', n.dataset.page === page);
   });
 
-  const titles = { dashboard:'Panel', pipeline:'Pipeline', projects:'Proyectos', clients:'Clientes', products:'Productos', editors:'Editores', analytics:'Analíticas', portfolio:'Portafolio' };
+  const titles = { dashboard:'Panel', pipeline:'Pipeline', projects:'Proyectos', clients:'Clientes', products:'Productos', editors:'Editores', analytics:'Analíticas' };
   document.getElementById('headerTitle').textContent = titles[page] || 'Panel';
 
   // Show skeleton briefly
@@ -2527,6 +2528,7 @@ function openProjectDrawer(id) {
             ${renderStageNotes(p, stage)}
             ${s.reviewer ? `<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-1);">Revisado por: ${esc(s.reviewer)} ${s.reviewedAt ? '· ' + formatDate(s.reviewedAt) : ''}</div>` : ''}
             ${s.reviewNote ? `<div class="stage-details" style="border-left:3px solid var(--color-warning);margin-top:var(--space-1);"><p><strong>Feedback:</strong> ${esc(s.reviewNote)}</p></div>` : ''}
+            ${['produccion','revision','entrega'].indexOf(stage) >= 0 ? renderDeliverablesSection(p, stage) : ''}
             ${s.files && s.files.length > 0 ? `<div class="file-list" style="margin-top:var(--space-2);">${s.files.map(f => `<div class="file-item"><span class="file-name">${esc(f)}</span></div>`).join('')}</div>` : ''}
             <div class="stage-actions" id="stageActions_${stage}_${p.id}">
               ${renderStageActions(p, stage, idx)}
@@ -2560,6 +2562,39 @@ function renderStageNotes(p, stage) {
   html += '</div>';
   return html;
 }
+function renderDeliverablesSection(p, stage) {
+  const s = p.stages[stage];
+  const list = s.deliverables || [];
+  let html = '<div class="deliverables-section" style="margin-top:var(--space-3);padding:var(--space-3);background:var(--color-surface-offset);border-radius:var(--radius-md);">';
+  html += '<div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-2);">Entregables</div>';
+  if (list.length === 0) {
+    html += '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2);">Aún no hay versiones subidas.</p>';
+  } else {
+    list.forEach(function(d) {
+      const upAt = d.uploadedAt ? (formatDate(d.uploadedAt) + ' ' + new Date(d.uploadedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })) : '';
+      html += '<div class="deliverable-version" style="margin-bottom:var(--space-2);padding:var(--space-2);background:var(--color-surface);border-radius:var(--radius-sm);border:1px solid var(--color-divider);">';
+      html += '<div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;">';
+      html += '<span class="badge badge-teal">Versión ' + (d.version || list.indexOf(d)+1) + '</span>';
+      html += '<span class="file-name" style="font-size:var(--text-sm);">' + esc(d.fileName || 'Archivo') + '</span>';
+      if (d.fileSize) html += '<span style="font-size:var(--text-xs);color:var(--color-text-muted);">' + (d.fileSize < 1024 ? d.fileSize + ' B' : (d.fileSize < 1048576 ? (d.fileSize/1024).toFixed(1) + ' KB' : (d.fileSize/1048576).toFixed(1) + ' MB')) + '</span>';
+      html += '</div>';
+      html += '<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-1);">Subido por ' + esc(d.uploadedBy || '—') + ' · ' + upAt + '</div>';
+      if (d.rejectedBy || d.rejectionNote) {
+        html += '<div style="font-size:var(--text-xs);color:var(--color-warning);margin-top:var(--space-1);border-left:3px solid var(--color-warning);padding-left:var(--space-2);">Rechazado por ' + esc(d.rejectedBy || '—') + (d.rejectedAt ? ' · ' + formatDate(d.rejectedAt) + ' ' + new Date(d.rejectedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '') + (d.rejectionNote ? ' — ' + esc(d.rejectionNote) : '') + '</div>';
+      }
+      if (d.filePath && supabase) {
+        var idx = list.indexOf(d);
+        html += '<a href="#" onclick="event.preventDefault();downloadDeliverableByIndex(\'' + p.id + '\',\'' + stage + '\',' + idx + ')" style="font-size:var(--text-xs);color:var(--color-primary);margin-top:var(--space-1);display:inline-block;">Descargar</a>';
+      }
+      html += '</div>';
+    });
+  }
+  if (s.status !== 'pending' && s.status !== 'approved') {
+    html += '<button type="button" class="btn btn-sm btn-primary" style="margin-top:var(--space-2);" onclick="document.getElementById(\'deliverableFileInput\').setAttribute(\'data-pid\',\'' + p.id + '\');document.getElementById(\'deliverableFileInput\').setAttribute(\'data-stage\',\'' + stage + '\');document.getElementById(\'deliverableFileInput\').click();">Subir versión</button>';
+  }
+  html += '</div>';
+  return html;
+}
 function toggleNoteInput(noteId) {
   const addEl = document.getElementById('noteAdd_' + noteId);
   if (!addEl) return;
@@ -2587,6 +2622,58 @@ function backToEditGuion(pid) {
   p.stages.guion.status = 'in_progress';
   showToast('info', 'Puedes editar el guión de nuevo. Guarda y reenvía cuando termines.');
   if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); renderPage(currentPage); }
+}
+function onDeliverableFileSelect(inp) {
+  var pid = inp.getAttribute('data-pid');
+  var stage = inp.getAttribute('data-stage');
+  if (!pid || !stage) return;
+  var f = inp.files && inp.files[0];
+  if (!f) return;
+  uploadDeliverableVersion(pid, stage, f);
+  inp.value = '';
+  inp.removeAttribute('data-pid');
+  inp.removeAttribute('data-stage');
+}
+function uploadDeliverableVersion(pid, stage, file) {
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p) return;
+  if (!p.stages[stage].deliverables) p.stages[stage].deliverables = [];
+  var version = p.stages[stage].deliverables.length + 1;
+  var fileName = file.name || 'archivo';
+  var uploadedAt = new Date().toISOString();
+  var uploadedBy = getCurrentUserName();
+  var fileSize = file.size || 0;
+  var filePath = null;
+  if (supabase && typeof supabase.storage !== 'undefined') {
+    var path = pid + '/' + stage + '/v' + version + '_' + fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    supabase.storage.from('creativos_entregables').upload(path, file, { upsert: false }).then(function(r) {
+      if (!r.error) filePath = path;
+      pushDeliverableAndSave(pid, stage, { version: version, fileName: fileName, filePath: filePath, fileSize: fileSize, uploadedAt: uploadedAt, uploadedBy: uploadedBy });
+    }).catch(function() {
+      pushDeliverableAndSave(pid, stage, { version: version, fileName: fileName, filePath: null, fileSize: fileSize, uploadedAt: uploadedAt, uploadedBy: uploadedBy });
+    });
+  } else {
+    pushDeliverableAndSave(pid, stage, { version: version, fileName: fileName, filePath: null, fileSize: fileSize, uploadedAt: uploadedAt, uploadedBy: uploadedBy });
+  }
+}
+function pushDeliverableAndSave(pid, stage, obj) {
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p) return;
+  p.stages[stage].deliverables.push(obj);
+  showToast('success', 'Versión ' + obj.version + ' registrada');
+  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); renderPage(currentPage); }
+  openProjectDrawer(pid);
+  renderPage(currentPage);
+}
+function downloadDeliverableByIndex(pid, stage, index) {
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p || !supabase) return;
+  var d = (p.stages[stage].deliverables || [])[index];
+  if (!d || !d.filePath) { showToast('error', 'Archivo no disponible'); return; }
+  supabase.storage.from('creativos_entregables').createSignedUrl(d.filePath, 60).then(function(r) {
+    if (r.data && r.data.signedUrl) window.open(r.data.signedUrl);
+    else showToast('error', 'No se pudo generar el enlace');
+  });
 }
 function renderStageActions(p, stage, stageIdx) {
   const s = p.stages[stage];
@@ -2664,6 +2751,13 @@ function requestChanges(pid, stage) {
   p.stages[stage].status = 'changes';
   p.stages[stage].reviewNote = note;
   p.stages[stage].reviewedAt = new Date().toISOString();
+  var dels = p.stages[stage].deliverables;
+  if (dels && dels.length > 0) {
+    var last = dels[dels.length - 1];
+    last.rejectedBy = getCurrentUserName();
+    last.rejectedAt = new Date().toISOString();
+    last.rejectionNote = note;
+  }
   logActivity('changes', p.name, STAGE_NAMES[stage]);
   showToast('warning', 'Cambios solicitados');
   if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
@@ -2751,19 +2845,19 @@ function openNewProjectModal() {
       <div class="form-group"><label class="form-label">Formato</label><select class="form-select" id="projFormat">${FORMATS.map(f=>`<option>${f}</option>`).join('')}</select></div>
     </div>
     <div class="form-group"><label class="form-label">Editor</label><select class="form-select" id="projEditor"><option value="">Seleccionar...</option>${D.editors.map(e=>`<option value="${e.id}">${esc(e.name)} — ${esc(e.specialty)}</option>`).join('')}</select></div>
-    <div class="form-group"><label class="form-label">Brief / Descripción</label><textarea class="form-textarea" id="projBrief" placeholder="Describe el concepto creativo, objetivos y requisitos..."></textarea></div>
+    <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="5" placeholder="Guión, brief, objetivos y requisitos del video..."></textarea></div>
     <div class="form-group">
-      <label class="form-label">Archivos de Inspiración</label>
-      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click();"
+      <label class="form-label">Archivos de inspiración / referencia</label>
+      <div class="upload-zone upload-zone-pro" id="uploadZone" onclick="document.getElementById('fileInput').click();"
         ondragover="event.preventDefault();this.classList.add('dragover');"
         ondragleave="this.classList.remove('dragover');"
         ondrop="event.preventDefault();this.classList.remove('dragover');handleFileDrop(event);">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-        <div class="upload-hint">Imágenes, videos o documentos de referencia</div>
+        <div class="upload-zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <p class="upload-zone-title">Arrastra archivos aquí o haz clic para seleccionar</p>
+        <div class="upload-hint">Imágenes, videos o documentos de referencia (se listan abajo)</div>
       </div>
       <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFileSelect(this.files)">
-      <div class="file-list" id="fileList"></div>
+      <div class="file-list file-list-pro" id="fileList"></div>
     </div>
   `;
   const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProject()">Crear Proyecto</button>`;
@@ -3057,14 +3151,14 @@ function saveEditor() {
   if (supabase) {
     if (editingId) {
       supabase.from('creativos_editores').update({ name: name, specialty: specialty, email: email || null }).eq('id', editingId).then(function(r) {
-        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        if (r.error) { showToast('error', (r.error.message || 'Error al guardar') + '. Si no puedes editar, verifica permisos de gerente.'); return; }
         showToast('success', 'Editor actualizado');
         closeModal();
         reloadCreativosData(function() { renderPage(currentPage); });
       });
     } else {
       supabase.from('creativos_editores').insert({ name: name, specialty: specialty, email: email || null }).then(function(r) {
-        if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
+        if (r.error) { showToast('error', (r.error.message || 'Error al agregar') + '. Si no puedes agregar editores, verifica que tu usuario tenga permisos de gerente.'); return; }
         showToast('success', 'Editor agregado');
         closeModal();
         reloadCreativosData(function() { renderPage(currentPage); });
@@ -3370,13 +3464,15 @@ document.addEventListener('keydown', function(e) {
    HASH ROUTING
    ============================================ */
 function handleHash() {
-  const hash = window.location.hash.replace('#','');
+  const hash = (window.location.hash || '').replace('#','');
   if (hash === 'portfolio') {
-    renderPortfolioPage();
-  } else {
-    document.getElementById('portfolioPage').style.display = 'none';
-    document.getElementById('dashboardApp').style.display = 'grid';
-    document.getElementById('mobileHamburger').style.display = '';
+    window.location.hash = '';
+  }
+  document.getElementById('portfolioPage').style.display = 'none';
+  document.getElementById('dashboardApp').style.display = 'grid';
+  document.getElementById('mobileHamburger').style.display = '';
+  if (hash === '' || !hash) {
+    navigateTo('dashboard');
   }
 }
 window.addEventListener('hashchange', handleHash);
@@ -3387,7 +3483,7 @@ window.addEventListener('hashchange', handleHash);
 function initApp() {
   activityLog = [];
   handleHash();
-  if (window.location.hash !== '#portfolio') navigateTo('dashboard');
+  navigateTo('dashboard');
 }
 function doCreativosInitialLoad() {
   if (!supabase) return;
