@@ -844,57 +844,57 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 ══════════════════════════════════════════════ */
 .clients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--sp-5);
 }
 .client-card {
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
-  border-radius: var(--r-xl);
+  border-radius: var(--r-lg);
   overflow: hidden;
   transition: box-shadow var(--tr);
 }
 .client-card:hover { box-shadow: var(--shadow-md); }
 .client-header {
-  padding: var(--sp-4);
+  padding: var(--sp-3);
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  gap: var(--sp-2);
   border-bottom: 1px solid var(--color-divider);
 }
 .client-avatar {
-  width: 42px; height: 42px;
-  border-radius: var(--r-lg);
+  width: 36px; height: 36px;
+  border-radius: var(--r-md);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   color: #fff;
-  font-size: 1rem;
+  font-size: 0.875rem;
   flex-shrink: 0;
 }
 .client-name {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
   font-family: var(--font-display);
 }
-.client-type { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
-.client-body { padding: var(--sp-4); }
+.client-type { font-size: 0.6875rem; color: var(--color-text-muted); margin-top: 1px; }
+.client-body { padding: var(--sp-3); }
 .client-phase {
   display: flex;
-  gap: 3px;
-  margin-bottom: var(--sp-4);
+  gap: 2px;
+  margin-bottom: var(--sp-3);
 }
 .phase-item {
   flex: 1;
   min-width: 0;
   text-align: center;
-  padding: var(--sp-1) var(--sp-1);
+  padding: var(--sp-1);
   border-radius: var(--r-sm);
-  font-size: 0.5625rem;
+  font-size: 0.5rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -902,59 +902,20 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .phase-done { background: var(--green-bg); color: var(--green); }
 .phase-curr { background: var(--color-primary-highlight); color: var(--color-primary); box-shadow: 0 0 0 1.5px var(--color-primary); }
 .phase-pend { background: var(--color-surface-offset); color: var(--color-text-faint); }
-.client-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
-}
-.metric-item {
-  text-align: center;
-  padding: var(--sp-2) var(--sp-1);
-  background: var(--color-surface-2);
-  border-radius: var(--r-md);
-}
-.metric-num {
-  font-size: var(--text-lg);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.metric-lbl { font-size: 0.5rem; color: var(--color-text-faint); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 1px; }
-.health-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-md);
-  margin-bottom: var(--sp-3);
-}
-.health-ring {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: #fff;
-  flex-shrink: 0;
-}
-.health-info h5 { font-size: var(--text-xs); font-weight: 600; margin-bottom: 1px; }
-.health-info p  { font-size: 0.625rem; color: var(--color-text-muted); }
 .client-contacts {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
 }
 .contact-item {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
   background: var(--color-surface-2);
   border-radius: var(--r-md);
-  font-size: 0.6875rem;
+  font-size: 0.625rem;
   color: var(--color-text-muted);
   min-width: 0;
 }
@@ -964,7 +925,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   border: 1px solid rgba(234,88,12,0.15);
   border-radius: var(--r-md);
   padding: var(--sp-2) var(--sp-3);
-  margin-bottom: var(--sp-3);
+  margin-bottom: var(--sp-2);
 }
 .next-action h5 {
   font-size: 0.5625rem;
@@ -975,20 +936,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   margin-bottom: 3px;
 }
 .next-action p { font-size: var(--text-sm); font-weight: 500; }
-.client-notes {
-  font-size: 0.6875rem;
-  color: var(--color-text-muted);
-  background: var(--color-surface-2);
-  border-radius: var(--r-md);
-  padding: var(--sp-2) var(--sp-3);
-  margin-bottom: var(--sp-3);
-  line-height: 1.5;
-}
 .client-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--sp-3);
+  padding-top: var(--sp-2);
   border-top: 1px solid var(--color-divider);
 }
 .team-avatars { display: flex; }
@@ -2839,17 +2791,12 @@ renderers.clients = function() {
   const grid = document.getElementById('clientsGrid');
   grid.innerHTML = '';
   clients.forEach((c, ci) => {
-    const pct = c.entregables > 0 ? Math.round(c.done / c.entregables * 100) : 0;
-    const healthNum = c.health != null ? Number(c.health) : 50;
     const satNum = c.satisfaction != null ? Number(c.satisfaction) : null;
-    const hcl = healthNum >= 90 ? 'var(--green)' : healthNum >= 75 ? 'var(--color-primary)' : 'var(--red)';
-    const hbg = healthNum >= 90 ? 'var(--green-bg)' : healthNum >= 75 ? 'var(--color-primary-highlight)' : 'var(--red-bg)';
     const svcHtml = c.svcs.map(s => `<span class="service-tag ${s}" style="margin-left:2px">${svcNames[s]||s}</span>`).join('');
     const teamHtml = c.team.map(id => makeAvatar(id, 24)).join('');
     const phasesHtml = c.phases.map((p,i) => `<div class="phase-item ${i<c.curr?'phase-done':i===c.curr?'phase-curr':'phase-pend'}" title="${p}">${p}</div>`).join('');
     const satPill = satNum != null && satNum >= 95 ? 'pill-green' : satNum != null && satNum >= 85 ? 'pill-orange' : 'pill-orange2';
     const satLabel = satNum != null ? (satNum + '%') : '—';
-    const healthLabel = c.healthTxt && c.healthTxt.trim() ? c.healthTxt : (healthNum === 50 ? 'Sincronizado desde Crédito' : '—');
 
     const card = document.createElement('article');
     card.className = 'client-card fade-in';
@@ -2864,20 +2811,7 @@ renderers.clients = function() {
         <span class="pill ${satPill}" title="Satisfacción">${satLabel}</span>
       </div>
       <div class="client-body">
-        <div class="health-bar" style="background:${hbg}">
-          <div class="health-ring" style="background:${hcl}" aria-label="Health score ${healthNum}">${healthNum}</div>
-          <div class="health-info">
-            <h5 style="color:${hcl}">Health Score</h5>
-            <p>${healthLabel}</p>
-          </div>
-        </div>
         <div class="client-phase" role="list" aria-label="Fases del proyecto">${phasesHtml}</div>
-        <div class="client-metrics">
-          <div class="metric-item"><div class="metric-num" style="font-variant-numeric:tabular-nums">${c.entregables}</div><div class="metric-lbl">Entregables</div></div>
-          <div class="metric-item"><div class="metric-num" style="color:var(--green);font-variant-numeric:tabular-nums">${pct}%</div><div class="metric-lbl">Avance</div></div>
-          <div class="metric-item"><div class="metric-num" style="color:${c.tickets>0?'var(--orange2)':'var(--color-text-faint)'};font-variant-numeric:tabular-nums">${c.tickets}</div><div class="metric-lbl">Tickets</div></div>
-          <div class="metric-item"><div class="metric-num" style="font-variant-numeric:tabular-nums">${c.meetings}</div><div class="metric-lbl">Reuniones</div></div>
-        </div>
         <div class="client-contacts">
           <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>${c.contact || '—'}</span></div>
           <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${c.email || '—'}</span></div>
@@ -2887,10 +2821,6 @@ renderers.clients = function() {
         <div class="next-action">
           <h5>📌 Próxima Acción</h5>
           <p>${c.nextAction || '—'}</p>
-        </div>
-        <div class="client-notes">📝 <strong>Notas:</strong> ${c.notes || '—'}</div>
-        <div style="font-size:0.625rem;color:var(--color-text-faint);margin-bottom:var(--sp-3)">
-          📄 Contrato: ${c.contractStart || '—'} — ${c.contractEnd || '—'} · Mensual: ${c.monthlyFee || '—'}
         </div>
         <div class="client-footer">
           <div class="team-avatars" aria-label="Equipo asignado">${teamHtml}</div>
@@ -3539,10 +3469,7 @@ function openClientDetail(idx) {
   if (!c) return;
   const relTk  = tickets.filter(tk => tk.client === c.n);
   const relDel = KT.filter(k => k.cl === c.n);
-  const healthNum = c.health != null ? Number(c.health) : 50;
   const satNum = c.satisfaction != null ? Number(c.satisfaction) : null;
-  const hcl = healthNum >= 90 ? 'var(--green)' : healthNum >= 75 ? 'var(--color-primary)' : 'var(--red)';
-  const healthLabel = healthNum >= 90 ? 'Excelente' : healthNum >= 75 ? 'Buena' : 'Alerta';
   const satLabel = satNum != null ? (satNum + '%') : '—';
 
   document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
@@ -3552,17 +3479,13 @@ function openClientDetail(idx) {
       <div><div style="font-size:var(--text-xl);font-weight:700">${c.n || '—'}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp || ''} · ${c.contact || ''} · ${c.email || ''}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
-      <div class="info-item"><div class="lbl">Health Score</div><div class="val" style="color:${hcl}">● ${healthNum}/100 — ${healthLabel}</div></div>
-      <div class="info-item"><div class="lbl">Contrato</div><div class="val">${c.contractStart || '—'} → ${c.contractEnd || '—'}</div></div>
       <div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>
       <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${satLabel}</div></div>
     </div>
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
     ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
-    ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}
-    <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📝 Notas Internas</div>
-    <div style="padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);font-size:var(--text-sm)">${c.notes||'Sin notas'}</div>`;
+    ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
   if (c.id) footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button><button class="btn-primary" style="background:var(--red);border-color:var(--red)" onclick="deleteClient(\'' + c.id + '\')">Eliminar</button>';
   document.getElementById('modalFooter').innerHTML = footerBtns;
