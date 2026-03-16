@@ -752,6 +752,11 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   border-bottom: 1px solid var(--color-divider);
   flex-shrink: 0;
 }
+.kanban-col-header-clickable { cursor: pointer; }
+.kanban-col-header-clickable:hover { background: var(--color-surface-hover, rgba(0,0,0,.04)); }
+.kanban-col-has-note, .kanban-col-note-hint { font-size: 0.75rem; opacity: 0.8; margin-left: auto; }
+.kanban-col-empty { cursor: pointer; text-align: center; padding: var(--space-6); color: var(--color-text-faint); font-size: var(--text-xs); min-height: 4rem; display: flex; align-items: center; justify-content: center; }
+.kanban-col-empty:hover { color: var(--color-text-muted); background: var(--color-surface-hover, rgba(0,0,0,.02)); }
 .kanban-col-count {
   background: var(--color-surface-dynamic); color: var(--color-text-muted);
   font-size: 0.65rem; padding: 1px 7px; border-radius: var(--radius-full);
@@ -1403,6 +1408,21 @@ if (typeof window !== 'undefined') tryInitSupabaseCreativos(0);
 
 const STAGES = ['inspiracion','guion','produccion','revision','entrega'];
 const STAGE_NAMES = { inspiracion:'Inspiración', guion:'Guión', produccion:'Producción', revision:'Revisión', entrega:'Entrega Final' };
+const PIPELINE_NOTES_KEY = 'creativos_pipeline_stage_notes';
+function getPipelineStageNotes() {
+  try {
+    var raw = localStorage.getItem(PIPELINE_NOTES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function getPipelineStageNote(stage) {
+  return (getPipelineStageNotes()[stage] || '').trim();
+}
+function setPipelineStageNote(stage, text) {
+  var o = getPipelineStageNotes();
+  o[stage] = (text || '').trim();
+  try { localStorage.setItem(PIPELINE_NOTES_KEY, JSON.stringify(o)); } catch (e) {}
+}
 const STAGE_STATUSES = { pending:'Pendiente', in_progress:'En Progreso', in_review:'En Revisión', approved:'Aprobado', changes:'Cambios Solicitados' };
 const CPA_LABELS = { pendiente:'Pendiente', muy_bueno:'Muy Bueno', bueno:'Bueno', malo:'Malo' };
 const CPA_BADGES = { pendiente:'badge-muted', muy_bueno:'badge-green', bueno:'badge-blue', malo:'badge-red' };
@@ -1867,9 +1887,10 @@ function renderPipeline() {
         if (fClient) stageProjects = stageProjects.filter(p => p.clientId === fClient);
 
         return `<div class="kanban-column" data-stage="${stage}">
-          <div class="kanban-col-header">
+          <div class="kanban-col-header kanban-col-header-clickable" title="Clic para ver o agregar nota de etapa">
             ${STAGE_NAMES[stage]}
             <span class="kanban-col-count">${stageProjects.length}</span>
+            ${getPipelineStageNote(stage) ? '<span class="kanban-col-has-note" title="Hay una nota">📝</span>' : '<span class="kanban-col-note-hint" title="Clic para agregar nota">＋</span>'}
           </div>
           <div class="kanban-col-body">
             ${stageProjects.length > 0 ? stageProjects.map(p => {
@@ -1896,7 +1917,7 @@ function renderPipeline() {
                   <div class="kanban-card-date">${timeAgo(p.createdAt)}</div>
                 </div>
               </div>`;
-            }).join('') : `<div style="text-align:center;padding:var(--space-6);color:var(--color-text-faint);font-size:var(--text-xs);">Sin proyectos</div>`}
+            }).join('') : `<div class="kanban-col-empty" title="Clic para ver o agregar nota de etapa">Sin proyectos</div>`}
           </div>
         </div>`;
       }).join('')}
@@ -1986,15 +2007,22 @@ function initPipelineDrag() {
   }
   board.addEventListener('click', function(e) {
     var card = e.target.closest('.kanban-card');
-    if (!card) return;
-    if (window._pipelineJustDropped) {
-      window._pipelineJustDropped = false;
-      e.preventDefault();
-      e.stopPropagation();
+    if (card) {
+      if (window._pipelineJustDropped) {
+        window._pipelineJustDropped = false;
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      var id = card.getAttribute('data-project-id');
+      if (id) openProjectDrawer(id);
       return;
     }
-    var id = card.getAttribute('data-project-id');
-    if (id) openProjectDrawer(id);
+    var col = e.target.closest('.kanban-column');
+    if (col) {
+      var stage = (col.getAttribute('data-stage') || '').trim();
+      if (stage && STAGES.indexOf(stage) >= 0) openStageNoteModal(stage);
+    }
   });
 }
 
@@ -2616,6 +2644,25 @@ function togglePublish(pid, checked) {
 /* ============================================
    MODALS: Create/Edit
    ============================================ */
+function openStageNoteModal(stage) {
+  var stageName = STAGE_NAMES[stage] || stage;
+  var current = getPipelineStageNote(stage) || '';
+  var body = '<div class="form-group"><label class="form-label">Nota para ' + esc(stageName) + '</label><textarea class="form-textarea" id="stageNoteText" rows="4" placeholder="Ej: recordatorios, criterios para esta etapa...">' + esc(current) + '</textarea></div>';
+  var footer = '<button class="btn btn-secondary" onclick="closeModal()">Cerrar</button><button class="btn btn-primary" onclick="saveStageNoteAndClose(\'' + stage + '\')">Guardar</button>';
+  openModal('Nota de etapa: ' + stageName, body, footer);
+  setTimeout(function() {
+    var t = document.getElementById('stageNoteText');
+    if (t) t.focus();
+  }, 100);
+}
+function saveStageNoteAndClose(stage) {
+  var t = document.getElementById('stageNoteText');
+  var text = t ? t.value : '';
+  setPipelineStageNote(stage, text);
+  closeModal();
+  showToast('success', 'Nota guardada');
+  renderPage('pipeline');
+}
 function openModal(title, bodyHtml, footerHtml) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = bodyHtml;
