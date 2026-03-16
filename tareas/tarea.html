@@ -2722,11 +2722,7 @@ function reloadTareasData(thenRender) {
       if (data.KT && data.KT.length > 0) {
         KT = data.KT;
       } else if (!data.KT || data.KT.length === 0) {
-        if (KT.length > 0) {
-          console.log('[Tareas Kanban] reload: ignorando KT vacío para no perder datos en pantalla. KT.length actual=', KT.length);
-        } else {
-          KT = data.KT || [];
-        }
+        if (KT.length === 0) KT = data.KT || [];
       } else {
         KT = data.KT || [];
       }
@@ -2877,12 +2873,8 @@ function filterClients(status, btn) {
 // ─── KANBAN ───
 renderers.kanban = function(snapshot) {
   const board = document.getElementById('kanbanBoard');
-  if (!board) {
-    console.warn('[Tareas Kanban] render: board no encontrado');
-    return;
-  }
+  if (!board) return;
   var items = Array.isArray(snapshot) ? snapshot.slice() : (Array.isArray(KT) ? KT.slice() : []);
-  console.log('[Tareas Kanban] render items.length=', items.length);
   board.innerHTML = '';
   const cols = [
     {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
@@ -3002,18 +2994,13 @@ function initKanbanDrag() {
 }
 
 function moveKanbanCard(cardId, newColumna) {
-  console.log('[Tareas Kanban] moveKanbanCard', { cardId: cardId, newColumna: newColumna, KT_length: KT && KT.length });
   if (!cardId || !newColumna) return;
   var idStr = String(cardId);
   var card = KT.find(function(k){ return k && String(k.id) === idStr; });
-  if (!card) {
-    console.warn('[Tareas Kanban] Card no encontrada en KT', { cardId: cardId, idStr: idStr, ids: KT && KT.map(function(k){ return k && k.id; }) });
-    return;
-  }
+  if (!card) return;
   var prevCol = card.col;
   card.col = newColumna;
   var snapshot = Array.isArray(KT) ? KT.slice() : [];
-  console.log('[Tareas Kanban] Card actualizada, snapshot length=', snapshot.length);
   var board = document.getElementById('kanbanBoard');
   if (board && snapshot.length > 0) {
     renderers.kanban(snapshot);
@@ -3022,7 +3009,6 @@ function moveKanbanCard(cardId, newColumna) {
   if (supabase) {
     supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
       if (r.error) {
-        console.warn('[Tareas Kanban] Error Supabase al mover', r.error);
         card.col = prevCol;
         if (board) { renderers.kanban(); updateBadges(); }
         alert('Error al mover: ' + (r.error.message||''));
