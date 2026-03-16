@@ -2719,7 +2719,13 @@ function reloadTareasData(thenRender) {
       TEAM = data.TEAM;
       MT = data.MT;
       clients = data.clients;
-      KT = data.KT;
+      if (data.KT && data.KT.length > 0) {
+        KT = data.KT;
+      } else if (!data.KT || data.KT.length === 0) {
+        if (KT.length === 0) KT = data.KT || [];
+      } else {
+        KT = data.KT || [];
+      }
       tickets = data.tickets;
       workflows = data.workflows;
       calI = data.calI;
@@ -2867,6 +2873,8 @@ function filterClients(status, btn) {
 // ─── KANBAN ───
 renderers.kanban = function() {
   const board = document.getElementById('kanbanBoard');
+  if (!board) return;
+  var items = Array.isArray(KT) ? KT.slice() : [];
   board.innerHTML = '';
   const cols = [
     {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
@@ -2875,7 +2883,7 @@ renderers.kanban = function() {
     {k:'done',l:'Completado',d:'var(--green)'}
   ];
   cols.forEach(col => {
-    const tasks = KT.filter(t => t.col === col.k);
+    const tasks = items.filter(t => t && t.col === col.k);
     const colEl = document.createElement('div');
     colEl.className = 'kanban-col';
     colEl.dataset.col = col.k;
@@ -2987,15 +2995,23 @@ function initKanbanDrag() {
 
 function moveKanbanCard(cardId, newColumna) {
   if (!cardId || !newColumna) return;
-  var card = KT.find(function(k){ return k.id === cardId; });
+  var idStr = String(cardId);
+  var card = KT.find(function(k){ return k && String(k.id) === idStr; });
   if (!card) return;
   var prevCol = card.col;
   card.col = newColumna;
-  renderers.kanban();
-  updateBadges();
+  var board = document.getElementById('kanbanBoard');
+  if (board && Array.isArray(KT)) {
+    renderers.kanban();
+    updateBadges();
+  }
   if (supabase) {
     supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
-      if (r.error) { card.col = prevCol; renderers.kanban(); updateBadges(); alert('Error al mover: ' + (r.error.message||'')); }
+      if (r.error) {
+        card.col = prevCol;
+        if (board) { renderers.kanban(); updateBadges(); }
+        alert('Error al mover: ' + (r.error.message||''));
+      }
     });
   }
 }
