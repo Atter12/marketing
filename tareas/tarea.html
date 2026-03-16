@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tareas Holistic</title>
+<title id="docTitleTareas">Tareas Holistic</title>
 <link rel="icon" type="image/png" href="/tareas/favicon/favicon.png" /><link rel="shortcut icon" type="image/png" href="/tareas/favicon/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -380,6 +380,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .user-name { color: #0f172a; font-size: 0.75rem; font-weight: 600; }
 .user-role { color: #94a3b8; font-size: 0.625rem; }
 .user-role-hint { font-size: 0.5625rem; margin-top: 2px; opacity: 0.9; }
+.sidebar-name-btn { background: none; border: none; padding: 0; font-size: inherit; color: var(--color-primary); cursor: pointer; text-decoration: underline; margin: 0; }
+.sidebar-name-btn:hover { color: var(--color-primary-hover); }
 .user-avatar-camera {
   position: absolute; right: -2px; bottom: -2px;
   width: 18px; height: 18px; border-radius: 50%;
@@ -2080,9 +2082,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         </span>
       </div>
       <div>
-        <div class="user-name">Victor Minas</div>
+        <div class="user-name" id="tareasUserName" title="Clic para cambiar tu nombre" style="cursor:pointer">Victor Minas</div>
         <div class="user-role">Director de Agencia</div>
-        <div class="user-role user-role-hint">Clic para poner tu foto</div>
+        <div class="user-role user-role-hint"><button type="button" class="sidebar-name-btn" onclick="event.stopPropagation();promptUserNameTareas()">Cambiar nombre</button> · Clic en la foto para cambiarla</div>
       </div>
     </div>
   </div>
@@ -4245,7 +4247,113 @@ document.addEventListener('DOMContentLoaded', function() {
     initViews();
     initTareasAvatar();
   }
+  updateTareasUserNameDisplay();
+  renderRecordatoriosTareas();
 });
+
+function getCurrentUserNameTareas() {
+  try { return localStorage.getItem('creativos_user_name') || 'Usuario'; } catch (e) { return 'Usuario'; }
+}
+function promptUserNameTareas() {
+  var n = prompt('Tu nombre (aparece en revisiones y notas):', getCurrentUserNameTareas());
+  if (n != null && n.trim()) {
+    try { localStorage.setItem('creativos_user_name', n.trim()); } catch (e) {}
+    updateTareasUserNameDisplay();
+    if (typeof attShowMessage === 'function') attShowMessage('Nombre actualizado'); else alert('Nombre actualizado');
+  }
+}
+function updateTareasUserNameDisplay() {
+  var el = document.getElementById('tareasUserName');
+  var name = getCurrentUserNameTareas();
+  if (el) { el.textContent = name; el.onclick = function() { promptUserNameTareas(); }; }
+  var titleEl = document.getElementById('docTitleTareas');
+  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Tareas · ' + name : 'Tareas Holistic';
+}
+
+var RECORDATORIOS_KEY_TAREAS = 'tareas_recordatorios';
+function getRecordatoriosTareas() {
+  try { var r = localStorage.getItem(RECORDATORIOS_KEY_TAREAS); return r ? JSON.parse(r) : []; } catch (e) { return []; }
+}
+function saveRecordatoriosTareas(arr) {
+  try { localStorage.setItem(RECORDATORIOS_KEY_TAREAS, JSON.stringify(arr)); } catch (e) {}
+  renderRecordatoriosTareas();
+  var badge = document.getElementById('recordatoriosBadgeTareas');
+  if (badge) { var n = arr.filter(function(x) { return !x.done; }).length; badge.textContent = n > 0 ? n : ''; badge.dataset.count = n; }
+}
+function toggleRecordatoriosPanelTareas() {
+  var p = document.getElementById('recordatoriosPanelTareas');
+  if (p) { p.classList.toggle('open'); if (p.classList.contains('open')) { renderRecordatoriosTareas(); var inp = document.getElementById('recordatoriosInputTareas'); if (inp) inp.focus(); } }
+}
+function addRecordatorioTareas() {
+  var inp = document.getElementById('recordatoriosInputTareas');
+  var text = inp && inp.value.trim();
+  if (!text) return;
+  var list = getRecordatoriosTareas();
+  list.unshift({ id: Date.now().toString(36), text: text, when: new Date().toISOString(), done: false });
+  saveRecordatoriosTareas(list);
+  inp.value = '';
+}
+function removeRecordatorioTareas(id) {
+  saveRecordatoriosTareas(getRecordatoriosTareas().filter(function(r) { return r.id !== id; }));
+}
+function toggleRecordatorioDoneTareas(id) {
+  var list = getRecordatoriosTareas();
+  var r = list.find(function(x) { return x.id === id; });
+  if (r) { r.done = !r.done; saveRecordatoriosTareas(list); }
+}
+function escTareas(s) { if (s == null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function renderRecordatoriosTareas() {
+  var ul = document.getElementById('recordatoriosListTareas');
+  if (!ul) return;
+  var list = getRecordatoriosTareas();
+  ul.innerHTML = list.length === 0 ? '<li style="padding:var(--sp-4);color:var(--color-text-faint);font-size:var(--text-sm)">Sin recordatorios.</li>' : list.map(function(r) {
+    return '<li class="recordatorios-item' + (r.done ? ' done' : '') + '">' +
+      '<span class="recordatorios-item-text" onclick="toggleRecordatorioDoneTareas(\'' + r.id + '\')" role="button" tabindex="0">' + escTareas(r.text) + '</span>' +
+      '<button type="button" class="recordatorios-item-del" onclick="removeRecordatorioTareas(\'' + r.id + '\')" title="Eliminar">×</button></li>';
+  }).join('');
+  var badge = document.getElementById('recordatoriosBadgeTareas');
+  if (badge) { var n = list.filter(function(x) { return !x.done; }).length; badge.textContent = n > 0 ? n : ''; badge.dataset.count = n; }
+}
 </script>
+
+<!-- Recordatorios flotante Tareas -->
+<div class="recordatorios-wrap" style="position:fixed;bottom:var(--sp-5);right:var(--sp-5);z-index:40">
+  <button type="button" class="recordatorios-fab" id="recordatoriosFabTareas" onclick="toggleRecordatoriosPanelTareas()" aria-label="Recordatorios" title="Recordatorios">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2"/><path d="M12 14v4M10 18h4"/></svg>
+    <span class="recordatorios-fab-badge" id="recordatoriosBadgeTareas">0</span>
+  </button>
+  <div class="recordatorios-panel" id="recordatoriosPanelTareas">
+    <div class="recordatorios-panel-header">
+      <h3>Recordatorios</h3>
+      <button type="button" class="recordatorios-close" onclick="toggleRecordatoriosPanelTareas()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="recordatorios-add">
+      <input type="text" class="recordatorios-input" id="recordatoriosInputTareas" placeholder="Escribe un recordatorio..." onkeydown="if(event.key==='Enter')addRecordatorioTareas()">
+      <button type="button" class="btn-primary btn-sm" onclick="addRecordatorioTareas()">Agregar</button>
+    </div>
+    <ul class="recordatorios-list" id="recordatoriosListTareas"></ul>
+  </div>
+</div>
+<style>
+.recordatorios-fab { width:52px;height:52px;border-radius:999px;background:var(--color-primary);color:#fff;border:none;box-shadow:0 8px 24px rgba(0,0,0,.12);cursor:pointer;display:flex;align-items:center;justify-content:center }
+.recordatorios-fab:hover { transform:scale(1.05) }
+.recordatorios-fab-badge { position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;background:var(--red);color:#fff;font-size:0.65rem;font-weight:700;border-radius:999px;display:flex;align-items:center;justify-content:center }
+.recordatorios-fab-badge:empty, .recordatorios-fab-badge[data-count="0"] { display:none }
+.recordatorios-panel { position:absolute;bottom:60px;right:0;width:min(340px,calc(100vw - 2rem));background:var(--color-surface);border-radius:var(--r-lg);box-shadow:0 12px 40px rgba(0,0,0,.15);border:1px solid var(--color-divider);display:none;flex-direction:column;max-height:380px }
+.recordatorios-panel.open { display:flex }
+.recordatorios-panel-header { display:flex;align-items:center;justify-content:space-between;padding:var(--sp-4);border-bottom:1px solid var(--color-divider) }
+.recordatorios-panel-header h3 { margin:0;font-size:var(--text-base);font-weight:600 }
+.recordatorios-close { background:none;border:none;font-size:1.25rem;cursor:pointer;color:var(--color-text-muted);padding:0 4px;line-height:1 }
+.recordatorios-add { padding:var(--sp-3);display:flex;gap:var(--sp-2) }
+.recordatorios-input { flex:1;padding:var(--sp-2) var(--sp-3);border:1px solid var(--color-border);border-radius:var(--r-md);font-size:var(--text-sm) }
+.recordatorios-list { list-style:none;margin:0;padding:var(--sp-2);overflow-y:auto;flex:1 }
+.recordatorios-item { display:flex;align-items:flex-start;gap:var(--sp-2);padding:var(--sp-2);border-radius:var(--r-md);font-size:var(--text-sm) }
+.recordatorios-item:hover { background:var(--color-surface-offset) }
+.recordatorios-item.done { opacity:0.6 }
+.recordatorios-item.done .recordatorios-item-text { text-decoration:line-through }
+.recordatorios-item-text { flex:1;word-break:break-word;cursor:pointer }
+.recordatorios-item-del { background:none;border:none;color:var(--color-text-faint);cursor:pointer;padding:2px }
+</style>
+
 </body>
 </html>

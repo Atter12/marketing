@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Creativos Holistic</title>
+<title id="pageTitle">Creativos Holistic</title>
 <link rel="icon" type="image/png" href="/creativos/favicon/favicon.png" /><link rel="shortcut icon" type="image/png" href="/creativos/favicon/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -317,6 +317,8 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .sidebar-user-role-hint { font-size: 0.65rem; margin-top: 2px; opacity: 0.85; }
 .sidebar-user-info { flex: 1; min-width: 0; }
 .sidebar-user-name { font-size: var(--text-sm); font-weight: 600; color: var(--sidebar-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-name-btn { background: none; border: none; padding: 0; font-size: inherit; color: var(--color-primary); cursor: pointer; text-decoration: underline; margin: 0; }
+.sidebar-name-btn:hover { color: var(--color-primary-hover); }
 .sidebar-user-role { font-size: var(--text-xs); color: var(--sidebar-text-muted); }
 .theme-toggle-btn {
   width: 34px; height: 34px; border-radius: var(--radius-md);
@@ -757,6 +759,40 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .kanban-col-has-note, .kanban-col-note-hint { font-size: 0.75rem; opacity: 0.8; margin-left: auto; }
 .kanban-col-empty { cursor: pointer; text-align: center; padding: var(--space-6); color: var(--color-text-faint); font-size: var(--text-xs); min-height: 4rem; display: flex; align-items: center; justify-content: center; }
 .kanban-col-empty:hover { color: var(--color-text-muted); background: var(--color-surface-hover, rgba(0,0,0,.02)); }
+/* Recordatorios flotante */
+.recordatorios-wrap { position: fixed; bottom: var(--space-5); right: var(--space-5); z-index: 40; }
+.recordatorios-fab {
+  width: 52px; height: 52px; border-radius: var(--radius-full);
+  background: var(--color-primary); color: #fff; border: none;
+  box-shadow: var(--shadow-lg); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform var(--transition-interactive), box-shadow var(--transition-interactive);
+}
+.recordatorios-fab:hover { transform: scale(1.05); box-shadow: 0 8px 24px rgba(249,115,22,.35); }
+.recordatorios-fab-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--color-error); color: #fff; font-size: 0.65rem; font-weight: 700;
+  border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;
+}
+.recordatorios-fab-badge:empty, .recordatorios-fab-badge[data-count="0"] { display: none; }
+.recordatorios-panel {
+  position: absolute; bottom: 60px; right: 0; width: min(340px, calc(100vw - 2rem));
+  background: var(--color-surface); border-radius: var(--radius-xl); box-shadow: var(--shadow-lg);
+  border: 1px solid var(--color-divider); display: none; flex-direction: column; max-height: 380px;
+}
+.recordatorios-panel.open { display: flex; }
+.recordatorios-panel-header { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); border-bottom: 1px solid var(--color-divider); }
+.recordatorios-panel-header h3 { margin: 0; font-size: var(--text-base); font-weight: 600; }
+.recordatorios-close { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--color-text-muted); padding: 0 4px; line-height: 1; }
+.recordatorios-add { padding: var(--space-3); display: flex; gap: var(--space-2); }
+.recordatorios-input { flex: 1; padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); font-size: var(--text-sm); }
+.recordatorios-list { list-style: none; margin: 0; padding: var(--space-2); overflow-y: auto; flex: 1; }
+.recordatorios-item { display: flex; align-items: flex-start; gap: var(--space-2); padding: var(--space-2); border-radius: var(--radius-md); font-size: var(--text-sm); }
+.recordatorios-item:hover { background: var(--color-surface-offset); }
+.recordatorios-item.done { opacity: 0.6; }
+.recordatorios-item.done .recordatorios-item-text { text-decoration: line-through; }
+.recordatorios-item-text { flex: 1; word-break: break-word; }
+.recordatorios-item-del { background: none; border: none; color: var(--color-text-faint); cursor: pointer; padding: 2px; }
 .kanban-col-count {
   background: var(--color-surface-dynamic); color: var(--color-text-muted);
   font-size: 0.65rem; padding: 1px 7px; border-radius: var(--radius-full);
@@ -1296,9 +1332,9 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
           </span>
         </div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" id="creativosUserName" title="Clic para cambiar nombre (aparece en revisiones y notas)" style="cursor:pointer">Equipo VideoForge</div>
+          <div class="sidebar-user-name" id="creativosUserName" title="Clic para cambiar tu nombre (aparece en Revisado por y notas)" style="cursor:pointer">Equipo VideoForge</div>
           <div class="sidebar-user-role">Administrador</div>
-          <div class="sidebar-user-role sidebar-user-role-hint">Clic para poner tu foto</div>
+          <div class="sidebar-user-role sidebar-user-role-hint"><button type="button" class="sidebar-name-btn" onclick="event.stopPropagation();promptUserNameCreativos()">Cambiar nombre</button> · Clic en la foto para cambiarla</div>
         </div>
       </div>
       <button class="theme-toggle-btn" id="themeToggle" data-theme-toggle aria-label="Cambiar tema">
@@ -1358,6 +1394,25 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- Recordatorios: botón flotante + popup -->
+<div class="recordatorios-wrap">
+  <button type="button" class="recordatorios-fab" id="recordatoriosFab" onclick="toggleRecordatoriosPanel()" aria-label="Recordatorios" title="Recordatorios">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2"/><path d="M12 14v4M10 18h4"/></svg>
+    <span class="recordatorios-fab-badge" id="recordatoriosBadge">0</span>
+  </button>
+  <div class="recordatorios-panel" id="recordatoriosPanel">
+    <div class="recordatorios-panel-header">
+      <h3>Recordatorios</h3>
+      <button type="button" class="recordatorios-close" onclick="toggleRecordatoriosPanel()" aria-label="Cerrar">×</button>
+    </div>
+    <div class="recordatorios-add">
+      <input type="text" class="recordatorios-input" id="recordatoriosInput" placeholder="Escribe un recordatorio..." onkeydown="if(event.key==='Enter')addRecordatorioCreativos()">
+      <button type="button" class="btn btn-sm btn-primary" onclick="addRecordatorioCreativos()">Agregar</button>
+    </div>
+    <ul class="recordatorios-list" id="recordatoriosList"></ul>
   </div>
 </div>
 
@@ -1509,13 +1564,16 @@ function loadCreativosData() {
         name: credito ? credito.name : (r.name || ''),
         company: credito ? credito.company : (r.company || ''),
         email: credito ? credito.email : (r.email || ''),
+        phone: r.phone || '',
+        contactName: r.contact_name || '',
+        notes: r.notes || '',
         creditoClientId: r.credito_client_id || null,
         createdAt: r.created_at
       };
     });
     console.log('[Creativos] Clientes: Crédito=', (creditoRes.data || []).length, ', creativos_clientes=', (cRes.data || []).length, ', listado final=', clients.length);
     var products = (pRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', category: r.category || '', createdAt: r.created_at }; });
-    var editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', createdAt: r.created_at }; });
+    var editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', email: r.email || '', createdAt: r.created_at }; });
     var projects = (projRes.data || []).map(function(r) {
       return {
         id: r.id,
@@ -2115,14 +2173,16 @@ function renderClients() {
     </div>
     <div class="data-table-wrapper">
       <table class="data-table">
-        <thead><tr><th>Nombre</th><th>Empresa</th><th>Email</th><th>Proyectos</th><th>Fecha</th><th></th></tr></thead>
+        <thead><tr><th>Nombre</th><th>Empresa</th><th>Contacto</th><th>Email / Tel</th><th>Proyectos</th><th>Fecha</th><th></th></tr></thead>
         <tbody>
           ${D.clients.map(c => {
             const projCount = D.projects.filter(p => p.clientId === c.id).length;
+            const contact = [c.contactName, c.email, c.phone].filter(Boolean).join(' · ') || '—';
             return `<tr>
               <td><strong>${esc(c.name)}</strong></td>
               <td>${esc(c.company)}</td>
-              <td style="font-size:var(--text-xs);color:var(--color-text-muted);">${esc(c.email)}</td>
+              <td style="font-size:var(--text-xs);">${esc(c.contactName || '—')}</td>
+              <td style="font-size:var(--text-xs);color:var(--color-text-muted);">${(c.email || c.phone) ? [c.email, c.phone].filter(Boolean).map(function(x) { return esc(x); }).join(' · ') : '—'}</td>
               <td><span class="badge badge-muted">${projCount}</span></td>
               <td style="font-size:var(--text-xs);color:var(--color-text-muted);">${formatDate(c.createdAt)}</td>
               <td>
@@ -2212,6 +2272,7 @@ function renderEditors() {
           <div class="editor-card-info">
             <div class="editor-card-name">${esc(e.name)}</div>
             <div class="editor-card-specialty">${esc(e.specialty)}</div>
+            ${e.email ? `<div class="editor-card-email" style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${esc(e.email)}</div>` : ''}
             <div class="editor-card-stats">${projects.length} proyectos · ${completed} completados</div>
           </div>
           <div class="table-actions" style="flex-shrink:0;" onclick="event.stopPropagation();">
@@ -2782,7 +2843,12 @@ function openClientModal(id) {
     ${importLine}
     <div class="form-group"><label class="form-label">Nombre Completo</label><input class="form-input" id="clientName" value="${c ? esc(c.name) : ''}" placeholder="Ej: María López"></div>
     <div class="form-group"><label class="form-label">Empresa</label><input class="form-input" id="clientCompany" value="${c ? esc(c.company) : ''}" placeholder="Ej: TechVista Solutions"></div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="clientEmail" type="email" value="${c ? esc(c.email) : ''}" placeholder="Ej: maria@techvista.com"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="clientEmail" type="email" value="${c ? esc(c.email) : ''}" placeholder="Ej: maria@techvista.com"></div>
+      <div class="form-group"><label class="form-label">Teléfono</label><input class="form-input" id="clientPhone" type="tel" value="${c ? esc(c.phone || '') : ''}" placeholder="Ej: +51 999 123 456"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Contacto (nombre de quien atiende)</label><input class="form-input" id="clientContactName" value="${c ? esc(c.contactName || '') : ''}" placeholder="Ej: Juan Pérez"></div>
+    <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="clientNotes" rows="2" placeholder="Notas internas...">${c ? esc(c.notes || '') : ''}</textarea></div>
   `;
   const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveClient()">${c ? 'Guardar Cambios' : 'Agregar Cliente'}</button>`;
   openModal(c ? 'Editar Cliente' : 'Nuevo Cliente', body, footer);
@@ -2844,18 +2910,22 @@ function importClienteFromCreditoCreativos(creditoId) {
 function saveClient() {
   var name = document.getElementById('clientName').value.trim();
   var company = document.getElementById('clientCompany').value.trim();
-  var email = document.getElementById('clientEmail').value.trim();
+  var email = (document.getElementById('clientEmail') && document.getElementById('clientEmail').value) ? document.getElementById('clientEmail').value.trim() : '';
+  var phone = (document.getElementById('clientPhone') && document.getElementById('clientPhone').value) ? document.getElementById('clientPhone').value.trim() : '';
+  var contactName = (document.getElementById('clientContactName') && document.getElementById('clientContactName').value) ? document.getElementById('clientContactName').value.trim() : '';
+  var notes = (document.getElementById('clientNotes') && document.getElementById('clientNotes').value) ? document.getElementById('clientNotes').value.trim() : '';
   if (!name || !company) { showToast('error', 'Nombre y empresa son requeridos'); return; }
+  var row = { name: name, company: company, email: email || null, phone: phone || null, contact_name: contactName || null, notes: notes || null };
   if (supabase) {
     if (editingId) {
-      supabase.from('creativos_clientes').update({ name: name, company: company, email: email }).eq('id', editingId).then(function(r) {
+      supabase.from('creativos_clientes').update(row).eq('id', editingId).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
         showToast('success', 'Cliente actualizado');
         closeModal();
         reloadCreativosData(function() { renderPage(currentPage); });
       });
     } else {
-      supabase.from('creativos_clientes').insert({ name: name, company: company, email: email }).then(function(r) {
+      supabase.from('creativos_clientes').insert(row).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
         showToast('success', 'Cliente agregado');
         closeModal();
@@ -2865,10 +2935,10 @@ function saveClient() {
   } else {
     if (editingId) {
       var c = D.clients.find(function(cl) { return cl.id === editingId; });
-      if (c) { c.name = name; c.company = company; c.email = email; }
+      if (c) { c.name = name; c.company = company; c.email = email; c.phone = phone; c.contactName = contactName; c.notes = notes; }
       showToast('success', 'Cliente actualizado');
     } else {
-      D.clients.push({ id: uid(), name: name, company: company, email: email, createdAt: new Date().toISOString() });
+      D.clients.push({ id: uid(), name: name, company: company, email: email, phone: phone, contactName: contactName, notes: notes, createdAt: new Date().toISOString() });
       showToast('success', 'Cliente agregado');
     }
     closeModal(); renderPage(currentPage);
@@ -2923,27 +2993,77 @@ function saveProduct() {
 function openEditorModal(id) {
   const e = id ? D.editors.find(ed => ed.id === id) : null;
   editingId = id || null; editingType = 'editor';
+  const importLine = e ? '' : '<p class="form-hint" style="margin-bottom:1rem;font-size:var(--text-sm);color:var(--color-text-muted)">¿Tienes equipo en Tareas? <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:0.8125rem" onclick="showImportEditoresFromTareas()">Importar desde Carga de Trabajo</button></p>';
   const body = `
+    ${importLine}
     <div class="form-group"><label class="form-label">Nombre Completo</label><input class="form-input" id="editorName" value="${e ? esc(e.name) : ''}" placeholder="Ej: Javier Quispe"></div>
+    <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="editorEmail" type="email" value="${e ? esc(e.email || '') : ''}" placeholder="Ej: javier@videoforge.com"></div>
     <div class="form-group"><label class="form-label">Especialidad</label><select class="form-select" id="editorSpecialty">${EDITOR_SPECIALTIES.map(s => `<option ${e && e.specialty === s ? 'selected':''}>${s}</option>`).join('')}</select></div>
   `;
   const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveEditor()">${e ? 'Guardar Cambios' : 'Agregar Editor'}</button>`;
   openModal(e ? 'Editar Editor' : 'Nuevo Editor', body, footer);
 }
+function showImportEditoresFromTareas() {
+  var titleEl = document.getElementById('modalTitle');
+  var bodyEl = document.getElementById('modalBody');
+  var footerEl = document.getElementById('modalFooter');
+  if (!titleEl || !bodyEl || !footerEl) return;
+  titleEl.textContent = 'Importar desde Carga de Trabajo (Tareas)';
+  bodyEl.innerHTML = '<p style="color:var(--color-text-muted);margin-bottom:1rem">Cargando equipo de Tareas…</p>';
+  footerEl.innerHTML = '<button class="btn btn-secondary" onclick="openEditorModal()">← Volver</button>';
+  if (!supabase) {
+    bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">Se necesita Supabase para sincronizar con Tareas.</p>';
+    return;
+  }
+  supabase.from('tareas_equipo').select('id, nombre, rol').order('nombre').then(function(r) {
+    if (r.error) {
+      bodyEl.innerHTML = '<p style="color:var(--color-error)">Error: ' + (r.error.message || '') + '</p>';
+      return;
+    }
+    var list = r.data || [];
+    var existingNames = (D.editors || []).map(function(ed) { return (ed.name || '').toLowerCase().trim(); });
+    list = list.filter(function(m) { return m.nombre && existingNames.indexOf((m.nombre || '').toLowerCase().trim()) === -1; });
+    if (list.length === 0) {
+      bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">No hay miembros en Tareas o ya están como editores.</p>';
+      return;
+    }
+    window._tareasEquipoImportList = list;
+    var html = '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:1rem">Añadir como editores en Creativos:</p><div style="display:flex;flex-direction:column;gap:0.5rem;max-height:280px;overflow-y:auto">';
+    list.forEach(function(m) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--color-surface-offset);border-radius:var(--radius-md)"><div><strong>' + esc(m.nombre || '') + '</strong>' + (m.rol ? ' <span style="font-size:var(--text-xs);color:var(--color-text-muted)">' + esc(m.rol) + '</span>' : '') + '</div><button type="button" class="btn btn-primary" style="padding:4px 12px" onclick="importEditorFromTareas(\'' + m.id + '\')">Agregar</button></div>';
+    });
+    html += '</div>';
+    bodyEl.innerHTML = html;
+  });
+}
+function importEditorFromTareas(equipoId) {
+  if (!supabase) return;
+  var list = window._tareasEquipoImportList || [];
+  var m = list.find(function(x) { return x.id === equipoId; });
+  if (!m) { showToast('error', 'No encontrado'); return; }
+  supabase.from('creativos_editores').insert({ name: m.nombre || 'Editor', specialty: m.rol || 'Edición General' }).then(function(r) {
+    if (r.error) { showToast('error', r.error.message || 'Error'); return; }
+    showToast('success', m.nombre + ' agregado como editor');
+    list.splice(list.findIndex(function(x) { return x.id === equipoId; }), 1);
+    window._tareasEquipoImportList = list;
+    reloadCreativosData(function() { showImportEditoresFromTareas(); });
+  });
+}
 function saveEditor() {
   var name = document.getElementById('editorName').value.trim();
+  var email = (document.getElementById('editorEmail') && document.getElementById('editorEmail').value) ? document.getElementById('editorEmail').value.trim() : '';
   var specialty = document.getElementById('editorSpecialty').value;
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
   if (supabase) {
     if (editingId) {
-      supabase.from('creativos_editores').update({ name: name, specialty: specialty }).eq('id', editingId).then(function(r) {
+      supabase.from('creativos_editores').update({ name: name, specialty: specialty, email: email || null }).eq('id', editingId).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
         showToast('success', 'Editor actualizado');
         closeModal();
         reloadCreativosData(function() { renderPage(currentPage); });
       });
     } else {
-      supabase.from('creativos_editores').insert({ name: name, specialty: specialty }).then(function(r) {
+      supabase.from('creativos_editores').insert({ name: name, specialty: specialty, email: email || null }).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
         showToast('success', 'Editor agregado');
         closeModal();
@@ -2953,10 +3073,10 @@ function saveEditor() {
   } else {
     if (editingId) {
       var e = D.editors.find(function(ed) { return ed.id === editingId; });
-      if (e) { e.name = name; e.specialty = specialty; }
+      if (e) { e.name = name; e.specialty = specialty; e.email = email; }
       showToast('success', 'Editor actualizado');
     } else {
-      D.editors.push({ id: uid(), name: name, specialty: specialty, createdAt: new Date().toISOString() });
+      D.editors.push({ id: uid(), name: name, specialty: specialty, email: email, createdAt: new Date().toISOString() });
       showToast('success', 'Editor agregado');
     }
     closeModal(); renderPage(currentPage);
@@ -3319,20 +3439,72 @@ if (supabase) {
   setTimeout(function() { clearInterval(t); }, 8000);
 }
 initCreativosAvatar();
+function promptUserNameCreativos() {
+  var n = prompt('Tu nombre (aparece en "Revisado por" y en las notas):', getCurrentUserName());
+  if (n != null && n.trim()) {
+    try { localStorage.setItem('creativos_user_name', n.trim()); } catch(e) {}
+    updateCreativosUserNameDisplay();
+    showToast('success', 'Nombre actualizado');
+  }
+}
 function updateCreativosUserNameDisplay() {
   var el = document.getElementById('creativosUserName');
-  if (!el) return;
-  el.textContent = getCurrentUserName();
-  el.onclick = function() {
-    var n = prompt('Tu nombre (aparece en revisiones y notas):', getCurrentUserName());
-    if (n != null && n.trim()) {
-      try { localStorage.setItem('creativos_user_name', n.trim()); } catch(e) {}
-      el.textContent = n.trim();
-      showToast('success', 'Nombre actualizado');
-    }
-  };
+  var name = getCurrentUserName();
+  if (el) {
+    el.textContent = name;
+    el.onclick = function() { promptUserNameCreativos(); };
+  }
+  var titleEl = document.getElementById('pageTitle');
+  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Creativos · ' + name : 'Creativos Holistic';
 }
 updateCreativosUserNameDisplay();
+
+/* Recordatorios (Creativos) */
+var RECORDATORIOS_KEY = 'creativos_recordatorios';
+function getRecordatoriosCreativos() {
+  try { var r = localStorage.getItem(RECORDATORIOS_KEY); return r ? JSON.parse(r) : []; } catch (e) { return []; }
+}
+function saveRecordatoriosCreativos(arr) {
+  try { localStorage.setItem(RECORDATORIOS_KEY, JSON.stringify(arr)); } catch (e) {}
+  renderRecordatoriosCreativos();
+  var badge = document.getElementById('recordatoriosBadge');
+  if (badge) { var n = arr.filter(function(x) { return !x.done; }).length; badge.textContent = n > 0 ? n : ''; badge.dataset.count = n; }
+}
+function toggleRecordatoriosPanel() {
+  var p = document.getElementById('recordatoriosPanel');
+  if (p) { p.classList.toggle('open'); if (p.classList.contains('open')) { renderRecordatoriosCreativos(); document.getElementById('recordatoriosInput').focus(); } }
+}
+function addRecordatorioCreativos() {
+  var inp = document.getElementById('recordatoriosInput');
+  var text = inp && inp.value.trim();
+  if (!text) return;
+  var list = getRecordatoriosCreativos();
+  list.unshift({ id: Date.now().toString(36), text: text, when: new Date().toISOString(), done: false });
+  saveRecordatoriosCreativos(list);
+  inp.value = '';
+}
+function removeRecordatorioCreativos(id) {
+  var list = getRecordatoriosCreativos().filter(function(r) { return r.id !== id; });
+  saveRecordatoriosCreativos(list);
+}
+function toggleRecordatorioDoneCreativos(id) {
+  var list = getRecordatoriosCreativos();
+  var r = list.find(function(x) { return x.id === id; });
+  if (r) { r.done = !r.done; saveRecordatoriosCreativos(list); }
+}
+function renderRecordatoriosCreativos() {
+  var ul = document.getElementById('recordatoriosList');
+  if (!ul) return;
+  var list = getRecordatoriosCreativos();
+  ul.innerHTML = list.length === 0 ? '<li style="padding:var(--space-4);color:var(--color-text-faint);font-size:var(--text-sm)">Sin recordatorios. Agrega uno arriba.</li>' : list.map(function(r) {
+    return '<li class="recordatorios-item' + (r.done ? ' done' : '') + '">' +
+      '<span class="recordatorios-item-text" onclick="toggleRecordatorioDoneCreativos(\'' + r.id + '\')" role="button" tabindex="0">' + esc(r.text) + '</span>' +
+      '<button type="button" class="recordatorios-item-del" onclick="removeRecordatorioCreativos(\'' + r.id + '\')" title="Eliminar">×</button></li>';
+  }).join('');
+  var badge = document.getElementById('recordatoriosBadge');
+  if (badge) { var n = list.filter(function(x) { return !x.done; }).length; badge.textContent = n > 0 ? n : ''; badge.dataset.count = n; }
+}
+renderRecordatoriosCreativos();
 </script>
 </body>
 </html>
