@@ -1101,6 +1101,25 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .progress-fill { height: 100%; border-radius: 3px; }
 .progress-pct { font-size: 0.5625rem; font-weight: 600; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
 .card-subtasks { font-size: 0.5625rem; color: var(--color-text-faint); margin-top: var(--sp-2); }
+.kanban-mover-wrap { margin-top: var(--sp-2); }
+.kanban-mover { font-size: 0.6875rem; padding: 4px 8px; min-height: 28px; border-radius: var(--r-sm); }
+.kanban-card-participants {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.kanban-card-participants .team-avatar {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  font-size: 0.5rem;
+  border: 1.5px solid var(--color-surface);
+  margin-left: -3px;
+  font-weight: 600;
+  color: #fff;
+}
+.kanban-card-participants .team-avatar:first-child { margin-left: 0; }
 
 /* ══════════════════════════════════════════════
    TICKET SYSTEM
@@ -2726,8 +2745,9 @@ const svcNames = {'tag-mk':'Marketing','tag-br':'Branding','tag-vi':'Video','tag
 
 function makeAvatar(id, size=22) {
   const m = TEAM.find(x => x.id === id);
-  const s = Math.round(size * 0.35);
-  return `<div class="team-avatar" style="background:${m?.c||'#666'};width:${size}px;height:${size}px;font-size:${s}px" aria-label="${m?.n||id}">${id}</div>`;
+  const s = Math.round(size * 0.5);
+  const letter = (m && m.n && m.n[0]) ? m.n[0].toUpperCase() : (typeof id === 'string' && id.length ? id[0].toUpperCase() : '?');
+  return `<div class="team-avatar" style="background:${m?.c||'#666'};width:${size}px;height:${size}px;font-size:${s}px" aria-label="${m?.n||id}">${letter}</div>`;
 }
 
 function makeTkAvatar(id, size=22) {
@@ -2855,7 +2875,7 @@ renderers.kanban = function() {
     const colEl = document.createElement('div');
     colEl.className = 'kanban-col';
     const cardsHtml = tasks.map(t => {
-      const avsHtml = t.tm.map(id => makeAvatar(id, 20)).join('');
+      const avsHtml = (t.tm || []).map(id => makeAvatar(id, 16)).join('');
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
       const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
       const dateIcon = t.dc === 'dn' ? '✅' : '📅';
@@ -2870,11 +2890,11 @@ renderers.kanban = function() {
           <div class="card-desc">${t.ds}</div>
           <div class="card-meta">
             <span class="card-date ${dateCls}">${dateIcon} ${t.du}</span>
-            <div class="team-avatars">${avsHtml}</div>
+            <div class="kanban-card-participants" aria-label="Participan en esta tarea">${avsHtml}</div>
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
           <div class="card-subtasks">☑ ${t.sb} subtareas</div>
-          ${t.id ? `<div style="margin-top:8px"><select class="form-select form-select-sm" style="font-size:11px;padding:4px 8px" onchange="moveKanbanCard('${t.id}',this.value);this.value=''" aria-label="Mover a columna"><option value="">Mover a…</option><option value="todo">Por hacer</option><option value="progress">En progreso</option><option value="review">Revisión</option><option value="done">Hecho</option></select></div>` : ''}
+          ${t.id ? `<div class="kanban-mover-wrap"><select class="form-select form-select-sm kanban-mover" onchange="moveKanbanCard('${t.id}',this.value);this.value=''" aria-label="Mover a columna"><option value="">Mover a…</option><option value="todo">Por hacer</option><option value="progress">En progreso</option><option value="review">Revisión</option><option value="done">Completado</option></select></div>` : ''}
         </article>`;
     }).join('');
     colEl.innerHTML = `
@@ -2893,14 +2913,16 @@ renderers.kanban = function() {
 
 function moveKanbanCard(cardId, newColumna) {
   if (!cardId || !newColumna) return;
+  var card = KT.find(function(k){ return k.id === cardId; });
+  if (!card) return;
+  var prevCol = card.col;
+  card.col = newColumna;
+  renderers.kanban();
+  updateBadges();
   if (supabase) {
     supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
-      if (r.error) { alert('Error al mover: ' + (r.error.message||'')); return; }
-      reloadTareasData();
+      if (r.error) { card.col = prevCol; renderers.kanban(); updateBadges(); alert('Error al mover: ' + (r.error.message||'')); }
     });
-  } else {
-    var card = KT.find(function(k){ return k.id === cardId; });
-    if (card) { card.col = newColumna; renderers.kanban(); updateBadges(); }
   }
 }
 
