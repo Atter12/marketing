@@ -2945,6 +2945,7 @@ renderers.kanban = function(snapshot) {
     </div>`;
   });
   board.innerHTML = fullHtml;
+  board.querySelectorAll('.kanban-card.fade-in').forEach(function(el) { el.classList.add('visible'); });
   _kanbanLog('renderers.kanban SALIDA', { totalCards: items.length, columnas: cols.length });
   initKanbanDrag();
 };
