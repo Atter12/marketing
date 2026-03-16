@@ -761,6 +761,7 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   flex: 1; overflow-y: auto; overscroll-behavior: contain;
   padding: var(--space-3);
   display: flex; flex-direction: column; gap: var(--space-2);
+  min-height: 140px;
 }
 
 .kanban-card {
@@ -1932,19 +1933,20 @@ function initPipelineDrag() {
     if (!_pipelineDrag.active) return;
     var b = getBoard();
     var colEl = null;
-    if (clientX != null && clientY != null) {
-      colEl = document.elementFromPoint(clientX, clientY);
-      if (colEl) colEl = colEl.closest('.kanban-column');
-    } else if (b) {
+    if (b) {
       colEl = b.querySelector('.kanban-drop-target');
+      if (!colEl && clientX != null && clientY != null) {
+        colEl = document.elementFromPoint(clientX, clientY);
+        if (colEl) colEl = colEl.closest('.kanban-column');
+      }
     }
     if (b) {
       b.querySelectorAll('.kanban-column').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
       b.querySelectorAll('.kanban-card-dragging').forEach(function(c) { c.classList.remove('kanban-card-dragging'); });
     }
     if (colEl && _pipelineDrag.projectId) {
-      var targetStage = colEl.getAttribute('data-stage');
-      if (targetStage && targetStage !== _pipelineDrag.sourceStage) {
+      var targetStage = (colEl.getAttribute('data-stage') || '').trim();
+      if (targetStage && STAGES.indexOf(targetStage) >= 0 && targetStage !== _pipelineDrag.sourceStage) {
         moveProjectToStage(_pipelineDrag.projectId, targetStage);
         window._pipelineJustDropped = true;
       }
@@ -2678,8 +2680,11 @@ function saveProject() {
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
   var productId = document.getElementById('projProduct').value || null;
   var editorId = document.getElementById('projEditor').value || null;
-  if (!productId) { showToast('error', 'Selecciona un producto'); return; }
-  if (!editorId) { showToast('error', 'Selecciona un editor'); return; }
+  if (D.products.length > 0 && !productId) { showToast('error', 'Selecciona un producto'); return; }
+  if (D.editors.length > 0 && !editorId) { showToast('error', 'Selecciona un editor'); return; }
+  if (D.products.length === 0 || D.editors.length === 0) {
+    showToast('info', 'Crea productos y editores en sus secciones para asignarlos después.');
+  }
   var stages = createStageData();
   if (pendingFiles.length > 0) stages.inspiracion.files = pendingFiles.slice();
   var clientId = document.getElementById('projClient').value || null;
