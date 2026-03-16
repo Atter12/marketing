@@ -2586,6 +2586,12 @@ let TEAM = [];
 let MT = {};
 let clients = [];
 let KT = [];
+var _kanbanLogSeq = 0;
+function _kanbanLog(msg, detail) {
+  _kanbanLogSeq++;
+  var d = detail !== undefined ? ' ' + JSON.stringify(detail) : '';
+  console.log('[Kanban #' + _kanbanLogSeq + '] ' + msg + d);
+}
 let tickets = [];
 let workflows = [];
 let calI = [];
@@ -2669,6 +2675,7 @@ async function loadTareasData() {
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
     });
+    _kanbanLog('loadTareasData: KT construido (variable local)', { length: KT.length, cols: KT.map(function(k){ return k.col; }) });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
       if (!MT[r.equipo_id]) MT[r.equipo_id] = [];
@@ -2698,6 +2705,7 @@ async function loadTareasData() {
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
+    _kanbanLog('loadTareasData: devolviendo data', { KT_length: KT.length });
     return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
@@ -2713,18 +2721,27 @@ function showTareasLoading(show) {
 }
 
 function reloadTareasData(thenRender) {
+  _kanbanLog('reloadTareasData: llamada', { caller: (new Error()).stack.split('\n')[2].trim() });
   if (!supabase) return Promise.resolve();
   return loadTareasData().then(function(data) {
+    _kanbanLog('reloadTareasData: .then recibido', { data_null: !data, data_KT_length: data && data.KT ? data.KT.length : 'n/a', KT_actual: KT.length });
     if (data) {
       TEAM = data.TEAM;
       MT = data.MT;
       clients = data.clients;
       if (data.KT && data.KT.length > 0) {
         KT = data.KT;
+        _kanbanLog('reloadTareasData: KT = data.KT', { new_length: KT.length });
       } else if (!data.KT || data.KT.length === 0) {
-        if (KT.length === 0) KT = data.KT || [];
+        if (KT.length === 0) {
+          KT = data.KT || [];
+          _kanbanLog('reloadTareasData: KT = data.KT (estaba vacío)', { new_length: KT.length });
+        } else {
+          _kanbanLog('reloadTareasData: NO sobrescribiendo KT (data.KT vacío, KT tenía ' + KT.length + ')');
+        }
       } else {
         KT = data.KT || [];
+        _kanbanLog('reloadTareasData: KT = data.KT (else)', { new_length: KT.length });
       }
       tickets = data.tickets;
       workflows = data.workflows;
@@ -2738,6 +2755,7 @@ function reloadTareasData(thenRender) {
     updateDashboardStats();
     if (thenRender && typeof thenRender === 'function') thenRender();
     else {
+      _kanbanLog('reloadTareasData: llamando renderers (clients, kanban, ...)');
       renderers.clients?.();
       renderers.kanban?.();
       renderers.tickets?.();
@@ -2872,9 +2890,17 @@ function filterClients(status, btn) {
 
 // ─── KANBAN ───
 renderers.kanban = function(snapshot) {
-  const board = document.getElementById('kanbanBoard');
-  if (!board) return;
+  var fromSnapshot = snapshot !== undefined && snapshot !== null;
   var items = Array.isArray(snapshot) ? snapshot.slice() : (Array.isArray(KT) ? KT.slice() : []);
+  const board = document.getElementById('kanbanBoard');
+  _kanbanLog('renderers.kanban ENTRADA', { fromSnapshot: fromSnapshot, snapshot_len: fromSnapshot && snapshot ? snapshot.length : 'n/a', KT_len: KT.length, items_len: items.length, board: !!board, caller: (new Error()).stack.split('\n')[2].trim() });
+  if (!board) {
+    _kanbanLog('renderers.kanban: SALIDA sin board');
+    return;
+  }
+  if (items.length === 0) {
+    _kanbanLog('renderers.kanban: items.length=0, pintando tablero vacío');
+  }
   board.innerHTML = '';
   const cols = [
     {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
@@ -2921,6 +2947,7 @@ renderers.kanban = function(snapshot) {
       <div class="kanban-cards">${cardsHtml}</div>`;
     board.appendChild(colEl);
   });
+  _kanbanLog('renderers.kanban SALIDA', { totalCards: items.length, columnas: cols.length });
   initKanbanDrag();
 };
 
@@ -2994,20 +3021,32 @@ function initKanbanDrag() {
 }
 
 function moveKanbanCard(cardId, newColumna) {
-  if (!cardId || !newColumna) return;
+  _kanbanLog('moveKanbanCard ENTRADA', { cardId: cardId, newColumna: newColumna, KT_length: KT.length });
+  if (!cardId || !newColumna) {
+    _kanbanLog('moveKanbanCard: salida (sin cardId o newColumna)');
+    return;
+  }
   var idStr = String(cardId);
   var card = KT.find(function(k){ return k && String(k.id) === idStr; });
-  if (!card) return;
+  if (!card) {
+    _kanbanLog('moveKanbanCard: card NO encontrada en KT', { idStr: idStr, ids_en_KT: KT.map(function(k){ return k && k.id; }) });
+    return;
+  }
   var prevCol = card.col;
   card.col = newColumna;
   var snapshot = Array.isArray(KT) ? KT.slice() : [];
+  _kanbanLog('moveKanbanCard: snapshot tomado', { snapshot_length: snapshot.length, card_col_ahora: card.col });
   var board = document.getElementById('kanbanBoard');
   if (board && snapshot.length > 0) {
     renderers.kanban(snapshot);
     updateBadges();
+    _kanbanLog('moveKanbanCard: renderers.kanban(snapshot) y updateBadges llamados');
+  } else {
+    _kanbanLog('moveKanbanCard: NO se llama render (board=' + !!board + ', snapshot.length=' + snapshot.length + ')');
   }
   if (supabase) {
     supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
+      _kanbanLog('moveKanbanCard: Supabase .then', { error: r.error ? r.error.message : null });
       if (r.error) {
         card.col = prevCol;
         if (board) { renderers.kanban(); updateBadges(); }
@@ -4065,6 +4104,7 @@ function observeFadeIns(container) {
 //  INIT
 // ══════════════════════════════════════════════════════════════════
 function initViews() {
+  _kanbanLog('initViews: inicio');
   setTimeout(function() {
     document.querySelectorAll('#view-dashboard .fade-in').forEach(function(el, i) {
       setTimeout(function() { el.classList.add('visible'); }, i * 55);
@@ -4113,16 +4153,19 @@ document.addEventListener('DOMContentLoaded', function() {
   if (supabase) {
     showTareasLoading(true);
     loadTareasData().then(function(data) {
+      _kanbanLog('DOMContentLoaded loadTareasData.then', { data_null: !data, data_KT_length: data && data.KT ? data.KT.length : 'n/a' });
       if (data) {
         TEAM = data.TEAM;
         MT = data.MT;
         clients = data.clients;
         KT = data.KT;
+        _kanbanLog('DOMContentLoaded: KT asignado (global)', { KT_length: KT.length });
         tickets = data.tickets;
         workflows = data.workflows;
         calI = data.calI;
       }
       showTareasLoading(false);
+      _kanbanLog('DOMContentLoaded: llamando initViews()');
       initViews();
       initTareasAvatar();
     }).catch(function(err) {
