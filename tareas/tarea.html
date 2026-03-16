@@ -3043,12 +3043,16 @@ function moveKanbanCard(cardId, newColumna) {
     _kanbanLog('moveKanbanCard: NO se llama render (board=' + !!board + ', snapshot.length=' + snapshot.length + ')');
   }
   if (supabase) {
-    supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).then(function(r) {
-      _kanbanLog('moveKanbanCard: Supabase .then', { error: r.error ? r.error.message : null });
+    supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).select('id, columna').maybeSingle().then(function(r) {
+      _kanbanLog('moveKanbanCard: Supabase .then', { error: r.error ? r.error.message : null, updated_row: r.data ? { id: r.data.id, columna: r.data.columna } : null });
       if (r.error) {
         card.col = prevCol;
         if (board) { renderers.kanban(); updateBadges(); }
         alert('Error al mover: ' + (r.error.message||''));
+        return;
+      }
+      if (!r.data) {
+        _kanbanLog('moveKanbanCard: Supabase no devolvió fila (0 rows updated). ¿RLS o clave anon sin política?');
       }
     });
   }
