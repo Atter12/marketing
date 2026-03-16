@@ -1037,6 +1037,10 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .kanban-card[data-sv="social"]::before    { background: #059669; }
 .kanban-card[data-sv="design"]::before    { background: #D97706; }
 .kanban-card:hover { box-shadow: var(--shadow-md); border-color: var(--color-primary); transform: translateY(-1px); }
+.kanban-card[data-id]:not([data-id=""]) { cursor: grab; }
+.kanban-card[data-id]:not([data-id=""]):active { cursor: grabbing; }
+.kanban-card-dragging { opacity: 0.85; box-shadow: var(--shadow-lg); cursor: grabbing; }
+.kanban-drop-target { outline: 2px dashed var(--color-primary); outline-offset: 4px; border-radius: var(--r-lg); }
 .kanban-card-top {
   display: flex;
   justify-content: space-between;
@@ -2874,6 +2878,7 @@ renderers.kanban = function() {
     const tasks = KT.filter(t => t.col === col.k);
     const colEl = document.createElement('div');
     colEl.className = 'kanban-col';
+    colEl.dataset.col = col.k;
     const cardsHtml = tasks.map(t => {
       const avsHtml = (t.tm || []).map(id => makeAvatar(id, 16)).join('');
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
@@ -2894,7 +2899,6 @@ renderers.kanban = function() {
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
           <div class="card-subtasks">☑ ${t.sb} subtareas</div>
-          ${t.id ? `<div class="kanban-mover-wrap"><select class="form-select form-select-sm kanban-mover" onchange="moveKanbanCard('${t.id}',this.value);this.value=''" aria-label="Mover a columna"><option value="">Mover a…</option><option value="todo">Por hacer</option><option value="progress">En progreso</option><option value="review">Revisión</option><option value="done">Completado</option></select></div>` : ''}
         </article>`;
     }).join('');
     colEl.innerHTML = `
@@ -2909,7 +2913,77 @@ renderers.kanban = function() {
       <div class="kanban-cards">${cardsHtml}</div>`;
     board.appendChild(colEl);
   });
+  initKanbanDrag();
 };
+
+var _kanbanDrag = { active: false, cardId: null, sourceCol: null };
+function initKanbanDrag() {
+  var board = document.getElementById('kanbanBoard');
+  if (!board || board.dataset.dragInited === '1') return;
+  board.dataset.dragInited = '1';
+  function startDrag(card) {
+    var id = card.getAttribute('data-id');
+    if (!id) return;
+    var colEl = card.closest('.kanban-col');
+    if (!colEl) return;
+    _kanbanDrag.active = true;
+    _kanbanDrag.cardId = id;
+    _kanbanDrag.sourceCol = colEl.dataset.col;
+    card.classList.add('kanban-card-dragging');
+  }
+  function updateTarget(clientX, clientY) {
+    var colEl = document.elementFromPoint(clientX, clientY);
+    if (!colEl) return;
+    colEl = colEl.closest('.kanban-col');
+    document.querySelectorAll('.kanban-col').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
+    if (colEl) colEl.classList.add('kanban-drop-target');
+  }
+  function endDrag(clientX, clientY) {
+    if (!_kanbanDrag.active) return;
+    var colEl = null;
+    if (clientX != null && clientY != null) {
+      colEl = document.elementFromPoint(clientX, clientY);
+      if (colEl) colEl = colEl.closest('.kanban-col');
+    } else {
+      colEl = document.querySelector('.kanban-drop-target');
+    }
+    document.querySelectorAll('.kanban-col').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
+    document.querySelectorAll('.kanban-card-dragging').forEach(function(c) { c.classList.remove('kanban-card-dragging'); });
+    if (colEl && _kanbanDrag.cardId) {
+      var targetCol = colEl.dataset.col;
+      if (targetCol && targetCol !== _kanbanDrag.sourceCol) moveKanbanCard(_kanbanDrag.cardId, targetCol);
+    }
+    _kanbanDrag.active = false;
+    _kanbanDrag.cardId = null;
+    _kanbanDrag.sourceCol = null;
+  }
+  board.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    var card = e.target.closest('.kanban-card');
+    if (!card) return;
+    startDrag(card);
+    e.preventDefault();
+  });
+  board.addEventListener('touchstart', function(e) {
+    var card = e.target.closest('.kanban-card');
+    if (!card) return;
+    startDrag(card);
+  }, { passive: true });
+  document.addEventListener('mousemove', function(e) {
+    if (!_kanbanDrag.active) return;
+    updateTarget(e.clientX, e.clientY);
+  });
+  document.addEventListener('touchmove', function(e) {
+    if (!_kanbanDrag.active || !e.touches.length) return;
+    updateTarget(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  document.addEventListener('mouseup', function(e) {
+    endDrag(e.clientX, e.clientY);
+  });
+  document.addEventListener('touchend', function(e) {
+    endDrag(e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : null, e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : null);
+  });
+}
 
 function moveKanbanCard(cardId, newColumna) {
   if (!cardId || !newColumna) return;
@@ -3263,7 +3337,7 @@ renderers.attendance = function() {
   TEAM.forEach(m => {
     const ts = MT[m.id] || [];
     const done = ts.filter(x => x.d).length;
-    const st = stMap[m.att];
+    const st = stMap[m.att] || stMap.present;
     const ck = (v, label) => `<div class="att-vf"><div class="lbl">${label}</div><div class="val">${v?'<span class="ck">✓ Verificado</span>':'<span class="no">✗ Pendiente</span>'}</div></div>`;
     const tasksHtml = ts.map((t, i) => `
       <div class="att-task">
@@ -3624,10 +3698,11 @@ function addTask() {
       cliente_nombre: clNombre,
       subtareas: '0/1',
       orden: 0
-    }).then(function(r) {
-      if (r.error) { alert('Error al crear entregable: ' + (r.error.message || ''));
-        return; }
-      reloadTareasData(); closeModal();
+    }).select().single().then(function(r) {
+      if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
+      var row = r.data;
+      KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1' });
+      renderers.kanban(); updateBadges(); closeModal();
     });
   } else {
     KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg,pr,du:due||'Sin fecha',dc:'',pc:0,tm:equipoId?[equipoId]:[],cl:clNombre,sb:'0/1'});
