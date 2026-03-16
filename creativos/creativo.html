@@ -798,6 +798,10 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
 .kanban-card-date { font-size: 0.65rem; color: var(--color-text-faint); }
+.kanban-card[data-project-id]:not([data-project-id=""]) { cursor: grab; }
+.kanban-card[data-project-id]:not([data-project-id=""]):active { cursor: grabbing; }
+.kanban-card.kanban-card-dragging { opacity: 0.7; box-shadow: var(--shadow-lg); pointer-events: none; }
+.kanban-column.kanban-drop-target { outline: 2px dashed var(--color-primary); outline-offset: 4px; border-radius: var(--radius-lg); }
 .kanban-card-type-badge {
   font-size: 0.6rem; padding: 1px 6px; border-radius: var(--radius-full);
   background: var(--color-surface-offset); color: var(--color-text-muted);
@@ -846,6 +850,13 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 }
 .stage-details p { margin-bottom: var(--space-1); max-width: none; }
 .stage-actions { margin-top: var(--space-2); display: flex; gap: var(--space-2); flex-wrap: wrap; }
+.stage-notes-panel { margin-top: var(--space-2); padding: var(--space-2); background: var(--color-surface-offset); border-radius: var(--radius-md); border-left: 3px solid var(--color-primary-muted); }
+.stage-note-item { margin-bottom: var(--space-2); font-size: var(--text-sm); }
+.stage-note-item:last-of-type { margin-bottom: 0; }
+.stage-note-text { margin: 0 0 var(--space-1); color: var(--color-text); }
+.stage-note-meta { font-size: var(--text-xs); color: var(--color-text-muted); }
+.stage-note-add { margin-top: var(--space-2); }
+.stage-note-toggle { margin-top: var(--space-1); }
 
 /* ============================================
    PORTFOLIO
@@ -1279,7 +1290,7 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
           </span>
         </div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name">Equipo VideoForge</div>
+          <div class="sidebar-user-name" id="creativosUserName" title="Clic para cambiar nombre (aparece en revisiones y notas)" style="cursor:pointer">Equipo VideoForge</div>
           <div class="sidebar-user-role">Administrador</div>
           <div class="sidebar-user-role sidebar-user-role-hint">Clic para poner tu foto</div>
         </div>
@@ -1425,7 +1436,7 @@ function timeAgo(iso) {
 
 function createStageData() {
   const s = {};
-  STAGES.forEach(st => { s[st] = { status:'pending', files:[], note:'', reviewer:'', reviewNote:'', reviewedAt:null }; });
+  STAGES.forEach(st => { s[st] = { status:'pending', files:[], note:'', notes:[], reviewer:'', reviewNote:'', reviewedAt:null }; });
   return s;
 }
 
@@ -1677,7 +1688,7 @@ function renderPage(page) {
   const main = document.getElementById('mainContent');
   switch(page) {
     case 'dashboard': main.innerHTML = renderDashboard(); break;
-    case 'pipeline': main.innerHTML = renderPipeline(); break;
+    case 'pipeline': main.innerHTML = renderPipeline(); initPipelineDrag(); break;
     case 'projects': main.innerHTML = renderProjectsList(); break;
     case 'clients': main.innerHTML = renderClients(); break;
     case 'products': main.innerHTML = renderProducts(); break;
@@ -1845,7 +1856,7 @@ function renderPipeline() {
         ${D.clients.map(c => `<option value="${c.id}" ${filterClientId === c.id ? 'selected':''}>${esc(c.company)}</option>`).join('')}
       </select>
     </div>
-    <div class="kanban">
+    <div class="kanban" id="pipelineKanban">
       ${STAGES.map(stage => {
         let stageProjects = projects.filter(p => getProjectStage(p) === stage);
         // Apply filters
@@ -1854,7 +1865,7 @@ function renderPipeline() {
         if (fEditor) stageProjects = stageProjects.filter(p => p.editorId === fEditor);
         if (fClient) stageProjects = stageProjects.filter(p => p.clientId === fClient);
 
-        return `<div class="kanban-column">
+        return `<div class="kanban-column" data-stage="${stage}">
           <div class="kanban-col-header">
             ${STAGE_NAMES[stage]}
             <span class="kanban-col-count">${stageProjects.length}</span>
@@ -1865,7 +1876,7 @@ function renderPipeline() {
               const client = D.clients.find(c => c.id === p.clientId);
               const progress = getProjectProgress(p);
               const stageStatus = p.stages[stage].status;
-              return `<div class="kanban-card" onclick="openProjectDrawer('${p.id}')">
+              return `<div class="kanban-card" data-project-id="${p.id}" role="button" tabindex="0">
                 <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--space-1);">
                   <div class="kanban-card-title">${esc(p.name)}</div>
                   <span class="kanban-card-type-badge">${esc(p.type)}</span>
@@ -1890,6 +1901,116 @@ function renderPipeline() {
       }).join('')}
     </div>
   </div>`;
+}
+
+var _pipelineDrag = { active: false, projectId: null, sourceStage: null };
+function initPipelineDrag() {
+  var board = document.getElementById('pipelineKanban');
+  if (!board || board.dataset.dragInited === '1') return;
+  board.dataset.dragInited = '1';
+  window._pipelineJustDropped = false;
+  function getBoard() { return document.getElementById('pipelineKanban'); }
+  function startDrag(card) {
+    var id = card.getAttribute('data-project-id');
+    if (!id) return;
+    var colEl = card.closest('.kanban-column');
+    if (!colEl) return;
+    _pipelineDrag.active = true;
+    _pipelineDrag.projectId = id;
+    _pipelineDrag.sourceStage = colEl.getAttribute('data-stage');
+    card.classList.add('kanban-card-dragging');
+  }
+  function updateTarget(clientX, clientY) {
+    var colEl = document.elementFromPoint(clientX, clientY);
+    if (!colEl) return;
+    colEl = colEl.closest('.kanban-column');
+    var b = getBoard();
+    if (b) b.querySelectorAll('.kanban-column').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
+    if (colEl) colEl.classList.add('kanban-drop-target');
+  }
+  function endDrag(clientX, clientY) {
+    if (!_pipelineDrag.active) return;
+    var b = getBoard();
+    var colEl = null;
+    if (clientX != null && clientY != null) {
+      colEl = document.elementFromPoint(clientX, clientY);
+      if (colEl) colEl = colEl.closest('.kanban-column');
+    } else if (b) {
+      colEl = b.querySelector('.kanban-drop-target');
+    }
+    if (b) {
+      b.querySelectorAll('.kanban-column').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
+      b.querySelectorAll('.kanban-card-dragging').forEach(function(c) { c.classList.remove('kanban-card-dragging'); });
+    }
+    if (colEl && _pipelineDrag.projectId) {
+      var targetStage = colEl.getAttribute('data-stage');
+      if (targetStage && targetStage !== _pipelineDrag.sourceStage) {
+        moveProjectToStage(_pipelineDrag.projectId, targetStage);
+        window._pipelineJustDropped = true;
+      }
+    }
+    _pipelineDrag.active = false;
+    _pipelineDrag.projectId = null;
+    _pipelineDrag.sourceStage = null;
+  }
+  board.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    var card = e.target.closest('.kanban-card');
+    if (!card) return;
+    startDrag(card);
+    e.preventDefault();
+  });
+  board.addEventListener('touchstart', function(e) {
+    var card = e.target.closest('.kanban-card');
+    if (!card) return;
+    startDrag(card);
+  }, { passive: true });
+  if (!window._pipelineDragDocListeners) {
+    window._pipelineDragDocListeners = true;
+    document.addEventListener('mousemove', function(e) {
+      if (!_pipelineDrag.active) return;
+      updateTarget(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchmove', function(e) {
+      if (!_pipelineDrag.active || !e.touches.length) return;
+      updateTarget(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+    document.addEventListener('mouseup', function(e) {
+      endDrag(e.clientX, e.clientY);
+    });
+    document.addEventListener('touchend', function(e) {
+      endDrag(e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : null, e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientY : null);
+    });
+  }
+  board.addEventListener('click', function(e) {
+    var card = e.target.closest('.kanban-card');
+    if (!card) return;
+    if (window._pipelineJustDropped) {
+      window._pipelineJustDropped = false;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    var id = card.getAttribute('data-project-id');
+    if (id) openProjectDrawer(id);
+  });
+}
+
+function moveProjectToStage(projectId, newStage) {
+  var p = D.projects.find(function(pr) { return pr.id === projectId; });
+  if (!p || !STAGES.includes(newStage)) return;
+  var idx = STAGES.indexOf(newStage);
+  STAGES.forEach(function(st, i) {
+    if (i < idx) p.stages[st].status = 'approved';
+    else if (i === idx) p.stages[st].status = 'in_progress';
+    else p.stages[st].status = 'pending';
+  });
+  showToast('success', 'Proyecto movido a ' + (STAGE_NAMES[newStage] || newStage));
+  if (supabase) {
+    updateProjectStages(projectId, p.stages, true);
+  } else {
+    renderPage('pipeline');
+  }
 }
 
 /* ============================================
@@ -2294,14 +2415,10 @@ function openProjectDrawer(id) {
           <button class="btn btn-sm ${p.cpa==='bueno'?'btn-primary':'btn-secondary'}" onclick="setCPA('${p.id}','bueno')">Bueno</button>
           <button class="btn btn-sm ${p.cpa==='malo'?'btn-danger':'btn-secondary'}" onclick="setCPA('${p.id}','malo')">Malo</button>
         </div>
-        <div style="margin-top:var(--space-3);">
-          <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--text-sm);">
-            <input type="checkbox" ${p.published?'checked':''} onchange="togglePublish('${p.id}', this.checked)" style="width:16px;height:16px;accent-color:var(--color-primary);">
-            Publicar en Portafolio
-          </label>
-        </div>
       </div>
     ` : ''}
+
+    ${(['produccion','revision'].indexOf(currentStage) >= 0 ? `<div style="margin-bottom:var(--space-4);"><button type="button" class="btn btn-sm btn-secondary" onclick="backToEditGuion('${p.id}')">← Volver a editar guión</button></div>` : '')}
 
     <div style="font-size:var(--text-sm);font-weight:600;margin-bottom:var(--space-3);">Etapas del Proyecto</div>
     <div class="stage-timeline">
@@ -2316,7 +2433,7 @@ function openProjectDrawer(id) {
           </div>
           <div class="stage-content">
             <div class="stage-name">${STAGE_NAMES[stage]} <span class="badge ${getStatusBadge(s.status)} badge-sm stage-status-badge"><span class="badge-dot"></span>${STAGE_STATUSES[s.status]}</span></div>
-            ${s.note ? `<div class="stage-details"><p><strong>Nota:</strong> ${esc(s.note)}</p></div>` : ''}
+            ${renderStageNotes(p, stage)}
             ${s.reviewer ? `<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-1);">Revisado por: ${esc(s.reviewer)} ${s.reviewedAt ? '· ' + formatDate(s.reviewedAt) : ''}</div>` : ''}
             ${s.reviewNote ? `<div class="stage-details" style="border-left:3px solid var(--color-warning);margin-top:var(--space-1);"><p><strong>Feedback:</strong> ${esc(s.reviewNote)}</p></div>` : ''}
             ${s.files && s.files.length > 0 ? `<div class="file-list" style="margin-top:var(--space-2);">${s.files.map(f => `<div class="file-item"><span class="file-name">${esc(f)}</span></div>`).join('')}</div>` : ''}
@@ -2333,6 +2450,53 @@ function openProjectDrawer(id) {
   document.getElementById('projectDrawer').classList.add('active');
 }
 
+function getCurrentUserName() {
+  try { return localStorage.getItem('creativos_user_name') || 'Usuario'; } catch (e) { return 'Usuario'; }
+}
+function renderStageNotes(p, stage) {
+  const s = p.stages[stage];
+  const notes = s.notes || (s.note ? [{ text: s.note, who: '—', at: '' }] : []);
+  let html = '<div class="stage-notes-panel">';
+  notes.forEach(function(n, i) {
+    const atStr = n.at ? (formatDate(n.at) + ' ' + (n.at.indexOf('T') >= 0 ? new Date(n.at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '')) : '';
+    html += '<div class="stage-note-item"><p class="stage-note-text">' + esc(n.text) + '</p><div class="stage-note-meta">' + esc(n.who || '—') + (atStr ? ' · ' + atStr : '') + '</div></div>';
+  });
+  const noteId = stage + '_' + p.id;
+  html += '<div class="stage-note-add" id="noteAdd_' + noteId + '" style="display:none;"><input type="text" class="form-input" id="noteInput_' + noteId + '" placeholder="Escribe la nota..." style="margin-bottom:var(--space-2);"><button type="button" class="btn btn-sm btn-primary" onclick="saveStageNote(\'' + p.id + '\',\'' + stage + '\')">Guardar</button></div>';
+  if (s.status !== 'pending' && s.status !== 'approved') {
+    html += '<button type="button" class="btn btn-sm btn-ghost stage-note-toggle" onclick="toggleNoteInput(\'' + noteId + '\')">Agregar Nota</button>';
+  }
+  html += '</div>';
+  return html;
+}
+function toggleNoteInput(noteId) {
+  const addEl = document.getElementById('noteAdd_' + noteId);
+  if (!addEl) return;
+  addEl.style.display = addEl.style.display === 'none' ? 'block' : 'none';
+  if (addEl.style.display === 'block') {
+    const inp = document.getElementById('noteInput_' + noteId);
+    if (inp) { inp.value = ''; inp.focus(); }
+  }
+}
+function saveStageNote(pid, stage) {
+  const inp = document.getElementById('noteInput_' + stage + '_' + pid);
+  const text = inp && inp.value.trim();
+  if (!text) return;
+  const p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p) return;
+  if (!p.stages[stage].notes) p.stages[stage].notes = [];
+  if (p.stages[stage].note) { p.stages[stage].notes.push({ text: p.stages[stage].note, who: '—', at: '' }); p.stages[stage].note = ''; }
+  p.stages[stage].notes.push({ text: text, who: getCurrentUserName(), at: new Date().toISOString() });
+  showToast('success', 'Nota guardada');
+  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); }
+}
+function backToEditGuion(pid) {
+  const p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p) return;
+  p.stages.guion.status = 'in_progress';
+  showToast('info', 'Puedes editar el guión de nuevo. Guarda y reenvía cuando termines.');
+  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); renderPage(currentPage); }
+}
 function renderStageActions(p, stage, stageIdx) {
   const s = p.stages[stage];
   const currentStage = getProjectStage(p);
@@ -2352,10 +2516,6 @@ function renderStageActions(p, stage, stageIdx) {
   if (s.status === 'changes') {
     html += `<button class="btn btn-sm btn-primary" onclick="resubmitStage('${p.id}','${stage}')">Reenviar</button>`;
   }
-  // Add note button for active stages
-  if (s.status !== 'pending' && s.status !== 'approved') {
-    html += `<button class="btn btn-sm btn-ghost" onclick="addStageNote('${p.id}','${stage}')">Agregar Nota</button>`;
-  }
 
   return html;
 }
@@ -2368,11 +2528,14 @@ function closeDrawer() {
 /* ============================================
    STAGE WORKFLOW
    ============================================ */
-function updateProjectStages(pid, stages) {
+function updateProjectStages(pid, stages, skipOpenDrawer) {
   if (supabase) {
     supabase.from('creativos_proyectos').update({ stages: stages }).eq('id', pid).then(function(r) {
       if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
-      reloadCreativosData(function() { openProjectDrawer(pid); renderPage(currentPage); });
+      reloadCreativosData(function() {
+        if (!skipOpenDrawer) openProjectDrawer(pid);
+        renderPage(currentPage);
+      });
     });
   }
 }
@@ -2397,7 +2560,7 @@ function approveStage(pid, stage) {
   if (!p) return;
   p.stages[stage].status = 'approved';
   p.stages[stage].reviewedAt = new Date().toISOString();
-  p.stages[stage].reviewer = 'Equipo VideoForge';
+  p.stages[stage].reviewer = getCurrentUserName();
   logActivity('approved', p.name, STAGE_NAMES[stage]);
   showToast('success', STAGE_NAMES[stage] + ' aprobada');
   if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
@@ -2422,15 +2585,6 @@ function resubmitStage(pid, stage) {
   logActivity('review', p.name, STAGE_NAMES[stage]);
   showToast('info', 'Reenviado a revisión');
   if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
-}
-function addStageNote(pid, stage) {
-  var note = prompt('Agregar nota:');
-  if (!note) return;
-  var p = D.projects.find(function(pr) { return pr.id === pid; });
-  if (!p) return;
-  p.stages[stage].note = note;
-  showToast('success', 'Nota agregada');
-  if (supabase) updateProjectStages(pid, p.stages); else openProjectDrawer(pid);
 }
 function setCPA(pid, value) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
@@ -2522,11 +2676,13 @@ function removeFile(i) { pendingFiles.splice(i,1); renderFileList(); }
 function saveProject() {
   var name = document.getElementById('projName').value.trim();
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
+  var productId = document.getElementById('projProduct').value || null;
+  var editorId = document.getElementById('projEditor').value || null;
+  if (!productId) { showToast('error', 'Selecciona un producto'); return; }
+  if (!editorId) { showToast('error', 'Selecciona un editor'); return; }
   var stages = createStageData();
   if (pendingFiles.length > 0) stages.inspiracion.files = pendingFiles.slice();
   var clientId = document.getElementById('projClient').value || null;
-  var productId = document.getElementById('projProduct').value || null;
-  var editorId = document.getElementById('projEditor').value || null;
   var row = {
     name: name,
     client_id: clientId || null,
@@ -3111,6 +3267,20 @@ if (supabase) {
   setTimeout(function() { clearInterval(t); }, 8000);
 }
 initCreativosAvatar();
+function updateCreativosUserNameDisplay() {
+  var el = document.getElementById('creativosUserName');
+  if (!el) return;
+  el.textContent = getCurrentUserName();
+  el.onclick = function() {
+    var n = prompt('Tu nombre (aparece en revisiones y notas):', getCurrentUserName());
+    if (n != null && n.trim()) {
+      try { localStorage.setItem('creativos_user_name', n.trim()); } catch(e) {}
+      el.textContent = n.trim();
+      showToast('success', 'Nombre actualizado');
+    }
+  };
+}
+updateCreativosUserNameDisplay();
 </script>
 </body>
 </html>

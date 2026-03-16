@@ -2067,21 +2067,6 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       </button>
     </div>
 
-    <div class="nav-section">
-      <div class="nav-section-label">Automatización</div>
-
-      <button class="nav-item" data-view="workflows" onclick="navigate('workflows',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <polyline points="16 3 21 3 21 8"/>
-          <line x1="4" y1="20" x2="21" y2="3"/>
-          <polyline points="21 16 21 21 16 21"/>
-          <line x1="15" y1="15" x2="21" y2="21"/>
-          <line x1="4" y1="4" x2="9" y2="9"/>
-        </svg>
-        Workflows
-        <span class="nav-badge purple" id="badge-workflows">0</span>
-      </button>
-    </div>
   </nav>
 
   <div class="sidebar-footer">
@@ -2230,15 +2215,6 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       <div class="stat-value" id="stat-vencidos">0</div>
       <div class="stat-label">Vencidos</div>
     </div>
-    <div class="stat-card fade-in">
-      <div class="stat-top">
-        <div class="stat-icon" style="background:var(--purple-bg);color:var(--purple)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>
-        </div>
-      </div>
-      <div class="stat-value" id="stat-workflows">0</div>
-      <div class="stat-label">Workflows Activos</div>
-    </div>
   </div>
 
   <!-- Dashboard Grid: Activity + Quick Actions -->
@@ -2268,10 +2244,6 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <button class="btn-secondary" style="width:100%;justify-content:center" onclick="navigate('attendance')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
             Marcar Asistencia
-          </button>
-          <button class="btn-secondary" style="width:100%;justify-content:center" onclick="navigate('workflows')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/></svg>
-            Workflows
           </button>
         </div>
         <div style="margin-top:var(--sp-4);padding:var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-lg)">
@@ -2442,15 +2414,6 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   </div>
 </section>
 
-<!-- ══════════════ WORKFLOWS VIEW ══════════════ -->
-<section class="view" id="view-workflows" aria-label="Workflows y automatizaciones">
-  <div class="section-header">
-    <h3>Automatizaciones y Flujos de Trabajo</h3>
-    <button class="btn-primary">+ Crear Workflow</button>
-  </div>
-  <div class="workflows-grid" id="workflowsGrid"></div>
-</section>
-
   </main><!-- /content -->
 </div><!-- /main -->
 </div><!-- /app -->
@@ -2540,10 +2503,6 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       <div class="cmd-item" onclick="navigate('attendance');closeCmdPalette()" data-cmd="Asistencia Control">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
         <div class="cmd-item-text"><div class="cmd-item-name">Asistencia</div><div class="cmd-item-desc">Control de asistencia verificada</div></div>
-      </div>
-      <div class="cmd-item" onclick="navigate('workflows');closeCmdPalette()" data-cmd="Workflows Automatizaciones">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Workflows</div><div class="cmd-item-desc">Automatizaciones y flujos de trabajo</div></div>
       </div>
       <div class="cmd-section-title">Acciones</div>
       <div class="cmd-item" onclick="openModal('task');closeCmdPalette()" data-cmd="Nuevo Entregable Crear">
@@ -2686,15 +2645,14 @@ async function loadTareasData() {
   var now = new Date();
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
-    var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes, wfRes] = await Promise.all([
+    var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes] = await Promise.all([
       supabase.from('clientes').select('id, name, phones, emails').order('name'),
       supabase.from('tareas_equipo').select('*').order('id'),
       supabase.from('tareas_clientes').select('*').order('nombre'),
       supabase.from('tareas_kanban').select('*').order('columna').order('orden', { ascending: true }),
       supabase.from('tareas_tickets').select('*').order('created_at', { ascending: false }),
       supabase.from('tareas_workload').select('*'),
-      supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
-      supabase.from('tareas_workflows').select('*').order('orden')
+      supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia')
     ]);
     if (creditoRes.error) console.warn('[Tareas] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
     if (eqRes.error) throw eqRes.error;
@@ -2703,8 +2661,6 @@ async function loadTareasData() {
     if (tkRes.error) throw tkRes.error;
     if (wlRes.error) throw wlRes.error;
     if (calRes.error) throw calRes.error;
-    if (wfRes.error) throw wfRes.error;
-
     var creditoById = {};
     (creditoRes.data || []).forEach(function(c) {
       var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
@@ -2736,9 +2692,6 @@ async function loadTareasData() {
     });
     TEAM.forEach(function(m) { if (!MT[m.id]) MT[m.id] = []; });
     var calI = (calRes.data || []).map(function(r) { return { d: r.dia, t: r.titulo, cl: r.clase_css || 'pill-orange' }; });
-    var workflows = (wfRes.data || []).map(function(r) {
-      return { id: r.id, ic: r.icono || '', bg: 'var(--color-primary-highlight)', t: r.titulo, d: r.descripcion || '', steps: Array.isArray(r.pasos) ? r.pasos : [], act: r.activo || 0, badges: Array.isArray(r.badges) ? r.badges : [] };
-    });
     var ticketIds = (tkRes.data || []).map(function(t) { return t.id; });
     var comentariosRes = ticketIds.length ? await supabase.from('tareas_ticket_comentarios').select('*').in('ticket_id', ticketIds).order('created_at', { ascending: true }) : { data: [] };
     var comentarios = comentariosRes.data || [];
@@ -2758,7 +2711,7 @@ async function loadTareasData() {
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
-    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
+    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
     return null;
@@ -2787,7 +2740,6 @@ function reloadTareasData(thenRender) {
         KT = data.KT || [];
       }
       tickets = data.tickets;
-      workflows = data.workflows;
       calI = data.calI;
       if (data.creditoIdsInTareas) creditoIdsInTareas = data.creditoIdsInTareas;
       var now = new Date();
@@ -2832,7 +2784,7 @@ function makeTkAvatar(id, size=22) {
 const pageNames = {
   dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables',
   tickets:'Sistema de Tickets',calendar:'Calendario Editorial',workload:'Carga de Trabajo',
-  attendance:'Asistencia Verificada',workflows:'Workflows'
+  attendance:'Asistencia Verificada'
 };
 
 function navigate(viewId, btn) {
@@ -3593,29 +3545,6 @@ function markAllPresent() {
   renderers.attendance();
 }
 
-// ─── WORKFLOWS ───
-renderers.workflows = function() {
-  const grid = document.getElementById('workflowsGrid');
-  grid.innerHTML = '';
-  workflows.forEach(w => {
-    const stepsHtml = w.steps.map((s, i) => `
-      ${i > 0 ? '<span class="wf-step-arrow" aria-hidden="true">→</span>' : ''}
-      <span class="wf-step ${i < w.act ? 'done' : i === w.act ? 'active' : ''}">${s}</span>`).join('');
-    const badgesHtml = w.badges.map(b => `<span class="pill pill-gray">${b}</span>`).join('');
-    const card = document.createElement('article');
-    card.className = 'workflow-card fade-in';
-    card.innerHTML = `
-      <div class="workflow-top">
-        <div class="workflow-icon" style="background:${w.bg}" aria-hidden="true">${w.ic}</div>
-        <div style="flex:1"><div class="workflow-title">${w.t}</div></div>
-      </div>
-      <div class="workflow-desc">${w.d}</div>
-      <div class="workflow-steps" role="list">${stepsHtml}</div>
-      <div class="workflow-badges">${badgesHtml}</div>`;
-    grid.appendChild(card);
-  });
-};
-
 // ─── SIDEBAR BADGE UPDATES ───
 function updateBadges() {
   var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
@@ -3625,8 +3554,6 @@ function updateBadges() {
   if (clEl) clEl.textContent = clients.length;
   var kbEl = document.getElementById('badge-kanban');
   if (kbEl) kbEl.textContent = KT.length;
-  var wfEl = document.getElementById('badge-workflows');
-  if (wfEl) wfEl.textContent = workflows.filter(function(w) { return (w.act || 0) > 0; }).length;
 }
 
 function updateDashboardStats() {
@@ -3634,14 +3561,12 @@ function updateDashboardStats() {
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
   var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
   var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
-  var wfAct = workflows.filter(function(w) { return (w.act || 0) > 0; }).length;
   var present = TEAM.filter(function(m) { return m.att === 'present' || m.att === 'remote' || m.att === 'late'; }).length;
   var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
   set('stat-clients', clients.length);
   set('stat-tickets', tkOpen);
   set('stat-done', done);
   set('stat-vencidos', vencidos);
-  set('stat-workflows', wfAct);
   set('welcome-stat-entregables', total);
   set('welcome-stat-done', done);
   set('welcome-stat-tickets', tkOpen);
@@ -4263,7 +4188,6 @@ function initViews() {
   renderers.calendar?.();
   renderers.workload?.();
   renderers.attendance?.();
-  renderers.workflows?.();
   observeFadeIns();
   updateBadges();
   updateDashboardStats();
@@ -4306,7 +4230,6 @@ document.addEventListener('DOMContentLoaded', function() {
         clients = data.clients;
         KT = data.KT;
         tickets = data.tickets;
-        workflows = data.workflows;
         calI = data.calI;
       }
       showTareasLoading(false);
