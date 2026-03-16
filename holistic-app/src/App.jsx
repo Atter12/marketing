@@ -351,6 +351,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [cofFilterCliente, setCofFilterCliente] = useState("");
   const [cofFilterPeriodo, setCofFilterPeriodo] = useState("");
   const [garantiaImagenNewFiles, setGarantiaImagenNewFiles] = useState([]);
+  const [garantiaEditComprobantePaths, setGarantiaEditComprobantePaths] = useState([]);
+  const [garantiaEditSignedUrls, setGarantiaEditSignedUrls] = useState({});
+  const [garantiaNewFileUrls, setGarantiaNewFileUrls] = useState([]);
+  const garantiaNewFileUrlsRef = useRef([]);
   const [uploadingComprobantes, setUploadingComprobantes] = useState(false);
   const [comprobanteViewer, setComprobanteViewer] = useState(null);
   const [viewerSignedUrls, setViewerSignedUrls] = useState([]);
@@ -687,7 +691,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [cof.gastoIds, cof.monto, cof.distribucion, sGastos]);
 
   /* ═══ MODALS ═══ */
-  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); setCobroEditComprobantePaths([]); } if (type === "garantia" && !eid) setGafFilterPeriodo(""); };
+  const openMdl = (type, eid = null) => { setEditId(eid); setModal(type); if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); setCobroEditComprobantePaths([]); } if (type === "garantia" && !eid) { setGafFilterPeriodo(""); setGarantiaEditComprobantePaths([]); setGarantiaImagenNewFiles([]); } };
   const closeMdl = () => {
     setModal(null);
     setEditId(null);
@@ -703,8 +707,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setCofGastosQuery("");
     setCofFilterCliente("");
     setCofFilterPeriodo("");
-    setGafFilterPeriodo("");
     setGarantiaImagenNewFiles([]);
+    setGarantiaEditComprobantePaths([]);
+    setGarantiaEditSignedUrls({});
+    setGafFilterPeriodo("");
     setGfClientNameInput("");
     setBulkFee("");
     setBulkFeeScope("selected");
@@ -719,8 +725,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
     if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
-    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); }
-    else if (modal === "garantia") setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId }));
+    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
+    else if (modal === "garantia") { setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId })); setGarantiaEditComprobantePaths([]); }
     if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) { setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); const urls = co.comprobante_urls; setCobroEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
   }, [modal, editId, clients, garantias, cobros]);
 
@@ -752,6 +758,26 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     cobroNewFileUrlsRef.current = urls;
     setCobroNewFileUrls(urls);
   }, [cobroComprobanteFiles]);
+
+  useEffect(() => {
+    if (modal === "garantia" && editId && garantiaEditComprobantePaths.length > 0) {
+      const pathList = garantiaEditComprobantePaths;
+      Promise.all(pathList.map((p) => getComprobanteSignedUrl(p))).then((urls) => {
+        const next = {};
+        pathList.forEach((p, i) => { next[p] = urls?.[i] ?? null; });
+        setGarantiaEditSignedUrls((prev) => ({ ...prev, ...next }));
+      });
+    } else {
+      setGarantiaEditSignedUrls({});
+    }
+  }, [modal, editId, garantiaEditComprobantePaths]);
+
+  useEffect(() => {
+    garantiaNewFileUrlsRef.current.forEach((u) => URL.revokeObjectURL(u));
+    const urls = garantiaImagenNewFiles.map((f) => URL.createObjectURL(f));
+    garantiaNewFileUrlsRef.current = urls;
+    setGarantiaNewFileUrls(urls);
+  }, [garantiaImagenNewFiles]);
 
   const clientsSorted = useMemo(() => [...clients].sort((a, b) => (a.name || "").localeCompare((b.name || ""), "es")), [clients]);
   const clientsFiltered = useMemo(() => clientsSorted.filter((c) => !search || (c.name || "").toLowerCase().includes(search.toLowerCase())), [clientsSorted, search]);
@@ -884,16 +910,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     try {
       setUploadingComprobantes(true);
       const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado, fechaColocacion: gaf.fechaColocacion || "" });
-      const existingPaths = (editId && garantias.find((g) => g.id === editId)?.imagen_urls) || [];
-      if (garantiaImagenNewFiles.length > 0) {
-        const newPaths = [];
-        for (const f of garantiaImagenNewFiles) {
-          newPaths.push(await uploadComprobanteGarantia(id, f));
-        }
-        await mutations.setGarantiaImagenes(id, [...existingPaths, ...newPaths]);
-      } else if (editId && existingPaths.length > 0) {
-        await mutations.setGarantiaImagenes(id, existingPaths);
+      const basePaths = editId ? garantiaEditComprobantePaths : [];
+      const newPaths = [];
+      for (const f of garantiaImagenNewFiles) {
+        newPaths.push(await uploadComprobanteGarantia(id, f));
       }
+      const allPaths = [...basePaths, ...newPaths];
+      if (allPaths.length > 0) await mutations.setGarantiaImagenes(id, allPaths);
       closeMdl();
       const mesGar = (gaf.fechaColocacion && String(gaf.fechaColocacion).slice(0, 7)) || (gaf.gastoId && gastos.find((x) => x.id === gaf.gastoId)?.mes) || tm();
       setRepCl(gaf.clientId);
@@ -2362,22 +2385,75 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <div style={{ marginTop: 8 }}>
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
           <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
+          {editId && garantiaEditComprobantePaths.length > 0 && (
+            <ul style={{ marginBottom: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {garantiaEditComprobantePaths.map((path, i) => {
+                const url = garantiaEditSignedUrls[path];
+                const name = path.split("/").pop() || `Archivo ${i + 1}`;
+                const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
+                const canPreview = !!url;
+                return (
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
+                      onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && e.preventDefault() && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
+                      title={canPreview ? "Clic para ver en grande" : ""}
+                    >
+                      {url && isImage ? (
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
+                      ) : url && !isImage ? (
+                        <FileText size={28} style={{ color: "#64748b" }} />
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
+                      )}
+                    </div>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setGarantiaEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
           <label style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 18px", border: "2px dashed #8b5cf6", borderRadius: 12, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 13, fontWeight: 600, cursor: uploadingComprobantes ? "wait" : "pointer", transition: "all .2s" }}>
             <Paperclip size={16} />
             <input type="file" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" multiple style={{ display: "none" }} onChange={(e) => { const files = Array.from(e.target.files || []); setGarantiaImagenNewFiles((p) => [...p, ...files]); e.target.value = ""; }} disabled={uploadingComprobantes} />
             Añadir archivos
           </label>
           {garantiaImagenNewFiles.length > 0 && (
-            <ul style={{ marginTop: 10, paddingLeft: 18, fontSize: 12, color: "#0f172a" }}>
-              {garantiaImagenNewFiles.map((f, i) => (
-                <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  {f.name} ({(f.size / 1024).toFixed(1)} KB)
-                  <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "2px 6px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 4, fontSize: 11, cursor: "pointer" }}>Quitar</button>
-                </li>
-              ))}
+            <ul style={{ marginTop: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
+              {garantiaImagenNewFiles.map((f, i) => {
+                const url = garantiaNewFileUrls[i];
+                const isImage = f.type && f.type.startsWith("image/");
+                const isPdf = f.type === "application/pdf";
+                const canPreview = !!url;
+                return (
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf, name: f.name })}
+                      onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf, name: f.name }))}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
+                      title={canPreview ? "Clic para ver en grande" : ""}
+                    >
+                      {url && isImage ? (
+                        <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
+                      ) : url && isPdf ? (
+                        <FileText size={28} style={{ color: "#64748b" }} />
+                      ) : (
+                        <span style={{ fontSize: 10, color: "#94a3b8" }}>…</span>
+                      )}
+                    </div>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={f.name}>{f.name}</span>
+                    <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
+                  </li>
+                );
+              })}
             </ul>
           )}
-          {editId && (() => { const gar = garantias.find((g) => g.id === editId); const paths = gar?.imagen_urls || []; return paths.length > 0 ? <p style={{ marginTop: 8, fontSize: 12, color: "#64748b" }}>Ya hay {paths.length} archivo(s) subidos para esta garantía. Los nuevos se añadirán.</p> : null; })()}
         </div>
       </Mdl>
 
