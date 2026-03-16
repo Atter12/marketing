@@ -2002,6 +2002,7 @@ function initPipelineDrag() {
     card.classList.add('kanban-card-dragging');
   }
   function updateTarget(clientX, clientY) {
+    pipelineDragMoved = true;
     var colEl = document.elementFromPoint(clientX, clientY);
     if (!colEl) return;
     colEl = colEl.closest('.kanban-column');
@@ -2009,6 +2010,7 @@ function initPipelineDrag() {
     if (b) b.querySelectorAll('.kanban-column').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
     if (colEl) colEl.classList.add('kanban-drop-target');
   }
+  var pipelineDragMoved = false;
   function endDrag(clientX, clientY) {
     if (!_pipelineDrag.active) return;
     var b = getBoard();
@@ -2024,21 +2026,28 @@ function initPipelineDrag() {
       b.querySelectorAll('.kanban-column').forEach(function(c) { c.classList.remove('kanban-drop-target'); });
       b.querySelectorAll('.kanban-card-dragging').forEach(function(c) { c.classList.remove('kanban-card-dragging'); });
     }
+    var didMove = false;
     if (colEl && _pipelineDrag.projectId) {
       var targetStage = (colEl.getAttribute('data-stage') || '').trim();
       if (targetStage && STAGES.indexOf(targetStage) >= 0 && targetStage !== _pipelineDrag.sourceStage) {
         moveProjectToStage(_pipelineDrag.projectId, targetStage);
         window._pipelineJustDropped = true;
+        didMove = true;
       }
+    }
+    if (!didMove && _pipelineDrag.projectId && !pipelineDragMoved) {
+      openProjectDrawer(_pipelineDrag.projectId);
     }
     _pipelineDrag.active = false;
     _pipelineDrag.projectId = null;
     _pipelineDrag.sourceStage = null;
+    pipelineDragMoved = false;
   }
   board.addEventListener('mousedown', function(e) {
     if (e.button !== 0) return;
     var card = e.target.closest('.kanban-card');
     if (!card) return;
+    pipelineDragMoved = false;
     startDrag(card);
     e.preventDefault();
   });
