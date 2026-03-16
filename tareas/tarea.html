@@ -1819,6 +1819,47 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .daily-code-meta { display: flex; gap: var(--sp-5); font-size: var(--text-xs); color: var(--color-text-muted); flex-wrap: wrap; }
 
+.att-code-bar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.att-code-label { display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); margin-bottom: var(--sp-2); }
+.att-code-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
+.att-code-input {
+  width: 120px;
+  font-size: 1.25rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2em;
+  text-align: center;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  border: 2px solid var(--color-divider);
+}
+.att-code-input:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px var(--color-primary-glow); }
+.att-code-select { min-width: 160px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); }
+.att-code-btn { white-space: nowrap; }
+.att-code-message { margin-top: var(--sp-2); font-size: var(--text-sm); min-height: 1.5em; }
+.att-code-message.ok { color: var(--green); }
+.att-code-message.err { color: var(--red); }
+
+.att-dashboard { margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: 1px solid var(--color-divider); }
+.att-dashboard-title { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--sp-4); }
+.att-dashboard-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-5); }
+.att-dash-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+  text-align: center;
+}
+.att-dash-card .num { font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--color-primary); }
+.att-dash-card .lbl { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-faint); margin-top: 4px; }
+.att-chart-wrap { background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--r-xl); padding: var(--sp-4); min-height: 220px; }
+.att-chart-wrap canvas { display: block; max-width: 100%; height: 200px; }
+
 /* Anti-fraud banner */
 .antifr-banner {
   background: var(--color-primary-highlight);
@@ -2332,13 +2373,13 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════════════ ATTENDANCE VIEW ══════════════ -->
 <section class="view" id="view-attendance" aria-label="Control de asistencia">
   <div class="section-header">
-    <h3>Control de Asistencia Verificada — 15 Feb 2026</h3>
+    <h3 id="attendanceTitle">Control de Asistencia Verificada</h3>
     <div class="section-actions">
       <button class="btn-success btn-sm" onclick="markAllPresent()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         Marcar todos
       </button>
-      <button class="btn-secondary btn-sm">
+      <button class="btn-secondary btn-sm" onclick="exportAttendance()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Exportar
       </button>
@@ -2353,11 +2394,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     </svg>
     <div>
       <div class="title">Verificación Anti-Fraude Activa</div>
-      <div class="sub">Cada check-in requiere: Código diario rotativo + Selfie en tiempo real + Geolocalización GPS + Verificación de IP de red.</div>
+      <div class="sub">Introduce el código que recibiste por email para registrar tu entrada o salida.</div>
     </div>
   </div>
 
-  <!-- Daily Code -->
+  <!-- Daily Code (admin: enviar por email) -->
   <div class="daily-code-box">
     <div style="display:flex;align-items:center;gap:var(--sp-4)">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
@@ -2365,18 +2406,40 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <line x1="12" y1="18" x2="12" y2="22"/><line x1="12" y1="2" x2="12" y2="6"/>
       </svg>
       <div>
-        <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-faint);font-weight:700;margin-bottom:4px">Código del Día</div>
+        <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-faint);font-weight:700;margin-bottom:4px">Código del Día (enviar por email al equipo)</div>
         <div class="daily-code-num" id="dailyCode" aria-live="polite"></div>
       </div>
     </div>
     <div class="daily-code-meta">
-      <span>⏰ Generado: 6:00 AM</span>
-      <span>♻️ Expira: 11:59 PM</span>
-      <span>🛡️ Solo válido desde IP oficina</span>
+      <span>⏰ Válido hoy</span>
+      <span>♻️ Cambia cada día a las 0:00</span>
     </div>
   </div>
 
+  <!-- Barra: código por email + registrar entrada/salida -->
+  <div class="att-code-bar">
+    <label for="attCodeInput" class="att-code-label">Código recibido por email</label>
+    <div class="att-code-row">
+      <input type="text" id="attCodeInput" class="att-code-input" placeholder="Ej: 4271" inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="Código del día" />
+      <select id="attCodeMember" class="att-code-select" aria-label="Registrar como">
+        <option value="">— Seleccionar —</option>
+      </select>
+      <button type="button" class="btn-primary att-code-btn" onclick="attVerifyAndCheckin()">✓ Entrada</button>
+      <button type="button" class="btn-secondary att-code-btn" onclick="attVerifyAndCheckout()">Salida</button>
+    </div>
+    <div id="attCodeMessage" class="att-code-message" role="status" aria-live="polite"></div>
+  </div>
+
   <div class="attendance-grid" id="attendanceGrid"></div>
+
+  <!-- Dashboard: horas trabajadas, promedios, gráfica -->
+  <div class="att-dashboard">
+    <h4 class="att-dashboard-title">Resumen de horas</h4>
+    <div class="att-dashboard-cards" id="attDashboardCards"></div>
+    <div class="att-chart-wrap">
+      <canvas id="attHoursChart" aria-label="Horas trabajadas por miembro hoy"></canvas>
+    </div>
+  </div>
 </section>
 
 <!-- ══════════════ WORKFLOWS VIEW ══════════════ -->
@@ -2586,12 +2649,6 @@ let TEAM = [];
 let MT = {};
 let clients = [];
 let KT = [];
-var _kanbanLogSeq = 0;
-function _kanbanLog(msg, detail) {
-  _kanbanLogSeq++;
-  var d = detail !== undefined ? ' ' + JSON.stringify(detail) : '';
-  console.log('[Kanban #' + _kanbanLogSeq + '] ' + msg + d);
-}
 let tickets = [];
 let workflows = [];
 let calI = [];
@@ -2626,7 +2683,6 @@ async function loadTareasData() {
     console.warn('[Tareas] loadTareasData: supabase es null, no se puede cargar. Revisa los logs de tryInitSupabase.');
     return null;
   }
-  console.log('[Tareas] loadTareasData: iniciando fetch (clientes Crédito, tareas_equipo, tareas_clientes, ...)');
   var now = new Date();
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
@@ -2657,10 +2713,8 @@ async function loadTareasData() {
     });
     var creditoCount = (creditoRes.data || []).length;
     var tareasClientesCount = (clRes.data || []).length;
-    console.log('[Tareas] Clientes: Crédito=', creditoCount, ', tareas_clientes=', tareasClientesCount, ', con credito_client_id=', (clRes.data || []).filter(function(r) { return r.credito_client_id; }).length);
-
     var TEAM = (eqRes.data || []).map(function(r) {
-      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '—', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', svc: r.servicio || '', selfie: true, gps: true, ip: true, code: true };
+      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '—', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', selfie: true, gps: true, ip: true, code: true };
     });
     var clients = (clRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
@@ -2675,7 +2729,6 @@ async function loadTareasData() {
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
     });
-    _kanbanLog('loadTareasData: KT construido (variable local)', { length: KT.length, cols: KT.map(function(k){ return k.col; }) });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
       if (!MT[r.equipo_id]) MT[r.equipo_id] = [];
@@ -2705,7 +2758,6 @@ async function loadTareasData() {
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
-    _kanbanLog('loadTareasData: devolviendo data', { KT_length: KT.length });
     return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, workflows: workflows, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
@@ -2721,27 +2773,18 @@ function showTareasLoading(show) {
 }
 
 function reloadTareasData(thenRender) {
-  _kanbanLog('reloadTareasData: llamada', { caller: (new Error()).stack.split('\n')[2].trim() });
   if (!supabase) return Promise.resolve();
   return loadTareasData().then(function(data) {
-    _kanbanLog('reloadTareasData: .then recibido', { data_null: !data, data_KT_length: data && data.KT ? data.KT.length : 'n/a', KT_actual: KT.length });
     if (data) {
       TEAM = data.TEAM;
       MT = data.MT;
       clients = data.clients;
       if (data.KT && data.KT.length > 0) {
         KT = data.KT;
-        _kanbanLog('reloadTareasData: KT = data.KT', { new_length: KT.length });
       } else if (!data.KT || data.KT.length === 0) {
-        if (KT.length === 0) {
-          KT = data.KT || [];
-          _kanbanLog('reloadTareasData: KT = data.KT (estaba vacío)', { new_length: KT.length });
-        } else {
-          _kanbanLog('reloadTareasData: NO sobrescribiendo KT (data.KT vacío, KT tenía ' + KT.length + ')');
-        }
+        if (KT.length === 0) KT = data.KT || [];
       } else {
         KT = data.KT || [];
-        _kanbanLog('reloadTareasData: KT = data.KT (else)', { new_length: KT.length });
       }
       tickets = data.tickets;
       workflows = data.workflows;
@@ -2755,7 +2798,6 @@ function reloadTareasData(thenRender) {
     updateDashboardStats();
     if (thenRender && typeof thenRender === 'function') thenRender();
     else {
-      _kanbanLog('reloadTareasData: llamando renderers (clients, kanban, ...)');
       renderers.clients?.();
       renderers.kanban?.();
       renderers.tickets?.();
@@ -2890,17 +2932,9 @@ function filterClients(status, btn) {
 
 // ─── KANBAN ───
 renderers.kanban = function(snapshot) {
-  var fromSnapshot = snapshot !== undefined && snapshot !== null;
   var items = Array.isArray(snapshot) ? snapshot.slice() : (Array.isArray(KT) ? KT.slice() : []);
   const board = document.getElementById('kanbanBoard');
-  _kanbanLog('renderers.kanban ENTRADA', { fromSnapshot: fromSnapshot, snapshot_len: fromSnapshot && snapshot ? snapshot.length : 'n/a', KT_len: KT.length, items_len: items.length, board: !!board, caller: (new Error()).stack.split('\n')[2].trim() });
-  if (!board) {
-    _kanbanLog('renderers.kanban: SALIDA sin board');
-    return;
-  }
-  if (items.length === 0) {
-    _kanbanLog('renderers.kanban: items.length=0, pintando tablero vacío');
-  }
+  if (!board) return;
   const cols = [
     {k:'todo',l:'Por Hacer',d:'var(--color-text-faint)'},
     {k:'progress',l:'En Progreso',d:'var(--color-primary)'},
@@ -2946,7 +2980,6 @@ renderers.kanban = function(snapshot) {
   });
   board.innerHTML = fullHtml;
   board.querySelectorAll('.kanban-card.fade-in').forEach(function(el) { el.classList.add('visible'); });
-  _kanbanLog('renderers.kanban SALIDA', { totalCards: items.length, columnas: cols.length });
   initKanbanDrag();
 };
 
@@ -3020,40 +3053,24 @@ function initKanbanDrag() {
 }
 
 function moveKanbanCard(cardId, newColumna) {
-  _kanbanLog('moveKanbanCard ENTRADA', { cardId: cardId, newColumna: newColumna, KT_length: KT.length });
-  if (!cardId || !newColumna) {
-    _kanbanLog('moveKanbanCard: salida (sin cardId o newColumna)');
-    return;
-  }
+  if (!cardId || !newColumna) return;
   var idStr = String(cardId);
   var card = KT.find(function(k){ return k && String(k.id) === idStr; });
-  if (!card) {
-    _kanbanLog('moveKanbanCard: card NO encontrada en KT', { idStr: idStr, ids_en_KT: KT.map(function(k){ return k && k.id; }) });
-    return;
-  }
+  if (!card) return;
   var prevCol = card.col;
   card.col = newColumna;
   var snapshot = Array.isArray(KT) ? KT.slice() : [];
-  _kanbanLog('moveKanbanCard: snapshot tomado', { snapshot_length: snapshot.length, card_col_ahora: card.col });
   var board = document.getElementById('kanbanBoard');
   if (board && snapshot.length > 0) {
     renderers.kanban(snapshot);
     updateBadges();
-    _kanbanLog('moveKanbanCard: renderers.kanban(snapshot) y updateBadges llamados');
-  } else {
-    _kanbanLog('moveKanbanCard: NO se llama render (board=' + !!board + ', snapshot.length=' + snapshot.length + ')');
   }
   if (supabase) {
     supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).select('id, columna').maybeSingle().then(function(r) {
-      _kanbanLog('moveKanbanCard: Supabase .then', { error: r.error ? r.error.message : null, updated_row: r.data ? { id: r.data.id, columna: r.data.columna } : null });
       if (r.error) {
         card.col = prevCol;
         if (board) { renderers.kanban(); updateBadges(); }
         alert('Error al mover: ' + (r.error.message||''));
-        return;
-      }
-      if (!r.data) {
-        _kanbanLog('moveKanbanCard: Supabase no devolvió fila (0 rows updated). ¿RLS o clave anon sin política?');
       }
     });
   }
@@ -3387,9 +3404,99 @@ renderers.workload = function() {
 };
 
 // ─── ATTENDANCE ───
+function getDailyCodeForDate(d) {
+  var t = new Date(d); t.setHours(0,0,0,0);
+  var dayOfYear = Math.floor((t - new Date(t.getFullYear(), 0, 0)) / 86400000);
+  var code = 1000 + (dayOfYear * 97) % 9000;
+  return String(code);
+}
+function setAttendanceCodeBar() {
+  var today = new Date();
+  var code = getDailyCodeForDate(today);
+  var el = document.getElementById('dailyCode');
+  if (el) el.textContent = code.split('').join(' ');
+  var sel = document.getElementById('attCodeMember');
+  if (sel) {
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">— Seleccionar —</option>' + TEAM.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
+    if (cur) sel.value = cur;
+  }
+  var title = document.getElementById('attendanceTitle');
+  if (title) title.textContent = 'Control de Asistencia Verificada — ' + today.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+function attShowMessage(msg, isError) {
+  var el = document.getElementById('attCodeMessage');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'att-code-message ' + (isError ? 'err' : 'ok');
+}
+function attVerifyAndCheckin() {
+  var input = document.getElementById('attCodeInput');
+  var memberId = document.getElementById('attCodeMember') && document.getElementById('attCodeMember').value;
+  if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
+  var raw = (input && input.value || '').replace(/\D/g,'');
+  var expected = getDailyCodeForDate(new Date());
+  if (raw !== expected) { attShowMessage('Código incorrecto. Revisa el que recibiste por email.', true); return; }
+  if (supabase) {
+    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
+      if (r.error) { attShowMessage('Error al registrar: ' + (r.error.message||''), true); return; }
+      var m = TEAM.find(function(x){ return x.id === memberId; });
+      if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+      attShowMessage('✓ Entrada registrada para ' + (m && m.n || memberId) + '.');
+      if (input) input.value = '';
+      reloadTareasData();
+    });
+  } else {
+    var m = TEAM.find(function(x){ return x.id === memberId; });
+    if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+    attShowMessage('✓ Entrada registrada para ' + (m && m.n || memberId) + '.');
+    if (input) input.value = '';
+    renderers.attendance();
+  }
+}
+function attVerifyAndCheckout() {
+  var input = document.getElementById('attCodeInput');
+  var memberId = document.getElementById('attCodeMember') && document.getElementById('attCodeMember').value;
+  if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
+  var raw = (input && input.value || '').replace(/\D/g,'');
+  var expected = getDailyCodeForDate(new Date());
+  if (raw !== expected) { attShowMessage('Código incorrecto. Revisa el que recibiste por email.', true); return; }
+  if (supabase) {
+    supabase.from('tareas_equipo').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
+      if (r.error) { attShowMessage('Error al registrar salida: ' + (r.error.message||''), true); return; }
+      var m = TEAM.find(function(x){ return x.id === memberId; });
+      if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+      attShowMessage('✓ Salida registrada para ' + (m && m.n || memberId) + '.');
+      if (input) input.value = '';
+      reloadTareasData();
+    });
+  } else {
+    var m = TEAM.find(function(x){ return x.id === memberId; });
+    if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+    attShowMessage('✓ Salida registrada para ' + (m && m.n || memberId) + '.');
+    if (input) input.value = '';
+    renderers.attendance();
+  }
+}
+function exportAttendance() {
+  var rows = TEAM.map(function(m){ return [m.n, m.r, m.ci || '—', m.co || '—', attHoursForMember(m)].join('\t'); });
+  var csv = 'Nombre\tRol\tEntrada\tSalida\tHoras\n' + rows.join('\n');
+  var a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv); a.download = 'asistencia-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+}
+function attHoursForMember(m) {
+  if (!m.checkinAt) return '—';
+  var end = m.checkoutAt || new Date();
+  var mins = Math.round((end - m.checkinAt) / 60000);
+  var h = Math.floor(mins / 60); var min = mins % 60;
+  return (h + 'h ' + (min < 10 ? '0' : '') + min + 'm');
+}
+function attHoursDecimal(m) {
+  if (!m.checkinAt) return 0;
+  var end = m.checkoutAt || new Date();
+  return (end - m.checkinAt) / 3600000;
+}
 renderers.attendance = function() {
-  const code = String(Math.floor(Math.random()*9000)+1000);
-  document.getElementById('dailyCode').textContent = code.split('').join(' ');
+  setAttendanceCodeBar();
   const grid = document.getElementById('attendanceGrid');
   grid.innerHTML = '';
   const stMap = {present:{l:'Presente',p:'pill-green'},absent:{l:'Ausente',p:'pill-red'},late:{l:'Tardanza',p:'pill-orange2'},remote:{l:'Remoto',p:'pill-orange'}};
@@ -3409,7 +3516,7 @@ renderers.attendance = function() {
     card.className = 'attendance-card fade-in';
     card.innerHTML = `
       <div class="att-top">
-        <div class="att-avatar" style="background:${m.c}" aria-hidden="true">${m.id}
+        <div class="att-avatar" style="background:${m.c}" aria-hidden="true">${(m.n&&m.n[0])||m.id}
           <div class="online-dot ${m.on?'on':'off'}" aria-label="${m.on?'En línea':'Fuera de línea'}"></div>
         </div>
         <div style="flex:1">
@@ -3428,7 +3535,9 @@ renderers.attendance = function() {
         </div>
       </div>
       <div class="att-check-grid">
-        <div class="att-vf"><div class="lbl">Check-in</div><div class="val">${m.ci}</div></div>
+        <div class="att-vf"><div class="lbl">Entrada</div><div class="val">${m.ci||'—'}</div></div>
+        <div class="att-vf"><div class="lbl">Salida</div><div class="val">${m.co||'—'}</div></div>
+        <div class="att-vf"><div class="lbl">Horas</div><div class="val" style="font-variant-numeric:tabular-nums">${attHoursForMember(m)}</div></div>
         <div class="att-vf"><div class="lbl">Tareas</div><div class="val" style="color:var(--green);font-variant-numeric:tabular-nums">${done}/${ts.length}</div></div>
       </div>
       <div class="att-tasks-section">
@@ -3437,6 +3546,42 @@ renderers.attendance = function() {
       </div>`;
     grid.appendChild(card);
   });
+  grid.querySelectorAll('.fade-in').forEach(function(el){ el.classList.add('visible'); });
+  var cardsEl = document.getElementById('attDashboardCards');
+  if (cardsEl) {
+    var withCheckin = TEAM.filter(function(m){ return m.checkinAt; });
+    var totalH = withCheckin.reduce(function(acc, m){ return acc + attHoursDecimal(m); }, 0);
+    var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
+    cardsEl.innerHTML = ''
+      + '<div class="att-dash-card"><div class="num">' + (withCheckin.length || 0) + '</div><div class="lbl">Con entrada hoy</div></div>'
+      + '<div class="att-dash-card"><div class="num">' + (totalH.toFixed(1) || '0') + 'h</div><div class="lbl">Total horas equipo</div></div>'
+      + '<div class="att-dash-card"><div class="num">' + (avgH.toFixed(1) || '0') + 'h</div><div class="lbl">Promedio por persona</div></div>';
+  }
+  var canvas = document.getElementById('attHoursChart');
+  if (canvas && TEAM.length) {
+    var ctx = canvas.getContext('2d');
+    var root = document.documentElement;
+    var getVar = function(v){ return getComputedStyle(root).getPropertyValue(v).trim() || '#666'; };
+    var dpr = window.devicePixelRatio || 1;
+    var w = canvas.offsetWidth || 400; var h = 200;
+    canvas.width = w * dpr; canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    var maxH = Math.max(1, Math.max.apply(null, TEAM.map(attHoursDecimal)));
+    var barH = 24; var gap = 8; var left = 100; var chartW = Math.max(80, w - left - 24);
+    ctx.font = '12px system-ui, sans-serif';
+    TEAM.forEach(function(m, i) {
+      var y = i * (barH + gap) + 8;
+      var name = (m.n || m.id).slice(0, 12);
+      ctx.fillStyle = getVar('--color-text-muted');
+      ctx.fillText(name, 4, y + barH - 6);
+      var pct = attHoursDecimal(m) / maxH;
+      var barW = Math.max(0, pct * chartW);
+      ctx.fillStyle = m.checkoutAt ? getVar('--green') : getVar('--color-primary');
+      ctx.fillRect(left, y, barW, barH);
+      ctx.fillStyle = getVar('--color-text');
+      ctx.fillText(attHoursForMember(m) === '—' ? '—' : attHoursForMember(m), left + barW + 6, y + barH - 6);
+    });
+  }
 };
 
 function toggleAttendance(mid, idx) {
@@ -4107,7 +4252,6 @@ function observeFadeIns(container) {
 //  INIT
 // ══════════════════════════════════════════════════════════════════
 function initViews() {
-  _kanbanLog('initViews: inicio');
   setTimeout(function() {
     document.querySelectorAll('#view-dashboard .fade-in').forEach(function(el, i) {
       setTimeout(function() { el.classList.add('visible'); }, i * 55);
@@ -4156,19 +4300,16 @@ document.addEventListener('DOMContentLoaded', function() {
   if (supabase) {
     showTareasLoading(true);
     loadTareasData().then(function(data) {
-      _kanbanLog('DOMContentLoaded loadTareasData.then', { data_null: !data, data_KT_length: data && data.KT ? data.KT.length : 'n/a' });
       if (data) {
         TEAM = data.TEAM;
         MT = data.MT;
         clients = data.clients;
         KT = data.KT;
-        _kanbanLog('DOMContentLoaded: KT asignado (global)', { KT_length: KT.length });
         tickets = data.tickets;
         workflows = data.workflows;
         calI = data.calI;
       }
       showTareasLoading(false);
-      _kanbanLog('DOMContentLoaded: llamando initViews()');
       initViews();
       initTareasAvatar();
     }).catch(function(err) {
