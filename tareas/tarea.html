@@ -1481,6 +1481,32 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .att-action-btn.checkin { color: var(--green); }
 .att-action-btn.checkout { color: var(--color-primary); }
 
+.att-trust-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+}
+.att-trust-high { background: rgba(34,197,94,.1); color: #16a34a; }
+.att-trust-medium { background: rgba(245,158,11,.1); color: #d97706; }
+.att-trust-low { background: rgba(239,68,68,.08); color: #dc2626; }
+.att-trust-none { background: var(--color-surface-offset); color: var(--color-text-faint); }
+.att-trust-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.att-trust-high .att-trust-dot { background: #16a34a; }
+.att-trust-medium .att-trust-dot { background: #d97706; }
+.att-trust-low .att-trust-dot { background: #dc2626; }
+.att-trust-none .att-trust-dot { background: var(--color-text-faint); }
+.att-heartbeat-icon {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: #16a34a; margin-left: 4px; vertical-align: middle;
+  animation: attPulse 2s ease-in-out infinite;
+}
+@keyframes attPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .4; transform: scale(.7); }
+}
+
 /* ══════════════════════════════════════════════
    WORKFLOWS VIEW
 ══════════════════════════════════════════════ */
@@ -2353,6 +2379,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <th>Entrada</th>
           <th>Salida</th>
           <th>Horas</th>
+          <th>Confianza</th>
           <th></th>
         </tr>
       </thead>
@@ -2602,7 +2629,7 @@ async function loadTareasData() {
       supabase.from('tareas_tickets').select('*').order('created_at', { ascending: false }),
       supabase.from('tareas_workload').select('*'),
       supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
-      supabase.from('gerentes').select('id, email, checkin_at, checkout_at').order('email')
+      supabase.from('gerentes').select('*').order('email')
     ]);
     if (creditoRes.error) console.warn('[Tareas] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
     if (gerentesRes.error) console.warn('[Tareas] No se pudo cargar gerentes (asistencia):', gerentesRes.error.message);
@@ -2628,9 +2655,9 @@ async function loadTareasData() {
       var h = 0; for (var i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i); return Math.abs(h % 360);
     };
     var ATTENDANCE_MEMBERS = (gerentesRes.data || []).map(function(r) {
-      var name = (r.email || '').trim(); var at = name.indexOf('@'); if (at > 0) name = name.slice(0, at).replace(/[._]/g, ' '); if (!name) name = r.email || 'Gerente';
+      var name = (r.nombre || r.email || '').trim(); var at = name.indexOf('@'); if (at > 0) name = name.slice(0, at).replace(/[._]/g, ' '); if (!name) name = r.email || 'Gerente';
       var hue = hueFromId(r.id); var c = 'hsl(' + hue + ', 55%, 42%)';
-      return { id: r.id, n: name, r: 'Gerente', c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null };
+      return { id: r.id, email: (r.email || '').toLowerCase().trim(), n: name, r: 'Gerente', c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, trust: r.att_trust || null, activeSeconds: r.att_active_seconds || 0, lastHeartbeat: r.att_last_heartbeat ? new Date(r.att_last_heartbeat) : null, ip: r.att_ip || '', device: r.att_device || '' };
     });
     var clients = (clRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
@@ -3335,6 +3362,118 @@ function attGetRealStatus(m) {
   return { key: 'active', label: 'Trabajando', cls: 'att-status-active' };
 }
 
+// ─── ANTI-FRAUD: Heartbeat + Activity Tracking ───
+var _attHBTimer = null, _attHBMemberId = null;
+var _attActiveStart = null, _attActiveSec = 0, _attLastAct = 0, _attTabVis = true;
+
+function attStartHeartbeat(memberId) {
+  attStopHeartbeat();
+  _attHBMemberId = memberId;
+  _attActiveStart = Date.now();
+  _attActiveSec = 0;
+  _attLastAct = Date.now();
+  _attTabVis = !document.hidden;
+  _attHBTimer = setInterval(function() { attSendHeartbeat(); }, 60000);
+  attSendHeartbeat();
+  ['click','keydown','mousemove','scroll','touchstart'].forEach(function(e) {
+    document.addEventListener(e, _attOnAct, { passive: true });
+  });
+  document.addEventListener('visibilitychange', _attOnVis);
+}
+function attStopHeartbeat() {
+  if (_attHBTimer) clearInterval(_attHBTimer);
+  _attHBTimer = null;
+  ['click','keydown','mousemove','scroll','touchstart'].forEach(function(e) {
+    document.removeEventListener(e, _attOnAct);
+  });
+  document.removeEventListener('visibilitychange', _attOnVis);
+}
+function _attOnAct() { _attLastAct = Date.now(); }
+function _attOnVis() { _attTabVis = !document.hidden; }
+
+function attGetActiveSec() {
+  if (!_attActiveStart) return _attActiveSec;
+  var idle = Date.now() - _attLastAct;
+  if (_attTabVis && idle < 120000) return Math.floor((Date.now() - _attActiveStart) / 1000);
+  return _attActiveSec;
+}
+
+function attComputeTrust(m) {
+  if (!m.checkinAt) return 'none';
+  var today = new Date(); today.setHours(0,0,0,0);
+  var ci = new Date(m.checkinAt); ci.setHours(0,0,0,0);
+  if (ci.getTime() !== today.getTime()) return 'none';
+  var score = 0, max = 100;
+  var secs = m.activeSeconds || 0;
+  if (secs > 3600) score += 40; else if (secs > 1800) score += 30; else if (secs > 600) score += 20; else if (secs > 120) score += 10;
+  if (m.lastHeartbeat) {
+    var ago = (Date.now() - m.lastHeartbeat.getTime()) / 60000;
+    if (ago < 3) score += 30; else if (ago < 10) score += 20; else if (ago < 30) score += 10;
+  }
+  if (m.ip) score += 15;
+  if (m.device) score += 15;
+  if (score >= 70) return 'high';
+  if (score >= 40) return 'medium';
+  return 'low';
+}
+
+function attTrustLabel(t) {
+  if (t === 'high') return 'Confiable';
+  if (t === 'medium') return 'Medio';
+  if (t === 'low') return 'Sospechoso';
+  return '—';
+}
+
+function attSendHeartbeat() {
+  if (!supabase || !_attHBMemberId) return;
+  var secs = attGetActiveSec();
+  _attActiveSec = secs;
+  var trust = _attTabVis && (Date.now() - _attLastAct) < 120000 ? 'high' : 'low';
+  supabase.from('gerentes').update({
+    att_last_heartbeat: new Date().toISOString(),
+    att_active_seconds: secs,
+    att_trust: trust,
+    att_device: navigator.userAgent.slice(0, 120)
+  }).eq('id', _attHBMemberId).then(function(r) {
+    if (r.error) console.warn('[Att] HB err:', r.error.message);
+  });
+}
+
+function attFinalHeartbeat(memberId) {
+  if (!supabase || !memberId) return Promise.resolve();
+  var secs = attGetActiveSec();
+  return supabase.from('gerentes').update({
+    att_last_heartbeat: new Date().toISOString(),
+    att_active_seconds: secs,
+    att_trust: secs > 600 ? 'high' : secs > 120 ? 'medium' : 'low',
+    att_device: navigator.userAgent.slice(0, 120)
+  }).eq('id', memberId);
+}
+
+function attGetCurrentMemberId() {
+  if (!supabase) return null;
+  try {
+    var data = supabase.auth.getSession && supabase.auth.getSession();
+    if (data && data.then) return null;
+  } catch(e) {}
+  return null;
+}
+
+function attAutoStartHeartbeat() {
+  if (!supabase) return;
+  supabase.auth.getSession().then(function(r) {
+    if (!r || !r.data || !r.data.session) return;
+    var email = (r.data.session.user.email || '').toLowerCase().trim();
+    var m = (ATTENDANCE_MEMBERS || []).find(function(x) { return x.email === email; });
+    if (!m || !m.checkinAt) return;
+    var today = new Date(); today.setHours(0,0,0,0);
+    var ci = new Date(m.checkinAt); ci.setHours(0,0,0,0);
+    if (ci.getTime() !== today.getTime()) return;
+    if (m.checkoutAt) return;
+    attStartHeartbeat(m.id);
+  });
+}
+
 function setAttendanceCodeBar() {
   var today = new Date();
   var code = getDailyCodeForDate(today);
@@ -3370,8 +3509,9 @@ function attVerifyAndCheckin() {
     if (ciDate.getTime() === today.getTime()) { attShowMessage((m.n || memberId) + ' ya registró entrada hoy a las ' + m.ci + '.', true); return; }
   }
   if (supabase) {
-    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null, att_active_seconds: 0, att_trust: 'high', att_device: navigator.userAgent.slice(0,120) }).eq('id', memberId).then(function(r) {
       if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
+      attStartHeartbeat(memberId);
       attShowMessage('Entrada registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
       reloadTareasData(function(){ renderers.attendance(); });
@@ -3393,8 +3533,11 @@ function attVerifyAndCheckout() {
   var m = (ATTENDANCE_MEMBERS || []).find(function(x){ return x.id === memberId; });
   if (m && !m.checkinAt) { attShowMessage((m.n || memberId) + ' no tiene entrada registrada hoy.', true); return; }
   if (supabase) {
-    supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
-      if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
+    attFinalHeartbeat(memberId).then(function() {
+      return supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId);
+    }).then(function(r) {
+      if (r && r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
+      attStopHeartbeat();
       attShowMessage('Salida registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
       reloadTareasData(function(){ renderers.attendance(); });
@@ -3408,8 +3551,9 @@ function attVerifyAndCheckout() {
 }
 function attQuickCheckin(memberId) {
   if (supabase) {
-    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null, att_active_seconds: 0, att_trust: 'high', att_device: navigator.userAgent.slice(0,120) }).eq('id', memberId).then(function(r) {
       if (r.error) return;
+      attStartHeartbeat(memberId);
       reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
@@ -3420,8 +3564,11 @@ function attQuickCheckin(memberId) {
 }
 function attQuickCheckout(memberId) {
   if (supabase) {
-    supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
-      if (r.error) return;
+    attFinalHeartbeat(memberId).then(function() {
+      return supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId);
+    }).then(function(r) {
+      if (r && r.error) return;
+      attStopHeartbeat();
       reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
@@ -3432,8 +3579,8 @@ function attQuickCheckout(memberId) {
 }
 function exportAttendance() {
   var members = ATTENDANCE_MEMBERS || [];
-  var rows = members.map(function(m){ var st = attGetRealStatus(m); return [m.n, m.r, st.label, m.ci || '—', m.co || '—', attHoursForMember(m)].join(','); });
-  var csv = 'Nombre,Rol,Estado,Entrada,Salida,Horas\n' + rows.join('\n');
+  var rows = members.map(function(m){ var st = attGetRealStatus(m); var t = attComputeTrust(m); return [m.n, m.r, st.label, m.ci || '—', m.co || '—', attHoursForMember(m), attTrustLabel(t)].join(','); });
+  var csv = 'Nombre,Rol,Estado,Entrada,Salida,Horas,Confianza\n' + rows.join('\n');
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'asistencia-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
 }
@@ -3457,7 +3604,7 @@ renderers.attendance = function() {
   var members = ATTENDANCE_MEMBERS || [];
 
   var present = 0, absent = 0, late = 0, working = 0;
-  var totalH = 0;
+  var totalH = 0, trustHigh = 0, trustLow = 0;
   members.forEach(function(m) {
     var st = attGetRealStatus(m);
     if (st.key === 'present') present++;
@@ -3465,6 +3612,9 @@ renderers.attendance = function() {
     else if (st.key === 'late') { late++; working++; }
     else if (st.key === 'active') { present++; working++; }
     totalH += attHoursDecimal(m);
+    var t = attComputeTrust(m);
+    if (t === 'high') trustHigh++;
+    else if (t === 'low') trustLow++;
   });
   var withCheckin = members.filter(function(m){ return m.checkinAt; });
   var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
@@ -3476,7 +3626,9 @@ renderers.attendance = function() {
       + '<div class="att-summary-item"><div class="att-summary-num red">' + absent + '</div><div class="att-summary-lbl">Ausentes</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num orange">' + late + '</div><div class="att-summary-lbl">Tardanzas</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num primary">' + totalH.toFixed(1) + 'h</div><div class="att-summary-lbl">Total horas</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num primary">' + avgH.toFixed(1) + 'h</div><div class="att-summary-lbl">Promedio</div></div>';
+      + '<div class="att-summary-item"><div class="att-summary-num primary">' + avgH.toFixed(1) + 'h</div><div class="att-summary-lbl">Promedio</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num green">' + trustHigh + '</div><div class="att-summary-lbl">Confiable</div></div>'
+      + (trustLow ? '<div class="att-summary-item"><div class="att-summary-num red">' + trustLow + '</div><div class="att-summary-lbl">Sospechoso</div></div>' : '');
   }
 
   var maxH = Math.max(1, Math.max.apply(null, members.map(attHoursDecimal)));
@@ -3496,12 +3648,18 @@ renderers.attendance = function() {
       ? '<button class="att-action-btn checkout" onclick="attQuickCheckout(\'' + m.id + '\')" title="Registrar salida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
       : '';
 
+    var trust = attComputeTrust(m);
+    var trustCls = 'att-trust-' + trust;
+    var trustLbl = attTrustLabel(trust);
+    var hbDot = (m.lastHeartbeat && (Date.now() - m.lastHeartbeat.getTime()) < 180000) ? '<span class="att-heartbeat-icon" title="Señal activa"></span>' : '';
+
     return '<tr>'
-      + '<td><div class="att-member-cell"><div class="att-avatar" style="background:' + m.c + '">' + ((m.n&&m.n[0])||'?') + '</div><div><div class="att-member-name">' + (m.n||'—') + '</div><div class="att-member-role">' + (m.r||'') + '</div></div></div></td>'
+      + '<td><div class="att-member-cell"><div class="att-avatar" style="background:' + m.c + '">' + ((m.n&&m.n[0])||'?') + '</div><div><div class="att-member-name">' + (m.n||'—') + hbDot + '</div><div class="att-member-role">' + (m.r||'') + '</div></div></div></td>'
       + '<td><span class="att-status-pill ' + st.cls + '"><span class="att-status-dot"></span>' + st.label + '</span></td>'
       + '<td class="' + (m.ci ? 'att-time-val' : 'att-time-empty') + '">' + (m.ci || '—') + '</td>'
       + '<td class="' + (m.co ? 'att-time-val' : 'att-time-empty') + '">' + (m.co || '—') + '</td>'
       + '<td><div class="att-hours-bar"><div class="att-hours-track"><div class="att-hours-fill" style="width:' + pct + '%"></div></div><span class="att-hours-num">' + hrsLabel + '</span></div></td>'
+      + '<td><span class="att-trust-badge ' + trustCls + '"><span class="att-trust-dot"></span>' + trustLbl + '</span></td>'
       + '<td><div class="att-action-btns">' + checkinBtn + checkoutBtn + '</div></td>'
       + '</tr>';
   }).join('');
@@ -3517,7 +3675,7 @@ function markAllPresent() {
     var ids = members.filter(function(m){ return !m.checkinAt; }).map(function(m){ return m.id; });
     if (!ids.length) { attShowMessage('Todos ya tienen entrada registrada.', false); return; }
     Promise.all(ids.map(function(id) {
-      return supabase.from('gerentes').update({ checkin_at: now, checkout_at: null }).eq('id', id);
+      return supabase.from('gerentes').update({ checkin_at: now, checkout_at: null, att_active_seconds: 0, att_trust: null }).eq('id', id);
     })).then(function() {
       reloadTareasData(function(){ renderers.attendance(); });
       attShowMessage('Entrada registrada para ' + ids.length + ' miembros.');
@@ -4212,6 +4370,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadTareasData().then(function(data) {
       if (data) {
         TEAM = data.TEAM;
+        ATTENDANCE_MEMBERS = data.ATTENDANCE_MEMBERS || [];
         MT = data.MT;
         clients = data.clients;
         KT = data.KT;
@@ -4221,6 +4380,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showTareasLoading(false);
       initViews();
       initTareasAvatar();
+      attAutoStartHeartbeat();
     }).catch(function(err) {
       console.error('[Tareas] Error cargando datos:', err);
       showTareasLoading(false);
