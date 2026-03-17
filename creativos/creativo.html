@@ -730,47 +730,82 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 /* ============================================
    KANBAN PIPELINE
    ============================================ */
+.pipeline-toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-5); flex-wrap: wrap; gap: var(--space-3);
+}
+.pipeline-toolbar-left {
+  display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;
+}
 .pipeline-filters {
-  display: flex; align-items: center; gap: var(--space-3);
-  margin-bottom: var(--space-4); flex-wrap: wrap;
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
 }
 .pipeline-filter-select {
-  padding: var(--space-2) var(--space-3); padding-right: 28px;
-  background: var(--color-surface); border: 1px solid var(--color-divider);
-  border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 400;
-  color: var(--color-text); appearance: none;
+  padding: 6px 28px 6px 10px; height: 32px;
+  background: var(--color-surface-2); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); font-size: var(--text-xs); font-weight: 500;
+  color: var(--color-text-muted); appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238a887f' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 8px center;
-  transition: border-color 160ms ease;
+  transition: border-color 140ms ease, color 140ms ease;
 }
-.pipeline-filter-select:hover { border-color: var(--color-border); }
-.pipeline-filter-select:focus { outline: none; border-color: var(--color-text-faint); }
+.pipeline-filter-select:hover { border-color: var(--color-border); color: var(--color-text); }
+.pipeline-filter-select:focus { outline: none; border-color: var(--color-text-faint); color: var(--color-text); }
+.pipeline-new-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; height: 32px; border-radius: var(--radius-md);
+  background: var(--color-primary); color: #fff;
+  font-size: var(--text-xs); font-weight: 600; border: none; cursor: pointer;
+  transition: background 140ms ease;
+}
+.pipeline-new-btn:hover { background: var(--color-primary-hover); }
+.pipeline-new-btn svg { width: 14px; height: 14px; }
 
 .kanban {
-  display: flex; gap: var(--space-4);
+  display: flex; gap: var(--space-3);
   overflow-x: auto; padding-bottom: var(--space-4);
-  min-height: 0;
+  min-height: 0; scroll-behavior: smooth;
 }
+.kanban::-webkit-scrollbar { height: 6px; }
+.kanban::-webkit-scrollbar-track { background: transparent; }
+.kanban::-webkit-scrollbar-thumb { background: var(--color-divider); border-radius: 3px; }
+.kanban::-webkit-scrollbar-thumb:hover { background: var(--color-border); }
 .kanban-column {
-  min-width: 280px; max-width: 320px; flex: 1;
+  min-width: 272px; max-width: 300px; flex: 1;
   display: flex; flex-direction: column;
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
+  background: transparent;
   border-radius: var(--radius-lg);
-  max-height: calc(100vh - 220px);
+  max-height: calc(100vh - 210px);
 }
 .kanban-col-header {
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-3);
   display: flex; align-items: center; gap: var(--space-2);
-  font-size: var(--text-sm); font-weight: 600; color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-divider);
-  flex-shrink: 0;
+  font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em;
+  flex-shrink: 0; border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
 }
 .kanban-col-header-clickable { cursor: pointer; }
 .kanban-col-header-clickable:hover { background: var(--color-surface-offset); color: var(--color-text); }
-.kanban-col-has-note, .kanban-col-note-hint { font-size: 0.75rem; opacity: 0.8; margin-left: auto; }
-.kanban-col-empty { cursor: pointer; text-align: center; padding: var(--space-6); color: var(--color-text-faint); font-size: var(--text-xs); min-height: 4rem; display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); }
-.kanban-col-empty:hover { color: var(--color-text-muted); background: var(--color-surface-offset); }
+.kanban-col-dot {
+  width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0;
+}
+.kanban-col-dot[data-stage="inspiracion"] { background: #a78bfa; }
+.kanban-col-dot[data-stage="guion"] { background: #60a5fa; }
+.kanban-col-dot[data-stage="produccion"] { background: #f59e0b; }
+.kanban-col-dot[data-stage="revision"] { background: #f97316; }
+.kanban-col-dot[data-stage="entrega"] { background: #34d399; }
+.kanban-col-has-note, .kanban-col-note-hint { font-size: 0.7rem; opacity: 0.6; margin-left: auto; }
+.kanban-col-note-hint { opacity: 0; transition: opacity 140ms ease; }
+.kanban-col-header:hover .kanban-col-note-hint { opacity: 0.5; }
+.kanban-col-empty {
+  cursor: pointer; text-align: center; padding: var(--space-8) var(--space-4);
+  color: var(--color-text-faint); font-size: var(--text-xs); min-height: 4rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-2); border-radius: var(--radius-md);
+  border: 1px dashed var(--color-divider); background: transparent;
+}
+.kanban-col-empty:hover { color: var(--color-text-muted); border-color: var(--color-border); background: var(--color-surface-offset); }
 /* Recordatorios flotante */
 .recordatorios-wrap { position: fixed; bottom: var(--space-5); right: var(--space-5); z-index: 40; }
 .recordatorios-fab {
@@ -806,61 +841,86 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .recordatorios-item-text { flex: 1; word-break: break-word; }
 .recordatorios-item-del { background: none; border: none; color: var(--color-text-faint); cursor: pointer; padding: 2px; }
 .kanban-col-count {
-  background: var(--color-surface-offset); color: var(--color-text-faint);
-  font-size: 0.7rem; padding: 2px 8px; border-radius: var(--radius-full);
-  font-weight: 500; font-variant-numeric: tabular-nums;
+  color: var(--color-text-faint);
+  font-size: 0.7rem; font-weight: 500; font-variant-numeric: tabular-nums;
 }
 .kanban-col-body {
   flex: 1; overflow-y: auto; overscroll-behavior: contain;
-  padding: var(--space-3);
-  display: flex; flex-direction: column; gap: var(--space-2);
-  min-height: 140px;
+  padding: 0;
+  display: flex; flex-direction: column; gap: 6px;
+  min-height: 100px;
 }
+.kanban-col-body::-webkit-scrollbar { width: 4px; }
+.kanban-col-body::-webkit-scrollbar-track { background: transparent; }
+.kanban-col-body::-webkit-scrollbar-thumb { background: var(--color-divider); border-radius: 2px; }
+.kanban-col-body::-webkit-scrollbar-thumb:hover { background: var(--color-border); }
 
 .kanban-card {
-  background: var(--color-surface); border: 1px solid var(--color-divider);
-  border-radius: var(--radius-lg); padding: var(--space-3);
-  cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease;
-  content-visibility: auto;
+  background: var(--color-surface-2); border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md); padding: 10px 12px;
+  cursor: pointer; transition: border-color 140ms ease, box-shadow 140ms ease;
+  content-visibility: auto; position: relative;
 }
-.kanban-card:hover { border-color: var(--color-border); background: var(--color-surface-offset); }
-.kanban-card-title { font-size: var(--text-sm); font-weight: 600; margin-bottom: var(--space-1); line-height: 1.3; }
-.kanban-card-meta { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--space-2); }
+.kanban-card:hover { border-color: var(--color-border); box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.kanban-card-accent {
+  position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
+  border-radius: 0 2px 2px 0;
+}
+.kanban-card-accent[data-status="in_progress"] { background: var(--color-blue); }
+.kanban-card-accent[data-status="in_review"] { background: var(--color-warning); }
+.kanban-card-accent[data-status="approved"] { background: var(--color-success); }
+.kanban-card-accent[data-status="changes"] { background: var(--color-error); }
+.kanban-card-accent[data-status="pending"] { background: var(--color-divider); }
+
+.kanban-card-title {
+  font-size: var(--text-sm); font-weight: 600; line-height: 1.35;
+  color: var(--color-text); margin-bottom: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.kanban-card-meta {
+  font-size: 0.72rem; color: var(--color-text-muted); margin-bottom: 8px;
+  display: flex; align-items: center; gap: 4px;
+}
+.kanban-card-meta-sep { color: var(--color-text-faint); }
 .kanban-card-footer { display: flex; align-items: center; justify-content: space-between; }
 .kanban-card-avatar {
-  width: 24px; height: 24px; border-radius: var(--radius-full);
+  width: 22px; height: 22px; border-radius: var(--radius-full);
   background: var(--color-primary-soft); color: var(--color-primary);
-  font-size: 0.6rem; font-weight: 700;
+  font-size: 0.55rem; font-weight: 700; letter-spacing: 0.02em;
   display: flex; align-items: center; justify-content: center;
-  position: relative;
+  position: relative; flex-shrink: 0;
 }
 .kanban-card-avatar[data-tooltip]:hover::after {
-  content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%;
+  content: attr(data-tooltip); position: absolute; bottom: calc(100% + 4px); left: 50%;
   transform: translateX(-50%); background: var(--color-text); color: var(--color-text-inverse);
-  font-size: 0.6rem; padding: 2px 6px; border-radius: var(--radius-sm);
-  white-space: nowrap; pointer-events: none; margin-bottom: 4px;
+  font-size: 0.6rem; padding: 3px 8px; border-radius: var(--radius-sm);
+  white-space: nowrap; pointer-events: none; z-index: 10;
 }
 .kanban-card-progress {
-  display: flex; gap: 3px; align-items: center;
+  display: flex; align-items: center; gap: 0; width: 48px; height: 4px;
+  background: var(--color-surface-dynamic); border-radius: 2px; overflow: hidden;
 }
-.kanban-card-progress-dot {
-  width: 8px; height: 8px; border-radius: var(--radius-full);
-  background: var(--color-surface-dynamic);
+.kanban-card-progress-fill {
+  height: 100%; border-radius: 2px;
+  background: var(--color-primary);
+  transition: width 300ms ease;
 }
-.kanban-card-progress-dot.filled { background: var(--color-primary); }
-.kanban-card-progress-dot.current { background: var(--color-primary); }
 
 .kanban-card-date { font-size: 0.65rem; color: var(--color-text-faint); }
-.kanban-card .badge { font-weight: 500; }
+.kanban-card-type-badge {
+  font-size: 0.6rem; padding: 1px 6px; border-radius: var(--radius-sm);
+  background: var(--color-surface-offset); color: var(--color-text-faint);
+  font-weight: 500; white-space: nowrap;
+}
 .kanban-card[data-project-id]:not([data-project-id=""]) { cursor: grab; }
 .kanban-card[data-project-id]:not([data-project-id=""]):active { cursor: grabbing; }
-.kanban-card.kanban-card-dragging { opacity: 0.7; box-shadow: var(--shadow-lg); pointer-events: none; }
-.kanban-column.kanban-drop-target { outline: 2px dashed var(--color-border); outline-offset: 2px; border-radius: var(--radius-lg); background: var(--color-surface-offset); }
-.kanban-card-type-badge {
-  font-size: 0.65rem; padding: 2px 6px; border-radius: var(--radius-sm);
-  background: transparent; color: var(--color-text-faint);
-  font-weight: 500;
+.kanban-card.kanban-card-dragging { opacity: 0.6; box-shadow: var(--shadow-lg); pointer-events: none; transform: rotate(2deg); }
+.kanban-column.kanban-drop-target {
+  background: var(--color-surface-offset); border-radius: var(--radius-lg);
+  outline: none;
 }
+[data-theme="dark"] .kanban-card { background: var(--color-surface-2); border-color: var(--color-border); }
+[data-theme="dark"] .kanban-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.2); }
 
 /* ============================================
    PROJECT DETAIL (Drawer)
@@ -1233,8 +1293,10 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   .search-bar { width: 180px; }
   .form-row { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
-  .kanban { flex-direction: column; }
+  .kanban { flex-direction: column; gap: var(--space-4); }
   .kanban-column { min-width: 100%; max-width: 100%; max-height: none; }
+  .pipeline-toolbar { flex-direction: column; align-items: stretch; }
+  .pipeline-toolbar-left { justify-content: space-between; }
   .portfolio-grid { columns: 1; }
   .project-info-grid { grid-template-columns: 1fr; }
 }
@@ -1930,21 +1992,30 @@ function renderPipeline() {
     projects = projects.filter(p => p.name.toLowerCase().includes(currentSearchTerm.toLowerCase()));
   }
 
+  var totalActive = projects.filter(function(p){return !isProjectComplete(p);}).length;
+
   return `<div class="page-view page-view-pipeline">
-    <div class="pipeline-filters">
-      <select class="pipeline-filter-select" id="pipeFilterEditor" onchange="renderPage('pipeline')">
-        <option value="">Todos los editores</option>
-        ${D.editors.map(e => `<option value="${e.id}" ${filterEditorId === e.id ? 'selected':''}>${esc(e.name)}</option>`).join('')}
-      </select>
-      <select class="pipeline-filter-select" id="pipeFilterClient" onchange="renderPage('pipeline')">
-        <option value="">Todos los clientes</option>
-        ${D.clients.map(c => `<option value="${c.id}" ${filterClientId === c.id ? 'selected':''}>${esc(c.company)}</option>`).join('')}
-      </select>
+    <div class="pipeline-toolbar">
+      <div class="pipeline-toolbar-left">
+        <div class="pipeline-filters">
+          <select class="pipeline-filter-select" id="pipeFilterEditor" onchange="renderPage('pipeline')">
+            <option value="">Todos los editores</option>
+            ${D.editors.map(e => `<option value="${e.id}" ${filterEditorId === e.id ? 'selected':''}>${esc(e.name)}</option>`).join('')}
+          </select>
+          <select class="pipeline-filter-select" id="pipeFilterClient" onchange="renderPage('pipeline')">
+            <option value="">Todos los clientes</option>
+            ${D.clients.map(c => `<option value="${c.id}" ${filterClientId === c.id ? 'selected':''}>${esc(c.company)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="pipeline-new-btn" onclick="openNewProjectModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nuevo
+      </button>
     </div>
     <div class="kanban" id="pipelineKanban">
       ${STAGES.map(stage => {
         let stageProjects = projects.filter(p => getProjectStage(p) === stage);
-        // Apply filters
         const fEditor = document.getElementById('pipeFilterEditor')?.value;
         const fClient = document.getElementById('pipeFilterClient')?.value;
         if (fEditor) stageProjects = stageProjects.filter(p => p.editorId === fEditor);
@@ -1952,36 +2023,34 @@ function renderPipeline() {
 
         return `<div class="kanban-column" data-stage="${stage}">
           <div class="kanban-col-header kanban-col-header-clickable" title="Clic para ver o agregar nota de etapa">
+            <span class="kanban-col-dot" data-stage="${stage}"></span>
             ${STAGE_NAMES[stage]}
             <span class="kanban-col-count">${stageProjects.length}</span>
-            ${getPipelineStageNote(stage) ? '<span class="kanban-col-has-note" title="Hay una nota">📝</span>' : '<span class="kanban-col-note-hint" title="Clic para agregar nota">＋</span>'}
+            ${getPipelineStageNote(stage) ? '<span class="kanban-col-has-note" title="Hay una nota">📝</span>' : '<span class="kanban-col-note-hint" title="Clic para agregar nota">+</span>'}
           </div>
           <div class="kanban-col-body">
             ${stageProjects.length > 0 ? stageProjects.map(p => {
               const editor = D.editors.find(e => e.id === p.editorId);
               const client = D.clients.find(c => c.id === p.clientId);
               const progress = getProjectProgress(p);
+              const progressPct = Math.round((progress / STAGES.length) * 100);
               const stageStatus = p.stages[stage].status;
               return `<div class="kanban-card" data-project-id="${p.id}" role="button" tabindex="0">
-                <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--space-1);">
+                <div class="kanban-card-accent" data-status="${stageStatus}"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
                   <div class="kanban-card-title">${esc(p.name)}</div>
                   <span class="kanban-card-type-badge">${esc(p.type)}</span>
                 </div>
-                <div class="kanban-card-meta">${client ? esc(client.company) : '—'} · ${esc(p.platform)}</div>
-                <div style="margin-bottom:var(--space-2);">
-                  <span class="badge ${getStatusBadge(stageStatus)} badge-sm"><span class="badge-dot"></span>${STAGE_STATUSES[stageStatus]}</span>
-                </div>
+                <div class="kanban-card-meta">${client ? esc(client.company) : '—'}<span class="kanban-card-meta-sep">·</span>${esc(p.platform)}</div>
                 <div class="kanban-card-footer">
-                  <div style="display:flex;align-items:center;gap:var(--space-2);">
+                  <div style="display:flex;align-items:center;gap:8px;">
                     ${editor ? `<div class="kanban-card-avatar" data-tooltip="${esc(editor.name)}">${editor.name.split(' ').map(n=>n[0]).join('')}</div>` : ''}
-                    <div class="kanban-card-progress">
-                      ${STAGES.map((s,i) => `<div class="kanban-card-progress-dot ${i < progress ? 'filled' : ''} ${s === stage && p.stages[s].status !== 'approved' && p.stages[s].status !== 'pending' ? 'current' : ''}"></div>`).join('')}
-                    </div>
+                    <div class="kanban-card-progress"><div class="kanban-card-progress-fill" style="width:${progressPct}%"></div></div>
                   </div>
                   <div class="kanban-card-date">${timeAgo(p.createdAt)}</div>
                 </div>
               </div>`;
-            }).join('') : `<div class="kanban-col-empty" title="Clic para ver o agregar nota de etapa">Sin proyectos</div>`}
+            }).join('') : `<div class="kanban-col-empty" title="Clic para ver o agregar nota de etapa"><span style="font-size:1.2rem;opacity:.4;">+</span>Sin proyectos</div>`}
           </div>
         </div>`;
       }).join('')}
