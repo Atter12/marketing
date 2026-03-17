@@ -1398,94 +1398,88 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 /* ══════════════════════════════════════════════
    ATTENDANCE VIEW
 ══════════════════════════════════════════════ */
-.attendance-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: var(--sp-4);
+.att-summary-strip {
+  display: flex; gap: var(--sp-3); margin-bottom: var(--sp-5); flex-wrap: wrap;
 }
-.attendance-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--r-xl);
-  padding: var(--sp-5);
-  transition: box-shadow var(--tr);
+.att-summary-item {
+  flex: 1; min-width: 120px;
+  background: var(--color-surface); border: 1px solid var(--color-divider);
+  border-radius: var(--r-lg); padding: var(--sp-4);
+  display: flex; flex-direction: column; align-items: center; text-align: center;
 }
-.attendance-card:hover { box-shadow: var(--shadow-sm); }
-.att-top { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-4); }
+.att-summary-num {
+  font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.att-summary-num.green { color: var(--green); }
+.att-summary-num.orange { color: var(--orange2); }
+.att-summary-num.red { color: var(--red); }
+.att-summary-num.primary { color: var(--color-primary); }
+.att-summary-lbl {
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--color-text-faint); font-weight: 600; margin-top: 4px;
+}
+
+.att-table-wrap {
+  background: var(--color-surface); border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl); overflow: hidden;
+}
+.att-table { width: 100%; border-collapse: collapse; }
+.att-table thead th {
+  padding: var(--sp-3) var(--sp-4);
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--color-text-faint); font-weight: 600; text-align: left;
+  background: var(--color-surface-2); border-bottom: 1px solid var(--color-divider);
+}
+.att-table tbody tr { border-bottom: 1px solid var(--color-divider); transition: background 120ms ease; }
+.att-table tbody tr:last-child { border-bottom: none; }
+.att-table tbody tr:hover { background: var(--color-surface-2); }
+.att-table td { padding: var(--sp-3) var(--sp-4); font-size: var(--text-sm); vertical-align: middle; }
+.att-member-cell { display: flex; align-items: center; gap: var(--sp-3); }
 .att-avatar {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  color: #fff;
-  position: relative;
-  flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem; font-weight: 700; color: #fff; flex-shrink: 0;
 }
-.online-dot {
-  position: absolute;
-  bottom: 0; right: 0;
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--color-surface);
+.att-member-name { font-weight: 600; font-size: var(--text-sm); }
+.att-member-role { font-size: 0.7rem; color: var(--color-text-muted); }
+.att-status-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 600;
 }
-.online-dot.on  { background: var(--green); }
-.online-dot.off { background: var(--color-text-faint); }
-.att-name { font-size: var(--text-sm); font-weight: 600; }
-.att-role { font-size: var(--text-xs); color: var(--color-text-muted); }
-.att-verif-section {
-  background: var(--color-surface-2);
-  border-radius: var(--r-lg);
-  padding: var(--sp-3);
-  margin-bottom: var(--sp-3);
+.att-status-pill .att-status-dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
 }
-.att-verif-title {
-  font-size: 0.5625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--color-text-faint);
-  font-weight: 700;
-  margin-bottom: var(--sp-2);
+.att-status-present { background: rgba(34,197,94,.1); color: #16a34a; }
+.att-status-present .att-status-dot { background: #16a34a; }
+.att-status-absent { background: rgba(239,68,68,.08); color: #dc2626; }
+.att-status-absent .att-status-dot { background: #dc2626; }
+.att-status-late { background: rgba(245,158,11,.1); color: #d97706; }
+.att-status-late .att-status-dot { background: #d97706; }
+.att-status-active { background: rgba(59,130,246,.1); color: #2563eb; }
+.att-status-active .att-status-dot { background: #2563eb; }
+.att-time-val { font-variant-numeric: tabular-nums; font-weight: 500; }
+.att-time-empty { color: var(--color-text-faint); }
+.att-hours-bar {
+  display: flex; align-items: center; gap: 8px;
 }
-.att-verif-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
-.att-vf {
-  padding: var(--sp-2) var(--sp-2);
-  border-radius: var(--r-md);
-  border: 1px solid var(--color-divider);
-  background: var(--color-surface);
+.att-hours-track {
+  flex: 1; height: 6px; background: var(--color-surface-offset);
+  border-radius: 3px; overflow: hidden; min-width: 50px; max-width: 100px;
 }
-.att-vf .lbl { font-size: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-faint); margin-bottom: 2px; font-weight: 600; }
-.att-vf .val { font-size: 0.6875rem; font-weight: 600; display: flex; align-items: center; gap: 3px; }
-.att-vf .ck { color: var(--green); }
-.att-vf .no  { color: var(--red); }
-.att-check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-bottom: var(--sp-3); }
-.att-tasks-section { border-top: 1px solid var(--color-divider); padding-top: var(--sp-3); }
-.att-tasks-title {
-  font-size: 0.5625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--color-text-faint);
-  font-weight: 700;
-  margin-bottom: var(--sp-2);
+.att-hours-fill { height: 100%; border-radius: 3px; background: var(--color-primary); transition: width 300ms ease; }
+.att-hours-num { font-size: 0.72rem; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 42px; }
+.att-action-btns { display: flex; gap: 4px; }
+.att-action-btn {
+  width: 28px; height: 28px; border-radius: var(--r-md);
+  border: 1px solid var(--color-divider); background: var(--color-surface);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 120ms ease; color: var(--color-text-muted);
 }
-.att-task { display: flex; align-items: center; gap: var(--sp-2); padding: 3px 0; font-size: var(--text-xs); }
-.task-check {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 2px solid var(--color-border);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--tr);
-  flex-shrink: 0;
-}
-.task-check.done { background: var(--green); border-color: var(--green); }
-.task-check.done svg { display: block !important; }
-.task-check svg { display: none; width: 8px; height: 8px; color: #fff; }
-.task-text.done { text-decoration: line-through; color: var(--color-text-faint); }
+.att-action-btn:hover { background: var(--color-surface-2); border-color: var(--color-border); color: var(--color-text); }
+.att-action-btn.checkin { color: var(--green); }
+.att-action-btn.checkout { color: var(--color-primary); }
 
 /* ══════════════════════════════════════════════
    WORKFLOWS VIEW
@@ -1799,82 +1793,54 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 /* ══════════════════════════════════════════════
    DAILY CODE
 ══════════════════════════════════════════════ */
-.daily-code-box {
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--r-xl);
-  padding: var(--sp-4) var(--sp-5);
-  margin-bottom: var(--sp-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--sp-3);
+.att-register-bar {
+  background: var(--color-surface); border: 1px solid var(--color-divider);
+  border-radius: var(--r-xl); padding: var(--sp-4) var(--sp-5);
+  margin-bottom: var(--sp-5);
+  display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap;
 }
-.daily-code-num {
-  font-size: clamp(1.5rem, 1.2rem + 0.8vw, 2rem);
-  font-weight: 800;
-  color: var(--color-primary);
-  letter-spacing: 0.5rem;
-  font-family: monospace;
-  font-variant-numeric: tabular-nums;
+.att-register-bar-code {
+  display: flex; align-items: center; gap: var(--sp-3);
 }
-.daily-code-meta { display: flex; gap: var(--sp-5); font-size: var(--text-xs); color: var(--color-text-muted); flex-wrap: wrap; }
-
-.att-code-bar {
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--r-xl);
-  padding: var(--sp-4);
-  margin-bottom: var(--sp-4);
+.att-register-code-display {
+  font-size: 1.1rem; font-weight: 800; color: var(--color-primary);
+  letter-spacing: 0.3em; font-family: monospace; font-variant-numeric: tabular-nums;
+  background: var(--color-primary-highlight); padding: 6px 14px;
+  border-radius: var(--r-md); border: 1px dashed rgba(234,88,12,.2);
 }
-.att-code-label { display: block; font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted); margin-bottom: var(--sp-2); }
-.att-code-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; }
-.att-code-input {
-  width: 120px;
-  font-size: 1.25rem;
-  font-family: var(--font-mono);
-  letter-spacing: 0.2em;
-  text-align: center;
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-md);
-  border: 2px solid var(--color-divider);
+.att-register-bar-form {
+  display: flex; align-items: center; gap: var(--sp-2); flex: 1; min-width: 0; flex-wrap: wrap;
 }
-.att-code-input:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px var(--color-primary-glow); }
-.att-code-select { min-width: 160px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); }
-.att-code-btn { white-space: nowrap; }
-.att-code-message { margin-top: var(--sp-2); font-size: var(--text-sm); min-height: 1.5em; }
-.att-code-message.ok { color: var(--green); }
-.att-code-message.err { color: var(--red); }
-
-.att-dashboard { margin-top: var(--sp-6); padding-top: var(--sp-5); border-top: 1px solid var(--color-divider); }
-.att-dashboard-title { font-size: var(--text-lg); font-weight: 700; margin-bottom: var(--sp-4); }
-.att-dashboard-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--sp-3); margin-bottom: var(--sp-5); }
-.att-dash-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
-  border-radius: var(--r-lg);
-  padding: var(--sp-4);
-  text-align: center;
+.att-register-input {
+  width: 90px; font-size: 1rem; font-family: monospace;
+  letter-spacing: 0.15em; text-align: center;
+  padding: 6px 10px; border-radius: var(--r-md);
+  border: 1px solid var(--color-divider); background: var(--color-surface-2);
+  transition: border-color 140ms ease;
 }
-.att-dash-card .num { font-size: 1.75rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--color-primary); }
-.att-dash-card .lbl { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-faint); margin-top: 4px; }
-.att-chart-wrap { background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--r-xl); padding: var(--sp-4); min-height: 220px; }
-.att-chart-wrap canvas { display: block; max-width: 100%; height: 200px; }
-
-/* Anti-fraud banner */
-.antifr-banner {
-  background: var(--color-primary-highlight);
-  border: 1px solid rgba(234,88,12,0.2);
-  border-radius: var(--r-xl);
-  padding: var(--sp-4) var(--sp-5);
-  margin-bottom: var(--sp-4);
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
+.att-register-input:focus { border-color: var(--color-primary); outline: none; }
+.att-register-select {
+  flex: 1; min-width: 140px; padding: 6px 10px;
+  border-radius: var(--r-md); border: 1px solid var(--color-divider);
+  background: var(--color-surface-2); font-size: var(--text-sm);
 }
-.antifr-banner .title { font-size: var(--text-sm); font-weight: 600; color: var(--color-primary); }
-.antifr-banner .sub   { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 2px; }
+.att-register-btn {
+  padding: 6px 16px; border-radius: var(--r-md); font-size: var(--text-sm);
+  font-weight: 600; border: none; cursor: pointer; white-space: nowrap;
+  transition: background 120ms ease;
+}
+.att-register-btn-in { background: var(--green); color: #fff; }
+.att-register-btn-in:hover { background: #15803d; }
+.att-register-btn-out { background: var(--color-surface-offset); color: var(--color-text); border: 1px solid var(--color-divider); }
+.att-register-btn-out:hover { background: var(--color-surface-2); }
+.att-register-msg { width: 100%; font-size: var(--text-sm); min-height: 1.3em; margin-top: var(--sp-1); }
+.att-register-msg.ok { color: var(--green); }
+.att-register-msg.err { color: var(--red); }
+@media (max-width: 700px) {
+  .att-register-bar { flex-direction: column; align-items: stretch; }
+  .att-register-bar-form { flex-direction: column; }
+  .att-table-wrap { overflow-x: auto; }
+}
 
 /* ══════════════════════════════════════════════
    MOBILE HAMBURGER
@@ -2347,7 +2313,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════════════ ATTENDANCE VIEW ══════════════ -->
 <section class="view" id="view-attendance" aria-label="Control de asistencia">
   <div class="section-header">
-    <h3 id="attendanceTitle">Control de Asistencia Verificada</h3>
+    <h3 id="attendanceTitle">Asistencia</h3>
     <div class="section-actions">
       <button class="btn-success btn-sm" onclick="markAllPresent()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
@@ -2360,59 +2326,38 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     </div>
   </div>
 
-  <!-- Anti-Fraud Banner -->
-  <div class="antifr-banner" role="alert">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-    <div>
-      <div class="title">Verificación Anti-Fraude Activa</div>
-      <div class="sub">Introduce el código que recibiste por email para registrar tu entrada o salida.</div>
-    </div>
-  </div>
+  <div id="attSummaryStrip" class="att-summary-strip"></div>
 
-  <!-- Daily Code (admin: enviar por email) -->
-  <div class="daily-code-box">
-    <div style="display:flex;align-items:center;gap:var(--sp-4)">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" stroke-width="2" aria-hidden="true">
-        <rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-        <line x1="12" y1="18" x2="12" y2="22"/><line x1="12" y1="2" x2="12" y2="6"/>
-      </svg>
-      <div>
-        <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.8px;color:var(--color-text-faint);font-weight:700;margin-bottom:4px">Código del Día (enviar por email al equipo)</div>
-        <div class="daily-code-num" id="dailyCode" aria-live="polite"></div>
-      </div>
+  <div class="att-register-bar">
+    <div class="att-register-bar-code">
+      <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--color-text-faint);font-weight:600">Código:</span>
+      <span class="att-register-code-display" id="dailyCode"></span>
     </div>
-    <div class="daily-code-meta">
-      <span>⏰ Válido hoy</span>
-      <span>♻️ Cambia cada día a las 0:00</span>
-    </div>
-  </div>
-
-  <!-- Barra: código por email + registrar entrada/salida -->
-  <div class="att-code-bar">
-    <label for="attCodeInput" class="att-code-label">Código recibido por email</label>
-    <div class="att-code-row">
-      <input type="text" id="attCodeInput" class="att-code-input" placeholder="Ej: 4271" inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="Código del día" />
-      <select id="attCodeMember" class="att-code-select" aria-label="Registrar como">
-        <option value="">— Seleccionar —</option>
+    <div class="att-register-bar-form">
+      <select id="attCodeMember" class="att-register-select" aria-label="Miembro">
+        <option value="">Seleccionar miembro...</option>
       </select>
-      <button type="button" class="btn-primary att-code-btn" onclick="attVerifyAndCheckin()">✓ Entrada</button>
-      <button type="button" class="btn-secondary att-code-btn" onclick="attVerifyAndCheckout()">Salida</button>
+      <input type="text" id="attCodeInput" class="att-register-input" placeholder="Código" inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="Código del día" />
+      <button type="button" class="att-register-btn att-register-btn-in" onclick="attVerifyAndCheckin()">Entrada</button>
+      <button type="button" class="att-register-btn att-register-btn-out" onclick="attVerifyAndCheckout()">Salida</button>
     </div>
-    <div id="attCodeMessage" class="att-code-message" role="status" aria-live="polite"></div>
+    <div id="attCodeMessage" class="att-register-msg" role="status" aria-live="polite"></div>
   </div>
 
-  <div class="attendance-grid" id="attendanceGrid"></div>
-
-  <!-- Dashboard: horas trabajadas, promedios, gráfica -->
-  <div class="att-dashboard">
-    <h4 class="att-dashboard-title">Resumen de horas</h4>
-    <div class="att-dashboard-cards" id="attDashboardCards"></div>
-    <div class="att-chart-wrap">
-      <canvas id="attHoursChart" aria-label="Horas trabajadas por miembro hoy"></canvas>
-    </div>
+  <div class="att-table-wrap">
+    <table class="att-table" id="attendanceTable">
+      <thead>
+        <tr>
+          <th>Miembro</th>
+          <th>Estado</th>
+          <th>Entrada</th>
+          <th>Salida</th>
+          <th>Horas</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="attendanceBody"></tbody>
+    </table>
   </div>
 </section>
 
@@ -2672,7 +2617,7 @@ async function loadTareasData() {
     var creditoCount = (creditoRes.data || []).length;
     var tareasClientesCount = (clRes.data || []).length;
     var TEAM = (eqRes.data || []).map(function(r) {
-      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '—', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '—', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', selfie: true, gps: true, ip: true, code: true };
+      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '' };
     });
     var clients = (clRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
@@ -3364,25 +3309,38 @@ function getDailyCodeForDate(d) {
   var code = 1000 + (dayOfYear * 97) % 9000;
   return String(code);
 }
+function attGetRealStatus(m) {
+  var today = new Date(); today.setHours(0,0,0,0);
+  if (!m.checkinAt) return { key: 'absent', label: 'Ausente', cls: 'att-status-absent' };
+  var ciDate = new Date(m.checkinAt); ciDate.setHours(0,0,0,0);
+  if (ciDate.getTime() !== today.getTime()) return { key: 'absent', label: 'Ausente', cls: 'att-status-absent' };
+  if (m.checkoutAt) return { key: 'present', label: 'Presente', cls: 'att-status-present' };
+  var ciHour = m.checkinAt.getHours();
+  var ciMin = m.checkinAt.getMinutes();
+  if (ciHour > 9 || (ciHour === 9 && ciMin > 15)) return { key: 'late', label: 'Tardanza', cls: 'att-status-late' };
+  return { key: 'active', label: 'Trabajando', cls: 'att-status-active' };
+}
+
 function setAttendanceCodeBar() {
   var today = new Date();
   var code = getDailyCodeForDate(today);
   var el = document.getElementById('dailyCode');
-  if (el) el.textContent = code.split('').join(' ');
+  if (el) el.textContent = code;
   var sel = document.getElementById('attCodeMember');
   if (sel) {
     var cur = sel.value;
-    sel.innerHTML = '<option value="">— Seleccionar —</option>' + TEAM.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
+    sel.innerHTML = '<option value="">Seleccionar miembro...</option>' + TEAM.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
     if (cur) sel.value = cur;
   }
   var title = document.getElementById('attendanceTitle');
-  if (title) title.textContent = 'Control de Asistencia Verificada — ' + today.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  if (title) title.textContent = 'Asistencia — ' + today.toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 function attShowMessage(msg, isError) {
   var el = document.getElementById('attCodeMessage');
   if (!el) return;
   el.textContent = msg;
-  el.className = 'att-code-message ' + (isError ? 'err' : 'ok');
+  el.className = 'att-register-msg ' + (isError ? 'err' : 'ok');
+  if (!isError) setTimeout(function(){ if (el.textContent === msg) el.textContent = ''; }, 4000);
 }
 function attVerifyAndCheckin() {
   var input = document.getElementById('attCodeInput');
@@ -3390,20 +3348,23 @@ function attVerifyAndCheckin() {
   if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
   var raw = (input && input.value || '').replace(/\D/g,'');
   var expected = getDailyCodeForDate(new Date());
-  if (raw !== expected) { attShowMessage('Código incorrecto. Revisa el que recibiste por email.', true); return; }
+  if (raw !== expected) { attShowMessage('Código incorrecto.', true); return; }
+  var m = TEAM.find(function(x){ return x.id === memberId; });
+  if (m && m.checkinAt) {
+    var today = new Date(); today.setHours(0,0,0,0);
+    var ciDate = new Date(m.checkinAt); ciDate.setHours(0,0,0,0);
+    if (ciDate.getTime() === today.getTime()) { attShowMessage((m.n || memberId) + ' ya registró entrada hoy a las ' + m.ci + '.', true); return; }
+  }
   if (supabase) {
-    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
-      if (r.error) { attShowMessage('Error al registrar: ' + (r.error.message||''), true); return; }
-      var m = TEAM.find(function(x){ return x.id === memberId; });
-      if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
-      attShowMessage('✓ Entrada registrada para ' + (m && m.n || memberId) + '.');
+    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+      if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
+      attShowMessage('Entrada registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
-      reloadTareasData();
+      reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
-    var m = TEAM.find(function(x){ return x.id === memberId; });
-    if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
-    attShowMessage('✓ Entrada registrada para ' + (m && m.n || memberId) + '.');
+    if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); m.checkoutAt = null; m.co = ''; }
+    attShowMessage('Entrada registrada — ' + (m && m.n || memberId));
     if (input) input.value = '';
     renderers.attendance();
   }
@@ -3414,137 +3375,142 @@ function attVerifyAndCheckout() {
   if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
   var raw = (input && input.value || '').replace(/\D/g,'');
   var expected = getDailyCodeForDate(new Date());
-  if (raw !== expected) { attShowMessage('Código incorrecto. Revisa el que recibiste por email.', true); return; }
+  if (raw !== expected) { attShowMessage('Código incorrecto.', true); return; }
+  var m = TEAM.find(function(x){ return x.id === memberId; });
+  if (m && !m.checkinAt) { attShowMessage((m.n || memberId) + ' no tiene entrada registrada hoy.', true); return; }
   if (supabase) {
     supabase.from('tareas_equipo').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
-      if (r.error) { attShowMessage('Error al registrar salida: ' + (r.error.message||''), true); return; }
-      var m = TEAM.find(function(x){ return x.id === memberId; });
-      if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
-      attShowMessage('✓ Salida registrada para ' + (m && m.n || memberId) + '.');
+      if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
+      attShowMessage('Salida registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
-      reloadTareasData();
+      reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
-    var m = TEAM.find(function(x){ return x.id === memberId; });
     if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
-    attShowMessage('✓ Salida registrada para ' + (m && m.n || memberId) + '.');
+    attShowMessage('Salida registrada — ' + (m && m.n || memberId));
     if (input) input.value = '';
     renderers.attendance();
   }
 }
+function attQuickCheckin(memberId) {
+  if (supabase) {
+    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+      if (r.error) return;
+      reloadTareasData(function(){ renderers.attendance(); });
+    });
+  } else {
+    var m = TEAM.find(function(x){ return x.id === memberId; });
+    if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); m.checkoutAt = null; m.co = ''; }
+    renderers.attendance();
+  }
+}
+function attQuickCheckout(memberId) {
+  if (supabase) {
+    supabase.from('tareas_equipo').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
+      if (r.error) return;
+      reloadTareasData(function(){ renderers.attendance(); });
+    });
+  } else {
+    var m = TEAM.find(function(x){ return x.id === memberId; });
+    if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+    renderers.attendance();
+  }
+}
 function exportAttendance() {
-  var rows = TEAM.map(function(m){ return [m.n, m.r, m.ci || '—', m.co || '—', attHoursForMember(m)].join('\t'); });
-  var csv = 'Nombre\tRol\tEntrada\tSalida\tHoras\n' + rows.join('\n');
-  var a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv); a.download = 'asistencia-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+  var rows = TEAM.map(function(m){ var st = attGetRealStatus(m); return [m.n, m.r, st.label, m.ci || '—', m.co || '—', attHoursForMember(m)].join(','); });
+  var csv = 'Nombre,Rol,Estado,Entrada,Salida,Horas\n' + rows.join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'asistencia-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
 }
 function attHoursForMember(m) {
   if (!m.checkinAt) return '—';
   var end = m.checkoutAt || new Date();
   var mins = Math.round((end - m.checkinAt) / 60000);
+  if (mins < 0) return '—';
   var h = Math.floor(mins / 60); var min = mins % 60;
-  return (h + 'h ' + (min < 10 ? '0' : '') + min + 'm');
+  return h + 'h ' + (min < 10 ? '0' : '') + min + 'm';
 }
 function attHoursDecimal(m) {
   if (!m.checkinAt) return 0;
   var end = m.checkoutAt || new Date();
-  return (end - m.checkinAt) / 3600000;
+  var val = (end - m.checkinAt) / 3600000;
+  return val > 0 ? val : 0;
 }
+
 renderers.attendance = function() {
   setAttendanceCodeBar();
-  const grid = document.getElementById('attendanceGrid');
-  grid.innerHTML = '';
-  const stMap = {present:{l:'Presente',p:'pill-green'},absent:{l:'Ausente',p:'pill-red'},late:{l:'Tardanza',p:'pill-orange2'},remote:{l:'Remoto',p:'pill-orange'}};
-  TEAM.forEach(m => {
-    const ts = MT[m.id] || [];
-    const done = ts.filter(x => x.d).length;
-    const st = stMap[m.att] || stMap.present;
-    const ck = (v, label) => `<div class="att-vf"><div class="lbl">${label}</div><div class="val">${v?'<span class="ck">✓ Verificado</span>':'<span class="no">✗ Pendiente</span>'}</div></div>`;
-    const tasksHtml = ts.map((t, i) => `
-      <div class="att-task">
-        <div class="task-check ${t.d?'done':''}" onclick="toggleAttendance('${m.id}',${i})" role="checkbox" aria-checked="${!!t.d}" aria-label="${t.t}">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <span class="task-text ${t.d?'done':''}">${t.t}</span>
-      </div>`).join('');
-    const card = document.createElement('article');
-    card.className = 'attendance-card fade-in';
-    card.innerHTML = `
-      <div class="att-top">
-        <div class="att-avatar" style="background:${m.c}" aria-hidden="true">${(m.n&&m.n[0])||m.id}
-          <div class="online-dot ${m.on?'on':'off'}" aria-label="${m.on?'En línea':'Fuera de línea'}"></div>
-        </div>
-        <div style="flex:1">
-          <div class="att-name">${m.n}</div>
-          <div class="att-role">${m.r}</div>
-        </div>
-        <span class="pill ${st.p}">${st.l}</span>
-      </div>
-      <div class="att-verif-section">
-        <div class="att-verif-title">🔒 Verificación de Identidad</div>
-        <div class="att-verif-grid">
-          ${ck(m.code,'🔑 Código Diario')}
-          ${ck(m.selfie,'📸 Selfie en Vivo')}
-          ${ck(m.gps,'📍 GPS Ubicación')}
-          ${ck(m.ip,'🌐 IP de Red')}
-        </div>
-      </div>
-      <div class="att-check-grid">
-        <div class="att-vf"><div class="lbl">Entrada</div><div class="val">${m.ci||'—'}</div></div>
-        <div class="att-vf"><div class="lbl">Salida</div><div class="val">${m.co||'—'}</div></div>
-        <div class="att-vf"><div class="lbl">Horas</div><div class="val" style="font-variant-numeric:tabular-nums">${attHoursForMember(m)}</div></div>
-        <div class="att-vf"><div class="lbl">Tareas</div><div class="val" style="color:var(--green);font-variant-numeric:tabular-nums">${done}/${ts.length}</div></div>
-      </div>
-      <div class="att-tasks-section">
-        <div class="att-tasks-title">Tareas del Día</div>
-        ${tasksHtml}
-      </div>`;
-    grid.appendChild(card);
+
+  var present = 0, absent = 0, late = 0, working = 0;
+  var totalH = 0;
+  TEAM.forEach(function(m) {
+    var st = attGetRealStatus(m);
+    if (st.key === 'present') present++;
+    else if (st.key === 'absent') absent++;
+    else if (st.key === 'late') { late++; working++; }
+    else if (st.key === 'active') { present++; working++; }
+    totalH += attHoursDecimal(m);
   });
-  grid.querySelectorAll('.fade-in').forEach(function(el){ el.classList.add('visible'); });
-  var cardsEl = document.getElementById('attDashboardCards');
-  if (cardsEl) {
-    var withCheckin = TEAM.filter(function(m){ return m.checkinAt; });
-    var totalH = withCheckin.reduce(function(acc, m){ return acc + attHoursDecimal(m); }, 0);
-    var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
-    cardsEl.innerHTML = ''
-      + '<div class="att-dash-card"><div class="num">' + (withCheckin.length || 0) + '</div><div class="lbl">Con entrada hoy</div></div>'
-      + '<div class="att-dash-card"><div class="num">' + (totalH.toFixed(1) || '0') + 'h</div><div class="lbl">Total horas equipo</div></div>'
-      + '<div class="att-dash-card"><div class="num">' + (avgH.toFixed(1) || '0') + 'h</div><div class="lbl">Promedio por persona</div></div>';
+  var withCheckin = TEAM.filter(function(m){ return m.checkinAt; });
+  var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
+
+  var strip = document.getElementById('attSummaryStrip');
+  if (strip) {
+    strip.innerHTML = ''
+      + '<div class="att-summary-item"><div class="att-summary-num green">' + (present + late) + '/' + TEAM.length + '</div><div class="att-summary-lbl">Presentes</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num red">' + absent + '</div><div class="att-summary-lbl">Ausentes</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num orange">' + late + '</div><div class="att-summary-lbl">Tardanzas</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num primary">' + totalH.toFixed(1) + 'h</div><div class="att-summary-lbl">Total horas</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num primary">' + avgH.toFixed(1) + 'h</div><div class="att-summary-lbl">Promedio</div></div>';
   }
-  var canvas = document.getElementById('attHoursChart');
-  if (canvas && TEAM.length) {
-    var ctx = canvas.getContext('2d');
-    var root = document.documentElement;
-    var getVar = function(v){ return getComputedStyle(root).getPropertyValue(v).trim() || '#666'; };
-    var dpr = window.devicePixelRatio || 1;
-    var w = canvas.offsetWidth || 400; var h = 200;
-    canvas.width = w * dpr; canvas.height = h * dpr;
-    ctx.scale(dpr, dpr);
-    var maxH = Math.max(1, Math.max.apply(null, TEAM.map(attHoursDecimal)));
-    var barH = 24; var gap = 8; var left = 100; var chartW = Math.max(80, w - left - 24);
-    ctx.font = '12px system-ui, sans-serif';
-    TEAM.forEach(function(m, i) {
-      var y = i * (barH + gap) + 8;
-      var name = (m.n || m.id).slice(0, 12);
-      ctx.fillStyle = getVar('--color-text-muted');
-      ctx.fillText(name, 4, y + barH - 6);
-      var pct = attHoursDecimal(m) / maxH;
-      var barW = Math.max(0, pct * chartW);
-      ctx.fillStyle = m.checkoutAt ? getVar('--green') : getVar('--color-primary');
-      ctx.fillRect(left, y, barW, barH);
-      ctx.fillStyle = getVar('--color-text');
-      ctx.fillText(attHoursForMember(m) === '—' ? '—' : attHoursForMember(m), left + barW + 6, y + barH - 6);
-    });
-  }
+
+  var maxH = Math.max(1, Math.max.apply(null, TEAM.map(attHoursDecimal)));
+  var tbody = document.getElementById('attendanceBody');
+  if (!tbody) return;
+  tbody.innerHTML = TEAM.map(function(m) {
+    var st = attGetRealStatus(m);
+    var hrs = attHoursDecimal(m);
+    var pct = Math.min(100, Math.round((hrs / 9) * 100));
+    var hrsLabel = attHoursForMember(m);
+    var hasCheckin = !!m.checkinAt;
+    var hasCheckout = !!m.checkoutAt;
+    var checkinBtn = !hasCheckin
+      ? '<button class="att-action-btn checkin" onclick="attQuickCheckin(\'' + m.id + '\')" title="Registrar entrada"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>'
+      : '';
+    var checkoutBtn = hasCheckin && !hasCheckout
+      ? '<button class="att-action-btn checkout" onclick="attQuickCheckout(\'' + m.id + '\')" title="Registrar salida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+      : '';
+
+    return '<tr>'
+      + '<td><div class="att-member-cell"><div class="att-avatar" style="background:' + m.c + '">' + ((m.n&&m.n[0])||'?') + '</div><div><div class="att-member-name">' + (m.n||'—') + '</div><div class="att-member-role">' + (m.r||'') + '</div></div></div></td>'
+      + '<td><span class="att-status-pill ' + st.cls + '"><span class="att-status-dot"></span>' + st.label + '</span></td>'
+      + '<td class="' + (m.ci ? 'att-time-val' : 'att-time-empty') + '">' + (m.ci || '—') + '</td>'
+      + '<td class="' + (m.co ? 'att-time-val' : 'att-time-empty') + '">' + (m.co || '—') + '</td>'
+      + '<td><div class="att-hours-bar"><div class="att-hours-track"><div class="att-hours-fill" style="width:' + pct + '%"></div></div><span class="att-hours-num">' + hrsLabel + '</span></div></td>'
+      + '<td><div class="att-action-btns">' + checkinBtn + checkoutBtn + '</div></td>'
+      + '</tr>';
+  }).join('');
+
+  updateDashboardStats();
 };
 
-function toggleAttendance(mid, idx) {
-  MT[mid][idx].d = MT[mid][idx].d ? 0 : 1;
-  renderers.attendance();
-}
 function markAllPresent() {
-  TEAM.forEach(m => m.att = 'present');
-  renderers.attendance();
+  if (!TEAM.length) return;
+  var now = new Date().toISOString();
+  if (supabase) {
+    var ids = TEAM.filter(function(m){ return !m.checkinAt; }).map(function(m){ return m.id; });
+    if (!ids.length) { attShowMessage('Todos ya tienen entrada registrada.', false); return; }
+    Promise.all(ids.map(function(id) {
+      return supabase.from('tareas_equipo').update({ checkin_at: now, checkout_at: null }).eq('id', id);
+    })).then(function() {
+      reloadTareasData(function(){ renderers.attendance(); });
+      attShowMessage('Entrada registrada para ' + ids.length + ' miembros.');
+    });
+  } else {
+    TEAM.forEach(function(m) {
+      if (!m.checkinAt) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
+    });
+    renderers.attendance();
+  }
 }
 
 // ─── SIDEBAR BADGE UPDATES ───
@@ -3563,7 +3529,7 @@ function updateDashboardStats() {
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
   var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
   var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
-  var present = TEAM.filter(function(m) { return m.att === 'present' || m.att === 'remote' || m.att === 'late'; }).length;
+  var present = TEAM.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
   var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
   set('stat-clients', clients.length);
   set('stat-tickets', tkOpen);
