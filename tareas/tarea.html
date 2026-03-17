@@ -2552,6 +2552,8 @@ if (typeof window !== 'undefined') {
 //  DATA — Vacío por defecto; se rellena solo desde Supabase
 // ══════════════════════════════════════════════════════════════════
 let TEAM = [];
+/** Miembros para Asistencia = gerentes (tabla gerentes de Crédito). Se carga en loadTareasData. */
+let ATTENDANCE_MEMBERS = [];
 let MT = {};
 let clients = [];
 let KT = [];
@@ -2592,16 +2594,18 @@ async function loadTareasData() {
   var now = new Date();
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
-    var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes] = await Promise.all([
+    var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes, gerentesRes] = await Promise.all([
       supabase.from('clientes').select('id, name, phones, emails').order('name'),
       supabase.from('tareas_equipo').select('*').order('id'),
       supabase.from('tareas_clientes').select('*').order('nombre'),
       supabase.from('tareas_kanban').select('*').order('columna').order('orden', { ascending: true }),
       supabase.from('tareas_tickets').select('*').order('created_at', { ascending: false }),
       supabase.from('tareas_workload').select('*'),
-      supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia')
+      supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
+      supabase.from('gerentes').select('id, email, checkin_at, checkout_at').order('email')
     ]);
     if (creditoRes.error) console.warn('[Tareas] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
+    if (gerentesRes.error) console.warn('[Tareas] No se pudo cargar gerentes (asistencia):', gerentesRes.error.message);
     if (eqRes.error) throw eqRes.error;
     if (clRes.error) throw clRes.error;
     if (kbRes.error) throw kbRes.error;
@@ -2618,6 +2622,15 @@ async function loadTareasData() {
     var tareasClientesCount = (clRes.data || []).length;
     var TEAM = (eqRes.data || []).map(function(r) {
       return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '' };
+    });
+    var hueFromId = function(id) {
+      if (!id || typeof id !== 'string') return 220;
+      var h = 0; for (var i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i); return Math.abs(h % 360);
+    };
+    var ATTENDANCE_MEMBERS = (gerentesRes.data || []).map(function(r) {
+      var name = (r.email || '').trim(); var at = name.indexOf('@'); if (at > 0) name = name.slice(0, at).replace(/[._]/g, ' '); if (!name) name = r.email || 'Gerente';
+      var hue = hueFromId(r.id); var c = 'hsl(' + hue + ', 55%, 42%)';
+      return { id: r.id, n: name, r: 'Gerente', c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null };
     });
     var clients = (clRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
@@ -2658,7 +2671,7 @@ async function loadTareasData() {
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
-    return { TEAM: TEAM, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
+    return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
     return null;
@@ -2677,6 +2690,7 @@ function reloadTareasData(thenRender) {
   return loadTareasData().then(function(data) {
     if (data) {
       TEAM = data.TEAM;
+      ATTENDANCE_MEMBERS = data.ATTENDANCE_MEMBERS || [];
       MT = data.MT;
       clients = data.clients;
       if (data.KT && data.KT.length > 0) {
@@ -3329,7 +3343,7 @@ function setAttendanceCodeBar() {
   var sel = document.getElementById('attCodeMember');
   if (sel) {
     var cur = sel.value;
-    sel.innerHTML = '<option value="">Seleccionar miembro...</option>' + TEAM.map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
+    sel.innerHTML = '<option value="">Seleccionar miembro...</option>' + (ATTENDANCE_MEMBERS || []).map(function(m){ return '<option value="'+m.id+'">'+m.n+'</option>'; }).join('');
     if (cur) sel.value = cur;
   }
   var title = document.getElementById('attendanceTitle');
@@ -3349,14 +3363,14 @@ function attVerifyAndCheckin() {
   var raw = (input && input.value || '').replace(/\D/g,'');
   var expected = getDailyCodeForDate(new Date());
   if (raw !== expected) { attShowMessage('Código incorrecto.', true); return; }
-  var m = TEAM.find(function(x){ return x.id === memberId; });
+  var m = (ATTENDANCE_MEMBERS || []).find(function(x){ return x.id === memberId; });
   if (m && m.checkinAt) {
     var today = new Date(); today.setHours(0,0,0,0);
     var ciDate = new Date(m.checkinAt); ciDate.setHours(0,0,0,0);
     if (ciDate.getTime() === today.getTime()) { attShowMessage((m.n || memberId) + ' ya registró entrada hoy a las ' + m.ci + '.', true); return; }
   }
   if (supabase) {
-    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
       if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
       attShowMessage('Entrada registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
@@ -3376,10 +3390,10 @@ function attVerifyAndCheckout() {
   var raw = (input && input.value || '').replace(/\D/g,'');
   var expected = getDailyCodeForDate(new Date());
   if (raw !== expected) { attShowMessage('Código incorrecto.', true); return; }
-  var m = TEAM.find(function(x){ return x.id === memberId; });
+  var m = (ATTENDANCE_MEMBERS || []).find(function(x){ return x.id === memberId; });
   if (m && !m.checkinAt) { attShowMessage((m.n || memberId) + ' no tiene entrada registrada hoy.', true); return; }
   if (supabase) {
-    supabase.from('tareas_equipo').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
       if (r.error) { attShowMessage('Error: ' + (r.error.message||''), true); return; }
       attShowMessage('Salida registrada — ' + (m && m.n || memberId));
       if (input) input.value = '';
@@ -3394,30 +3408,31 @@ function attVerifyAndCheckout() {
 }
 function attQuickCheckin(memberId) {
   if (supabase) {
-    supabase.from('tareas_equipo').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null }).eq('id', memberId).then(function(r) {
       if (r.error) return;
       reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
-    var m = TEAM.find(function(x){ return x.id === memberId; });
+    var m = (ATTENDANCE_MEMBERS || []).find(function(x){ return x.id === memberId; });
     if (m) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); m.checkoutAt = null; m.co = ''; }
     renderers.attendance();
   }
 }
 function attQuickCheckout(memberId) {
   if (supabase) {
-    supabase.from('tareas_equipo').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
+    supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId).then(function(r) {
       if (r.error) return;
       reloadTareasData(function(){ renderers.attendance(); });
     });
   } else {
-    var m = TEAM.find(function(x){ return x.id === memberId; });
+    var m = (ATTENDANCE_MEMBERS || []).find(function(x){ return x.id === memberId; });
     if (m) { m.checkoutAt = new Date(); m.co = m.checkoutAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
     renderers.attendance();
   }
 }
 function exportAttendance() {
-  var rows = TEAM.map(function(m){ var st = attGetRealStatus(m); return [m.n, m.r, st.label, m.ci || '—', m.co || '—', attHoursForMember(m)].join(','); });
+  var members = ATTENDANCE_MEMBERS || [];
+  var rows = members.map(function(m){ var st = attGetRealStatus(m); return [m.n, m.r, st.label, m.ci || '—', m.co || '—', attHoursForMember(m)].join(','); });
   var csv = 'Nombre,Rol,Estado,Entrada,Salida,Horas\n' + rows.join('\n');
   var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'asistencia-' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
@@ -3439,10 +3454,11 @@ function attHoursDecimal(m) {
 
 renderers.attendance = function() {
   setAttendanceCodeBar();
+  var members = ATTENDANCE_MEMBERS || [];
 
   var present = 0, absent = 0, late = 0, working = 0;
   var totalH = 0;
-  TEAM.forEach(function(m) {
+  members.forEach(function(m) {
     var st = attGetRealStatus(m);
     if (st.key === 'present') present++;
     else if (st.key === 'absent') absent++;
@@ -3450,23 +3466,23 @@ renderers.attendance = function() {
     else if (st.key === 'active') { present++; working++; }
     totalH += attHoursDecimal(m);
   });
-  var withCheckin = TEAM.filter(function(m){ return m.checkinAt; });
+  var withCheckin = members.filter(function(m){ return m.checkinAt; });
   var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
 
   var strip = document.getElementById('attSummaryStrip');
   if (strip) {
     strip.innerHTML = ''
-      + '<div class="att-summary-item"><div class="att-summary-num green">' + (present + late) + '/' + TEAM.length + '</div><div class="att-summary-lbl">Presentes</div></div>'
+      + '<div class="att-summary-item"><div class="att-summary-num green">' + (present + late) + '/' + members.length + '</div><div class="att-summary-lbl">Presentes</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num red">' + absent + '</div><div class="att-summary-lbl">Ausentes</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num orange">' + late + '</div><div class="att-summary-lbl">Tardanzas</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num primary">' + totalH.toFixed(1) + 'h</div><div class="att-summary-lbl">Total horas</div></div>'
       + '<div class="att-summary-item"><div class="att-summary-num primary">' + avgH.toFixed(1) + 'h</div><div class="att-summary-lbl">Promedio</div></div>';
   }
 
-  var maxH = Math.max(1, Math.max.apply(null, TEAM.map(attHoursDecimal)));
+  var maxH = Math.max(1, Math.max.apply(null, members.map(attHoursDecimal)));
   var tbody = document.getElementById('attendanceBody');
   if (!tbody) return;
-  tbody.innerHTML = TEAM.map(function(m) {
+  tbody.innerHTML = members.map(function(m) {
     var st = attGetRealStatus(m);
     var hrs = attHoursDecimal(m);
     var pct = Math.min(100, Math.round((hrs / 9) * 100));
@@ -3494,19 +3510,20 @@ renderers.attendance = function() {
 };
 
 function markAllPresent() {
-  if (!TEAM.length) return;
+  var members = ATTENDANCE_MEMBERS || [];
+  if (!members.length) return;
   var now = new Date().toISOString();
   if (supabase) {
-    var ids = TEAM.filter(function(m){ return !m.checkinAt; }).map(function(m){ return m.id; });
+    var ids = members.filter(function(m){ return !m.checkinAt; }).map(function(m){ return m.id; });
     if (!ids.length) { attShowMessage('Todos ya tienen entrada registrada.', false); return; }
     Promise.all(ids.map(function(id) {
-      return supabase.from('tareas_equipo').update({ checkin_at: now, checkout_at: null }).eq('id', id);
+      return supabase.from('gerentes').update({ checkin_at: now, checkout_at: null }).eq('id', id);
     })).then(function() {
       reloadTareasData(function(){ renderers.attendance(); });
       attShowMessage('Entrada registrada para ' + ids.length + ' miembros.');
     });
   } else {
-    TEAM.forEach(function(m) {
+    members.forEach(function(m) {
       if (!m.checkinAt) { m.checkinAt = new Date(); m.ci = m.checkinAt.toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }); }
     });
     renderers.attendance();
@@ -3529,7 +3546,8 @@ function updateDashboardStats() {
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
   var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
   var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
-  var present = TEAM.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
+  var attMembers = ATTENDANCE_MEMBERS || [];
+  var present = attMembers.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
   var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
   set('stat-clients', clients.length);
   set('stat-tickets', tkOpen);
@@ -3538,7 +3556,7 @@ function updateDashboardStats() {
   set('welcome-stat-entregables', total);
   set('welcome-stat-done', done);
   set('welcome-stat-tickets', tkOpen);
-  set('welcome-stat-asistencia', present + '/' + TEAM.length);
+  set('welcome-stat-asistencia', present + '/' + (attMembers.length || TEAM.length));
   var sub = document.getElementById('dashboard-sub');
   if (sub) {
     if (total === 0 && tkOpen === 0) sub.textContent = '';
