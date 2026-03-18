@@ -460,6 +460,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       if (!bc[cid]) bc[cid] = { ads: 0, fee: 0, total: 0, paid: 0 };
       bc[cid].paid += parseFloat(c.monto || 0);
     });
+    /* Clientes con garantía en el período pero sin gasto (fecha) ni cobro en ese mes: igual aparecen en el desglose */
+    garantiasParaReporte.forEach((g) => {
+      const cid = g.clientId;
+      if (!cid) return;
+      if (repCl !== "all" && String(cid) !== String(repCl)) return;
+      if (!bc[cid]) bc[cid] = { ads: 0, fee: 0, total: 0, paid: 0 };
+    });
 
     const rows = Object.entries(bc).map(([cid, d]) => {
       const gar = garantiasParaReporte.filter((g) => g.clientId === cid).reduce((a, g) => a + parseFloat(g.valor || 0), 0);
@@ -469,7 +476,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
-    return { rows, t, pie: [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "#0f172a" }].filter((d) => d.value > 0) };
+    const pie = (t.ads + t.fee) > 0
+      ? [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "#0f172a" }].filter((d) => d.value > 0)
+      : t.gar > 0
+        ? [{ name: "Garantías (período)", value: t.gar, color: "#7c3aed" }]
+        : [];
+
+    return { rows, t, pie };
   }, [sGastos, repCl, repPerInicio, repPerFin, clients, garantias, gastos, cobros]);
 
   /* Filas del desglose ordenadas (mismo criterio que lista Clientes) */
@@ -489,6 +502,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         return rows.sort((a, b) => (b.paid || 0) - (a.paid || 0));
       case "ads":
         return rows.sort((a, b) => (b.ads || 0) - (a.ads || 0));
+      case "garantia":
+        return rows.sort((a, b) => (b.gar || 0) - (a.gar || 0));
       default:
         return rows;
     }
@@ -1600,14 +1615,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
-                <p style={{ margin: 0, fontSize: 12.5, color: "#6b21a8", lineHeight: 1.5 }}>Las garantías vigentes que agregás en <strong>Garantías</strong> se descuentan aquí: en la columna <strong>GARANTÍA</strong> (con signo negativo) y reducen el <strong>PEND. NETO</strong> de cada cliente. También bajan la columna <strong>A cobrar</strong> en Gastos. Si acabas de guardar una garantía, ya está reflejada.</p>
+                <p style={{ margin: 0, fontSize: 12.5, color: "#6b21a8", lineHeight: 1.5 }}>Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
               </div>
             </div>
-            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 20, marginBottom: 32 }}>
+            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 20, marginBottom: 32 }}>
               <Stat icon={<DollarSign size={22} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#6366f1" />
               <Stat icon={<Percent size={22} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#2563eb" />
               <Stat icon={<Check size={22} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#059669" />
-              <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Garantías: -$${fmt(repData.t.gar)}` : ""} />
+              <Stat icon={<Shield size={22} />} value={repData.t.gar > 0 ? `$${fmt(repData.t.gar)}` : "$0"} label="Garantías (período)" color="#7c3aed" sub="Vigentes con mes en resumen aquí" />
+              <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Ya descontadas garantías` : ""} />
             </div>
             <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
@@ -1624,6 +1640,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                         <option value="total">Mayor total (Ads+Fee)</option>
                         <option value="pagado">Más cobrado</option>
                         <option value="ads">Mayor gasto Ads</option>
+                        <option value="garantia">Mayor garantía</option>
                       </select>
                     </div>
                   )}
@@ -1632,17 +1649,21 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <tbody>
                     {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
                     <tr style={{ background: "linear-gradient(90deg, #f8fafc, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
-                    {!repData.rows.length && <Empty cols={8} msg="Sin datos para este período" />}
+                    {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
                   </tbody></table></TableScrollWrap>
               </div>
               {/* Composición de Cuentas: abajo, ancho completo */}
               <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
                 <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, letterSpacing: -0.2, alignSelf: "flex-start", width: "100%" }}>Composición de Cuentas</h4>
                 <div style={{ width: "100%", maxWidth: 420, margin: "0 auto" }}>
-                  <ResponsiveContainer width="100%" height={260}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={62} outerRadius={98} paddingAngle={5} cornerRadius={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                  {repData.pie.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={260}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={62} outerRadius={98} paddingAngle={5} cornerRadius={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                  ) : (
+                    <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 14, textAlign: "center", padding: 24 }}>Sin movimiento en este período.<br /><span style={{ fontSize: 12.5, marginTop: 8, display: "block" }}>Si cargaste garantías para este mes, revisá en Garantías que <strong>Período en resumen</strong> sea exactamente este mes.</span></div>
+                  )}
                 </div>
-                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 36, fontWeight: 700, marginTop: 10, letterSpacing: -1.5, background: "linear-gradient(135deg, #0f172a, #2563eb)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{fmtK(repData.t.total)}</div>
-                <div style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>Total General</div>
+                <div style={{ fontFamily: "'IBM Plex Mono'", fontSize: 36, fontWeight: 700, marginTop: 10, letterSpacing: -1.5, background: repData.t.total > 0 ? "linear-gradient(135deg, #0f172a, #2563eb)" : repData.t.gar > 0 ? "linear-gradient(135deg, #5b21b6, #7c3aed)" : "linear-gradient(135deg, #0f172a, #2563eb)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{fmtK(repData.t.total > 0 ? repData.t.total : repData.t.gar > 0 ? repData.t.gar : 0)}</div>
+                <div style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>{repData.t.total > 0 ? "Total General (Ads+Fee)" : repData.t.gar > 0 ? "Solo garantías este mes" : "Total General"}</div>
               </div>
             </div>
             <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 28, marginBottom: 28 }}>
