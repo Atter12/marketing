@@ -40,6 +40,17 @@ const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
 const normalizePeriod = (p) => { if (!p || typeof p !== "string") return ""; const t = String(p).trim(); const i = t.indexOf("-"); if (i === -1) return t; const y = t.slice(0, i), m = t.slice(i + 1); const mon = parseInt(m, 10); if (mon >= 1 && mon <= 12) return `${y}-${String(mon).padStart(2, "0")}`; return t; };
 const mesCobro = (c, gastosList) => { if (c.periodoResumen && String(c.periodoResumen).trim()) return normalizePeriod(String(c.periodoResumen).trim()); if (c.gastoId && gastosList && gastosList.length) { const g = gastosList.find((x) => x.id === c.gastoId); if (g && g.mes) return normalizePeriod(g.mes); } return normalizePeriod((c.fecha || "").slice(0, 7)); };
+/** Mes en que la garantía cuenta en el resumen (período explícito, gasto, fecha colocación o alta). */
+const mesGarantiaResumen = (g, gastosList) => {
+  const pr = g.periodoResumen && String(g.periodoResumen).trim();
+  if (pr) return normalizePeriod(pr);
+  if (g.gastoId && gastosList?.length) { const gg = gastosList.find((x) => x.id === g.gastoId); if (gg?.mes) return normalizePeriod(gg.mes); }
+  const fc = (g.fechaColocacion || "").slice(0, 7);
+  if (fc) return normalizePeriod(fc);
+  if (g.created_at) return normalizePeriod(String(g.created_at).slice(0, 7));
+  return "";
+};
+const addOneMonthYm = (ym) => { if (!ym || typeof ym !== "string") return tm(); const [y, m] = ym.split("-").map(Number); if (!y || !m) return tm(); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
 const fmtDt = (iso) => { if (!iso) return "—"; const d = new Date(iso); return d.toLocaleString("es-PE", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); };
@@ -334,7 +345,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), periodoResumen: "", hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
-  const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "" };
+  const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "", periodoResumen: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
   const [cf, setCf] = useState(emptyCf);
@@ -420,12 +431,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
     const garantiasParaReporte = garantias.filter((g) => {
       if (g.estado !== "Vigente") return false;
-      const period = g.gastoId ? (gastos.find((x) => x.id === g.gastoId)?.mes) : (g.fechaColocacion || "").slice(0, 7);
-      const dateCol = (g.fechaColocacion || "").slice(0, 10);
       if (repPerInicio && repPerFin) {
-        if (dateCol) return dateCol >= repPerInicio && dateCol <= repPerFin;
-        if (period) return period >= (repPerInicio || "").slice(0, 7) && period <= (repPerFin || "").slice(0, 7);
-        return false;
+        const mesG = mesGarantiaResumen(g, gastos);
+        const mesIni = (repPerInicio || "").slice(0, 7);
+        const mesFin = (repPerFin || "").slice(0, 7);
+        if (!mesG) return false;
+        return mesG >= mesIni && mesG <= mesFin;
       }
       return true;
     });
@@ -575,7 +586,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const tG = gs.reduce((a, g) => a + parseFloat(g.gasto || 0), 0);
     const tF = gs.reduce((a, g) => a + g._f, 0);
     const tP = cs.reduce((a, c) => a + parseFloat(c.monto || 0), 0);
-    const tGar = garantias.filter((g) => g.estado === "Vigente").reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+    const per = normalizePeriod(dashboardPeriodo);
+    const tGar = garantias.filter((g) => g.estado === "Vigente" && mesGarantiaResumen(g, gastos) === per).reduce((a, g) => a + parseFloat(g.valor || 0), 0);
     return { tG, tF, tP, tGar, net: Math.max(0, tG + tF - tP - tGar) };
   }, [dashboardPeriodo, tots, sGastos, cobros, gastos, garantias]);
 
@@ -652,7 +664,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const garantiasFiltradas = useMemo(() => {
     let list = garantias;
     if (filterCliente.garantias) list = list.filter((g) => g.clientId === filterCliente.garantias);
-    if (filterPeriodoGarantias) list = list.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === filterPeriodoGarantias) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === filterPeriodoGarantias));
+    if (filterPeriodoGarantias) list = list.filter((g) => mesGarantiaResumen(g, gastos) === normalizePeriod(filterPeriodoGarantias));
     return list;
   }, [garantias, filterCliente.garantias, filterPeriodoGarantias, gastos]);
 
@@ -725,10 +737,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
     if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
-    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "" }); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
-    else if (modal === "garantia") { setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId })); setGarantiaEditComprobantePaths([]); }
+    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { const pr = (gar.periodoResumen && String(gar.periodoResumen).trim()) ? normalizePeriod(gar.periodoResumen) : (mesGarantiaResumen(gar, gastos) || tm()); setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "", periodoResumen: pr }); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
+    else if (modal === "garantia") { const pr0 = (clientDetailPeriodo && normalizePeriod(clientDetailPeriodo)) || tm(); setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId, periodoResumen: pr0 })); setGarantiaEditComprobantePaths([]); }
     if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) { setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); const urls = co.comprobante_urls; setCobroEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
-  }, [modal, editId, clients, garantias, cobros]);
+  }, [modal, editId, clients, garantias, cobros, gastos, clientDetailPeriodo]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
   useEffect(() => { if (!isCliente && page === "reportes") setPage("dashboard"); }, [isCliente, page]);
@@ -807,7 +819,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const curGastosDisplay = curCl && clientDetailPeriodo ? curGastos.filter((g) => g.mes === clientDetailPeriodo) : curGastos;
   const curCobrosDisplay = curCl && clientDetailPeriodo ? curCobros.filter((c) => mesCobro(c, gastos) === normalizePeriod(clientDetailPeriodo)) : curCobros;
   const curManDisplay = curCl && clientDetailPeriodo ? curMan.filter((m) => (m.fecha || "").slice(0, 7) === clientDetailPeriodo) : curMan;
-  const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => (g.fechaColocacion && String(g.fechaColocacion).slice(0, 7) === clientDetailPeriodo) || (g.gastoId && gastos.find((x) => x.id === g.gastoId)?.mes === clientDetailPeriodo)) : curGars;
+  const curGarsDisplay = curCl && clientDetailPeriodo ? curGars.filter((g) => mesGarantiaResumen(g, gastos) === normalizePeriod(clientDetailPeriodo)) : curGars;
   const curDDisplay = useMemo(() => {
     if (!curCl) return null;
     if (!clientDetailPeriodo) return curD;
@@ -884,7 +896,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         if (id) createdIds.push(id);
       }
       if (excedente > 0 && lineasConMonto[0]?.g?.clientId) {
-        await mutations.saveGarantia({ clientId: lineasConMonto[0].g.clientId, gastoId: null, tipo: "Depósito", desc: "Excedente de cobro " + (cof.fecha || td()) + " — para mes siguiente", valor: String(excedente), estado: "Vigente", fechaColocacion: cof.fecha || "" });
+        const mesesAplicados = lineasConMonto.map((l) => l.g?.mes).filter(Boolean).sort();
+        const ultimoMesGasto = mesesAplicados[mesesAplicados.length - 1] || tm();
+        const periodoExcedente = addOneMonthYm(normalizePeriod(ultimoMesGasto));
+        await mutations.saveGarantia({ clientId: lineasConMonto[0].g.clientId, gastoId: null, tipo: "Depósito", desc: "Excedente de cobro " + (cof.fecha || td()) + " — para mes siguiente", valor: String(excedente), estado: "Vigente", fechaColocacion: cof.fecha || "", periodoResumen: periodoExcedente });
       }
       if (cobroComprobanteFiles.length > 0 && createdIds.length > 0) {
         const paths = [];
@@ -909,7 +924,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!gaf.clientId) return alert("Selecciona cliente");
     try {
       setUploadingComprobantes(true);
-      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado, fechaColocacion: gaf.fechaColocacion || "" });
+      let prG = (gaf.periodoResumen && String(gaf.periodoResumen).trim()) ? normalizePeriod(gaf.periodoResumen) : "";
+      if (!prG && gaf.gastoId) { const gg = gastos.find((x) => x.id === gaf.gastoId); if (gg?.mes) prG = normalizePeriod(gg.mes); }
+      if (!prG && gaf.fechaColocacion) prG = normalizePeriod(String(gaf.fechaColocacion).slice(0, 7));
+      if (!prG && gafFilterPeriodo) prG = normalizePeriod(gafFilterPeriodo);
+      if (!prG) prG = tm();
+      const id = await mutations.saveGarantia({ id: editId && modal === "garantia" ? editId : undefined, clientId: gaf.clientId, gastoId: (gaf.gastoId && String(gaf.gastoId).trim()) ? gaf.gastoId : null, tipo: gaf.tipo, desc: gaf.desc, valor: gaf.valor, estado: gaf.estado, fechaColocacion: gaf.fechaColocacion || "", periodoResumen: prG });
       const basePaths = editId ? garantiaEditComprobantePaths : [];
       const newPaths = [];
       for (const f of garantiaImagenNewFiles) {
@@ -918,7 +938,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const allPaths = [...basePaths, ...newPaths];
       if (allPaths.length > 0) await mutations.setGarantiaImagenes(id, allPaths);
       closeMdl();
-      const mesGar = (gaf.fechaColocacion && String(gaf.fechaColocacion).slice(0, 7)) || (gaf.gastoId && gastos.find((x) => x.id === gaf.gastoId)?.mes) || tm();
+      const mesGar = prG;
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
@@ -2365,6 +2385,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
+        <div style={{ marginBottom: 14 }}>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período en resumen (mes) *</label>
+          <input type="month" value={(gaf.periodoResumen && String(gaf.periodoResumen).length >= 7) ? String(gaf.periodoResumen).slice(0, 7) : tm()} onChange={(e) => setGaf({ ...gaf, periodoResumen: e.target.value || tm() })} style={{ width: "100%", maxWidth: 200, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'DM Sans',sans-serif", fontSize: 13, outline: "none" }} title="Mes en que esta garantía cuenta en el resumen (Crédito / Mi cuenta)" />
+          <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Debe coincidir con el mes que ves en el resumen (ej. marzo). No es lo mismo que la fecha del depósito.</div>
+        </div>
         {gaf.clientId && (
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>

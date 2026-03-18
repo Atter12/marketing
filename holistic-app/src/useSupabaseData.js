@@ -33,7 +33,7 @@ function mapCobro(r) {
 function mapGarantia(r) {
   if (!r) return r;
   const urls = r.imagen_urls;
-  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "", fechaColocacion: r.fecha_colocacion ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, imagen_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
+  return { id: r.id, clientId: r.client_id, gastoId: r.gasto_id ?? null, tipo: r.tipo ?? "Cuenta TikTok", desc: r.descripcion ?? "", valor: String(r.valor), estado: r.estado ?? "Vigente", codigoVerificacion: r.codigo_verificacion ?? "", fechaColocacion: r.fecha_colocacion ?? "", periodoResumen: r.periodo_resumen ?? "", created_at: r.created_at ?? null, created_by: r.created_by ?? null, imagen_urls: Array.isArray(urls) ? urls : (urls ? [urls] : []) };
 }
 
 function mapManual(r) {
@@ -250,7 +250,7 @@ const { gastoId, clientId, monto, fecha, periodoResumen, hora, metodo, notas } =
     },
     saveGarantia: async (payload) => {
       if (role !== "gerente") return;
-      const { id, clientId, gastoId, tipo, desc, valor, estado, fechaColocacion } = payload;
+      const { id, clientId, gastoId, tipo, desc, valor, estado, fechaColocacion, periodoResumen } = payload;
       let created_by = null;
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -258,7 +258,8 @@ const { gastoId, clientId, monto, fecha, periodoResumen, hora, metodo, notas } =
       } catch (_) {}
       const genCodigoVerif = () => "GV-" + Date.now().toString(36).toUpperCase().slice(-7) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const gid = (gastoId && String(gastoId).trim()) ? gastoId : null;
-      const row = { client_id: clientId, gasto_id: gid, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente", fecha_colocacion: (fechaColocacion && String(fechaColocacion).trim()) ? fechaColocacion : null };
+      const pr = periodoResumen && String(periodoResumen).trim() ? String(periodoResumen).trim().slice(0, 7) : null;
+      const row = { client_id: clientId, gasto_id: gid, tipo: tipo || "Cuenta TikTok", descripcion: desc || null, valor: parseFloat(valor) || 0, estado: estado || "Vigente", fecha_colocacion: (fechaColocacion && String(fechaColocacion).trim()) ? fechaColocacion : null, periodo_resumen: pr };
       if (id) {
         const { error: e } = await supabase.from("garantias").update(row).eq("id", id);
         if (e) throw e;
