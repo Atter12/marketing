@@ -58,6 +58,7 @@ const COLORS = ["#635bff", "#0d9f6e", "#d97706", "#dc2626", "#7c3aed", "#e1306c"
 const PC = { "Mercury Bank": "#5542f6", BCP: "#ff6200", Interbank: "#00a651", Binance: "#f0b90b", Efectivo: "#94a3b8", Stripe: "#635bff", Yape: "#6c2cb2", Plin: "#00d4aa" };
 const PI = { "Mercury Bank": "🏦", BCP: "🟠", Interbank: "🟢", Binance: "💛", Efectivo: "💵", Stripe: "💳", Yape: "💜", Plin: "💚" };
 const PM = ["Mercury Bank", "BCP", "Interbank", "Binance", "Efectivo", "Stripe", "Yape", "Plin"];
+const OTRO_METODO_VALUE = "__OTRO__";
 const GT = ["Cuenta TikTok", "Business Center", "Dispositivo", "Documento ID", "Contrato Firmado", "Depósito", "Otro"];
 const PER_PAGE = 20;
 const clr = (s) => { let h = 0; for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h); return COLORS[Math.abs(h) % COLORS.length]; };
@@ -344,7 +345,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
-  const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), periodoResumen: "", hora: "", metodo: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
+  const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), periodoResumen: "", hora: "", metodo: "", metodoManual: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "", periodoResumen: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
@@ -754,7 +755,27 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
     if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { const pr = (gar.periodoResumen && String(gar.periodoResumen).trim()) ? normalizePeriod(gar.periodoResumen) : (mesGarantiaResumen(gar, gastos) || tm()); setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "", periodoResumen: pr }); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
     else if (modal === "garantia") { const pr0 = (clientDetailPeriodo && normalizePeriod(clientDetailPeriodo)) || tm(); setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId, periodoResumen: pr0 })); setGarantiaEditComprobantePaths([]); }
-    if (modal === "cobro" && editId) { const co = cobros.find((x) => x.id === editId); if (co) { setCof({ gastoIds: co.gastoId ? [co.gastoId] : [], sinAsignarGasto: !co.gastoId, clientId: co.clientId || "", monto: String(co.monto), fecha: (co.fecha || "").slice(0, 10) || td(), periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "", hora: co.hora || "", metodo: co.metodo || "", notas: co.notas || "" }); const urls = co.comprobante_urls; setCobroEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
+    if (modal === "cobro" && editId) {
+      const co = cobros.find((x) => x.id === editId);
+      if (co) {
+        const coMetodo = String(co.metodo || "").trim();
+        const isPredefinedMetodo = PM.includes(coMetodo);
+        setCof({
+          gastoIds: co.gastoId ? [co.gastoId] : [],
+          sinAsignarGasto: !co.gastoId,
+          clientId: co.clientId || "",
+          monto: String(co.monto),
+          fecha: (co.fecha || "").slice(0, 10) || td(),
+          periodoResumen: co.periodoResumen || (co.fecha || "").slice(0, 7) || "",
+          hora: co.hora || "",
+          metodo: isPredefinedMetodo ? coMetodo : OTRO_METODO_VALUE,
+          metodoManual: isPredefinedMetodo ? "" : coMetodo,
+          notas: co.notas || "",
+        });
+        const urls = co.comprobante_urls;
+        setCobroEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []);
+      }
+    }
   }, [modal, editId, clients, garantias, cobros, gastos, clientDetailPeriodo]);
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
@@ -876,15 +897,16 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const saveCobro = async () => {
     const ids = Array.isArray(cof.gastoIds) ? cof.gastoIds.filter(Boolean) : (cof.gastoId ? [cof.gastoId] : []);
     const sinAsignar = !!cof.sinAsignarGasto;
+    const metodoFinal = cof.metodo === OTRO_METODO_VALUE ? String(cof.metodoManual || "").trim() : String(cof.metodo || "").trim();
     if (!ids.length && !sinAsignar) return alert("Seleccioná al menos un gasto a los que aplicar el pago, o marcá «Ninguna» para registrar un cobro sin asignar.");
     if (sinAsignar && !cof.clientId) return alert("Para un cobro sin asignar a gasto, elegí el cliente.");
-    if (!parseFloat(cof.monto) || !cof.metodo) return alert("Completá monto y método de pago.");
+    if (!parseFloat(cof.monto) || !metodoFinal) return alert("Completá monto y método de pago.");
     const totalMonto = parseFloat(cof.monto) || 0;
     if (totalMonto <= 0) return alert("El monto debe ser mayor a 0");
     try {
       setUploadingComprobantes(true);
       if (editId && modal === "cobro") {
-        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.sinAsignarGasto ? (cof.periodoResumen || null) : null, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        await mutations.updateCobro(editId, { gastoId: ids.length ? ids[0] : null, clientId: ids.length ? null : (cof.clientId || null), monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.sinAsignarGasto ? (cof.periodoResumen || null) : null, hora: cof.hora || null, metodo: metodoFinal, notas: cof.notas });
         const newPaths = [];
         for (const f of cobroComprobanteFiles) newPaths.push(await uploadComprobanteCobro(editId, f));
         const finalPaths = [...cobroEditComprobantePaths, ...newPaths];
@@ -893,7 +915,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         return;
       }
       if (sinAsignar || ids.length === 0) {
-        const id = await mutations.saveCobro({ gastoId: null, clientId: cof.clientId || null, monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.periodoResumen || null, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        const id = await mutations.saveCobro({ gastoId: null, clientId: cof.clientId || null, monto: totalMonto, fecha: cof.fecha, periodoResumen: cof.periodoResumen || null, hora: cof.hora || null, metodo: metodoFinal, notas: cof.notas });
         if (id && cobroComprobanteFiles.length > 0) {
           const paths = [];
           for (const f of cobroComprobanteFiles) paths.push(await uploadComprobanteCobro(id, f));
@@ -907,7 +929,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       if (!lineasConMonto.length) return alert("El monto no alcanza a cubrir ningún gasto. Revisá la selección o el monto.");
       const createdIds = [];
       for (const l of lineasConMonto) {
-        const id = await mutations.saveCobro({ gastoId: l.gastoId, monto: l.montoAplicado, fecha: cof.fecha, hora: cof.hora || null, metodo: cof.metodo, notas: cof.notas });
+        const id = await mutations.saveCobro({ gastoId: l.gastoId, monto: l.montoAplicado, fecha: cof.fecha, hora: cof.hora || null, metodo: metodoFinal, notas: cof.notas });
         if (id) createdIds.push(id);
       }
       if (excedente > 0 && lineasConMonto[0]?.g?.clientId) {
@@ -2262,7 +2284,30 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           {editId && <span />}
         </div>
         <Inp label="Hora (opcional)" type="time" value={cof.hora} onChange={(e) => setCof({ ...cof, hora: e.target.value })} />
-        <Inp label="Método de Pago *" type="select" value={cof.metodo} onChange={(e) => setCof({ ...cof, metodo: e.target.value })}><option value="">Seleccionar...</option>{PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}</Inp>
+        <Inp
+          label="Método de Pago *"
+          type="select"
+          value={cof.metodo}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === OTRO_METODO_VALUE) setCof({ ...cof, metodo: v });
+            else setCof({ ...cof, metodo: v, metodoManual: "" });
+          }}
+        >
+          <option value="">Seleccionar...</option>
+          {PM.map((m) => <option key={m} value={m}>{PI[m]} {m}</option>)}
+          <option value={OTRO_METODO_VALUE}>Otro</option>
+        </Inp>
+        {cof.metodo === OTRO_METODO_VALUE && (
+          <Inp
+            label="Método de pago (manual) *"
+            type="text"
+            value={cof.metodoManual}
+            onChange={(e) => setCof({ ...cof, metodoManual: e.target.value })}
+            placeholder="Ej. Transferencia bancaria / Efectivo en ventanilla"
+            hint="Se guardará tal cual en el cobro."
+          />
+        )}
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
         <div style={{ marginTop: 8 }}>
           <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
