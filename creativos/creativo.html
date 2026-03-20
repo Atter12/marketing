@@ -912,6 +912,25 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   background: var(--color-surface-offset); color: var(--color-text-faint);
   font-weight: 500; white-space: nowrap;
 }
+.kanban-card-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 6px; margin-bottom: 2px;
+}
+.kanban-card-head-right {
+  display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+}
+.kanban-card-delete {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: var(--radius-sm);
+  color: var(--color-text-faint); flex-shrink: 0; cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 140ms ease, color 140ms ease, background 140ms ease;
+}
+.kanban-card:hover .kanban-card-delete { opacity: 1; }
+.kanban-card-delete:hover {
+  color: var(--color-error); background: var(--color-error-soft); opacity: 1;
+}
+.kanban-card-delete svg { width: 14px; height: 14px; pointer-events: none; }
 .kanban-card[data-project-id]:not([data-project-id=""]) { cursor: grab; }
 .kanban-card[data-project-id]:not([data-project-id=""]):active { cursor: grabbing; }
 .kanban-card.kanban-card-dragging { opacity: 0.6; box-shadow: var(--shadow-lg); pointer-events: none; transform: rotate(2deg); }
@@ -932,6 +951,25 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .project-info-item { }
 .project-info-label { font-size: var(--text-xs); color: var(--color-text-muted); font-weight: 500; margin-bottom: 2px; }
 .project-info-value { font-size: var(--text-sm); font-weight: 500; }
+
+.project-brief-block { margin-bottom: var(--space-5); }
+.project-brief-block > .project-info-label { margin-bottom: var(--space-2); }
+.project-brief-body {
+  font-size: var(--text-sm); font-family: var(--font-body);
+  font-weight: 400; color: var(--color-text);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  max-width: none; margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  line-height: 1.6;
+}
+[data-theme="dark"] .project-brief-body {
+  background: var(--color-surface-offset-2);
+  border-color: var(--color-border);
+}
 
 .stage-timeline { margin-bottom: var(--space-5); }
 .stage-step {
@@ -1607,6 +1645,66 @@ function isProjectComplete(p) {
   return p.stages.entrega.status === 'approved';
 }
 
+var ENTREGA_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
+
+function computeEntregaEnteredAtForTransition(prevStages, newStages, prevEntregaEnteredAt) {
+  var prevStage = getProjectStage({ stages: prevStages });
+  var newStage = getProjectStage({ stages: newStages });
+  if (newStage === 'entrega') {
+    if (prevStage !== 'entrega') return new Date().toISOString();
+    return prevEntregaEnteredAt || null;
+  }
+  return null;
+}
+
+function backfillEntregaEnteredAtIfMissing() {
+  if (!supabase) return Promise.resolve();
+  var nowIso = new Date().toISOString();
+  var need = [];
+  D.projects.forEach(function(p) {
+    if (getProjectStage(p) === 'entrega' && !p.entregaEnteredAt) need.push(p);
+  });
+  if (need.length === 0) return Promise.resolve();
+  return Promise.all(need.map(function(p) {
+    return supabase.from('creativos_proyectos').update({ entrega_entered_at: nowIso }).eq('id', p.id);
+  })).then(function(results) {
+    var bad = results.some(function(r) { return r.error; });
+    if (bad) console.warn('[Creativos] backfill entrega_entered_at:', results);
+    else need.forEach(function(p) { p.entregaEnteredAt = nowIso; });
+  });
+}
+
+function purgeExpiredEntregaProjects() {
+  if (!supabase) return Promise.resolve();
+  var cutoff = Date.now() - ENTREGA_RETENTION_MS;
+  var ids = [];
+  D.projects.forEach(function(p) {
+    if (getProjectStage(p) === 'entrega' && p.entregaEnteredAt) {
+      var t = new Date(p.entregaEnteredAt).getTime();
+      if (!isNaN(t) && t <= cutoff) ids.push(p.id);
+    }
+  });
+  if (ids.length === 0) return Promise.resolve();
+  return Promise.all(ids.map(function(id) {
+    return supabase.from('creativos_proyectos').delete().eq('id', id);
+  })).then(function(results) {
+    var bad = results.filter(function(r) { return r.error; });
+    if (bad.length) console.warn('[Creativos] purge entrega:', bad);
+    else if (ids.length > 0) {
+      showToast('info', 'Se eliminaron automáticamente ' + ids.length + ' proyecto(s) con más de 7 días en Entrega final.');
+    }
+    return loadCreativosData();
+  }).then(function(data) {
+    if (data) {
+      D.clients = data.clients;
+      D.products = data.products;
+      D.editors = data.editors;
+      D.projects = data.projects;
+      if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
+    }
+  });
+}
+
 /* ============================================
    LOAD FROM SUPABASE (Fase 3)
    ============================================ */
@@ -1659,7 +1757,8 @@ function loadCreativosData() {
         stages: r.stages && typeof r.stages === 'object' ? r.stages : createStageData(),
         cpa: r.cpa || 'pendiente',
         published: r.published === true,
-        createdAt: r.created_at
+        createdAt: r.created_at,
+        entregaEnteredAt: r.entrega_entered_at || null
       };
     });
     return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos };
@@ -1676,6 +1775,10 @@ function reloadCreativosData(then) {
       D.projects = data.projects;
       if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
+    return backfillEntregaEnteredAtIfMissing();
+  }).then(function() {
+    return purgeExpiredEntregaProjects();
+  }).then(function() {
     if (then) then();
   });
 }
@@ -2037,9 +2140,16 @@ function renderPipeline() {
               const stageStatus = p.stages[stage].status;
               return `<div class="kanban-card" data-project-id="${p.id}" role="button" tabindex="0">
                 <div class="kanban-card-accent" data-status="${stageStatus}"></div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                <div class="kanban-card-head">
                   <div class="kanban-card-title">${esc(p.name)}</div>
-                  <span class="kanban-card-type-badge">${esc(p.type)}</span>
+                  <div class="kanban-card-head-right">
+                    <button type="button" class="kanban-card-delete" title="Eliminar del pipeline" aria-label="Eliminar proyecto"
+                      onclick="event.stopPropagation();event.preventDefault();deleteProject('${p.id}');return false;"
+                      onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    </button>
+                    <span class="kanban-card-type-badge">${esc(p.type)}</span>
+                  </div>
                 </div>
                 <div class="kanban-card-meta">${client ? esc(client.company) : '—'}<span class="kanban-card-meta-sep">·</span>${esc(p.platform)}</div>
                 <div class="kanban-card-footer">
@@ -2119,6 +2229,7 @@ function initPipelineDrag() {
   }
   board.addEventListener('mousedown', function(e) {
     if (e.button !== 0) return;
+    if (e.target.closest('.kanban-card-delete')) return;
     var card = e.target.closest('.kanban-card');
     if (!card) return;
     pipelineDragMoved = false;
@@ -2126,6 +2237,7 @@ function initPipelineDrag() {
     e.preventDefault();
   });
   board.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.kanban-card-delete')) return;
     var card = e.target.closest('.kanban-card');
     if (!card) return;
     startDrag(card);
@@ -2148,6 +2260,7 @@ function initPipelineDrag() {
     });
   }
   board.addEventListener('click', function(e) {
+    if (e.target.closest('.kanban-card-delete')) return;
     var card = e.target.closest('.kanban-card');
     if (card) {
       if (window._pipelineJustDropped) {
@@ -2171,6 +2284,7 @@ function initPipelineDrag() {
 function moveProjectToStage(projectId, newStage) {
   var p = D.projects.find(function(pr) { return pr.id === projectId; });
   if (!p || !STAGES.includes(newStage)) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   var idx = STAGES.indexOf(newStage);
   STAGES.forEach(function(st, i) {
     if (i < idx) p.stages[st].status = 'approved';
@@ -2179,7 +2293,7 @@ function moveProjectToStage(projectId, newStage) {
   });
   showToast('success', 'Proyecto movido a ' + (STAGE_NAMES[newStage] || newStage));
   if (supabase) {
-    updateProjectStages(projectId, p.stages, true);
+    updateProjectStages(projectId, p.stages, true, prevStages);
   } else {
     renderPage('pipeline');
   }
@@ -2580,7 +2694,7 @@ function openProjectDrawer(id) {
       <div class="project-info-item"><div class="project-info-label">Publicado</div><div class="project-info-value">${p.published ? '<span class="badge badge-green"><span class="badge-dot"></span>Sí</span>' : '<span class="badge badge-muted">No</span>'}</div></div>
     </div>
 
-    ${p.brief ? `<div style="margin-bottom:var(--space-5);"><div class="project-info-label">Brief</div><p style="font-size:var(--text-sm);color:var(--color-text-muted);max-width:none;">${esc(p.brief)}</p></div>` : ''}
+    ${p.brief ? `<div class="project-brief-block"><div class="project-info-label">Brief</div><div class="project-brief-body">${esc(p.brief)}</div></div>` : ''}
 
     ${isProjectComplete(p) ? `
       <div style="margin-bottom:var(--space-5);padding:var(--space-4);background:var(--color-surface-offset);border-radius:var(--radius-lg);">
@@ -2693,18 +2807,20 @@ function saveStageNote(pid, stage) {
   if (!text) return;
   const p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   if (!p.stages[stage].notes) p.stages[stage].notes = [];
   if (p.stages[stage].note) { p.stages[stage].notes.push({ text: p.stages[stage].note, who: '—', at: '' }); p.stages[stage].note = ''; }
   p.stages[stage].notes.push({ text: text, who: getCurrentUserName(), at: new Date().toISOString() });
   showToast('success', 'Nota guardada');
-  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); }
+  if (supabase) { updateProjectStages(pid, p.stages, false, prevStages); } else { openProjectDrawer(pid); }
 }
 function backToEditGuion(pid) {
   const p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages.guion.status = 'in_progress';
   showToast('info', 'Puedes editar el guión de nuevo. Guarda y reenvía cuando termines.');
-  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) { updateProjectStages(pid, p.stages, false, prevStages); } else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function onDeliverableFileSelect(inp) {
   var pid = inp.getAttribute('data-pid');
@@ -2742,9 +2858,10 @@ function uploadDeliverableVersion(pid, stage, file) {
 function pushDeliverableAndSave(pid, stage, obj) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].deliverables.push(obj);
   showToast('success', 'Versión ' + obj.version + ' registrada');
-  if (supabase) { updateProjectStages(pid, p.stages); } else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) { updateProjectStages(pid, p.stages, false, prevStages); } else { openProjectDrawer(pid); renderPage(currentPage); }
   openProjectDrawer(pid);
   renderPage(currentPage);
 }
@@ -2789,9 +2906,15 @@ function closeDrawer() {
 /* ============================================
    STAGE WORKFLOW
    ============================================ */
-function updateProjectStages(pid, stages, skipOpenDrawer) {
+function updateProjectStages(pid, stages, skipOpenDrawer, prevStages) {
   if (supabase) {
-    supabase.from('creativos_proyectos').update({ stages: stages }).eq('id', pid).then(function(r) {
+    var payload = { stages: stages };
+    if (prevStages) {
+      var prevRow = D.projects.find(function(pr) { return pr.id === pid; });
+      var prevAt = prevRow && prevRow.entregaEnteredAt ? prevRow.entregaEnteredAt : null;
+      payload.entrega_entered_at = computeEntregaEnteredAtForTransition(prevStages, stages, prevAt);
+    }
+    supabase.from('creativos_proyectos').update(payload).eq('id', pid).then(function(r) {
       if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
       reloadCreativosData(function() {
         if (!skipOpenDrawer) openProjectDrawer(pid);
@@ -2803,34 +2926,38 @@ function updateProjectStages(pid, stages, skipOpenDrawer) {
 function startStage(pid, stage) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].status = 'in_progress';
   logActivity('review', p.name, STAGE_NAMES[stage]);
   showToast('success', STAGE_NAMES[stage] + ' iniciada');
-  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) updateProjectStages(pid, p.stages, false, prevStages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function sendToReview(pid, stage) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].status = 'in_review';
   logActivity('review', p.name, STAGE_NAMES[stage]);
   showToast('info', STAGE_NAMES[stage] + ' enviada a revisión');
-  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) updateProjectStages(pid, p.stages, false, prevStages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function approveStage(pid, stage) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].status = 'approved';
   p.stages[stage].reviewedAt = new Date().toISOString();
   p.stages[stage].reviewer = getCurrentUserName();
   logActivity('approved', p.name, STAGE_NAMES[stage]);
   showToast('success', STAGE_NAMES[stage] + ' aprobada');
-  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) updateProjectStages(pid, p.stages, false, prevStages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function requestChanges(pid, stage) {
   var note = prompt('Describe los cambios necesarios:');
   if (!note) return;
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].status = 'changes';
   p.stages[stage].reviewNote = note;
   p.stages[stage].reviewedAt = new Date().toISOString();
@@ -2843,16 +2970,17 @@ function requestChanges(pid, stage) {
   }
   logActivity('changes', p.name, STAGE_NAMES[stage]);
   showToast('warning', 'Cambios solicitados');
-  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) updateProjectStages(pid, p.stages, false, prevStages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function resubmitStage(pid, stage) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
   if (!p) return;
+  var prevStages = JSON.parse(JSON.stringify(p.stages));
   p.stages[stage].status = 'in_review';
   p.stages[stage].reviewNote = '';
   logActivity('review', p.name, STAGE_NAMES[stage]);
   showToast('info', 'Reenviado a revisión');
-  if (supabase) updateProjectStages(pid, p.stages); else { openProjectDrawer(pid); renderPage(currentPage); }
+  if (supabase) updateProjectStages(pid, p.stages, false, prevStages); else { openProjectDrawer(pid); renderPage(currentPage); }
 }
 function setCPA(pid, value) {
   var p = D.projects.find(function(pr) { return pr.id === pid; });
@@ -2928,7 +3056,7 @@ function openNewProjectModal() {
       <div class="form-group"><label class="form-label">Formato</label><select class="form-select" id="projFormat">${FORMATS.map(f=>`<option>${f}</option>`).join('')}</select></div>
     </div>
     <div class="form-group"><label class="form-label">Editor</label><select class="form-select" id="projEditor"><option value="">Seleccionar...</option>${D.editors.map(e=>`<option value="${e.id}">${esc(e.name)} — ${esc(e.specialty)}</option>`).join('')}</select></div>
-    <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="5" placeholder="Guión, brief, objetivos y requisitos del video..."></textarea></div>
+    <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="8" placeholder="Pega o escribe el guión aquí; se conservan los saltos de línea y párrafos."></textarea></div>
     <div class="form-group">
       <label class="form-label">Archivos de inspiración / referencia</label>
       <div class="upload-zone upload-zone-pro" id="uploadZone" onclick="document.getElementById('fileInput').click();"
@@ -3338,10 +3466,21 @@ function openEditorDetail(id) {
    DELETE OPERATIONS
    ============================================ */
 function deleteProject(id) {
-  if (!confirm('¿Eliminar este proyecto?')) return;
-  D.projects = D.projects.filter(p => p.id !== id);
-  showToast('success', 'Proyecto eliminado');
-  closeDrawer(); renderPage(currentPage);
+  if (!confirm('¿Eliminar este proyecto del pipeline? Esta acción no se puede deshacer.')) return;
+  function finishRemove() {
+    D.projects = D.projects.filter(function(p) { return p.id !== id; });
+    showToast('success', 'Proyecto eliminado');
+    closeDrawer();
+    renderPage(currentPage);
+  }
+  if (supabase) {
+    supabase.from('creativos_proyectos').delete().eq('id', id).then(function(r) {
+      if (r.error) { showToast('error', r.error.message || 'No se pudo eliminar'); return; }
+      finishRemove();
+    });
+  } else {
+    finishRemove();
+  }
 }
 function deleteClient(id) {
   if (D.projects.some(p => p.clientId === id)) {
@@ -3570,15 +3709,8 @@ function initApp() {
 }
 function doCreativosInitialLoad() {
   if (!supabase) return;
-  loadCreativosData().then(function(data) {
-    if (data) {
-      D.clients = data.clients;
-      D.products = data.products;
-      D.editors = data.editors;
-      D.projects = data.projects;
-      if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
-      console.log('[Creativos] Clientes cargados:', (data.clients || []).length);
-    }
+  reloadCreativosData(function() {
+    console.log('[Creativos] Clientes cargados:', (D.clients || []).length);
     initApp();
   }).catch(function(e) { console.warn('[Creativos] loadCreativosData:', e); initApp(); });
 }
