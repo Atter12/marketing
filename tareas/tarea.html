@@ -1291,6 +1291,38 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .comment-input:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-glow); }
 .ticket-actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-3); flex-wrap: wrap; }
 
+.ticket-attach-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+}
+.ticket-attach-grid a {
+  display: block; border-radius: var(--r-md); overflow: hidden;
+  border: 1px solid var(--color-divider); aspect-ratio: 1; background: var(--color-surface-2);
+}
+.ticket-attach-grid img { width: 100%; height: 100%; object-fit: cover; vertical-align: middle; }
+.ticket-desc-body {
+  font-size: var(--text-sm); line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+  color: var(--color-text); padding: var(--sp-3); background: var(--color-surface-offset);
+  border-radius: var(--r-md); border: 1px solid var(--color-divider); margin-top: var(--sp-2);
+}
+.kanban-card-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: var(--sp-2); flex-wrap: wrap; }
+.kanban-card-view-btn {
+  font-size: 0.625rem; font-weight: 600; padding: 5px 10px; border-radius: var(--r-sm);
+  border: 1px solid var(--color-border); background: var(--color-surface-2); cursor: pointer; color: var(--color-text-muted);
+}
+.kanban-card-view-btn:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.kanban-ticket-pill {
+  font-size: 0.5625rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+  background: rgba(234, 88, 12, 0.12); color: var(--color-primary); margin-bottom: 4px; display: inline-block;
+}
+.form-file-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px; }
+.tk-file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.tk-file-preview img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-divider); }
+.entregable-detail-block { margin-bottom: var(--sp-4); }
+.entregable-detail-block h4 { font-size: var(--text-sm); margin-bottom: var(--sp-2); }
+
 /* ══════════════════════════════════════════════
    CALENDAR VIEW
 ══════════════════════════════════════════════ */
@@ -2068,13 +2100,13 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     <div class="user-card user-card-avatar" role="button" tabindex="0" title="Clic para cambiar foto">
       <div class="user-avatar" id="tareasUserAvatar" aria-hidden="true">
         <img id="tareasUserAvatarImg" src="" alt="" style="display:none" />
-        <span id="tareasUserAvatarIniciales">VM</span>
+        <span id="tareasUserAvatarIniciales">·</span>
         <span class="user-avatar-camera" aria-hidden="true" title="Clic para poner tu foto">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </span>
       </div>
       <div>
-        <div class="user-name" id="tareasUserName" title="Clic para cambiar tu nombre" style="cursor:pointer">Victor Minas</div>
+        <div class="user-name" id="tareasUserName" title="Clic para cambiar tu nombre" style="cursor:pointer">Usuario</div>
         <div class="user-role">Director de Agencia</div>
         <div class="user-role user-role-hint"><button type="button" class="sidebar-name-btn" onclick="event.stopPropagation();promptUserNameTareas()">Cambiar nombre</button> · Clic en la foto para cambiarla</div>
       </div>
@@ -2148,8 +2180,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <!-- Welcome Banner -->
   <div class="welcome-banner fade-in">
     <div>
-      <div class="welcome-greeting" id="dashboard-greeting">Hola, Victor Minas</div>
-      <div class="welcome-sub" id="dashboard-sub">Bienvenido al dashboard</div>
+      <div class="welcome-greeting" id="dashboard-greeting">Hola</div>
+      <div class="welcome-sub" id="dashboard-sub">Resumen de tu operación</div>
     </div>
     <div class="welcome-stats">
       <div class="welcome-stat">
@@ -2288,7 +2320,10 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════════════ TICKETS VIEW ══════════════ -->
 <section class="view" id="view-tickets" aria-label="Sistema de tickets">
   <div class="section-header">
-    <h3>Sistema de Tickets — Mesa de Ayuda</h3>
+    <div>
+      <h3 style="margin-bottom:4px">Tickets</h3>
+      <p style="margin:0;font-size:var(--text-xs);color:var(--color-text-muted);max-width:42rem">Cliente opcional, plazo en minutos u horas, capturas visibles en el detalle. El correo de sesión queda como solicitante.</p>
+    </div>
     <div class="section-actions">
       <div class="tabs" id="ticketTabs" role="tablist">
         <button class="tab active" onclick="filterTickets('all',this)">Todos</button>
@@ -2400,40 +2435,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     <h4>Notificaciones</h4>
     <button class="btn-secondary btn-sm" onclick="toggleNotifPanel()">Cerrar</button>
   </div>
-  <div class="notif-item unread">
-    <div class="notif-dot-marker" aria-hidden="true"></div>
-    <div>
-      <div class="notif-text"><strong>TK-003</strong> SLA breach — CTA FitZone no resuelto</div>
-      <div class="notif-time">Hace 2h</div>
-    </div>
-  </div>
-  <div class="notif-item unread">
-    <div class="notif-dot-marker" aria-hidden="true"></div>
-    <div>
-      <div class="notif-text"><strong>TK-005</strong> SLA breach — Video formato vertical</div>
-      <div class="notif-time">Hace 1 día</div>
-    </div>
-  </div>
-  <div class="notif-item">
-    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
-    <div>
-      <div class="notif-text">María García completó edición — Luna Beauty Reel</div>
-      <div class="notif-time">Hace 25 min</div>
-    </div>
-  </div>
-  <div class="notif-item">
-    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
-    <div>
-      <div class="notif-text">Nuevo cliente <strong>TechStart</strong> en onboarding</div>
-      <div class="notif-time">Hace 3 días</div>
-    </div>
-  </div>
-  <div class="notif-item">
-    <div style="width:8px;height:8px;flex-shrink:0;margin-top:5px" aria-hidden="true"></div>
-    <div>
-      <div class="notif-text">Workflow Onboarding TechStart — Paso 3/5 completado</div>
-      <div class="notif-time">Hace 3h</div>
-    </div>
+  <div id="notifPanelBody" style="padding:var(--sp-5);text-align:center;font-size:var(--text-sm);color:var(--color-text-muted)">
+    No hay notificaciones nuevas. Los avisos reales se conectarán aquí cuando estén disponibles.
   </div>
 </div>
 
@@ -2607,6 +2610,15 @@ function formatTicketWhen(d) {
   return dt.toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 function formatSlaHours(h) { if (h == null) return ''; if (h < 24) return h + 'h'; return (h / 24) + 'd'; }
+function formatSlaMinutesOrHours(minutos, horasFallback) {
+  if (minutos != null && minutos !== '' && !isNaN(Number(minutos))) {
+    var m = Number(minutos);
+    if (m < 60) return m + ' min';
+    if (m < 1440) return (m / 60) + ' h';
+    return (m / 1440) + ' d';
+  }
+  return formatSlaHours(horasFallback);
+}
 function formatKanbanDate(dateStr) {
   if (!dateStr) return '';
   var d = new Date(dateStr);
@@ -2670,7 +2682,7 @@ async function loadTareasData() {
       return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     var KT = (kbRes.data || []).map(function(r) {
-      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '' };
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
     });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
@@ -2695,7 +2707,9 @@ async function loadTareasData() {
           else slaLeft = mins + 'm';
         }
       }
-      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaHours(t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline };
+      var solAdj = Array.isArray(t.adjuntos_solicitud) ? t.adjuntos_solicitud : [];
+      var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
@@ -2889,13 +2903,16 @@ renderers.kanban = function(snapshot) {
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
       const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
       const dateIcon = t.dc === 'dn' ? '✅' : '📅';
+      const kid = String(t.id || '').replace(/"/g, '&quot;');
+      const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
       return `
         <article class="kanban-card fade-in" data-sv="${t.sv}" data-id="${t.id||''}" role="article">
+          ${ticketPill}
           <div class="kanban-card-top">
             <span class="service-tag ${t.tg}">${t.sv}</span>
             <div class="priority-dot ${t.pr}" title="Prioridad: ${t.pr === 'hi' ? 'Alta' : t.pr === 'md' ? 'Media' : 'Baja'}"></div>
           </div>
-          <div class="card-client-tag">📁 ${t.cl}</div>
+          <div class="card-client-tag">📁 ${t.cl ? t.cl : 'Sin cliente'}</div>
           <div class="card-title">${t.tt}</div>
           <div class="card-desc">${t.ds}</div>
           <div class="card-meta">
@@ -2904,6 +2921,9 @@ renderers.kanban = function(snapshot) {
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
           <div class="card-subtasks">☑ ${t.sb} subtareas</div>
+          <div class="kanban-card-actions">
+            <button type="button" class="kanban-card-view-btn" onmousedown="event.stopPropagation();" ontouchstart="event.stopPropagation();" onclick="event.stopPropagation();openEntregableDetailModal('${kid}')">Ver detalle</button>
+          </div>
         </article>`;
     }).join('');
     fullHtml += `<div class="kanban-col" data-col="${col.k}">
@@ -2966,12 +2986,14 @@ function initKanbanDrag() {
   }
   board.addEventListener('mousedown', function(e) {
     if (e.button !== 0) return;
+    if (e.target.closest('.kanban-card-view-btn')) return;
     var card = e.target.closest('.kanban-card');
     if (!card) return;
     startDrag(card);
     e.preventDefault();
   });
   board.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.kanban-card-view-btn')) return;
     var card = e.target.closest('.kanban-card');
     if (!card) return;
     startDrag(card);
@@ -3061,46 +3083,66 @@ renderers.tickets = function() {
     const slaDot = tk.slaStatus === 'ok' ? 'sla-ok' : tk.slaStatus === 'warn' ? 'sla-warn' : 'sla-breach';
     const slaColor = tk.slaStatus === 'ok' ? 'var(--green)' : tk.slaStatus === 'warn' ? 'var(--orange2)' : 'var(--red)';
 
-    const tlHtml = tk.timeline.map(t =>
-      `<div class="tl-entry ${t.type}"><div class="who">${t.who}</div><div class="what">${t.what}</div><div class="when">${t.when}</div></div>`
-    ).join('');
+    const tlHtml = tk.timeline.map(function(t) {
+      return '<div class="tl-entry ' + escTareas(t.type) + '"><div class="who">' + escTareas(t.who) + '</div><div class="what">' + escTareas(t.what) + '</div><div class="when">' + escTareas(t.when) + '</div></div>';
+    }).join('');
+
+    const clientCell = tk.client
+      ? '<span class="client-dot" style="background:' + tk.clientColor + '"></span>' + escTareas(tk.client)
+      : '<span class="client-dot" style="background:#cbd5e1"></span><span style="color:var(--color-text-faint)">—</span>';
+
+    const resBlock = (tk.resolucionDetalle || (tk.resolucionAdjuntos && tk.resolucionAdjuntos.length))
+      ? '<p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);margin:var(--sp-4) 0 var(--sp-2)">Cierre / evidencia</p>'
+        + (tk.resolucionDetalle ? '<div class="ticket-desc-body">' + escTareas(tk.resolucionDetalle) + '</div>' : '')
+        + '<div class="ticket-attach-grid" id="tkAttRes-' + idx + '"></div>'
+      : '';
 
     html += `
     <div class="ticket-row" data-st="${tk.status}" onclick="toggleTicketDetail(${idx})" role="row" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTicketDetail(${idx})">
-      <div class="ticket-id" role="cell">${tk.id}</div>
-      <div class="ticket-title-col" role="cell"><span class="main">${tk.title}</span><span class="sub">${tk.sub}</span></div>
-      <div class="ticket-client" role="cell"><span class="client-dot" style="background:${tk.clientColor}"></span>${tk.client}</div>
-      <div role="cell"><span class="pill ${catPill}">${tk.category}</span></div>
-      <div role="cell"><span class="pill ${prPill}">${tk.priority}</span></div>
+      <div class="ticket-id" role="cell">${escTareas(tk.id)}</div>
+      <div class="ticket-title-col" role="cell"><span class="main">${escTareas(tk.title)}</span><span class="sub">${escTareas(tk.sub)}</span></div>
+      <div class="ticket-client" role="cell">${clientCell}</div>
+      <div role="cell"><span class="pill ${catPill}">${escTareas(tk.category)}</span></div>
+      <div role="cell"><span class="pill ${prPill}">${escTareas(tk.priority)}</span></div>
       <div class="ticket-assignee" role="cell">${makeTkAvatar(tk.assignee,22)}<span>${m?.n.split(' ')[0]||''}</span></div>
-      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span style="color:${slaColor}">${tk.slaLeft}</span></div>
+      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span style="color:${slaColor}">${escTareas(tk.slaLeft)}</span></div>
       <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
     </div>
-    <div class="ticket-detail" id="tkDetail-${idx}" role="region" aria-label="Detalle del ticket ${tk.id}">
+    <div class="ticket-detail" id="tkDetail-${idx}" role="region" aria-label="Detalle del ticket ${escTareas(tk.id)}">
       <div class="ticket-detail-inner">
         <div class="detail-section">
-          <h4>📋 Información del Ticket</h4>
+          <h4>📝 Solicitud</h4>
+          ${tk.createdByEmail ? '<p style="font-size:var(--text-sm);margin-bottom:var(--sp-2)"><span style="color:var(--color-text-muted)">Quién reporta (sesión):</span> <strong>' + escTareas(tk.createdByEmail) + '</strong></p>' : '<p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:var(--sp-2)">Sin correo de sesión registrado (inicia sesión con Google para asociarlo).</p>'}
+          ${tk.sub ? '<div class="ticket-desc-body">' + escTareas(tk.sub) + '</div>' : '<p style="font-size:var(--text-xs);color:var(--color-text-faint)">Sin texto de detalle.</p>'}
+          <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);margin:var(--sp-4) 0 var(--sp-2)">Imágenes / referencias</p>
+          <div class="ticket-attach-grid" id="tkAttSol-${idx}"></div>
+          ${resBlock}
+        </div>
+        <div class="detail-section">
+          <h4>📋 Datos</h4>
           <div class="info-grid">
-            <div class="info-item"><div class="lbl">Creado</div><div class="val">${tk.created}</div></div>
-            <div class="info-item"><div class="lbl">Vencimiento SLA</div><div class="val" style="color:${slaColor}">${tk.due}</div></div>
-            <div class="info-item"><div class="lbl">Canal de Entrada</div><div class="val">${tk.channel}</div></div>
-            <div class="info-item"><div class="lbl">SLA Asignado</div><div class="val">${tk.sla}</div></div>
-            <div class="info-item"><div class="lbl">Entregable Vinculado</div><div class="val" style="color:var(--color-primary)">${tk.linkedDeliverable}</div></div>
-            <div class="info-item"><div class="lbl">Categoría</div><div class="val">${tk.category}</div></div>
+            <div class="info-item"><div class="lbl">Creado</div><div class="val">${escTareas(tk.created)}</div></div>
+            <div class="info-item"><div class="lbl">Vence</div><div class="val" style="color:${slaColor}">${escTareas(tk.due)}</div></div>
+            <div class="info-item"><div class="lbl">Plazo acordado</div><div class="val">${escTareas(tk.sla)}</div></div>
+            <div class="info-item"><div class="lbl">Canal</div><div class="val">${escTareas(tk.channel)}</div></div>
+            <div class="info-item"><div class="lbl">Cliente</div><div class="val">${tk.client ? escTareas(tk.client) : '—'}</div></div>
+            <div class="info-item"><div class="lbl">Entregable vinculado</div><div class="val" style="color:var(--color-primary)">${tk.linkedDeliverable ? escTareas(tk.linkedDeliverable) : '—'}</div></div>
+            <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
           <div class="ticket-actions">
-            ${tk.status !== 'closed' ? `<button class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();resolveTicket('${tk.id}')">✅ Resolver</button>` : ''}
-            ${tk.status === 'open' ? `<button class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${tk.id}')">▶ Tomar Ticket</button>` : ''}
-            <button class="btn-secondary btn-sm" onclick="event.stopPropagation()">🔄 Reasignar</button>
-            ${tk.priority !== 'urgente' ? `<button class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${tk.id}')">⬆ Escalar</button>` : ''}
+            ${tk.status !== 'closed' && supabase && tk.dbId ? `<button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();createEntregableFromTicket(${idx})">📦 Pasar a entregable</button>` : ''}
+            ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();openResolveTicketModal(${idx})">✅ Resolver con evidencia</button>` : ''}
+            ${tk.status === 'open' ? `<button type="button" class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${escTareas(tk.id)}')">▶ Tomar ticket</button>` : ''}
+            ${tk.priority !== 'urgente' ? `<button type="button" class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${escTareas(tk.id)}')">⬆ Escalar</button>` : ''}
+            <button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="event.stopPropagation();deleteTicketByIdx(${idx})">🗑 Eliminar ticket</button>
           </div>
         </div>
         <div class="detail-section">
-          <h4>💬 Historial y Comentarios</h4>
+          <h4>💬 Historial</h4>
           <div class="ticket-timeline">${tlHtml}</div>
           <div class="comment-box">
-            <input class="comment-input" placeholder="Agregar comentario interno..." id="tkComment-${idx}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){addTicketComment(${idx});event.stopPropagation()}" aria-label="Agregar comentario al ticket">
-            <button class="btn-primary btn-sm" onclick="event.stopPropagation();addTicketComment(${idx})">Enviar</button>
+            <input class="comment-input" placeholder="Comentario (se guarda con tu correo si hay sesión)…" id="tkComment-${idx}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){addTicketComment(${idx});event.stopPropagation()}" aria-label="Agregar comentario al ticket">
+            <button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();addTicketComment(${idx})">Enviar</button>
           </div>
         </div>
       </div>
@@ -3118,7 +3160,241 @@ function toggleTicketDetail(idx) {
   detail.classList.toggle('show');
   row.classList.toggle('expanded');
   row.setAttribute('aria-expanded', !isOpen);
+  if (!isOpen) hydrateTicketAttachmentGrids(idx);
 }
+
+function fillTicketAttachGridInto(el, attachments) {
+  if (!el) return;
+  if (!attachments || !attachments.length) {
+    el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">Sin imágenes</span>';
+    return;
+  }
+  if (!supabase) {
+    el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">Conecta Supabase para ver adjuntos</span>';
+    return;
+  }
+  el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-muted)">Cargando…</span>';
+  Promise.all(attachments.map(function(adj) {
+    if (!adj || !adj.path) return Promise.resolve(null);
+    return supabase.storage.from('tareas_adjuntos').createSignedUrl(adj.path, 3600).then(function(r) {
+      if (r.error || !r.data || !r.data.signedUrl) return null;
+      return { url: r.data.signedUrl, name: adj.file_name || '' };
+    });
+  })).then(function(results) {
+    el.innerHTML = '';
+    var any = false;
+    results.forEach(function(item) {
+      if (!item) return;
+      any = true;
+      var a = document.createElement('a');
+      a.href = item.url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      var img = document.createElement('img');
+      img.src = item.url;
+      img.alt = item.name;
+      a.appendChild(img);
+      el.appendChild(a);
+    });
+    if (!any) el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">No se pudieron cargar las imágenes</span>';
+  });
+}
+
+function fillTicketAttachGrid(domId, attachments) {
+  fillTicketAttachGridInto(document.getElementById(domId), attachments);
+}
+
+function hydrateTicketAttachmentGrids(idx) {
+  var tk = tickets[idx];
+  if (!tk) return;
+  fillTicketAttachGrid('tkAttSol-' + idx, tk.solicitudAdjuntos);
+  if (tk.resolucionDetalle || (tk.resolucionAdjuntos && tk.resolucionAdjuntos.length)) {
+    fillTicketAttachGrid('tkAttRes-' + idx, tk.resolucionAdjuntos);
+  }
+}
+
+function createEntregableFromTicket(idx) {
+  var tk = tickets[idx];
+  if (!tk || !tk.dbId || !supabase) return;
+  var titulo = '[' + tk.id + '] ' + tk.title;
+  if (titulo.length > 200) titulo = titulo.slice(0, 197) + '…';
+  var desc = (tk.sub || '').trim();
+  if (tk.createdByEmail) desc += (desc ? '\n\n' : '') + 'Solicitante: ' + tk.createdByEmail;
+  supabase.from('tareas_kanban').insert({
+    columna: 'todo',
+    titulo: titulo,
+    descripcion: desc || tk.title,
+    servicio: 'tag-mk',
+    prioridad: (tk.priority === 'urgente' || tk.priority === 'alta') ? 'hi' : 'md',
+    ticket_id: tk.dbId,
+    cliente_nombre: tk.client || null,
+    equipo_ids: [],
+    progreso: 0,
+    subtareas: '0/1',
+    orden: 0
+  }).select().single().then(function(r) {
+    if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
+    var row = r.data;
+    supabase.from('tareas_tickets').update({ entregable_vinculado: row.titulo, status: 'progress' }).eq('id', tk.dbId).then(function() {
+      reloadTareasData(function() {
+        navigate('kanban', document.querySelector('.nav-item[data-view="kanban"]'));
+      });
+    });
+  });
+}
+
+var _resolveTicketIdx = null;
+function openResolveTicketModal(idx) {
+  _resolveTicketIdx = idx;
+  var tk = tickets[idx];
+  if (!tk) return;
+  document.getElementById('modalTitle').textContent = 'Resolver ' + tk.id;
+  document.getElementById('modalBody').innerHTML = `
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-3)">Describe el resultado y, si quieres, adjunta capturas.</p>
+    <div class="form-group"><label for="res-txt">Detalle de la resolución</label><textarea class="form-textarea" id="res-txt" rows="4" placeholder="Qué se hizo, dónde verificarlo…"></textarea></div>
+    <div class="form-group"><label for="res-files">Evidencia (imágenes)</label><input type="file" class="form-input" id="res-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple></div>`;
+  document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal();_resolveTicketIdx=null">Cancelar</button><button type="button" class="btn-primary" onclick="submitResolveTicket()">Cerrar ticket</button>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function submitResolveTicket() {
+  var idx = _resolveTicketIdx;
+  if (idx == null) return;
+  var tk = tickets[idx];
+  if (!tk || !tk.dbId || !supabase) { closeModal(); _resolveTicketIdx = null; return; }
+  var det = (document.getElementById('res-txt') && document.getElementById('res-txt').value || '').trim();
+  var filesEl = document.getElementById('res-files');
+  var files = filesEl && filesEl.files ? Array.prototype.slice.call(filesEl.files) : [];
+  function finish() {
+    _resolveTicketIdx = null;
+    reloadTareasData(); closeModal();
+  }
+  function doUpdate(mergedRes) {
+    var payload = { status: 'closed' };
+    if (det) payload.resolucion_detalle = det;
+    if (mergedRes && mergedRes.length) payload.adjuntos_resolucion = mergedRes;
+    supabase.from('tareas_tickets').update(payload).eq('id', tk.dbId).then(function(r) {
+      if (r.error) { alert(r.error.message); return; }
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: tk.dbId,
+        quien: 'Sistema',
+        que: '✅ Ticket resuelto y cerrado.',
+        cuando: 'Ahora',
+        tipo: 'system'
+      }).then(function() { finish(); });
+    });
+  }
+  if (files.length) {
+    uploadTicketAdjuntos(tk.dbId, 'resolucion', files, function(adj) {
+      doUpdate([].concat(tk.resolucionAdjuntos || [], adj));
+    });
+  } else {
+    doUpdate(tk.resolucionAdjuntos && tk.resolucionAdjuntos.length ? tk.resolucionAdjuntos : null);
+  }
+}
+
+function openEntregableDetailModal(kanbanId) {
+  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
+  if (!k) return;
+  var tk = k.ticketDbId ? tickets.find(function(t) { return t.dbId === k.ticketDbId; }) : null;
+  document.getElementById('modalTitle').textContent = k.tt || 'Entregable';
+  var body = '';
+  body += '<div class="entregable-detail-block"><h4>Descripción</h4><div class="ticket-desc-body">' + escTareas(k.ds || 'Sin descripción.') + '</div></div>';
+  body += '<div class="entregable-detail-block"><h4>Cliente y prioridad</h4><p style="font-size:var(--text-sm)">' + escTareas(k.cl || 'Sin cliente') + ' · ' + escTareas(k.pr) + '</p></div>';
+  if (tk) {
+    body += '<div class="entregable-detail-block"><h4>Ticket origen (' + escTareas(tk.id) + ')</h4><p style="font-size:var(--text-sm);color:var(--color-text-muted)">' + escTareas(tk.title) + '</p><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Referencias del reporte:</p><div class="ticket-attach-grid" id="entModalTkSol"></div></div>';
+  }
+  if (tk && tk.status !== 'closed') {
+    body += '<div class="entregable-detail-block"><h4>Evidencia en el ticket</h4><p class="form-file-hint">Añade texto y/o capturas del arreglo; se guardan en el ticket vinculado.</p><textarea class="form-textarea" id="ent-modal-res-txt" rows="3" placeholder="Qué entregaste o mejoraste…"></textarea><input type="file" class="form-input" id="ent-modal-res-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple style="margin-top:8px"><div style="margin-top:var(--sp-3)"><button type="button" class="btn-primary btn-sm" onclick="submitEntregableEvidence(\'' + String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">Guardar en el ticket</button></div></div>';
+  }
+  document.getElementById('modalBody').innerHTML = body;
+  var kidEsc = String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal()">Cerrar</button>' +
+    (supabase && k.id ? '<button type="button" class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="deleteEntregable(\'' + kidEsc + '\')">🗑 Eliminar entregable</button>' : '');
+  document.getElementById('modalOverlay').classList.add('show');
+  if (tk) setTimeout(function() { fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos); }, 60);
+}
+
+function submitEntregableEvidence(kanbanId) {
+  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
+  if (!k || !k.ticketDbId || !supabase) return;
+  var tk = tickets.find(function(t) { return t.dbId === k.ticketDbId; });
+  if (!tk) return;
+  var det = (document.getElementById('ent-modal-res-txt') && document.getElementById('ent-modal-res-txt').value || '').trim();
+  var filesEl = document.getElementById('ent-modal-res-files');
+  var files = filesEl && filesEl.files ? Array.prototype.slice.call(filesEl.files) : [];
+  if (!files.length && !det) { alert('Escribe un detalle o sube al menos una imagen.'); return; }
+  function saveMerge(adjNew) {
+    var merged = [].concat(tk.resolucionAdjuntos || [], adjNew || []);
+    var payload = {};
+    if (det) payload.resolucion_detalle = (tk.resolucionDetalle ? tk.resolucionDetalle + '\n\n— ' : '') + det;
+    if (merged.length) payload.adjuntos_resolucion = merged;
+    supabase.from('tareas_tickets').update(payload).eq('id', tk.dbId).then(function(r) {
+      if (r.error) { alert(r.error.message); return; }
+      reloadTareasData(function() { closeModal(); });
+    });
+  }
+  if (files.length) {
+    uploadTicketAdjuntos(tk.dbId, 'resolucion', files, function(adj) { saveMerge(adj); });
+  } else {
+    saveMerge([]);
+  }
+}
+
+function collectTicketStoragePaths(tk) {
+  var paths = [];
+  (tk.solicitudAdjuntos || []).forEach(function(a) { if (a && a.path) paths.push(a.path); });
+  (tk.resolucionAdjuntos || []).forEach(function(a) { if (a && a.path) paths.push(a.path); });
+  return paths;
+}
+
+function deleteTicketByIdx(idx) {
+  var tk = tickets[idx];
+  if (!tk) return;
+  if (!confirm('¿Eliminar el ticket ' + (tk.id || '') + '? Se borrarán los comentarios y, si hay, las imágenes en almacenamiento.')) return;
+  if (supabase && tk.dbId) {
+    var paths = collectTicketStoragePaths(tk);
+    function doRowDelete() {
+      supabase.from('tareas_tickets').delete().eq('id', tk.dbId).then(function(r) {
+        if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
+        reloadTareasData(function() { closeModal(); });
+      });
+    }
+    if (paths.length) {
+      supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function() { doRowDelete(); });
+    } else {
+      doRowDelete();
+    }
+  } else {
+    tickets.splice(idx, 1);
+    renderers.tickets();
+    updateBadges();
+  }
+}
+
+function deleteEntregable(kanbanId) {
+  if (!confirm('¿Eliminar este entregable del tablero?')) return;
+  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
+  if (!k) { closeModal(); return; }
+  if (supabase) {
+    supabase.from('tareas_kanban').delete().eq('id', kanbanId).then(function(r) {
+      if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
+      if (k.ticketDbId) {
+        supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).then(function() {
+          reloadTareasData(function() { closeModal(); });
+        });
+      } else {
+        reloadTareasData(function() { closeModal(); });
+      }
+    });
+  } else {
+    KT = KT.filter(function(x) { return String(x.id) !== String(kanbanId); });
+    renderers.kanban();
+    updateBadges();
+    closeModal();
+  }
+}
+
 function addTicketComment(idx) {
   var inp = document.getElementById('tkComment-' + idx);
   if (!inp) return;
@@ -3127,42 +3403,29 @@ function addTicketComment(idx) {
   var tk = tickets[idx];
   if (!tk) return;
   if (supabase && tk.dbId) {
-    supabase.from('tareas_ticket_comentarios').insert({
-      ticket_id: tk.dbId,
-      quien: 'Usuario',
-      que: v,
-      cuando: 'Ahora',
-      tipo: 'comment'
-    }).then(function(r) {
-      if (r.error) { alert('Error al agregar comentario'); return; }
-      inp.value = '';
-      reloadTareasData();
+    supabase.auth.getUser().then(function(ar) {
+      var quien = (ar.data && ar.data.user && ar.data.user.email) ? ar.data.user.email : getCurrentUserNameTareas();
+      supabase.from('tareas_ticket_comentarios').insert({
+        ticket_id: tk.dbId,
+        quien: quien,
+        que: v,
+        cuando: 'Ahora',
+        tipo: 'comment'
+      }).then(function(r) {
+        if (r.error) { alert('Error al agregar comentario'); return; }
+        inp.value = '';
+        reloadTareasData();
+      });
     });
   } else {
-    tk.timeline.push({who:'Usuario',what:v,when:'Ahora',type:'comment'});
+    tk.timeline.push({ who: getCurrentUserNameTareas(), what: v, when: 'Ahora', type: 'comment' });
     inp.value = '';
     renderers.tickets();
   }
 }
 function resolveTicket(id) {
-  var tk = tickets.find(function(x){ return x.id === id; });
-  if (!tk) return;
-  if (supabase && tk.dbId) {
-    supabase.from('tareas_tickets').update({ status: 'closed' }).eq('id', tk.dbId).then(function(r) {
-      if (r.error) { alert('Error al resolver ticket'); return; }
-      supabase.from('tareas_ticket_comentarios').insert({
-        ticket_id: tk.dbId,
-        quien: 'Sistema',
-        que: '✅ Ticket resuelto y cerrado.',
-        cuando: 'Ahora',
-        tipo: 'system'
-      }).then(function() { reloadTareasData(); });
-    });
-  } else {
-    tk.status = 'closed'; tk.slaStatus = 'ok'; tk.slaLeft = 'Resuelto';
-    tk.timeline.push({who:'Sistema',what:'✅ Ticket resuelto y cerrado.',when:'Ahora',type:'system'});
-    renderers.tickets(); updateBadges();
-  }
+  var idx = tickets.findIndex(function(x) { return x.id === id; });
+  if (idx >= 0) openResolveTicketModal(idx);
 }
 function progressTicket(id) {
   var tk = tickets.find(function(x){ return x.id === id; });
@@ -3209,7 +3472,8 @@ function filterTickets(s, btn) {
   btn.classList.add('active');
   document.querySelectorAll('.ticket-row').forEach(r => {
     if (!r.dataset.st) return;
-    const show = s === 'all' || r.dataset.st === s;
+    const st = r.dataset.st;
+    const show = s === 'all' || st === s || (s === 'resolved' && st === 'closed');
     r.style.display = show ? '' : 'none';
     const det = r.nextElementSibling;
     if (det && det.classList.contains('ticket-detail')) {
@@ -3690,7 +3954,7 @@ function markAllPresent() {
 
 // ─── SIDEBAR BADGE UPDATES ───
 function updateBadges() {
-  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
+  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed'; }).length;
   var el = document.getElementById('badge-tickets');
   if (el) el.textContent = tkOpen;
   var clEl = document.getElementById('badge-clients');
@@ -3702,7 +3966,7 @@ function updateBadges() {
 function updateDashboardStats() {
   var total = KT.length;
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
-  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed' && t.status !== 'resolved'; }).length;
+  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed'; }).length;
   var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
   var attMembers = ATTENDANCE_MEMBERS || [];
   var present = attMembers.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
@@ -3717,8 +3981,13 @@ function updateDashboardStats() {
   set('welcome-stat-asistencia', present + '/' + (attMembers.length || TEAM.length));
   var sub = document.getElementById('dashboard-sub');
   if (sub) {
-    if (total === 0 && tkOpen === 0) sub.textContent = '';
+    if (total === 0 && tkOpen === 0) sub.textContent = 'Resumen de tu operación';
     else sub.textContent = (total ? total + ' entregables' : '') + (total && tkOpen ? ' · ' : '') + (tkOpen ? tkOpen + ' tickets abiertos' : '');
+  }
+  var greet = document.getElementById('dashboard-greeting');
+  if (greet) {
+    var uname = typeof getCurrentUserNameTareas === 'function' ? getCurrentUserNameTareas() : '';
+    greet.textContent = (uname && uname !== 'Usuario') ? ('Hola, ' + uname) : 'Hola';
   }
 }
 
@@ -3748,21 +4017,41 @@ function openModal(type) {
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
 
   } else if (type === 'ticket') {
-    title.textContent = 'Nuevo Ticket — Solicitud de Cliente';
+    title.textContent = 'Nuevo ticket';
     body.innerHTML = `
-      <div class="form-group"><label for="tk-name">Título</label><input class="form-input" placeholder="Ej: Cambiar foto del carrusel" id="tk-name"></div>
-      <div class="form-group"><label for="tk-desc">Descripción Detallada</label><textarea class="form-textarea" placeholder="¿Qué necesita el cliente exactamente? Contexto, archivos, etc." id="tk-desc"></textarea></div>
+      <p class="form-hint" style="margin:0 0 var(--sp-4);font-size:var(--text-sm);color:var(--color-text-muted)">Describe el cambio o mejora con el mayor detalle posible. El solicitante se registra con el correo de tu sesión.</p>
+      <div class="form-group"><label for="tk-name">Título</label><input class="form-input" placeholder="Ej: Preview de comprobantes en Crédito" id="tk-name"></div>
+      <div class="form-group"><label for="tk-desc">Detalle</label><textarea class="form-textarea" style="min-height:120px" placeholder="Qué falla, dónde, pasos para reproducir, resultado esperado…" id="tk-desc"></textarea></div>
+      <div class="form-group">
+        <label for="tk-files">Capturas / referencias (opcional)</label>
+        <input type="file" class="form-input" id="tk-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+        <div class="form-file-hint">Imágenes del problema o mockup. Se verán en el detalle del ticket.</div>
+        <div class="tk-file-preview" id="tk-file-preview"></div>
+      </div>
       <div class="form-row">
-        <div class="form-group"><label for="tk-client">Cliente</label><select class="form-select" id="tk-client"><option value="">— Ninguno —</option>${(clients||[]).map(function(c){var n=c.n||''; return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
+        <div class="form-group"><label for="tk-client">Cliente <span style="font-weight:400;color:var(--color-text-faint)">(opcional)</span></label><select class="form-select" id="tk-client"><option value="">— Sin cliente —</option>${(clients||[]).map(function(c){var n=c.n||''; return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
-        <div class="form-group"><label for="tk-priority">Prioridad (SLA)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente (1h)</option><option value="alta">🟠 Alta (2h)</option><option value="media" selected>🟡 Media (4h)</option><option value="baja">⚪ Baja (24h)</option></select></div>
+        <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla">
+          <option value="30">30 minutos</option>
+          <option value="60">1 hora</option>
+          <option value="120">2 horas</option>
+          <option value="240">4 horas</option>
+          <option value="480">8 horas</option>
+          <option value="1440" selected>1 día</option>
+          <option value="4320">3 días</option>
+        </select></div>
+        <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
         <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(TEAM||[]).map(function(m){return '<option value="'+(m.id||'')+'">'+(m.n||'').replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
-        <div class="form-group"><label for="tk-channel">Canal</label><select class="form-select" id="tk-channel"><option>WhatsApp</option><option>Email</option><option>Slack</option><option>Llamada</option><option>Presencial</option></select></div>
       </div>
-      <div class="form-group"><label for="tk-link">Entregable Vinculado</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${KT.map(k=>`<option>${k.tt}</option>`).join('')}</select></div>`;
-    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear Ticket</button>`;
+      <div class="form-group"><label for="tk-channel">Canal</label><select class="form-select" id="tk-channel"><option>Interno</option><option>WhatsApp</option><option>Email</option><option>Slack</option><option>Llamada</option><option>Presencial</option></select></div>
+      <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
+    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
+    setTimeout(function() {
+      var fi = document.getElementById('tk-files');
+      if (fi) fi.onchange = function() { previewTkFiles(this); };
+    }, 80);
 
   } else if (type === 'client') {
     title.textContent = 'Nuevo Cliente';
@@ -3822,8 +4111,11 @@ function openModal(type) {
 
   overlay.classList.add('show');
   overlay.removeAttribute('aria-hidden');
-  // Focus first input
-  setTimeout(() => body.querySelector('input,select,textarea')?.focus(), 100);
+  // Focus first input (skip file input)
+  setTimeout(function() {
+    var el = body.querySelector('input:not([type=file]),select,textarea');
+    if (el) el.focus();
+  }, 100);
 }
 
 function closeModal(e) {
@@ -3947,6 +4239,42 @@ function deleteClient(id) {
 }
 
 // ─── ADD FUNCTIONS (persisten en Supabase) ───
+function previewTkFiles(inp) {
+  var prev = document.getElementById('tk-file-preview');
+  if (!prev) return;
+  prev.innerHTML = '';
+  if (!inp || !inp.files || !inp.files.length) return;
+  for (var i = 0; i < inp.files.length; i++) {
+    var f = inp.files[i];
+    if (f.type.indexOf('image/') !== 0) continue;
+    var img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    img.alt = '';
+    prev.appendChild(img);
+  }
+}
+
+function uploadTicketAdjuntos(ticketDbId, subfolder, fileList, done) {
+  if (!supabase || !fileList || !fileList.length) { if (done) done([]); return; }
+  var results = [];
+  var doneCount = 0;
+  var total = fileList.length;
+  for (var i = 0; i < fileList.length; i++) {
+    (function(file, idx) {
+      var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
+      var path = ticketDbId + '/' + subfolder + '/' + idx + '_' + Date.now() + '_' + safe;
+      supabase.storage.from('tareas_adjuntos').upload(path, file, { upsert: false }).then(function(r) {
+        if (!r.error) results.push({ path: path, file_name: file.name || 'imagen' });
+        doneCount++;
+        if (doneCount >= total && done) done(results);
+      }).catch(function() {
+        doneCount++;
+        if (doneCount >= total && done) done(results);
+      });
+    })(fileList[i], i);
+  }
+}
+
 function addTask() {
   var n = document.getElementById('m-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
@@ -3974,69 +4302,103 @@ function addTask() {
     }).select().single().then(function(r) {
       if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
       var row = r.data;
-      KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1' });
+      KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
       renderers.kanban(); updateBadges(); closeModal();
     });
   } else {
-    KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg,pr,du:due||'Sin fecha',dc:'',pc:0,tm:equipoId?[equipoId]:[],cl:clNombre,sb:'0/1'});
+    KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg,pr,du:due||'Sin fecha',dc:'',pc:0,tm:equipoId?[equipoId]:[],cl:clNombre,sb:'0/1',ticketDbId:null});
     renderers.kanban(); updateBadges(); closeModal();
   }
 }
 function addTicket() {
   var n = document.getElementById('tk-name').value.trim();
   if (!n) { alert('Título requerido'); return; }
-  var slaMap = {urgente:1,alta:2,media:4,baja:24};
+  var desc = document.getElementById('tk-desc').value || '';
   var pr = document.getElementById('tk-priority').value;
   var clVal = document.getElementById('tk-client').value;
-  var clColor = (clients.find(function(c){ return c.n === clVal; }) || {}).c || '#666';
+  var clColor = clVal ? ((clients.find(function(c){ return c.n === clVal; }) || {}).c || '#666') : '#94a3b8';
   var cat = document.getElementById('tk-cat').value;
   var chan = document.getElementById('tk-channel').value;
   var assignId = document.getElementById('tk-assign').value;
-  var linkDel = document.getElementById('tk-link').value || '';
-  var comentarioSistema = 'Ticket creado — Categoría: ' + cat;
+  var linkId = document.getElementById('tk-link').value || '';
+  var linkTitulo = '';
+  if (linkId) {
+    var kFound = KT.find(function(x){ return String(x.id) === String(linkId); });
+    linkTitulo = kFound ? kFound.tt : '';
+  }
+  var slaMinutes = parseInt(document.getElementById('tk-sla').value, 10) || 1440;
+  var slaH = Math.max(1, Math.ceil(slaMinutes / 60));
+  var vencimiento = new Date();
+  vencimiento.setMinutes(vencimiento.getMinutes() + slaMinutes);
+  var filesEl = document.getElementById('tk-files');
+  var fileList = filesEl && filesEl.files ? Array.prototype.slice.call(filesEl.files) : [];
+  var comentarioSistema = 'Ticket creado — Categoría: ' + cat + ' — Plazo: ' + formatSlaMinutesOrHours(slaMinutes, slaH);
+
+  function afterCommentClose() {
+    reloadTareasData(); closeModal();
+  }
+
   if (supabase) {
-    var nums = tickets.map(function(t){ var m = (t.id || '').match(/TK-(\d+)/); return m ? parseInt(m[1],10) : 0; });
-    var nextNum = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
-    var codigo = 'TK-' + String(nextNum).padStart(3, '0');
-    var slaH = slaMap[pr] || 4;
-    var vencimiento = new Date(); vencimiento.setHours(vencimiento.getHours() + slaH);
-    supabase.from('tareas_tickets').insert({
-      codigo: codigo,
-      titulo: n,
-      subtitulo: document.getElementById('tk-desc').value || '',
-      cliente_nombre: clVal,
-      cliente_color: clColor,
-      status: 'open',
-      prioridad: pr,
-      categoria: cat,
-      canal: chan,
-      asignado_id: assignId || null,
-      sla_horas: slaH,
-      sla_vencimiento: vencimiento.toISOString(),
-      sla_status: 'ok',
-      entregable_vinculado: linkDel
-    }).select('id').single().then(function(r) {
-      if (r.error) { alert('Error al crear ticket: ' + (r.error.message || '')); return; }
-      var ticketId = r.data.id;
-      supabase.from('tareas_ticket_comentarios').insert({
-        ticket_id: ticketId,
-        quien: 'Sistema',
-        que: comentarioSistema,
-        cuando: 'Ahora',
-        tipo: 'system'
-      }).then(function(r2) {
-        if (r2.error) { /* no bloqueamos */ }
-        reloadTareasData(); closeModal();
+    supabase.auth.getUser().then(function(authRes) {
+      var userEmail = (authRes.data && authRes.data.user && authRes.data.user.email) ? authRes.data.user.email.trim() : '';
+      var nums = tickets.map(function(t){ var m = (t.id || '').match(/TK-(\d+)/); return m ? parseInt(m[1],10) : 0; });
+      var nextNum = (nums.length ? Math.max.apply(null, nums) : 0) + 1;
+      var codigo = 'TK-' + String(nextNum).padStart(3, '0');
+      supabase.from('tareas_tickets').insert({
+        codigo: codigo,
+        titulo: n,
+        subtitulo: desc,
+        cliente_nombre: clVal || null,
+        cliente_color: clColor,
+        status: 'open',
+        prioridad: pr,
+        categoria: cat,
+        canal: chan,
+        asignado_id: assignId || null,
+        sla_horas: slaH,
+        sla_minutos: slaMinutes,
+        sla_vencimiento: vencimiento.toISOString(),
+        sla_status: 'ok',
+        entregable_vinculado: linkTitulo || null,
+        creado_por_email: userEmail || null,
+        adjuntos_solicitud: []
+      }).select('id').single().then(function(r) {
+        if (r.error) { alert('Error al crear ticket: ' + (r.error.message || '')); return; }
+        var ticketId = r.data.id;
+        function insertCommentThenRefresh(adjuntos) {
+          var q = comentarioSistema + (userEmail ? ' — Solicitante: ' + userEmail : '');
+          supabase.from('tareas_ticket_comentarios').insert({
+            ticket_id: ticketId,
+            quien: 'Sistema',
+            que: q,
+            cuando: 'Ahora',
+            tipo: 'system'
+          }).then(function() {
+            if (adjuntos && adjuntos.length) {
+              supabase.from('tareas_tickets').update({ adjuntos_solicitud: adjuntos }).eq('id', ticketId).then(function() { afterCommentClose(); });
+            } else {
+              afterCommentClose();
+            }
+          });
+        }
+        if (fileList.length) {
+          uploadTicketAdjuntos(ticketId, 'solicitud', fileList, function(adjuntos) {
+            insertCommentThenRefresh(adjuntos);
+          });
+        } else {
+          insertCommentThenRefresh([]);
+        }
       });
     });
   } else {
-    var slaStr = {urgente:'1h',alta:'2h',media:'4h',baja:'24h'}[pr] || '4h';
+    var slaStr = formatSlaMinutesOrHours(slaMinutes, slaH);
     tickets.unshift({
-      id:'TK-'+String(tickets.length+1).padStart(3,'0'),title:n,sub:document.getElementById('tk-desc').value||'',
-      client:clVal,clientColor:clColor,status:'open',priority:pr,
-      category:cat,channel:chan,assignee:assignId,sla:slaStr,slaLeft:slaStr,slaStatus:'ok',
-      created:'Ahora',due:'Pendiente',linkedDeliverable:linkDel||'—',
-      timeline:[{who:'Sistema',what:comentarioSistema,when:'Ahora',type:'system'}]
+      id:'TK-'+String(tickets.length+1).padStart(3,'0'), dbId: null, title:n, sub:desc,
+      client:clVal, clientColor:clColor, status:'open', priority:pr,
+      category:cat, channel:chan, assignee:assignId, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
+      created:'Ahora', due:'Pendiente', linkedDeliverable:linkTitulo||'—',
+      timeline:[{who:'Sistema', what:comentarioSistema, when:'Ahora', type:'system'}],
+      createdByEmail:'', slaMinutos: slaMinutes, solicitudAdjuntos:[], resolucionAdjuntos:[], resolucionDetalle:''
     });
     renderers.tickets(); updateBadges(); closeModal();
   }
