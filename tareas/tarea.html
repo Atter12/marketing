@@ -1297,11 +1297,32 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   gap: var(--sp-2);
   margin-top: var(--sp-2);
 }
-.ticket-attach-grid a {
+.ticket-attach-grid .ticket-attach-thumb {
   display: block; border-radius: var(--r-md); overflow: hidden;
   border: 1px solid var(--color-divider); aspect-ratio: 1; background: var(--color-surface-2);
+  padding: 0; cursor: zoom-in; width: 100%; font: inherit; color: inherit;
 }
-.ticket-attach-grid img { width: 100%; height: 100%; object-fit: cover; vertical-align: middle; }
+.ticket-attach-grid .ticket-attach-thumb:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.ticket-attach-grid img { width: 100%; height: 100%; object-fit: cover; vertical-align: middle; pointer-events: none; }
+.ticket-img-lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15, 15, 15, 0.92);
+  display: flex; align-items: center; justify-content: center;
+  padding: max(var(--sp-4), 3vh); cursor: zoom-out;
+}
+.ticket-img-lightbox.hidden { display: none !important; }
+.ticket-img-lightbox-close {
+  position: absolute; top: var(--sp-4); right: var(--sp-4);
+  width: 44px; height: 44px; border-radius: var(--r-md);
+  border: 1px solid var(--color-divider); background: var(--color-surface);
+  color: var(--color-text); font-size: 1.25rem; line-height: 1; cursor: pointer; z-index: 1;
+}
+.ticket-img-lightbox-close:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.ticket-img-lightbox img {
+  max-width: min(96vw, 1400px); max-height: 90vh; width: auto; height: auto;
+  object-fit: contain; border-radius: var(--r-lg); box-shadow: var(--shadow-xl);
+  pointer-events: none;
+}
 .ticket-desc-body {
   font-size: var(--text-sm); line-height: 1.55; white-space: pre-wrap; word-break: break-word;
   color: var(--color-text); padding: var(--sp-3); background: var(--color-surface-offset);
@@ -1319,7 +1340,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .form-file-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px; }
 .tk-file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.tk-file-preview img { width: 76px; height: 76px; object-fit: cover; border-radius: 8px; border: 1px solid var(--color-divider); }
+.tk-file-preview .tk-preview-thumb {
+  padding: 0; border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;
+  cursor: zoom-in; background: var(--color-surface-2);
+}
+.tk-file-preview .tk-preview-thumb img { display: block; width: 120px; height: 120px; object-fit: cover; pointer-events: none; }
 .entregable-detail-block { margin-bottom: var(--sp-4); }
 .entregable-detail-block h4 { font-size: var(--text-sm); margin-bottom: var(--sp-2); }
 
@@ -2517,6 +2542,12 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   </div>
 </div>
 
+<!-- Vista ampliada de adjuntos (clic en miniatura) -->
+<div id="ticketImageLightbox" class="ticket-img-lightbox hidden" onclick="closeTicketImageLightbox(event)" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
+  <button type="button" class="ticket-img-lightbox-close" onclick="event.stopPropagation(); closeTicketImageLightbox();" aria-label="Cerrar">✕</button>
+  <img id="ticketImageLightboxImg" src="" alt="">
+</div>
+
 <script>
 'use strict';
 // ══════════════════════════════════════════════════════════════════
@@ -2709,7 +2740,7 @@ async function loadTareasData() {
       }
       var solAdj = Array.isArray(t.adjuntos_solicitud) ? t.adjuntos_solicitud : [];
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
-      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
     var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
@@ -3074,7 +3105,7 @@ renderers.tickets = function() {
     const stPill = tk.status === 'open' ? 'pill-orange' : tk.status === 'progress' ? 'pill-orange2' : 'pill-green';
     const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En Proceso' : 'Resuelto';
     const prPill = tk.priority === 'urgente' ? 'pill-red' : tk.priority === 'alta' ? 'pill-orange2' : tk.priority === 'media' ? 'pill-orange' : 'pill-gray';
-    const catPill= tk.category === 'Error' ? 'pill-red' : tk.category === 'Cambio' ? 'pill-orange2' : tk.category === 'Solicitud' ? 'pill-purple' : 'pill-gray';
+    const catPill= tk.category === 'Error' ? 'pill-red' : tk.category === 'Cambio' ? 'pill-orange2' : tk.category === 'Mejora' ? 'pill-green' : tk.category === 'Solicitud' ? 'pill-purple' : 'pill-gray';
     const slaDot = tk.slaStatus === 'ok' ? 'sla-ok' : tk.slaStatus === 'warn' ? 'sla-warn' : 'sla-breach';
     const slaColor = tk.slaStatus === 'ok' ? 'var(--green)' : tk.slaStatus === 'warn' ? 'var(--orange2)' : 'var(--red)';
 
@@ -3085,6 +3116,16 @@ renderers.tickets = function() {
     const clientCell = tk.client
       ? '<span class="client-dot" style="background:' + tk.clientColor + '"></span>' + escTareas(tk.client)
       : '<span class="client-dot" style="background:#cbd5e1"></span><span style="color:var(--color-text-faint)">—</span>';
+
+    var assigneeCellHtml;
+    if (tk.assigneeEmail) {
+      var gM = (ATTENDANCE_MEMBERS || []).find(function(x) { return x.email === tk.assigneeEmail; });
+      var shortName = gM ? gM.n : (tk.assigneeEmail.indexOf('@') > 0 ? tk.assigneeEmail.split('@')[0] : tk.assigneeEmail);
+      var letter = (tk.assigneeEmail[0] || '?').toUpperCase();
+      assigneeCellHtml = '<div class="tk-avatar" style="background:#6366f1;width:22px;height:22px;font-size:9px;flex-shrink:0" title="' + escTareas(tk.assigneeEmail) + '">' + escTareas(letter) + '</div><span>' + escTareas(shortName) + '</span>';
+    } else {
+      assigneeCellHtml = makeTkAvatar(tk.assignee, 22) + '<span>' + escTareas(m && m.n ? m.n.split(' ')[0] : '') + '</span>';
+    }
 
     const resBlock = (tk.resolucionDetalle || (tk.resolucionAdjuntos && tk.resolucionAdjuntos.length))
       ? '<p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);margin:var(--sp-4) 0 var(--sp-2)">Cierre / evidencia</p>'
@@ -3099,7 +3140,7 @@ renderers.tickets = function() {
       <div class="ticket-client" role="cell">${clientCell}</div>
       <div role="cell"><span class="pill ${catPill}">${escTareas(tk.category)}</span></div>
       <div role="cell"><span class="pill ${prPill}">${escTareas(tk.priority)}</span></div>
-      <div class="ticket-assignee" role="cell">${makeTkAvatar(tk.assignee,22)}<span>${m?.n.split(' ')[0]||''}</span></div>
+      <div class="ticket-assignee" role="cell">${assigneeCellHtml}</div>
       <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span style="color:${slaColor}">${escTareas(tk.slaLeft)}</span></div>
       <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
     </div>
@@ -3119,8 +3160,8 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Creado</div><div class="val">${escTareas(tk.created)}</div></div>
             <div class="info-item"><div class="lbl">Vence</div><div class="val" style="color:${slaColor}">${escTareas(tk.due)}</div></div>
             <div class="info-item"><div class="lbl">Plazo acordado</div><div class="val">${escTareas(tk.sla)}</div></div>
-            <div class="info-item"><div class="lbl">Canal</div><div class="val">${escTareas(tk.channel)}</div></div>
             <div class="info-item"><div class="lbl">Cliente</div><div class="val">${tk.client ? escTareas(tk.client) : '—'}</div></div>
+            <div class="info-item"><div class="lbl">Asignado a</div><div class="val">${tk.assigneeEmail ? escTareas(tk.assigneeEmail) : (m && m.n ? escTareas(m.n) : '—')}</div></div>
             <div class="info-item"><div class="lbl">Entregable vinculado</div><div class="val" style="color:var(--color-primary)">${tk.linkedDeliverable ? escTareas(tk.linkedDeliverable) : '—'}</div></div>
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
@@ -3158,6 +3199,26 @@ function toggleTicketDetail(idx) {
   if (!isOpen) hydrateTicketAttachmentGrids(idx);
 }
 
+function openTicketImageLightbox(src, alt) {
+  var lb = document.getElementById('ticketImageLightbox');
+  var im = document.getElementById('ticketImageLightboxImg');
+  if (!lb || !im || !src) return;
+  im.src = src;
+  im.alt = alt || 'Vista ampliada';
+  lb.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTicketImageLightbox(e) {
+  var lb = document.getElementById('ticketImageLightbox');
+  var im = document.getElementById('ticketImageLightboxImg');
+  if (!lb || lb.classList.contains('hidden')) return;
+  if (e && e.type === 'click' && e.target !== lb && !(e.target.classList && e.target.classList.contains('ticket-img-lightbox-close'))) return;
+  if (im) { im.src = ''; im.alt = ''; }
+  lb.classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
 function fillTicketAttachGridInto(el, attachments) {
   if (!el) return;
   if (!attachments || !attachments.length) {
@@ -3181,15 +3242,16 @@ function fillTicketAttachGridInto(el, attachments) {
     results.forEach(function(item) {
       if (!item) return;
       any = true;
-      var a = document.createElement('a');
-      a.href = item.url;
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ticket-attach-thumb';
+      btn.setAttribute('aria-label', 'Ver en grande: ' + (item.name || 'imagen'));
+      btn.onclick = function() { openTicketImageLightbox(item.url, item.name || ''); };
       var img = document.createElement('img');
       img.src = item.url;
-      img.alt = item.name;
-      a.appendChild(img);
-      el.appendChild(a);
+      img.alt = item.name || '';
+      btn.appendChild(img);
+      el.appendChild(btn);
     });
     if (!any) el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">No se pudieron cargar las imágenes</span>';
   });
@@ -4107,7 +4169,7 @@ function openModal(type) {
       </div>
       <div class="form-row">
         <div class="form-group"><label for="tk-client">Cliente <span style="font-weight:400;color:var(--color-text-faint)">(opcional)</span></label><select class="form-select" id="tk-client"><option value="">— Sin cliente —</option>${(clients||[]).map(function(c){var n=c.n||''; return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
-        <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
+        <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Mejora">✨ Mejora</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
         <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla">
@@ -4120,9 +4182,8 @@ function openModal(type) {
           <option value="4320">3 días</option>
         </select></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(TEAM||[]).map(function(m){return '<option value="'+(m.id||'')+'">'+(m.n||'').replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a (gerentes)</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); return '<option value="'+em+'">'+em+'</option>'; }).join('')}</select></div>
       </div>
-      <div class="form-group"><label for="tk-channel">Canal</label><select class="form-select" id="tk-channel"><option>Interno</option><option>WhatsApp</option><option>Email</option><option>Slack</option><option>Llamada</option><option>Presencial</option></select></div>
       <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
     setTimeout(function() {
@@ -4323,10 +4384,17 @@ function previewTkFiles(inp) {
   for (var i = 0; i < inp.files.length; i++) {
     var f = inp.files[i];
     if (f.type.indexOf('image/') !== 0) continue;
+    var url = URL.createObjectURL(f);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tk-preview-thumb';
+    btn.setAttribute('aria-label', 'Ver en grande antes de enviar');
+    btn.onclick = function(u, name) { return function() { openTicketImageLightbox(u, name); }; }(url, f.name || '');
     var img = document.createElement('img');
-    img.src = URL.createObjectURL(f);
-    img.alt = '';
-    prev.appendChild(img);
+    img.src = url;
+    img.alt = f.name || '';
+    btn.appendChild(img);
+    prev.appendChild(btn);
   }
 }
 
@@ -4394,8 +4462,7 @@ function addTicket() {
   var clVal = document.getElementById('tk-client').value;
   var clColor = clVal ? ((clients.find(function(c){ return c.n === clVal; }) || {}).c || '#666') : '#94a3b8';
   var cat = document.getElementById('tk-cat').value;
-  var chan = document.getElementById('tk-channel').value;
-  var assignId = document.getElementById('tk-assign').value;
+  var assignEmail = (document.getElementById('tk-assign').value || '').trim();
   var linkId = document.getElementById('tk-link').value || '';
   var linkTitulo = '';
   if (linkId) {
@@ -4429,8 +4496,9 @@ function addTicket() {
         status: 'open',
         prioridad: pr,
         categoria: cat,
-        canal: chan,
-        asignado_id: assignId || null,
+        canal: null,
+        asignado_id: null,
+        asignado_email: assignEmail || null,
         sla_horas: slaH,
         sla_minutos: slaMinutes,
         sla_vencimiento: vencimiento.toISOString(),
@@ -4471,7 +4539,7 @@ function addTicket() {
     tickets.unshift({
       id:'TK-'+String(tickets.length+1).padStart(3,'0'), dbId: null, title:n, sub:desc,
       client:clVal, clientColor:clColor, status:'open', priority:pr,
-      category:cat, channel:chan, assignee:assignId, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
+      category:cat, channel:'', assignee:'', assigneeEmail:assignEmail, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
       created:'Ahora', due:'Pendiente', linkedDeliverable:linkTitulo||'—',
       timeline:[{who:'Sistema', what:comentarioSistema, when:'Ahora', type:'system'}],
       createdByEmail:'', slaMinutos: slaMinutes, solicitudAdjuntos:[], resolucionAdjuntos:[], resolucionDetalle:''
@@ -4711,6 +4779,12 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') {
     closeCmdPalette();
+    var lb = document.getElementById('ticketImageLightbox');
+    if (lb && !lb.classList.contains('hidden')) {
+      closeTicketImageLightbox();
+      e.preventDefault();
+      return;
+    }
     var mo = document.getElementById('modalOverlay');
     if (mo && mo.classList.contains('show')) closeModal();
   }
