@@ -2734,14 +2734,9 @@ function reloadTareasData(thenRender) {
       ATTENDANCE_MEMBERS = data.ATTENDANCE_MEMBERS || [];
       MT = data.MT;
       clients = data.clients;
-      if (data.KT && data.KT.length > 0) {
-        KT = data.KT;
-      } else if (!data.KT || data.KT.length === 0) {
-        if (KT.length === 0) KT = data.KT || [];
-      } else {
-        KT = data.KT || [];
-      }
-      tickets = data.tickets;
+      /* Siempre sustituir KT/tickets con lo que viene del servidor (antes: si KT local tenía filas y el servidor devolvía [], no se vaciaba y el borrado no se veía hasta recargar). */
+      KT = Array.isArray(data.KT) ? data.KT : [];
+      tickets = Array.isArray(data.tickets) ? data.tickets : [];
       calI = data.calI;
       if (data.creditoIdsInTareas) creditoIdsInTareas = data.creditoIdsInTareas;
       var now = new Date();
@@ -3355,8 +3350,12 @@ function deleteTicketByIdx(idx) {
   if (supabase && tk.dbId) {
     var paths = collectTicketStoragePaths(tk);
     function doRowDelete() {
-      supabase.from('tareas_tickets').delete().eq('id', tk.dbId).then(function(r) {
+      supabase.from('tareas_tickets').delete().eq('id', tk.dbId).select('id').then(function(r) {
         if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
+        if (!r.data || !r.data.length) {
+          alert('No se eliminó ningún ticket (¿permisos RLS o sesión?). Revisa que entres como gerente autorizado.');
+          return;
+        }
         reloadTareasData(function() { closeModal(); });
       });
     }
@@ -3369,6 +3368,7 @@ function deleteTicketByIdx(idx) {
     tickets.splice(idx, 1);
     renderers.tickets();
     updateBadges();
+    closeModal();
   }
 }
 
@@ -3377,14 +3377,19 @@ function deleteEntregable(kanbanId) {
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
   if (!k) { closeModal(); return; }
   if (supabase) {
-    supabase.from('tareas_kanban').delete().eq('id', kanbanId).then(function(r) {
+    supabase.from('tareas_kanban').delete().eq('id', kanbanId).select('id').then(function(r) {
       if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
-      if (k.ticketDbId) {
-        supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).then(function() {
-          reloadTareasData(function() { closeModal(); });
-        });
-      } else {
+      if (!r.data || !r.data.length) {
+        alert('No se eliminó ningún entregable (¿permisos RLS o sesión?). Si usas la app sin login de gerente, el borrado en base puede estar bloqueado.');
+        return;
+      }
+      function afterUnlink() {
         reloadTareasData(function() { closeModal(); });
+      }
+      if (k.ticketDbId) {
+        supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).then(function() { afterUnlink(); });
+      } else {
+        afterUnlink();
       }
     });
   } else {
