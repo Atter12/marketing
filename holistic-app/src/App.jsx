@@ -114,7 +114,7 @@ function Av({ name, size = 34, avatarUrl }) {
   const showImg = avatarUrl && avatarUrl.trim() && !imgError;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
   const imgSrc = showImg ? (avatarUrl.replace(/&amp;/gi, "&")) : "";
-  if (showImg) return <div style={style}><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} referrerPolicy="no-referrer" /></div>;
+  if (showImg) return <div style={style}><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} /></div>;
   return <div style={style}>{ini(name)}</div>;
 }
 
@@ -1814,7 +1814,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             fmtT={fmtT}
             fmtDt={fmtDt}
             isCliente={isCliente}
-            updateClientAvatar={mutations.updateClientAvatar}
+            updateClientAvatar={(url) => mutations.updateClientAvatar(url, curCl)}
             uploadAvatarFile={curCl ? (file) => uploadAvatar(curCl, file) : null}
             onExportClientPorPeriodo={expClientDataPorPeriodo}
             setComprobanteViewer={setComprobanteViewer}

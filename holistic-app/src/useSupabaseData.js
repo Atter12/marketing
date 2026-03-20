@@ -144,9 +144,13 @@ export function useSupabaseData(role, clientId) {
         return data?.id ?? null;
       }
     },
-    updateClientAvatar: async (avatarUrl) => {
-      const cid = clientId;
-      if (!cid) return;
+    /** targetClientId: obligatorio si el rol es gerente (el hook no tiene clientId); en rol cliente puede omitirse. */
+    updateClientAvatar: async (avatarUrl, targetClientId) => {
+      const cid = targetClientId != null && String(targetClientId) !== "" ? targetClientId : clientId;
+      if (!cid) {
+        console.warn("[updateClientAvatar] Sin client_id: pasa el id del cliente como segundo argumento cuando eres gerente.");
+        return;
+      }
       const { error: e } = await supabase.from("clientes").update({ avatar_url: avatarUrl || null }).eq("id", cid);
       if (e) throw e;
       await fetchAll();

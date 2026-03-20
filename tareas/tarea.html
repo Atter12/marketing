@@ -875,6 +875,12 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   font-size: 0.875rem;
   flex-shrink: 0;
 }
+.client-avatar.client-avatar--photo {
+  padding: 0; overflow: hidden; background: var(--color-surface-2); border: 1px solid var(--color-divider);
+}
+.client-avatar.client-avatar--photo img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
 .client-name {
   font-size: var(--text-sm);
   font-weight: 700;
@@ -2665,7 +2671,7 @@ async function loadTareasData() {
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
     var [creditoRes, eqRes, clRes, kbRes, tkRes, wlRes, calRes, gerentesRes] = await Promise.all([
-      supabase.from('clientes').select('id, name, phones, emails').order('name'),
+      supabase.from('clientes').select('id, name, phones, emails, avatar_url').order('name'),
       supabase.from('tareas_equipo').select('*').order('id'),
       supabase.from('tareas_clientes').select('*').order('nombre'),
       supabase.from('tareas_kanban').select('*').order('columna').order('orden', { ascending: true }),
@@ -2686,7 +2692,13 @@ async function loadTareasData() {
     (creditoRes.data || []).forEach(function(c) {
       var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
       var firstPhone = (c.phones && (Array.isArray(c.phones) ? c.phones[0] : (typeof c.phones === 'string' ? c.phones : null))) || '';
-      creditoById[c.id] = { nombre: c.name || '', contacto_nombre: c.name || '', email: firstEmail, telefono: firstPhone };
+      creditoById[c.id] = {
+        nombre: c.name || '',
+        contacto_nombre: c.name || '',
+        email: firstEmail,
+        telefono: firstPhone,
+        avatar_url: (c.avatar_url && String(c.avatar_url).trim()) || ''
+      };
     });
     var creditoCount = (creditoRes.data || []).length;
     var tareasClientesCount = (clRes.data || []).length;
@@ -2710,7 +2722,10 @@ async function loadTareasData() {
       var phone = credito ? credito.telefono : (r.telefono || '');
       var healthVal = r.health != null && r.health !== '' ? Number(r.health) : null;
       var satVal = r.satisfaccion != null && r.satisfaccion !== '' ? Number(r.satisfaccion) : null;
-      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+      var fotoTareas = (r.avatar_url && String(r.avatar_url).trim()) || '';
+      var fotoCredito = (credito && credito.avatar_url) ? String(credito.avatar_url).trim() : '';
+      var photo = fotoTareas || fotoCredito;
+      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
@@ -2806,6 +2821,26 @@ function makeTkAvatar(id, size=22) {
   return `<div class="tk-avatar" style="background:${m?.c||'#666'};width:${size}px;height:${size}px;font-size:${s}px" aria-label="${m?.n||id}">${id}</div>`;
 }
 
+function escAttrUrlTareas(u) {
+  return String(u || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '%3C');
+}
+
+/** Avatar con foto (Crédito / tareas_clientes.avatar_url) o iniciales. */
+function clientAvatarMarkup(c, opts) {
+  opts = opts || {};
+  var w = opts.w != null ? opts.w : 36;
+  var h = opts.h != null ? opts.h : 36;
+  var fs = opts.fs != null ? opts.fs : '0.875rem';
+  var url = (c && c.photo && String(c.photo).trim()) || '';
+  if (url) {
+    var label = (c && c.n) ? escTareas(c.n) : 'Cliente';
+    return '<div class="client-avatar client-avatar--photo" style="width:' + w + 'px;height:' + h + 'px" role="img" aria-label="Foto de ' + label + '"><img src="' + escAttrUrlTareas(url) + '" alt="" loading="lazy" decoding="async"></div>';
+  }
+  var bg = (c && c.c) ? c.c : '#666';
+  var letter = (c && c.n && c.n[0]) ? escTareas(c.n[0]) : '?';
+  return '<div class="client-avatar" style="background:' + bg + ';width:' + w + 'px;height:' + h + 'px;font-size:' + fs + '" aria-hidden="true">' + letter + '</div>';
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  NAVIGATION
 // ══════════════════════════════════════════════════════════════════
@@ -2873,7 +2908,7 @@ renderers.clients = function() {
     card.dataset.status = c.status;
     card.innerHTML = `
       <div class="client-header">
-        <div class="client-avatar" style="background:${c.c}" aria-hidden="true">${(c.n && c.n[0]) || '?'}</div>
+        ${clientAvatarMarkup(c, { w: 36, h: 36 })}
         <div style="flex:1;min-width:0">
           <div class="client-name">${c.n || '—'}</div>
           <div class="client-type">${c.tp || ''} · ${svcHtml}</div>
@@ -4182,7 +4217,7 @@ function openModal(type) {
           <option value="4320">3 días</option>
         </select></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a (gerentes)</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); return '<option value="'+em+'">'+em+'</option>'; }).join('')}</select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); return '<option value="'+em+'">'+em+'</option>'; }).join('')}</select></div>
       </div>
       <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
@@ -4273,7 +4308,7 @@ function openClientDetail(idx) {
   document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5)">
-      <div class="client-avatar" style="background:${c.c};width:50px;height:50px;font-size:1.25rem" aria-hidden="true">${(c.n && c.n[0]) || '?'}</div>
+      ${clientAvatarMarkup(c, { w: 50, h: 50, fs: '1.25rem' })}
       <div><div style="font-size:var(--text-xl);font-weight:700">${c.n || '—'}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp || ''} · ${c.contact || ''} · ${c.email || ''}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
@@ -4325,7 +4360,8 @@ function openEditClient(id) {
         <option value="tag-ad" ${(c.svcs||[]).indexOf('tag-ad')>=0?'selected':''}>Paid Ads</option>
       </select>
     </div>
-    <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>`;
+    <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>
+    <div class="form-group"><label for="cl-avatar-url">URL foto de perfil (opcional)</label><input class="form-input" type="url" id="cl-avatar-url" value="${(c.photo||'').replace(/"/g,'&quot;')}" placeholder="https://… (misma que en Crédito si está vinculado)"><p class="form-file-hint">Si el cliente viene de Crédito, la foto se rellena desde allí; puedes pegar la URL pública del bucket avatars.</p></div>`;
   footer.innerHTML = `<button class="btn-secondary" onclick="closeModal();_editingClientId=null">Cancelar</button><button class="btn-primary" onclick="updateClient()">Guardar</button>`;
   showModalOverlay();
 }
@@ -4342,7 +4378,8 @@ function updateClient() {
     fee_mensual: document.getElementById('cl-fee').value || '',
     status: document.getElementById('cl-status').value || 'activo',
     servicios: svcs,
-    notes: document.getElementById('cl-notes').value || ''
+    notes: document.getElementById('cl-notes').value || '',
+    avatar_url: (function() { var el = document.getElementById('cl-avatar-url'); return (el && el.value.trim()) || null; })()
   };
   if (!row.nombre) { alert('Nombre requerido'); return; }
   if (supabase) {
@@ -4354,7 +4391,7 @@ function updateClient() {
     });
   } else {
     var c = clients.find(function(x){ return x.id === _editingClientId; });
-    if (c) { c.n = row.nombre; c.tp = row.tipo; c.contact = row.contacto_nombre; c.email = row.email; c.phone = row.telefono; c.monthlyFee = row.fee_mensual; c.status = row.status; c.svcs = svcs; c.notes = row.notes; }
+    if (c) { c.n = row.nombre; c.tp = row.tipo; c.contact = row.contacto_nombre; c.email = row.email; c.phone = row.telefono; c.monthlyFee = row.fee_mensual; c.status = row.status; c.svcs = svcs; c.notes = row.notes; c.photo = row.avatar_url || c.photo || ''; }
     _editingClientId = null;
     renderers.clients(); updateBadges();
     closeModal();
@@ -4558,7 +4595,7 @@ function showImportFromCredito() {
     body.innerHTML = '<p style="color:var(--color-text-muted)">No hay conexión a Supabase. Los clientes de Crédito se cargan desde la misma base de datos.</p>';
     return;
   }
-  supabase.from('clientes').select('id, name, emails, phones').order('name').then(function(r) {
+  supabase.from('clientes').select('id, name, emails, phones, avatar_url').order('name').then(function(r) {
     if (r.error) {
       body.innerHTML = '<p style="color:var(--red)">Error al cargar: ' + (r.error.message || '') + '</p>';
       return;
@@ -4590,7 +4627,8 @@ function importClienteFromCredito(creditoId) {
     nombre: c.name || 'Cliente Crédito',
     contacto_nombre: c.name || '',
     email: firstEmail,
-    status: 'activo'
+    status: 'activo',
+    avatar_url: (c.avatar_url && String(c.avatar_url).trim()) || null
   };
   supabase.from('tareas_clientes').insert(row).then(function(r) {
     if (r.error) { alert('Error al importar: ' + (r.error.message || '')); return; }
@@ -4644,7 +4682,8 @@ function addClient() {
       entregables: 0, done: 0, tickets: 0, meetings: 0, satisfaction: null, budget: row.presupuesto, spent: row.gastado,
       contact: row.contacto_nombre, email: row.email, phone: row.telefono,
       nextAction: row.proxima_accion, contractStart: row.contrato_inicio, contractEnd: row.contrato_fin,
-      monthlyFee: row.fee_mensual, health: 50, healthTxt: row.health_txt, notes: row.notes, status: row.status
+      monthlyFee: row.fee_mensual, health: 50, healthTxt: row.health_txt, notes: row.notes, status: row.status,
+      photo: ''
     });
     renderers.clients(); updateBadges(); closeModal();
   }
