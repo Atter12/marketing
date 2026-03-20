@@ -2745,15 +2745,15 @@ function reloadTareasData(thenRender) {
     }
     updateBadges();
     updateDashboardStats();
+    /* Siempre repintar vistas: si solo se ejecutaba thenRender (p. ej. closeModal tras borrar),
+       antes no se llamaba renderers.kanban/tickets y el tablero seguía mostrando filas ya borradas en BD. */
+    renderers.clients?.();
+    renderers.kanban?.();
+    renderers.tickets?.();
+    renderers.calendar?.();
+    renderers.workload?.();
+    renderers.workflows?.();
     if (thenRender && typeof thenRender === 'function') thenRender();
-    else {
-      renderers.clients?.();
-      renderers.kanban?.();
-      renderers.tickets?.();
-      renderers.calendar?.();
-      renderers.workload?.();
-      renderers.workflows?.();
-    }
   });
 }
 
@@ -3345,27 +3345,48 @@ function collectTicketStoragePaths(tk) {
 
 function deleteTicketByIdx(idx) {
   var tk = tickets[idx];
-  if (!tk) return;
-  if (!confirm('¿Eliminar el ticket ' + (tk.id || '') + '? Se borrarán los comentarios y, si hay, las imágenes en almacenamiento.')) return;
+  if (!tk) {
+    console.error('[Tareas] deleteTicketByIdx: sin ticket en índice', idx);
+    return;
+  }
+  if (!confirm('¿Eliminar el ticket ' + (tk.id || '') + '? Se borrarán los comentarios y, si hay, las imágenes en almacenamiento.')) {
+    console.log('[Tareas] deleteTicketByIdx: cancelado por el usuario');
+    return;
+  }
+  console.log('[Tareas] deleteTicketByIdx: inicio', { idx: idx, codigo: tk.id, dbId: tk.dbId, supabase: !!supabase });
   if (supabase && tk.dbId) {
     var paths = collectTicketStoragePaths(tk);
     function doRowDelete() {
+      console.log('[Tareas] deleteTicketByIdx: DELETE tareas_tickets', tk.dbId);
       supabase.from('tareas_tickets').delete().eq('id', tk.dbId).select('id').then(function(r) {
-        if (r.error) { console.warn('deleteTicketByIdx', r.error); alert(r.error.message || 'No se pudo eliminar'); return; }
+        console.log('[Tareas] deleteTicketByIdx: respuesta', r);
+        if (r.error) {
+          console.error('[Tareas] deleteTicketByIdx error PostgREST', r.error);
+          alert(r.error.message || 'No se pudo eliminar');
+          return;
+        }
         if (!r.data || !r.data.length) {
-          console.warn('deleteTicketByIdx: 0 rows (RLS/sesión?)', { dbId: tk.dbId });
-          alert('No se eliminó ningún ticket (¿permisos RLS o sesión?). Revisa que entres como gerente autorizado o aplica la migración 025 en Supabase.');
+          console.error('[Tareas] deleteTicketByIdx: 0 filas borradas (RLS o id). Ejecuta en Supabase la migración 026 (políticas anon en tickets).', { dbId: tk.dbId });
+          alert('No se eliminó el ticket: la base no devolvió filas (suele ser RLS). En el proyecto SQL, aplica supabase/migrations/026_tareas_tickets_anon_policy.sql');
           return;
         }
         reloadTareasData(function() { closeModal(); });
+      }).catch(function(err) {
+        console.error('[Tareas] deleteTicketByIdx: excepción/red', err);
+        alert('Error al eliminar ticket: ' + (err && err.message ? err.message : String(err)));
       });
     }
     if (paths.length) {
-      supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function() { doRowDelete(); });
+      console.log('[Tareas] deleteTicketByIdx: quitando', paths.length, 'archivos de storage');
+      supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function(e) {
+        console.warn('[Tareas] deleteTicketByIdx: storage.remove falló, igual se intenta borrar fila', e);
+        doRowDelete();
+      });
     } else {
       doRowDelete();
     }
   } else {
+    console.warn('[Tareas] deleteTicketByIdx: modo local (sin supabase o sin dbId)', { hasSupabase: !!supabase, dbId: tk.dbId });
     tickets.splice(idx, 1);
     renderers.tickets();
     updateBadges();
@@ -3374,27 +3395,50 @@ function deleteTicketByIdx(idx) {
 }
 
 function deleteEntregable(kanbanId) {
-  if (!confirm('¿Eliminar este entregable del tablero?')) return;
+  if (!confirm('¿Eliminar este entregable del tablero?')) {
+    console.log('[Tareas] deleteEntregable: cancelado por el usuario');
+    return;
+  }
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
-  if (!k) { closeModal(); return; }
+  if (!k) {
+    console.error('[Tareas] deleteEntregable: no hay tarjeta en KT con id', kanbanId, 'len(KT)=', KT.length);
+    closeModal();
+    return;
+  }
+  console.log('[Tareas] deleteEntregable: inicio', { kanbanId: kanbanId, ticketDbId: k.ticketDbId, supabase: !!supabase });
   if (supabase) {
     supabase.from('tareas_kanban').delete().eq('id', kanbanId).select('id').then(function(r) {
-      if (r.error) { console.warn('deleteEntregable', r.error); alert(r.error.message || 'No se pudo eliminar'); return; }
+      console.log('[Tareas] deleteEntregable: respuesta DELETE', r);
+      if (r.error) {
+        console.error('[Tareas] deleteEntregable error PostgREST', r.error);
+        alert(r.error.message || 'No se pudo eliminar');
+        return;
+      }
       if (!r.data || !r.data.length) {
-        console.warn('deleteEntregable: 0 rows (RLS/sesión?)', { kanbanId: kanbanId });
-        alert('No se eliminó ningún entregable (¿permisos RLS o sesión?). Aplica la migración 025 en Supabase si entras con usuario autenticado que no está en gerentes.');
+        console.error('[Tareas] deleteEntregable: 0 filas (RLS o id). Revisa migraciones 017 (kanban anon) y 026 (tickets).', { kanbanId: kanbanId });
+        alert('No se eliminó el entregable: 0 filas en BD (RLS o id). Aplica 017 + 026 en Supabase o comprueba que el id sea el de la fila en tareas_kanban.');
         return;
       }
       function afterUnlink() {
         reloadTareasData(function() { closeModal(); });
       }
       if (k.ticketDbId) {
-        supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).then(function() { afterUnlink(); });
+        supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).select('id').then(function(ur) {
+          if (ur.error) console.warn('[Tareas] deleteEntregable: no se pudo limpiar entregable_vinculado en ticket (sigue el borrado en kanban)', ur.error);
+          afterUnlink();
+        }).catch(function(err) {
+          console.error('[Tareas] deleteEntregable: error al actualizar ticket', err);
+          afterUnlink();
+        });
       } else {
         afterUnlink();
       }
+    }).catch(function(err) {
+      console.error('[Tareas] deleteEntregable: excepción/red', err);
+      alert('Error al eliminar entregable: ' + (err && err.message ? err.message : String(err)));
     });
   } else {
+    console.warn('[Tareas] deleteEntregable: sin supabase, solo memoria local');
     KT = KT.filter(function(x) { return String(x.id) !== String(kanbanId); });
     renderers.kanban();
     updateBadges();
