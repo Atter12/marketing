@@ -2506,7 +2506,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════════════════════════════════
      MODAL
 ══════════════════════════════════ -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-header">
       <h3 id="modalTitle">Nuevo</h3>
@@ -3249,7 +3249,7 @@ function openResolveTicketModal(idx) {
     <div class="form-group"><label for="res-txt">Detalle de la resolución</label><textarea class="form-textarea" id="res-txt" rows="4" placeholder="Qué se hizo, dónde verificarlo…"></textarea></div>
     <div class="form-group"><label for="res-files">Evidencia (imágenes)</label><input type="file" class="form-input" id="res-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple></div>`;
   document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal();_resolveTicketIdx=null">Cancelar</button><button type="button" class="btn-primary" onclick="submitResolveTicket()">Cerrar ticket</button>';
-  document.getElementById('modalOverlay').classList.add('show');
+  showModalOverlay();
 }
 
 function submitResolveTicket() {
@@ -3306,7 +3306,7 @@ function openEntregableDetailModal(kanbanId) {
   var kidEsc = String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
   document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal()">Cerrar</button>' +
     (supabase && k.id ? '<button type="button" class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="deleteEntregable(\'' + kidEsc + '\')">🗑 Eliminar entregable</button>' : '');
-  document.getElementById('modalOverlay').classList.add('show');
+  showModalOverlay();
   if (tk) setTimeout(function() { fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos); }, 60);
 }
 
@@ -3351,9 +3351,10 @@ function deleteTicketByIdx(idx) {
     var paths = collectTicketStoragePaths(tk);
     function doRowDelete() {
       supabase.from('tareas_tickets').delete().eq('id', tk.dbId).select('id').then(function(r) {
-        if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
+        if (r.error) { console.warn('deleteTicketByIdx', r.error); alert(r.error.message || 'No se pudo eliminar'); return; }
         if (!r.data || !r.data.length) {
-          alert('No se eliminó ningún ticket (¿permisos RLS o sesión?). Revisa que entres como gerente autorizado.');
+          console.warn('deleteTicketByIdx: 0 rows (RLS/sesión?)', { dbId: tk.dbId });
+          alert('No se eliminó ningún ticket (¿permisos RLS o sesión?). Revisa que entres como gerente autorizado o aplica la migración 025 en Supabase.');
           return;
         }
         reloadTareasData(function() { closeModal(); });
@@ -3378,9 +3379,10 @@ function deleteEntregable(kanbanId) {
   if (!k) { closeModal(); return; }
   if (supabase) {
     supabase.from('tareas_kanban').delete().eq('id', kanbanId).select('id').then(function(r) {
-      if (r.error) { alert(r.error.message || 'No se pudo eliminar'); return; }
+      if (r.error) { console.warn('deleteEntregable', r.error); alert(r.error.message || 'No se pudo eliminar'); return; }
       if (!r.data || !r.data.length) {
-        alert('No se eliminó ningún entregable (¿permisos RLS o sesión?). Si usas la app sin login de gerente, el borrado en base puede estar bloqueado.');
+        console.warn('deleteEntregable: 0 rows (RLS/sesión?)', { kanbanId: kanbanId });
+        alert('No se eliminó ningún entregable (¿permisos RLS o sesión?). Aplica la migración 025 en Supabase si entras con usuario autenticado que no está en gerentes.');
         return;
       }
       function afterUnlink() {
@@ -3999,8 +4001,34 @@ function updateDashboardStats() {
 // ══════════════════════════════════════════════════════════════════
 //  MODAL SYSTEM
 // ══════════════════════════════════════════════════════════════════
+function showModalOverlay() {
+  var ov = document.getElementById('modalOverlay');
+  if (!ov) return;
+  ov.classList.add('show');
+  ov.removeAttribute('aria-hidden');
+}
+
+function hideModalOverlay() {
+  var ov = document.getElementById('modalOverlay');
+  if (!ov) return;
+  var ae = document.activeElement;
+  if (ae && ov.contains(ae)) {
+    try { ae.blur(); } catch (err) {}
+  }
+  ov.classList.remove('show');
+  requestAnimationFrame(function() {
+    ov.setAttribute('aria-hidden', 'true');
+    try {
+      var m = document.getElementById('main-content');
+      if (m) {
+        m.setAttribute('tabindex', '-1');
+        m.focus({ preventScroll: true });
+      }
+    } catch (err2) {}
+  });
+}
+
 function openModal(type) {
-  const overlay = document.getElementById('modalOverlay');
   const title   = document.getElementById('modalTitle');
   const body    = document.getElementById('modalBody');
   const footer  = document.getElementById('modalFooter');
@@ -4114,8 +4142,7 @@ function openModal(type) {
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addEquipoMember()">Crear miembro</button>`;
   }
 
-  overlay.classList.add('show');
-  overlay.removeAttribute('aria-hidden');
+  showModalOverlay();
   // Focus first input (skip file input)
   setTimeout(function() {
     var el = body.querySelector('input:not([type=file]),select,textarea');
@@ -4124,10 +4151,10 @@ function openModal(type) {
 }
 
 function closeModal(e) {
-  if (!e || e.target === document.getElementById('modalOverlay')) {
-    document.getElementById('modalOverlay').classList.remove('show');
-    document.getElementById('modalOverlay').setAttribute('aria-hidden','true');
-  }
+  var overlay = document.getElementById('modalOverlay');
+  if (!overlay) return;
+  if (e && e.target !== overlay) return;
+  hideModalOverlay();
 }
 
 function openClientDetail(idx) {
@@ -4155,7 +4182,7 @@ function openClientDetail(idx) {
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
   if (c.id) footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button><button class="btn-primary" style="background:var(--red);border-color:var(--red)" onclick="deleteClient(\'' + c.id + '\')">Eliminar</button>';
   document.getElementById('modalFooter').innerHTML = footerBtns;
-  document.getElementById('modalOverlay').classList.add('show');
+  showModalOverlay();
 }
 
 var _editingClientId = null;
@@ -4195,7 +4222,7 @@ function openEditClient(id) {
     </div>
     <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>`;
   footer.innerHTML = `<button class="btn-secondary" onclick="closeModal();_editingClientId=null">Cancelar</button><button class="btn-primary" onclick="updateClient()">Guardar</button>`;
-  document.getElementById('modalOverlay').classList.add('show');
+  showModalOverlay();
 }
 function updateClient() {
   if (!_editingClientId) return;
@@ -4640,7 +4667,8 @@ document.addEventListener('keydown', e => {
   }
   if (e.key === 'Escape') {
     closeCmdPalette();
-    closeModal();
+    var mo = document.getElementById('modalOverlay');
+    if (mo && mo.classList.contains('show')) closeModal();
   }
 });
 
