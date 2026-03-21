@@ -1345,6 +1345,28 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   background: rgba(234, 88, 12, 0.12); color: var(--color-primary); margin-bottom: 4px; display: inline-block;
 }
 .form-file-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px; }
+/* Invitar miembro (equipo / asistencia) */
+.eq-invite-stepper { display: flex; gap: var(--sp-4); margin-bottom: var(--sp-4); padding-bottom: var(--sp-3); border-bottom: 1px solid var(--color-divider); }
+.eq-invite-step { flex: 1; text-align: center; font-size: var(--text-xs); color: var(--color-text-faint); }
+.eq-invite-step strong { display: block; font-size: var(--text-sm); color: var(--color-text-muted); margin-bottom: 2px; }
+.eq-invite-step.active strong { color: var(--color-primary); }
+.eq-invite-step.done strong { color: var(--green); }
+.eq-invite-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-bottom: var(--sp-4); line-height: 1.45; }
+.eq-invite-extra.hidden { display: none !important; }
+.eq-perm-list { display: flex; flex-direction: column; gap: var(--sp-3); max-height: 52vh; overflow-y: auto; }
+.eq-perm-card {
+  display: flex; gap: var(--sp-3); align-items: flex-start; padding: var(--sp-3); border: 1px solid var(--color-divider);
+  border-radius: var(--r-md); background: var(--color-surface-offset); cursor: pointer; text-align: left;
+}
+.eq-perm-card:has(input:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.eq-perm-card input { margin-top: 4px; flex-shrink: 0; }
+.eq-perm-card h4 { font-size: var(--text-sm); margin: 0 0 4px; font-weight: 700; }
+.eq-perm-card p { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0; line-height: 1.4; }
+.eq-foto-preview { margin-top: var(--sp-2); max-width: 120px; max-height: 120px; border-radius: var(--r-md); border: 1px solid var(--color-divider); display: none; }
+.eq-foto-preview.show { display: block; }
+.eq-invite-pane1.hidden, .eq-invite-pane2.hidden { display: none !important; }
+#modalFooter .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+#modalFooter button.hidden { display: none !important; }
 .tk-file-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .tk-file-preview .tk-preview-thumb {
   padding: 0; border: 1px solid var(--color-divider); border-radius: 8px; overflow: hidden;
@@ -1504,6 +1526,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   display: flex; align-items: center; justify-content: center;
   font-size: 0.6rem; font-weight: 700; color: #fff; flex-shrink: 0;
 }
+.att-avatar.has-photo { padding: 0; overflow: hidden; border: 1px solid var(--color-divider); }
+.att-avatar.has-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .att-member-name { font-weight: 600; font-size: var(--text-sm); }
 .att-member-role { font-size: 0.7rem; color: var(--color-text-muted); }
 .att-status-pill {
@@ -2396,7 +2420,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <button class="tab active">Vista Barras</button>
         <button class="tab">Vista Gantt</button>
       </div>
-      <button class="btn-primary btn-sm" onclick="openModal('equipo')">+ Nuevo miembro</button>
+      <button type="button" class="btn-primary btn-sm" data-tareas-action="invitar-miembro" onclick="openModal('equipo')">+ Nuevo miembro</button>
     </div>
   </div>
   <div class="workload-table" id="workloadTable" role="table" aria-label="Equipo de trabajo"></div>
@@ -2615,6 +2639,75 @@ if (typeof window !== 'undefined') {
   tryInitSupabase(0);
 }
 
+window.__tareasGerentePerms = null;
+function permMiembroLabel(gr) {
+  if (!gr) return 'Miembro';
+  if (gr.perm_admin) return 'Administrador';
+  var bits = [];
+  if (gr.perm_estandar) bits.push('Estándar');
+  if (gr.perm_gestor_financiero) bits.push('Gestor financiero');
+  if (gr.perm_analista_financiero) bits.push('Analista financiero');
+  return bits.length ? bits.join(' · ') : 'Miembro';
+}
+function tareasPermsEffective(row) {
+  if (row == null) return { admin: true, finWrite: true, finRead: true, invite: true };
+  if (row.perm_admin) return { admin: true, finWrite: true, finRead: true, invite: true };
+  return {
+    admin: false,
+    finWrite: !!row.perm_gestor_financiero,
+    finRead: !!(row.perm_gestor_financiero || row.perm_analista_financiero),
+    invite: false
+  };
+}
+function tareasEffectivePerms() {
+  return tareasPermsEffective(window.__tareasGerentePerms);
+}
+function refreshTareasSessionPerms(callback) {
+  if (!supabase) {
+    window.__tareasGerentePerms = null;
+    tareasApplyPermissionUi();
+    if (callback) callback();
+    return;
+  }
+  supabase.auth.getUser().then(function(ar) {
+    var u = ar.data && ar.data.user;
+    if (!u || !u.email) {
+      window.__tareasGerentePerms = null;
+      tareasApplyPermissionUi();
+      if (callback) callback();
+      return;
+    }
+    var em = u.email.trim().toLowerCase();
+    supabase.from('gerentes').select('*').eq('email', em).maybeSingle().then(function(gr) {
+      window.__tareasGerentePerms = gr.data || null;
+      tareasApplyPermissionUi();
+      if (callback) callback();
+    });
+  });
+}
+function tareasApplyPermissionUi() {
+  var p = tareasEffectivePerms();
+  document.querySelectorAll('[data-tareas-action="invitar-miembro"]').forEach(function(el) {
+    el.style.display = p.invite ? '' : 'none';
+  });
+}
+function gerenteEmailSlug(email) {
+  return String(email || '').trim().toLowerCase().replace(/@/g, '_at_').replace(/\./g, '_').replace(/[^a-z0-9_]/g, '_');
+}
+function uploadGerenteAvatarForEmail(email, file, done) {
+  if (!supabase || !file) { if (done) done(null); return; }
+  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) < 0) ext = 'jpg';
+  var path = gerenteEmailSlug(email) + '/avatar.' + ext;
+  supabase.storage.from('avatars').upload(path, file, { upsert: true }).then(function(up) {
+    if (up.error) { console.warn('[Tareas] avatar storage', up.error); if (done) done(null); return; }
+    var pub = supabase.storage.from('avatars').getPublicUrl(path);
+    if (!pub || !pub.data || !pub.data.publicUrl) { if (done) done(null); return; }
+    var url = pub.data.publicUrl + (pub.data.publicUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+    if (done) done(url);
+  }).catch(function(e) { console.warn(e); if (done) done(null); });
+}
+
 // ══════════════════════════════════════════════════════════════════
 //  DATA — Vacío por defecto; se rellena solo desde Supabase
 // ══════════════════════════════════════════════════════════════════
@@ -2710,9 +2803,18 @@ async function loadTareasData() {
       var h = 0; for (var i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i); return Math.abs(h % 360);
     };
     var ATTENDANCE_MEMBERS = (gerentesRes.data || []).map(function(r) {
-      var name = (r.nombre || r.email || '').trim(); var at = name.indexOf('@'); if (at > 0) name = name.slice(0, at).replace(/[._]/g, ' '); if (!name) name = r.email || 'Gerente';
+      var fn = (r.nombre && String(r.nombre).trim()) || '';
+      var ln = (r.apellido && String(r.apellido).trim()) || '';
+      var name = [fn, ln].filter(Boolean).join(' ');
+      if (!name) {
+        var raw = (r.email || '').trim();
+        var at = raw.indexOf('@');
+        name = at > 0 ? raw.slice(0, at).replace(/[._]/g, ' ') : raw;
+        if (!name) name = 'Gerente';
+      }
       var hue = hueFromId(r.id); var c = 'hsl(' + hue + ', 55%, 42%)';
-      return { id: r.id, email: (r.email || '').toLowerCase().trim(), n: name, r: 'Gerente', c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, trust: r.att_trust || null, activeSeconds: r.att_active_seconds || 0, lastHeartbeat: r.att_last_heartbeat ? new Date(r.att_last_heartbeat) : null, ip: r.att_ip || '', device: r.att_device || '' };
+      var photo = (r.avatar_url && String(r.avatar_url).trim()) || '';
+      return { id: r.id, email: (r.email || '').toLowerCase().trim(), n: name, r: permMiembroLabel(r), photo: photo, c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, trust: r.att_trust || null, activeSeconds: r.att_active_seconds || 0, lastHeartbeat: r.att_last_heartbeat ? new Date(r.att_last_heartbeat) : null, ip: r.att_ip || '', device: r.att_device || '' };
     });
     var clients = (clRes.data || []).map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
@@ -2799,6 +2901,7 @@ function reloadTareasData(thenRender) {
     renderers.calendar?.();
     renderers.workload?.();
     renderers.workflows?.();
+    refreshTareasSessionPerms();
     if (thenRender && typeof thenRender === 'function') thenRender();
   });
 }
@@ -4087,8 +4190,14 @@ renderers.attendance = function() {
     var trustLbl = attTrustLabel(trust);
     var hbDot = (m.lastHeartbeat && (Date.now() - m.lastHeartbeat.getTime()) < 180000) ? '<span class="att-heartbeat-icon" title="Señal activa"></span>' : '';
 
+    var avPhoto = (m.photo && String(m.photo).trim()) || '';
+    var avInner = avPhoto
+      ? '<img src="' + avPhoto.replace(/"/g,'&quot;') + '" alt="">'
+      : ((m.n&&m.n[0])||'?');
+    var avCls = 'att-avatar' + (avPhoto ? ' has-photo' : '');
+    var avStyle = avPhoto ? '' : ('background:' + m.c);
     return '<tr>'
-      + '<td><div class="att-member-cell"><div class="att-avatar" style="background:' + m.c + '">' + ((m.n&&m.n[0])||'?') + '</div><div><div class="att-member-name">' + (m.n||'—') + hbDot + '</div><div class="att-member-role">' + (m.r||'') + '</div></div></div></td>'
+      + '<td><div class="att-member-cell"><div class="' + avCls + '" style="' + avStyle + '">' + avInner + '</div><div><div class="att-member-name">' + (m.n||'—') + hbDot + '</div><div class="att-member-role">' + (m.r||'') + '</div></div></div></td>'
       + '<td><span class="att-status-pill ' + st.cls + '"><span class="att-status-dot"></span>' + st.label + '</span></td>'
       + '<td class="' + (m.ci ? 'att-time-val' : 'att-time-empty') + '">' + (m.ci || '—') + '</td>'
       + '<td class="' + (m.co ? 'att-time-val' : 'att-time-empty') + '">' + (m.co || '—') + '</td>'
@@ -4239,7 +4348,7 @@ function openModal(type) {
           <option value="4320">3 días</option>
         </select></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); return '<option value="'+em+'">'+em+'</option>'; }).join('')}</select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); var nm = (m.n||em).replace(/</g,'&lt;'); return '<option value="'+em+'">'+nm+'</option>'; }).join('')}</select></div>
       </div>
       <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
@@ -4292,16 +4401,46 @@ function openModal(type) {
       <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase"><option value="pill-orange">Naranja</option><option value="pill-green">Verde</option><option value="pill-red">Rojo</option><option value="pill-purple">Púrpura</option><option value="pill-pink">Rosa</option></select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addCalendarEvent()">Crear evento</button>`;
   } else if (type === 'equipo') {
-    title.textContent = 'Nuevo miembro del equipo';
+    if (!tareasEffectivePerms().invite) {
+      alert('No tienes permiso para invitar miembros (solo administradores).');
+      return;
+    }
+    title.textContent = 'Invitar a un nuevo miembro';
+    window._eqInvitarStep = 1;
     body.innerHTML = `
-      <div class="form-group"><label for="eq-id">Código (2 letras)</label><input class="form-input" id="eq-id" placeholder="Ej: DG" maxlength="4"></div>
-      <div class="form-group"><label for="eq-nombre">Nombre completo</label><input class="form-input" id="eq-nombre" placeholder="Ej: Diego Gutiérrez"></div>
-      <div class="form-row">
-        <div class="form-group"><label for="eq-rol">Rol</label><input class="form-input" id="eq-rol" placeholder="Ej: Estratega"></div>
-        <div class="form-group"><label for="eq-servicio">Servicio</label><input class="form-input" id="eq-servicio" placeholder="Ej: Marketing"></div>
+      <div class="eq-invite-stepper" role="navigation" aria-label="Pasos de invitación">
+        <div class="eq-invite-step active" id="eq-step-ind-1"><strong>1. Información sobre el miembro</strong></div>
+        <div class="eq-invite-step" id="eq-step-ind-2"><strong>2. Permisos de datos (Opcional)</strong></div>
       </div>
-      <div class="form-group"><label for="eq-color">Color (hex)</label><input class="form-input" id="eq-color" value="#EA580C" placeholder="#EA580C"></div>`;
-    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addEquipoMember()">Crear miembro</button>`;
+      <p class="eq-invite-hint">Te recomendamos que invites a más de un administrador para evitar que te bloqueen la cuenta sin querer.</p>
+      <div id="eq-invite-pane1">
+        <div class="form-group"><label for="eq-invite-email">Dirección de correo electrónico</label>
+          <input class="form-input" type="email" id="eq-invite-email" placeholder="correo@empresa.com" autocomplete="email" oninput="equipoInvitarToggleExtra()" onblur="equipoInvitarToggleExtra()"></div>
+        <div id="eq-invite-extra" class="eq-invite-extra hidden">
+          <div class="form-row">
+            <div class="form-group"><label for="eq-invite-nombre">Nombre</label><input class="form-input" id="eq-invite-nombre" placeholder="Nombre" autocomplete="given-name"></div>
+            <div class="form-group"><label for="eq-invite-apellido">Apellido</label><input class="form-input" id="eq-invite-apellido" placeholder="Apellido" autocomplete="family-name"></div>
+          </div>
+          <div class="form-group">
+            <label for="eq-invite-foto">Subir su foto (opcional)</label>
+            <input type="file" class="form-input" id="eq-invite-foto" accept="image/jpeg,image/png,image/webp,image/gif">
+            <img class="eq-foto-preview" id="eq-foto-preview" alt="Vista previa"></div>
+        </div>
+      </div>
+      <div id="eq-invite-pane2" class="eq-invite-pane2 hidden">
+        <p class="eq-invite-hint" style="margin-top:0">Marca los permisos que tendrá este miembro en el centro de negocios.</p>
+        <div class="eq-perm-list">
+          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-admin" onchange="equipoInvitarSyncAdmin()"><div><h4>Administrador</h4><p>Los administradores tienen acceso completo a todas las funciones del Centro de negocios e invitan a nuevos miembros.</p></div></label>
+          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-estandar" checked onchange="equipoInvitarClearAdmin()"><div><h4>Estándar</h4><p>Los miembros estándar solo pueden trabajar en las cuentas y tareas asignadas.</p></div></label>
+          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-gestor-fin" onchange="equipoInvitarClearAdmin()"><div><h4>Gestor financiero</h4><p>Control total de funciones relacionadas con finanzas y pagos en clientes (editar fees y datos financieros).</p></div></label>
+          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-analista-fin" onchange="equipoInvitarClearAdmin()"><div><h4>Analista financiero</h4><p>Puede ver y consultar datos financieros de clientes (solo lectura).</p></div></label>
+        </div>
+      </div>`;
+    footer.innerHTML = `<button type="button" class="btn-secondary hidden" id="eq-invite-btn-back" onclick="equipoInvitarStepPrev()">Atrás</button><button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button><button type="button" class="btn-primary" id="eq-invite-btn-next" onclick="equipoInvitarStep1Next()" disabled>Siguiente</button><button type="button" class="btn-primary hidden" id="eq-invite-btn-send" onclick="submitEquipoInvite()">Invitar miembro</button>`;
+    setTimeout(function() {
+      equipoInvitarBindFotoPreview();
+      equipoInvitarToggleExtra();
+    }, 30);
   }
 
   showModalOverlay();
@@ -4326,6 +4465,8 @@ function openClientDetail(idx) {
   const relDel = KT.filter(k => k.cl === c.n);
   const satNum = c.satisfaction != null ? Number(c.satisfaction) : null;
   const satLabel = satNum != null ? (satNum + '%') : '—';
+  var pFin = tareasEffectivePerms();
+  var invBlock = pFin.finRead ? `<div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>` : '';
 
   document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
   document.getElementById('modalBody').innerHTML = `
@@ -4334,7 +4475,7 @@ function openClientDetail(idx) {
       <div><div style="font-size:var(--text-xl);font-weight:700">${c.n || '—'}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp || ''} · ${c.contact || ''} · ${c.email || ''}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
-      <div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>
+      ${invBlock}
       <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${satLabel}</div></div>
     </div>
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
@@ -4342,7 +4483,10 @@ function openClientDetail(idx) {
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
     ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
-  if (c.id) footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button><button class="btn-primary" style="background:var(--red);border-color:var(--red)" onclick="deleteClient(\'' + c.id + '\')">Eliminar</button>';
+  if (c.id) {
+    footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button>';
+    if (tareasEffectivePerms().admin) footerBtns += '<button class="btn-primary" style="background:var(--red);border-color:var(--red)" onclick="deleteClient(\'' + c.id + '\')">Eliminar</button>';
+  }
   document.getElementById('modalFooter').innerHTML = footerBtns;
   showModalOverlay();
 }
@@ -4355,6 +4499,12 @@ function openEditClient(id) {
   var title = document.getElementById('modalTitle');
   var body = document.getElementById('modalBody');
   var footer = document.getElementById('modalFooter');
+  var pFin = tareasEffectivePerms();
+  var feeCol = '';
+  if (pFin.finRead) {
+    var feeRo = pFin.finWrite ? '' : ' readonly disabled';
+    feeCol = '<div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" value="' + (c.monthlyFee||c.budget||'').replace(/"/g,'&quot;') + '" id="cl-fee"' + feeRo + '></div>';
+  }
   title.textContent = 'Editar Cliente';
   body.innerHTML = `
     <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" value="${(c.n||'').replace(/"/g,'&quot;')}" id="cl-name"></div>
@@ -4367,7 +4517,7 @@ function openEditClient(id) {
       <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" value="${(c.phone||'').replace(/"/g,'&quot;')}" id="cl-phone"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" value="${(c.monthlyFee||c.budget||'').replace(/"/g,'&quot;')}" id="cl-fee"></div>
+      ${feeCol}
       <div class="form-group"><label for="cl-status">Estado</label><select class="form-select" id="cl-status"><option value="activo" ${c.status==='activo'?'selected':''}>Activo</option><option value="onboarding" ${c.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
     </div>
     <div class="form-group">
@@ -4391,18 +4541,20 @@ function updateClient() {
   if (!_editingClientId) return;
   var svcsEl = document.getElementById('cl-svcs');
   var svcs = svcsEl ? Array.from(svcsEl.selectedOptions).map(function(o){ return o.value; }) : [];
+  var perms = tareasEffectivePerms();
   var row = {
     nombre: document.getElementById('cl-name').value.trim(),
     tipo: document.getElementById('cl-ind').value || '',
     contacto_nombre: document.getElementById('cl-contact').value || '',
     email: document.getElementById('cl-email').value || '',
     telefono: document.getElementById('cl-phone').value || '',
-    fee_mensual: document.getElementById('cl-fee').value || '',
     status: document.getElementById('cl-status').value || 'activo',
     servicios: svcs,
     notes: document.getElementById('cl-notes').value || '',
     avatar_url: (function() { var el = document.getElementById('cl-avatar-url'); return (el && el.value.trim()) || null; })()
   };
+  var feeEl = document.getElementById('cl-fee');
+  if (feeEl && perms.finWrite) row.fee_mensual = feeEl.value || '';
   if (!row.nombre) { alert('Nombre requerido'); return; }
   if (supabase) {
     supabase.from('tareas_clientes').update(row).eq('id', _editingClientId).then(function(r) {
@@ -4420,6 +4572,7 @@ function updateClient() {
   }
 }
 function deleteClient(id) {
+  if (!tareasEffectivePerms().admin) { alert('Solo los administradores pueden eliminar clientes.'); return; }
   if (!confirm('¿Eliminar este cliente? Esta acción no se puede deshacer.')) return;
   if (supabase) {
     supabase.from('tareas_clientes').delete().eq('id', id).then(function(r) {
@@ -4730,29 +4883,145 @@ function addCalendarEvent() {
   }
 }
 
-function addEquipoMember() {
-  var id = (document.getElementById('eq-id').value || '').trim().toUpperCase().slice(0, 4);
-  if (!id) { alert('Código requerido (ej: DG)'); return; }
-  var nombre = document.getElementById('eq-nombre').value.trim();
-  if (!nombre) { alert('Nombre requerido'); return; }
-  var row = {
-    id: id,
-    nombre: nombre,
-    rol: document.getElementById('eq-rol').value || '',
-    servicio: document.getElementById('eq-servicio').value || '',
-    color: document.getElementById('eq-color').value || '#EA580C',
-    activo: true
+window._eqInvitarStep = 1;
+function eqEmailValid(v) {
+  v = (v || '').trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+function equipoInvitarToggleExtra() {
+  var em = document.getElementById('eq-invite-email');
+  var ex = document.getElementById('eq-invite-extra');
+  var next = document.getElementById('eq-invite-btn-next');
+  if (!em || !ex) return;
+  var ok = eqEmailValid(em.value);
+  ex.classList.toggle('hidden', !ok);
+  if (next) next.disabled = !ok;
+}
+function equipoInvitarSyncAdmin() {
+  var adm = document.getElementById('eq-perm-admin');
+  if (!adm || !adm.checked) return;
+  ['eq-perm-estandar', 'eq-perm-gestor-fin', 'eq-perm-analista-fin'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+}
+function equipoInvitarClearAdmin() {
+  var adm = document.getElementById('eq-perm-admin');
+  if (adm) adm.checked = false;
+}
+function equipoInvitarStep1Next() {
+  var em = (document.getElementById('eq-invite-email') && document.getElementById('eq-invite-email').value || '').trim();
+  var nom = (document.getElementById('eq-invite-nombre') && document.getElementById('eq-invite-nombre').value || '').trim();
+  var ape = (document.getElementById('eq-invite-apellido') && document.getElementById('eq-invite-apellido').value || '').trim();
+  if (!eqEmailValid(em)) { alert('Correo electrónico no válido.'); return; }
+  if (!nom || !ape) { alert('Indica nombre y apellido.'); return; }
+  document.getElementById('eq-invite-pane1').classList.add('hidden');
+  document.getElementById('eq-invite-pane2').classList.remove('hidden');
+  document.getElementById('eq-step-ind-1').classList.remove('active');
+  document.getElementById('eq-step-ind-1').classList.add('done');
+  document.getElementById('eq-step-ind-2').classList.add('active');
+  window._eqInvitarStep = 2;
+  var fNext = document.getElementById('eq-invite-btn-next');
+  var fBack = document.getElementById('eq-invite-btn-back');
+  var fSend = document.getElementById('eq-invite-btn-send');
+  if (fNext) fNext.classList.add('hidden');
+  if (fBack) fBack.classList.remove('hidden');
+  if (fSend) fSend.classList.remove('hidden');
+}
+function equipoInvitarStepPrev() {
+  document.getElementById('eq-invite-pane2').classList.add('hidden');
+  document.getElementById('eq-invite-pane1').classList.remove('hidden');
+  document.getElementById('eq-step-ind-2').classList.remove('active');
+  document.getElementById('eq-step-ind-1').classList.remove('done');
+  document.getElementById('eq-step-ind-1').classList.add('active');
+  window._eqInvitarStep = 1;
+  var fNext = document.getElementById('eq-invite-btn-next');
+  var fBack = document.getElementById('eq-invite-btn-back');
+  var fSend = document.getElementById('eq-invite-btn-send');
+  if (fNext) fNext.classList.remove('hidden');
+  if (fBack) fBack.classList.add('hidden');
+  if (fSend) fSend.classList.add('hidden');
+}
+function equipoInvitarBindFotoPreview() {
+  var inp = document.getElementById('eq-invite-foto');
+  var prev = document.getElementById('eq-foto-preview');
+  if (!inp || !prev) return;
+  inp.onchange = function() {
+    var f = inp.files && inp.files[0];
+    if (!f || f.type.indexOf('image/') !== 0) { prev.classList.remove('show'); prev.removeAttribute('src'); return; }
+    prev.src = URL.createObjectURL(f);
+    prev.classList.add('show');
   };
-  if (supabase) {
-    supabase.from('tareas_equipo').insert(row).then(function(r) {
-      if (r.error) { alert('Error al crear miembro: ' + (r.error.message||'')); return; }
-      reloadTareasData(); closeModal();
-    });
-  } else {
-    TEAM.push({ id: row.id, n: row.nombre, r: row.rol, c: row.color, on: true, att: '—', ci: '—', svc: row.servicio, selfie: true, gps: true, ip: true, code: true });
-    if (!MT[row.id]) MT[row.id] = [];
-    renderers.workload?.(); closeModal();
+}
+function makeUniqueEquipoId(email) {
+  var local = (String(email).split('@')[0] || 'US').replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (local.length < 2) local = 'MB' + local;
+  var base = local.slice(0, 4);
+  var id = base;
+  var n = 0;
+  while (true) {
+    var clash = (TEAM || []).some(function(t) { return t.id === id; });
+    if (!clash) break;
+    n++;
+    id = (base.slice(0, 2) + n).toUpperCase().slice(0, 4);
+    if (n > 99) { id = 'M' + String(n).slice(-3); break; }
   }
+  return id;
+}
+function insertEquipoAndFinish(nombre, apellido, email, color) {
+  var nombreFull = (nombre + ' ' + apellido).trim();
+  var id = makeUniqueEquipoId(email);
+  var rowEq = { id: id, nombre: nombreFull || email.split('@')[0], rol: 'Miembro', servicio: '', color: color, activo: true };
+  supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
+    if (re.error) console.warn('[Tareas] tareas_equipo:', re.error.message);
+    reloadTareasData(function() { closeModal(); });
+    alert('Miembro registrado en asistencia y equipo. El usuario debe existir en Supabase Auth con el mismo correo para iniciar sesión.');
+  });
+}
+function submitEquipoInvite() {
+  if (!tareasEffectivePerms().invite) { alert('No tienes permiso para invitar miembros (solo administradores).'); return; }
+  var email = (document.getElementById('eq-invite-email') && document.getElementById('eq-invite-email').value || '').trim().toLowerCase();
+  var nombre = (document.getElementById('eq-invite-nombre') && document.getElementById('eq-invite-nombre').value || '').trim();
+  var apellido = (document.getElementById('eq-invite-apellido') && document.getElementById('eq-invite-apellido').value || '').trim();
+  var adm = document.getElementById('eq-perm-admin') && document.getElementById('eq-perm-admin').checked;
+  var std = document.getElementById('eq-perm-estandar') && document.getElementById('eq-perm-estandar').checked;
+  var gf = document.getElementById('eq-perm-gestor-fin') && document.getElementById('eq-perm-gestor-fin').checked;
+  var af = document.getElementById('eq-perm-analista-fin') && document.getElementById('eq-perm-analista-fin').checked;
+  if (adm) { std = false; gf = false; af = false; }
+  if (!adm && !std && !gf && !af) std = true;
+  var hue = 0; for (var i = 0; i < email.length; i++) hue = ((hue << 5) - hue) + email.charCodeAt(i);
+  var color = 'hsl(' + (Math.abs(hue) % 360) + ',55%,42%)';
+  var fotoInp = document.getElementById('eq-invite-foto');
+  var file = fotoInp && fotoInp.files && fotoInp.files[0];
+  if (!supabase) { alert('Conecta Supabase para invitar miembros.'); return; }
+  var rowG = {
+    email: email,
+    nombre: nombre,
+    apellido: apellido,
+    perm_admin: !!adm,
+    perm_estandar: !!std,
+    perm_gestor_financiero: !!gf,
+    perm_analista_financiero: !!af
+  };
+  supabase.from('gerentes').insert(rowG).select('id').single().then(function(r) {
+    if (r.error) {
+      alert('No se pudo guardar el miembro: ' + (r.error.message || '') + (String(r.error.code) === '23505' ? ' · ¿Ya existe ese correo en gerentes?' : ''));
+      return;
+    }
+    var gid = r.data && r.data.id;
+    function afterAvatar(url) {
+      if (url && gid) {
+        supabase.from('gerentes').update({ avatar_url: url }).eq('id', gid).then(function(up) {
+          if (up.error) console.warn('[Tareas] avatar_url update', up.error);
+          insertEquipoAndFinish(nombre, apellido, email, color);
+        });
+      } else {
+        insertEquipoAndFinish(nombre, apellido, email, color);
+      }
+    }
+    if (file) uploadGerenteAvatarForEmail(email, file, afterAvatar);
+    else afterAvatar(null);
+  });
 }
 
 // ══════════════════════════════════════════════════════════════════
@@ -4955,15 +5224,18 @@ document.addEventListener('DOMContentLoaded', function() {
       initViews();
       initTareasAvatar();
       attAutoStartHeartbeat();
+      refreshTareasSessionPerms();
     }).catch(function(err) {
       console.error('[Tareas] Error cargando datos:', err);
       showTareasLoading(false);
       initViews();
       initTareasAvatar();
+      refreshTareasSessionPerms();
     });
   } else {
     initViews();
     initTareasAvatar();
+    refreshTareasSessionPerms();
   }
   updateTareasUserNameDisplay();
   renderRecordatoriosTareas();
