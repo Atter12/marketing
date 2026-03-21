@@ -2110,7 +2110,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        Carga de Trabajo
+        Equipo de trabajo
       </button>
 
       <button class="nav-item" data-view="attendance" onclick="navigate('attendance',this)">
@@ -2388,9 +2388,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 </section>
 
 <!-- ══════════════ WORKLOAD VIEW ══════════════ -->
-<section class="view" id="view-workload" aria-label="Carga de trabajo">
+<section class="view" id="view-workload" aria-label="Equipo de trabajo">
   <div class="section-header">
-    <h3>Carga de Trabajo del Equipo</h3>
+    <h3>Equipo de trabajo</h3>
     <div class="section-actions">
       <div class="tabs" role="tablist">
         <button class="tab active">Vista Barras</button>
@@ -2399,7 +2399,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       <button class="btn-primary btn-sm" onclick="openModal('equipo')">+ Nuevo miembro</button>
     </div>
   </div>
-  <div class="workload-table" id="workloadTable" role="table" aria-label="Carga de trabajo del equipo"></div>
+  <div class="workload-table" id="workloadTable" role="table" aria-label="Equipo de trabajo"></div>
 </section>
 
 <!-- ══════════════ ATTENDANCE VIEW ══════════════ -->
@@ -2504,9 +2504,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <div class="cmd-item-text"><div class="cmd-item-name">Calendario</div><div class="cmd-item-desc">Calendario editorial Feb 2026</div></div>
       </div>
-      <div class="cmd-item" onclick="navigate('workload');closeCmdPalette()" data-cmd="Carga de Trabajo Equipo">
+      <div class="cmd-item" onclick="navigate('workload');closeCmdPalette()" data-cmd="Equipo de trabajo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Carga de Trabajo</div><div class="cmd-item-desc">Distribución de tareas del equipo</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Equipo de trabajo</div><div class="cmd-item-desc">Distribución de tareas del equipo</div></div>
       </div>
       <div class="cmd-item" onclick="navigate('attendance');closeCmdPalette()" data-cmd="Asistencia Control">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
@@ -2846,7 +2846,7 @@ function clientAvatarMarkup(c, opts) {
 // ══════════════════════════════════════════════════════════════════
 const pageNames = {
   dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables',
-  tickets:'Sistema de Tickets',calendar:'Calendario Editorial',workload:'Carga de Trabajo',
+  tickets:'Sistema de Tickets',calendar:'Calendario Editorial',workload:'Equipo de trabajo',
   attendance:'Asistencia Verificada'
 };
 
@@ -2921,7 +2921,6 @@ renderers.clients = function() {
           <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>${c.contact || '—'}</span></div>
           <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span>${c.email || '—'}</span></div>
           <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 9.8 19.79 19.79 0 0 1 1.61 1.21 2 2 0 0 1 3.6.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 7.91a16 16 0 0 0 6.06 6.06l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>${c.phone || '—'}</span></div>
-          <div class="contact-item"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>${c.spent || '—'} / ${c.budget || '—'}</span></div>
         </div>
         <div class="next-action">
           <h5>📌 Próxima Acción</h5>
