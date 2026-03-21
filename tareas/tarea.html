@@ -2431,7 +2431,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   <div class="section-header">
     <h3 id="attendanceTitle">Asistencia</h3>
     <div class="section-actions">
-      <button class="btn-success btn-sm" onclick="markAllPresent()">
+      <button type="button" class="btn-success btn-sm" data-attendance-admin-only onclick="markAllPresent()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
         Marcar todos
       </button>
@@ -2690,10 +2690,45 @@ function tareasApplyPermissionUi() {
   document.querySelectorAll('[data-tareas-action="invitar-miembro"]').forEach(function(el) {
     el.style.display = p.invite ? '' : 'none';
   });
+  document.querySelectorAll('[data-attendance-admin-only]').forEach(function(el) {
+    el.style.display = p.admin ? '' : 'none';
+  });
 }
 function gerenteEmailSlug(email) {
   return String(email || '').trim().toLowerCase().replace(/@/g, '_at_').replace(/\./g, '_').replace(/[^a-z0-9_]/g, '_');
 }
+function invokeInviteGerenteEmail(email, done) {
+  var base = window.__SUPABASE_URL__;
+  var key = window.__SUPABASE_ANON_KEY__;
+  if (!base || !key || !supabase) {
+    if (done) done(false, 'Sin configuración Supabase.');
+    return;
+  }
+  supabase.auth.getSession().then(function(s) {
+    var tok = s.data && s.data.session && s.data.session.access_token;
+    if (!tok) {
+      if (done) done(false, 'Inicia sesión para enviar la invitación.');
+      return;
+    }
+    var redirect = '';
+    try {
+      if (window.location && window.location.href) redirect = window.location.href.split('#')[0];
+    } catch (e) {}
+    var url = String(base).replace(/\/$/, '') + '/functions/v1/invite-gerente';
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok, 'apikey': key },
+      body: JSON.stringify({ email: email, redirect_to: redirect })
+    }).then(function(r) {
+      return r.json().then(function(j) { return { ok: r.ok, status: r.status, body: j }; });
+    }).then(function(x) {
+      if (done) done(x.ok, x.body && (x.body.error || x.body.message) || (x.ok ? '' : 'Error ' + x.status));
+    }).catch(function(e) {
+      if (done) done(false, e && e.message ? e.message : 'Red');
+    });
+  });
+}
+
 function uploadGerenteAvatarForEmail(email, file, done) {
   if (!supabase || !file) { if (done) done(null); return; }
   var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
@@ -4211,6 +4246,10 @@ renderers.attendance = function() {
 };
 
 function markAllPresent() {
+  if (!tareasEffectivePerms().admin) {
+    attShowMessage('Solo administradores pueden marcar a todo el equipo.', true);
+    return;
+  }
   var members = ATTENDANCE_MEMBERS || [];
   if (!members.length) return;
   var now = new Date().toISOString();
@@ -4974,8 +5013,15 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
   var rowEq = { id: id, nombre: nombreFull || email.split('@')[0], rol: 'Miembro', servicio: '', color: color, activo: true };
   supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
     if (re.error) console.warn('[Tareas] tareas_equipo:', re.error.message);
-    reloadTareasData(function() { closeModal(); });
-    alert('Miembro registrado en asistencia y equipo. El usuario debe existir en Supabase Auth con el mismo correo para iniciar sesión.');
+    invokeInviteGerenteEmail(email, function(inviteOk, msg) {
+      reloadTareasData(function() { closeModal(); });
+      if (inviteOk) {
+        alert('Miembro registrado. Se envió un correo de invitación a ' + email + ' para que active su acceso.');
+      } else {
+        var hint = msg ? (' ' + msg) : '';
+        alert('Miembro registrado en asistencia y equipo. No se pudo enviar el correo de invitación (¿desplegaste la función invite-gerente?).' + hint);
+      }
+    });
   });
 }
 function submitEquipoInvite() {
