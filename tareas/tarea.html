@@ -2642,20 +2642,24 @@ if (typeof window !== 'undefined') {
 window.__tareasGerentePerms = null;
 function permMiembroLabel(gr) {
   if (!gr) return 'Miembro';
-  if (gr.perm_admin) return 'Administrador';
+  var pa = gr.perm_admin === true || gr.perm_admin === 'true' || gr.perm_admin === 't' || gr.perm_admin === 1;
+  if (pa) return 'Administrador';
   var bits = [];
-  if (gr.perm_estandar) bits.push('Estándar');
-  if (gr.perm_gestor_financiero) bits.push('Gestor financiero');
-  if (gr.perm_analista_financiero) bits.push('Analista financiero');
+  if (gr.perm_estandar === true || gr.perm_estandar === 'true' || gr.perm_estandar === 't') bits.push('Estándar');
+  if (gr.perm_gestor_financiero === true || gr.perm_gestor_financiero === 'true' || gr.perm_gestor_financiero === 't') bits.push('Gestor financiero');
+  if (gr.perm_analista_financiero === true || gr.perm_analista_financiero === 'true' || gr.perm_analista_financiero === 't') bits.push('Analista financiero');
   return bits.length ? bits.join(' · ') : 'Miembro';
+}
+function tareasPermBool(v) {
+  return v === true || v === 'true' || v === 't' || v === 1;
 }
 function tareasPermsEffective(row) {
   if (row == null) return { admin: true, finWrite: true, finRead: true, invite: true };
-  if (row.perm_admin) return { admin: true, finWrite: true, finRead: true, invite: true };
+  if (tareasPermBool(row.perm_admin)) return { admin: true, finWrite: true, finRead: true, invite: true };
   return {
     admin: false,
-    finWrite: !!row.perm_gestor_financiero,
-    finRead: !!(row.perm_gestor_financiero || row.perm_analista_financiero),
+    finWrite: tareasPermBool(row.perm_gestor_financiero),
+    finRead: tareasPermBool(row.perm_gestor_financiero) || tareasPermBool(row.perm_analista_financiero),
     invite: false
   };
 }
@@ -2830,8 +2834,44 @@ async function loadTareasData() {
     });
     var creditoCount = (creditoRes.data || []).length;
     var tareasClientesCount = (clRes.data || []).length;
+    var gerentesByEmail = {};
+    (gerentesRes.data || []).forEach(function(g) {
+      var em = (g.email || '').toLowerCase().trim();
+      if (em) gerentesByEmail[em] = g;
+    });
+    function gerenteNombreCompleto(g) {
+      if (!g) return '';
+      var fn = (g.nombre && String(g.nombre).trim()) || '';
+      var ln = (g.apellido && String(g.apellido).trim()) || '';
+      return [fn, ln].filter(Boolean).join(' ');
+    }
     var TEAM = (eqRes.data || []).map(function(r) {
-      return { id: r.id, n: r.nombre, r: r.rol || '', c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '' };
+      var ge = (r.gerente_email && String(r.gerente_email).toLowerCase().trim()) || '';
+      var gMatch = ge ? gerentesByEmail[ge] : null;
+      var rolFromGerente = gMatch ? permMiembroLabel(gMatch) : '';
+      var rol = rolFromGerente || r.rol || '';
+      return { id: r.id, n: r.nombre, r: rol, c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', gerente_email: ge };
+    });
+    (TEAM || []).forEach(function(t) {
+      if (t.gerente_email) return;
+      var tn = workloadNormName(t.n);
+      if (!tn) return;
+      var hit = (gerentesRes.data || []).find(function(g) {
+        var gn = workloadNormName(gerenteNombreCompleto(g));
+        if (gn && (gn === tn || tn.indexOf(gn) === 0 || gn.indexOf(tn) === 0)) return true;
+        if (!tareasPermBool(g.perm_admin)) return false;
+        var em = (g.email || '').toLowerCase().trim();
+        if (!em) return false;
+        var local = em.split('@')[0].replace(/[._-]/g, ' ').trim();
+        if (local.length < 4) return false;
+        var i, tok;
+        for (i = 4; i <= local.length && i <= 22; i++) {
+          tok = local.slice(0, i);
+          if (tn.indexOf(tok) >= 0) return true;
+        }
+        return false;
+      });
+      if (hit) t.r = permMiembroLabel(hit);
     });
     var hueFromId = function(id) {
       if (!id || typeof id !== 'string') return 220;
@@ -3848,7 +3888,7 @@ renderers.calendar = function() {
   updateCalendarHeaderTitle();
 };
 
-// ─── WORKLOAD (misma base que Asistencia: gerentes → se muestran como «Miembro») ───
+// ─── WORKLOAD (roles alineados con gerentes / permisos cuando hay gerente_email o nombre coincide) ───
 function workloadNormName(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -3896,7 +3936,7 @@ renderers.workload = function() {
     row.innerHTML = `
       <div class="wl-person" role="cell">
         <div class="wl-avatar" style="background:${m.c}" aria-hidden="true">${avLetter}</div>
-        <div><div class="wl-name">${m.n || '—'}</div><div class="wl-role">Miembro</div></div>
+        <div><div class="wl-name">${(m.n || '—').replace(/</g,'&lt;')}</div><div class="wl-role">${(m.r || 'Miembro').replace(/</g,'&lt;')}</div></div>
       </div>
       <div class="wl-bar-wrap" role="cell" aria-label="${done} completadas, ${pend} pendientes">
         <div class="wl-bar">
@@ -5010,7 +5050,7 @@ function makeUniqueEquipoId(email) {
 function insertEquipoAndFinish(nombre, apellido, email, color) {
   var nombreFull = (nombre + ' ' + apellido).trim();
   var id = makeUniqueEquipoId(email);
-  var rowEq = { id: id, nombre: nombreFull || email.split('@')[0], rol: 'Miembro', servicio: '', color: color, activo: true };
+  var rowEq = { id: id, nombre: nombreFull || email.split('@')[0], rol: 'Miembro', servicio: '', color: color, activo: true, gerente_email: email };
   supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
     if (re.error) console.warn('[Tareas] tareas_equipo:', re.error.message);
     invokeInviteGerenteEmail(email, function(inviteOk, msg) {
