@@ -1606,9 +1606,9 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
         {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
-          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", padding: "36px 48px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(37,99,235,.08)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(124,58,237,.05)", pointerEvents: "none" }} />
+          <div style={{ background: "linear-gradient(135deg, #8c837f 0%, #f8ac78 42%, #dc7223 100%)", padding: "36px 48px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.18)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,.08)", pointerEvents: "none" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", maxWidth: "none", margin: "0 auto", position: "relative" }}>
               <div style={{ width: 52, height: 52, background: "rgba(255,255,255,.08)", backdropFilter: "blur(8px)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, border: "1px solid rgba(255,255,255,.1)" }}>H</div>
               <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6 }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400 }}>Análisis detallado por período y cliente</p></div>
