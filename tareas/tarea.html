@@ -3710,7 +3710,28 @@ renderers.calendar = function() {
   updateCalendarHeaderTitle();
 };
 
-// ─── WORKLOAD ───
+// ─── WORKLOAD (misma base que Asistencia: gerentes → se muestran como «Miembro») ───
+function workloadNormName(s) {
+  return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+/** Tareas de tareas_workload están ligadas a tareas_equipo.id; intentamos cruzar por nombre / parte del correo. */
+function workloadTasksForMember(m) {
+  if (!m || !MT) return [];
+  if (MT[m.id] && MT[m.id].length) return MT[m.id];
+  var target = workloadNormName(m.n);
+  var targetFirst = target.split(' ')[0] || '';
+  var mailLocal = (m.email || '').split('@')[0].toLowerCase().replace(/[._-]/g, ' ');
+  var i, t, tn;
+  for (i = 0; i < (TEAM || []).length; i++) {
+    t = TEAM[i];
+    tn = workloadNormName(t.n);
+    if (!tn) continue;
+    if (target && (tn === target || (targetFirst && tn.indexOf(targetFirst) === 0) || target.indexOf((tn.split(' ')[0] || tn)) === 0)) return MT[t.id] || [];
+    if (mailLocal && tn.split(' ')[0] && mailLocal.indexOf(tn.split(' ')[0]) >= 0) return MT[t.id] || [];
+  }
+  return [];
+}
+
 renderers.workload = function() {
   const table = document.getElementById('workloadTable');
   table.innerHTML = `
@@ -3721,8 +3742,9 @@ renderers.workload = function() {
       <div style="text-align:center" role="columnheader">Hechas</div>
       <div style="text-align:center" role="columnheader">Carga</div>
     </div>`;
-  TEAM.forEach(m => {
-    const ts = MT[m.id] || [];
+  var list = (ATTENDANCE_MEMBERS && ATTENDANCE_MEMBERS.length) ? ATTENDANCE_MEMBERS : (TEAM || []);
+  list.forEach(m => {
+    const ts = workloadTasksForMember(m);
     const done = ts.filter(x => x.d).length;
     const tot = ts.length;
     const pend = tot - done;
@@ -3730,12 +3752,13 @@ renderers.workload = function() {
     const capCls = cap > 90 ? 'over' : cap > 70 ? 'high' : 'ok';
     const doneW = tot ? Math.round(done/tot*100) : 0;
     const pendW = tot ? Math.round(pend/tot*100) : 0;
+    const avLetter = (m.n && m.n[0]) ? String(m.n[0]).toUpperCase() : (m.id && String(m.id).length <= 4 ? String(m.id) : '?');
     const row = document.createElement('div');
     row.className = 'workload-row fade-in'; row.setAttribute('role','row');
     row.innerHTML = `
       <div class="wl-person" role="cell">
-        <div class="wl-avatar" style="background:${m.c}" aria-hidden="true">${m.id}</div>
-        <div><div class="wl-name">${m.n}</div><div class="wl-role">${m.r}</div></div>
+        <div class="wl-avatar" style="background:${m.c}" aria-hidden="true">${avLetter}</div>
+        <div><div class="wl-name">${m.n || '—'}</div><div class="wl-role">Miembro</div></div>
       </div>
       <div class="wl-bar-wrap" role="cell" aria-label="${done} completadas, ${pend} pendientes">
         <div class="wl-bar">
