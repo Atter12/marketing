@@ -1275,9 +1275,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
   return (
-    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", background: "#f5f3ee", color: "#0f172a", WebkitFontSmoothing: "antialiased", zoom: 0.9 }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
-*{box-sizing:border-box}
+    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", background: "var(--color-bg)", color: "var(--color-text)", lineHeight: 1.55, WebkitFontSmoothing: "antialiased", zoom: 0.9 }}>
+      <style>{`*{box-sizing:border-box}
 
 /* === STAT CARDS === */
 .stat-card{transition:all .25s cubic-bezier(.4,0,.2,1)}
@@ -1286,7 +1285,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 /* === TABLES === */
 table{width:100%;border-collapse:collapse;min-width:600px}
 tbody tr{transition:all .15s ease}
-tbody tr:hover{background:linear-gradient(90deg,#f5f3ee,#f1f5f9)!important}
+tbody tr:hover{background:linear-gradient(90deg,var(--color-surface-offset),var(--color-surface-2))!important}
 .hm-table-wrap.hm-table-clientes tbody tr:hover{background:linear-gradient(90deg,transparent,#f1f5f9,transparent)!important}
 tbody tr:last-child td{border-bottom:none}
 thead th{position:relative}
@@ -1295,12 +1294,12 @@ thead th{position:relative}
 .hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
 .hm-modal-box .hm-form-grid>div{min-width:0}
 
-/* === FOCUS STATES (blue glow) === */
-input:focus,select:focus,textarea:focus{border-color:#2563eb!important;box-shadow:0 0 0 4px rgba(37,99,235,.12)!important;outline:none!important}
+/* === FOCUS STATES (Creativos / marca) === */
+input:focus,select:focus,textarea:focus{border-color:var(--color-primary)!important;box-shadow:0 0 0 3px var(--color-primary-soft)!important;outline:none!important}
 
 /* === SIDEBAR NAV === */
 .hm-nav-item{transition:all .2s cubic-bezier(.4,0,.2,1);border-radius:12px;position:relative}
-.hm-nav-item:hover{background:#f1f5f9!important;transform:translateX(2px)}
+.hm-nav-item:hover{background:var(--sidebar-hover)!important;transform:translateX(2px)}
 .hm-nav-item:active{transform:translateX(0) scale(.98)}
 
 /* === BUTTONS === */
@@ -1363,7 +1362,7 @@ button{transition:all .15s ease}
 /* === TABLE WRAPS === Mismo criterio que COBROS (se ve bien): card overflow hidden + wrap overflow-x auto + tabla con min-width para que quepan todas las columnas === */
 .hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px;position:relative}
 .hm-table-wrap:focus{outline:none}
-.hm-table-wrap:focus-visible{box-shadow:inset 0 0 0 2px #2563eb;border-radius:12px}
+.hm-table-wrap:focus-visible{box-shadow:inset 0 0 0 2px var(--color-primary);border-radius:12px}
 .hm-table-wrap table{border-collapse:collapse;width:100%;min-width:0;table-layout:auto}
 /* Tablas anchas (como antes de compactar): min-width fuerza scroll dentro del wrap si no cabe — igual lógica que cobros pero con px según columnas */
 .hm-table-wrap.hm-table-clientes table{min-width:1100px}
@@ -1392,7 +1391,7 @@ button{transition:all .15s ease}
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 
 /* === SELECTION COLOR === */
-::selection{background:rgba(37,99,235,.15);color:#0f172a}
+::selection{background:var(--color-primary-highlight);color:var(--color-text)}
 
 /* === PAGINATION HOVER === */
 .hm-page-content button:hover{opacity:.85}
@@ -1405,7 +1404,7 @@ button{transition:all .15s ease}
 .hm-table-wrap button:active{transform:scale(.95)}
 
 /* === Smooth checkbox === */
-input[type="checkbox"]{accent-color:#2563eb;transition:all .15s}
+input[type="checkbox"]{accent-color:var(--color-primary);transition:all .15s}
 
 /* === Badge pulse for pending count in sidebar === */
 @keyframes subtlePulse{0%,100%{opacity:1}50%{opacity:.7}}
@@ -1439,7 +1438,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
       </header>
 
       {/* ═══ SIDEBAR ═══ */}
-      <aside className="hm-sidebar" style={{ width: 280, background: "linear-gradient(180deg, #ffffff 0%, #f5f3ee 100%)", borderRight: "1px solid #e5e7eb", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
+      <aside className="hm-sidebar" style={{ width: 260, background: "linear-gradient(180deg, var(--sidebar-bg) 0%, #f8fafc 100%)", borderRight: "1px solid var(--sidebar-border)", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
         <div style={{ padding: "24px 22px 20px", borderBottom: "1px solid #f1f5f9" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
@@ -1478,14 +1477,14 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               )}
               <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
               {!isCliente && (
-                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "#2563eb", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px rgba(37,99,235,.4)", pointerEvents: "none" }} title="Clic para poner tu foto">
+                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px var(--color-primary-glow)", pointerEvents: "none" }} title="Clic para poner tu foto">
                   <Camera size={11} strokeWidth={2.2} />
                 </div>
               )}
             </div>
             <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Bienvenido</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "break-word" }}>{displayName}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: "var(--sidebar-text-active)", lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "break-word" }}>{displayName}</div>
               {!isCliente && <div style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 4 }}>Clic para poner tu foto</div>}
               {subLabel && <div style={{ marginTop: 8 }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#059669", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 8, letterSpacing: 0.3 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981" }} /> {subLabel}</span></div>}
             </div>
@@ -1501,8 +1500,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <span style={{ color: "#94a3b8" }}>{it.icon}</span><span>{it.label}</span><ExternalLink size={13} style={{ marginLeft: "auto", opacity: 0.5 }} />
                 </a>
               ) : (
-                <div onClick={() => goTo(it.id)} className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "#0f172a" : "#64748b", background: page === it.id ? (it.accent || "#2563eb") + "0c" : "transparent", cursor: "pointer", margin: "2px 0", borderLeft: page === it.id ? `3px solid ${it.accent || "#2563eb"}` : "3px solid transparent" }}>
-                  <span style={{ color: page === it.id ? (it.accent || "#2563eb") : "#94a3b8", transition: "color .15s" }}>{it.icon}</span><span>{it.label}</span>
+                <div onClick={() => goTo(it.id)} className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "var(--color-primary)" : "var(--sidebar-text)", background: page === it.id ? "var(--sidebar-active)" : "transparent", cursor: "pointer", margin: "2px 0", borderLeft: page === it.id ? "3px solid var(--color-primary)" : "3px solid transparent" }}>
+                  <span style={{ color: page === it.id ? "var(--color-primary)" : "var(--sidebar-text-muted)", transition: "color .15s" }}>{it.icon}</span><span>{it.label}</span>
                   {it.badge > 0 && <span style={{ marginLeft: "auto", background: `linear-gradient(135deg, ${it.accent || "#dc2626"}, ${it.accent || "#dc2626"}cc)`, color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 12, minWidth: 20, textAlign: "center", boxShadow: `0 2px 6px ${it.accent || "#dc2626"}40` }}>{it.badge}</span>}
                 </div>
               )}
@@ -1516,7 +1515,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
       </aside>
 
       {/* ═══ MAIN ═══ */}
-      <main className="hm-main" style={{ flex: 1, marginLeft: 280, minHeight: "100vh" }}>
+      <main className="hm-main" style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
 
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
