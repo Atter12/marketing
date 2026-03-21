@@ -1505,6 +1505,82 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   color: var(--color-text-faint); font-weight: 600; margin-top: 4px;
 }
 
+/* Dashboard métricas asistencia (mismo lenguaje que stat-card / card) */
+.att-metrics-root { margin-bottom: var(--sp-6); }
+.att-dash-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+.att-dash-panels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-5);
+  align-items: stretch;
+}
+@media (max-width: 960px) {
+  .att-dash-panels { grid-template-columns: 1fr; }
+}
+.att-dash-card .card-body.att-dash-card-body { min-height: 200px; }
+.att-dash-header-meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+.att-dist-wrap { display: flex; flex-direction: column; gap: var(--sp-4); }
+.att-dist-bar {
+  display: flex; height: 14px; border-radius: 999px; overflow: hidden;
+  background: var(--color-surface-offset); border: 1px solid var(--color-divider);
+}
+.att-dist-seg { height: 100%; min-width: 0; transition: width 400ms ease; }
+.att-dist-seg--present { background: linear-gradient(90deg, #16a34a, #22c55e); }
+.att-dist-seg--active { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+.att-dist-seg--late { background: linear-gradient(90deg, #d97706, #f59e0b); }
+.att-dist-seg--absent { background: linear-gradient(90deg, #b91c1c, #ef4444); }
+.att-dist-legend {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-2);
+}
+.att-dist-legend li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--text-xs); color: var(--color-text-muted);
+}
+.att-dist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.att-dist-dot.present { background: #22c55e; }
+.att-dist-dot.active { background: #3b82f6; }
+.att-dist-dot.late { background: #f59e0b; }
+.att-dist-dot.absent { background: #ef4444; }
+.att-dist-pct { font-weight: 700; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.att-hours-rank { display: flex; flex-direction: column; gap: var(--sp-3); }
+.att-hour-row {
+  display: grid;
+  grid-template-columns: minmax(100px, 1fr) minmax(80px, 2fr) 52px;
+  align-items: center; gap: var(--sp-3);
+}
+.att-hour-name {
+  font-size: var(--text-xs); font-weight: 600; color: var(--color-text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.att-hour-track {
+  height: 8px; background: var(--color-surface-offset);
+  border-radius: 999px; overflow: hidden; border: 1px solid var(--color-divider);
+}
+.att-hour-fill {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-primary), #f97316);
+  transition: width 450ms ease;
+}
+.att-hour-val {
+  font-size: 0.7rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  color: var(--color-text-muted); text-align: right;
+}
+.att-dash-empty {
+  font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; text-align: center; padding: var(--sp-6);
+}
+.att-dash-empty.hidden { display: none !important; }
+
 .att-table-wrap {
   background: var(--color-surface); border: 1px solid var(--color-divider);
   border-radius: var(--r-xl); overflow: hidden;
@@ -2442,7 +2518,27 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     </div>
   </div>
 
-  <div id="attSummaryStrip" class="att-summary-strip"></div>
+  <div id="attMetricsRoot" class="att-metrics-root fade-in" aria-label="Métricas de asistencia">
+    <div id="attDashStats" class="att-dash-stats-row"></div>
+    <div class="att-dash-panels">
+      <div class="card att-dash-card">
+        <div class="card-header">
+          <h3>Distribución del equipo hoy</h3>
+          <span class="att-dash-header-meta" id="attDashDateLbl"></span>
+        </div>
+        <div class="card-body att-dash-card-body">
+          <div class="att-dist-wrap" id="attDistWrap"></div>
+          <p class="att-dash-empty hidden" id="attDashEmpty">No hay miembros en la lista de asistencia.</p>
+        </div>
+      </div>
+      <div class="card att-dash-card">
+        <div class="card-header">
+          <h3>Horas por persona (hoy)</h3>
+        </div>
+        <div class="card-body att-dash-card-body" id="attHoursRank"></div>
+      </div>
+    </div>
+  </div>
 
   <div class="att-register-bar">
     <div class="att-register-bar-code">
@@ -4211,37 +4307,105 @@ function attHoursDecimal(m) {
   return val > 0 ? val : 0;
 }
 
+function renderAttMetricsDashboard(members) {
+  members = members || [];
+  var statsEl = document.getElementById('attDashStats');
+  var distWrap = document.getElementById('attDistWrap');
+  var hoursEl = document.getElementById('attHoursRank');
+  var dateLbl = document.getElementById('attDashDateLbl');
+  var emptyEl = document.getElementById('attDashEmpty');
+  if (!statsEl || !distWrap || !hoursEl) return;
+
+  var n = members.length;
+  var absent = 0, late = 0, active = 0, present = 0;
+  var totalH = 0, trustHigh = 0;
+  members.forEach(function(m) {
+    var st = attGetRealStatus(m);
+    if (st.key === 'absent') absent++;
+    else if (st.key === 'late') late++;
+    else if (st.key === 'active') active++;
+    else if (st.key === 'present') present++;
+    totalH += attHoursDecimal(m);
+    if (attComputeTrust(m) === 'high') trustHigh++;
+  });
+  var checkedIn = n - absent;
+  var attRate = n ? Math.round((checkedIn / n) * 100) : 0;
+  var withHours = members.filter(function(m) {
+    return attGetRealStatus(m).key !== 'absent' && m.checkinAt;
+  });
+  var avgH = withHours.length ? totalH / withHours.length : 0;
+  var enJornada = active + late;
+
+  if (dateLbl) {
+    dateLbl.textContent = new Date().toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function iconSvg(path) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">' + path + '</svg>';
+  }
+  function cardHtml(iconBg, iconColor, path, value, label) {
+    return '<div class="stat-card fade-in"><div class="stat-top"><div class="stat-icon" style="background:' + iconBg + ';color:' + iconColor + '">' + iconSvg(path) + '</div></div><div class="stat-value">' + value + '</div><div class="stat-label">' + label + '</div></div>';
+  }
+
+  statsEl.innerHTML =
+    cardHtml('rgba(234,88,12,.12)', 'var(--color-primary)', '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', String(n), 'Equipo registrado') +
+    cardHtml('rgba(34,197,94,.12)', '#16a34a', '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', attRate + '%', 'Asistencia hoy') +
+    cardHtml('rgba(59,130,246,.12)', '#2563eb', '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', String(enJornada), 'En jornada ahora') +
+    cardHtml('rgba(34,197,94,.08)', '#15803d', '<rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 22V12h6v10"/>', String(present), 'Jornada cerrada') +
+    cardHtml('rgba(245,158,11,.12)', '#d97706', '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', String(late), 'Tardanzas') +
+    cardHtml('rgba(239,68,68,.1)', '#dc2626', '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>', String(absent), 'Ausentes') +
+    cardHtml('rgba(234,88,12,.12)', 'var(--color-primary)', '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', totalH.toFixed(1) + 'h', 'Horas acumuladas') +
+    cardHtml('var(--color-surface-offset)', 'var(--color-text-muted)', '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>', avgH.toFixed(1) + 'h', 'Promedio (con registro)') +
+    cardHtml('rgba(34,197,94,.12)', '#16a34a', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', trustHigh + '/' + n, 'Confianza alta');
+
+  if (!n) {
+    distWrap.innerHTML = '';
+    hoursEl.innerHTML = '';
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    return;
+  }
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  function pct(x) { return n ? Math.round((x / n) * 1000) / 10 : 0; }
+  var pa = pct(present), pac = pct(active), pl = pct(late), pab = pct(absent);
+  distWrap.innerHTML =
+    '<div class="att-dist-bar" role="img" aria-label="Distribución de estados del equipo">' +
+    (pab > 0 ? '<div class="att-dist-seg att-dist-seg--absent" style="width:' + pab + '%"></div>' : '') +
+    (pl > 0 ? '<div class="att-dist-seg att-dist-seg--late" style="width:' + pl + '%"></div>' : '') +
+    (pac > 0 ? '<div class="att-dist-seg att-dist-seg--active" style="width:' + pac + '%"></div>' : '') +
+    (pa > 0 ? '<div class="att-dist-seg att-dist-seg--present" style="width:' + pa + '%"></div>' : '') +
+    '</div>' +
+    '<ul class="att-dist-legend">' +
+    '<li><span class="att-dist-dot present"></span>Jornada cerrada <span class="att-dist-pct">' + present + ' (' + pa + '%)</span></li>' +
+    '<li><span class="att-dist-dot active"></span>Trabajando <span class="att-dist-pct">' + active + ' (' + pac + '%)</span></li>' +
+    '<li><span class="att-dist-dot late"></span>Tardanza <span class="att-dist-pct">' + late + ' (' + pl + '%)</span></li>' +
+    '<li><span class="att-dist-dot absent"></span>Ausente <span class="att-dist-pct">' + absent + ' (' + pab + '%)</span></li>' +
+    '</ul>';
+
+  var ranked = members.map(function(m) {
+    return { n: m.n || '—', h: attHoursDecimal(m), c: m.c || '#666', st: attGetRealStatus(m) };
+  }).filter(function(x) {
+    return x.st.key !== 'absent' && x.h > 0;
+  }).sort(function(a, b) {
+    return b.h - a.h;
+  }).slice(0, 10);
+  var maxHr = ranked.length ? Math.max.apply(null, ranked.map(function(x) { return x.h; })) : 1;
+  if (!ranked.length) {
+    hoursEl.innerHTML = '<p class="att-dash-empty" style="padding:var(--sp-2)">Nadie tiene horas registradas aún hoy.</p>';
+  } else {
+    hoursEl.innerHTML = '<div class="att-hours-rank">' + ranked.map(function(x) {
+      var w = maxHr ? Math.round((x.h / maxHr) * 100) : 0;
+      var label = String(x.n).replace(/</g, '&lt;').replace(/"/g, '&quot;');
+      return '<div class="att-hour-row"><span class="att-hour-name" title="' + label + '">' + label + '</span><div class="att-hour-track"><div class="att-hour-fill" style="width:' + w + '%"></div></div><span class="att-hour-val">' + x.h.toFixed(1) + 'h</span></div>';
+    }).join('') + '</div>';
+  }
+}
+
 renderers.attendance = function() {
   setAttendanceCodeBar();
   var members = ATTENDANCE_MEMBERS || [];
 
-  var present = 0, absent = 0, late = 0, working = 0;
-  var totalH = 0, trustHigh = 0, trustLow = 0;
-  members.forEach(function(m) {
-    var st = attGetRealStatus(m);
-    if (st.key === 'present') present++;
-    else if (st.key === 'absent') absent++;
-    else if (st.key === 'late') { late++; working++; }
-    else if (st.key === 'active') { present++; working++; }
-    totalH += attHoursDecimal(m);
-    var t = attComputeTrust(m);
-    if (t === 'high') trustHigh++;
-    else if (t === 'low') trustLow++;
-  });
-  var withCheckin = members.filter(function(m){ return m.checkinAt; });
-  var avgH = withCheckin.length ? totalH / withCheckin.length : 0;
-
-  var strip = document.getElementById('attSummaryStrip');
-  if (strip) {
-    strip.innerHTML = ''
-      + '<div class="att-summary-item"><div class="att-summary-num green">' + (present + late) + '/' + members.length + '</div><div class="att-summary-lbl">Presentes</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num red">' + absent + '</div><div class="att-summary-lbl">Ausentes</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num orange">' + late + '</div><div class="att-summary-lbl">Tardanzas</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num primary">' + totalH.toFixed(1) + 'h</div><div class="att-summary-lbl">Total horas</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num primary">' + avgH.toFixed(1) + 'h</div><div class="att-summary-lbl">Promedio</div></div>'
-      + '<div class="att-summary-item"><div class="att-summary-num green">' + trustHigh + '</div><div class="att-summary-lbl">Confiable</div></div>'
-      + (trustLow ? '<div class="att-summary-item"><div class="att-summary-num red">' + trustLow + '</div><div class="att-summary-lbl">Sospechoso</div></div>' : '');
-  }
+  renderAttMetricsDashboard(members);
 
   var maxH = Math.max(1, Math.max.apply(null, members.map(attHoursDecimal)));
   var tbody = document.getElementById('attendanceBody');
@@ -4283,6 +4447,7 @@ renderers.attendance = function() {
   }).join('');
 
   updateDashboardStats();
+  updateBadges();
 };
 
 function markAllPresent() {
@@ -4319,6 +4484,10 @@ function updateBadges() {
   if (clEl) clEl.textContent = clients.length;
   var kbEl = document.getElementById('badge-kanban');
   if (kbEl) kbEl.textContent = KT.length;
+  var attMembers = ATTENDANCE_MEMBERS || [];
+  var attPresent = attMembers.filter(function(m) { return attGetRealStatus(m).key !== 'absent'; }).length;
+  var attBadge = document.getElementById('badge-attendance');
+  if (attBadge) attBadge.textContent = attPresent + '/' + (attMembers.length || TEAM.length || 0);
 }
 
 function updateDashboardStats() {
