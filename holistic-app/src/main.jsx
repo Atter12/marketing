@@ -1,3 +1,4 @@
+import './holistic-design-system.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import AuthGate from './AuthGate.jsx';

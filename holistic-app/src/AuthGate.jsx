@@ -114,7 +114,7 @@ export default function AuthGate() {
 
   if (status === statuses.loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f111a", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f111a", fontFamily: "'Inter', sans-serif" }}>
         <div style={{ color: "#9498a8", fontSize: 14 }}>Cargando…</div>
       </div>
     );
@@ -122,12 +122,12 @@ export default function AuthGate() {
 
   if (status === statuses.unauthorized) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #0f111a 0%, #1a1d26 100%)", fontFamily: "'DM Sans', sans-serif", padding: 20 }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #0f111a 0%, #1a1d26 100%)", fontFamily: "'Inter', sans-serif", padding: 20 }}>
         <div style={{ textAlign: "center", maxWidth: 360 }}>
           <p style={{ color: "#f4f5f7", fontSize: 16, marginBottom: 20 }}>No autorizado. Acceso solo para gerente o clientes con cuenta.</p>
           <button
             onClick={() => setStatus(statuses.login)}
-            style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#1b2559", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
+            style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#ea580c", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
           >
             Volver al login
           </button>
