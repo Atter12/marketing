@@ -616,8 +616,9 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
   flex-shrink: 0; border-radius: var(--radius-md);
   margin-bottom: var(--space-2);
 }
-.kanban-col-header-clickable { cursor: pointer; }
-.kanban-col-header-clickable:hover { background: var(--color-surface-offset); color: var(--color-text); }
+.kanban-col-title {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .kanban-col-dot {
   width: 8px; height: 8px; border-radius: var(--radius-full); flex-shrink: 0;
 }
@@ -626,11 +627,36 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .kanban-col-dot[data-stage="produccion"] { background: #f59e0b; }
 .kanban-col-dot[data-stage="revision"] { background: #f97316; }
 .kanban-col-dot[data-stage="entrega"] { background: #34d399; }
-.kanban-col-has-note, .kanban-col-note-hint { font-size: 0.7rem; opacity: 0.6; margin-left: auto; }
-.kanban-col-note-hint { opacity: 0; transition: opacity 140ms ease; }
-.kanban-col-header:hover .kanban-col-note-hint { opacity: 0.5; }
+.kanban-col-note-btn {
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0; margin-left: auto;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+  background: var(--color-surface-2); color: var(--color-text-muted);
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease, box-shadow 140ms ease;
+}
+.kanban-col-note-btn svg { width: 15px; height: 15px; pointer-events: none; }
+.kanban-col-note-btn:hover {
+  border-color: var(--color-border); background: var(--color-surface-offset);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+.kanban-col-note-btn:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 2px;
+}
+.kanban-col-note-btn--has-note {
+  border-color: var(--color-border);
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+.kanban-col-note-btn--has-note:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+[data-theme="dark"] .kanban-col-note-btn:hover { box-shadow: 0 1px 3px rgba(0,0,0,.25); }
 .kanban-col-empty {
-  cursor: pointer; text-align: center; padding: var(--space-8) var(--space-4);
+  text-align: center; padding: var(--space-8) var(--space-4);
   color: var(--color-text-faint); font-size: var(--text-xs); min-height: 4rem;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: var(--space-2); border-radius: var(--radius-md);
@@ -2040,12 +2066,24 @@ function renderPipeline() {
         if (fEditor) stageProjects = stageProjects.filter(p => p.editorId === fEditor);
         if (fClient) stageProjects = stageProjects.filter(p => p.clientId === fClient);
 
+        const stageNote = getPipelineStageNote(stage);
+        const noteBtnClass = 'kanban-col-note-btn' + (stageNote ? ' kanban-col-note-btn--has-note' : '');
         return `<div class="kanban-column" data-stage="${stage}">
-          <div class="kanban-col-header kanban-col-header-clickable" title="Clic para ver o agregar nota de etapa">
-            <span class="kanban-col-dot" data-stage="${stage}"></span>
-            ${STAGE_NAMES[stage]}
+          <div class="kanban-col-header">
+            <span class="kanban-col-dot" data-stage="${stage}" aria-hidden="true"></span>
+            <span class="kanban-col-title">${STAGE_NAMES[stage]}</span>
             <span class="kanban-col-count">${stageProjects.length}</span>
-            ${getPipelineStageNote(stage) ? '<span class="kanban-col-has-note" title="Hay una nota">📝</span>' : '<span class="kanban-col-note-hint" title="Clic para agregar nota">+</span>'}
+            <button type="button" class="${noteBtnClass}" data-stage="${stage}"
+              title="${stageNote ? 'Editar nota de etapa' : 'Agregar nota de etapa'}"
+              aria-label="Nota de etapa: ${esc(STAGE_NAMES[stage])}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <line x1="10" y1="9" x2="8" y2="9"/>
+              </svg>
+            </button>
           </div>
           <div class="kanban-col-body">
             ${stageProjects.length > 0 ? stageProjects.map(p => {
@@ -2076,7 +2114,7 @@ function renderPipeline() {
                   <div class="kanban-card-date">${timeAgo(p.createdAt)}</div>
                 </div>
               </div>`;
-            }).join('') : `<div class="kanban-col-empty" title="Clic para ver o agregar nota de etapa"><span style="font-size:1.2rem;opacity:.4;">+</span>Sin proyectos</div>`}
+            }).join('') : `<div class="kanban-col-empty" title="Sin proyectos en esta etapa"><span style="font-size:1.2rem;opacity:.4;">+</span>Sin proyectos</div>`}
           </div>
         </div>`;
       }).join('')}
@@ -2239,9 +2277,11 @@ function initPipelineDrag() {
       if (id) openProjectDrawer(id);
       return;
     }
-    var col = e.target.closest('.kanban-column');
-    if (col) {
-      var stage = (col.getAttribute('data-stage') || '').trim();
+    var noteBtn = e.target.closest('.kanban-col-note-btn');
+    if (noteBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var stage = (noteBtn.getAttribute('data-stage') || '').trim();
       if (stage && STAGES.indexOf(stage) >= 0) openStageNoteModal(stage);
     }
   });
