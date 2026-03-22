@@ -1414,7 +1414,7 @@ body.kanban-pipeline-dragging {
 /* ============================================
    DATA MODEL
    ============================================ */
-let D = { projects: [], clients: [], editors: [], products: [] };
+let D = { projects: [], clients: [], editors: [], products: [], tareasEquipo: [] };
 let activityLog = [];
 let currentPage = 'dashboard';
 let currentSearchTerm = '';
@@ -1642,6 +1642,7 @@ function purgeExpiredEntregaProjects() {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
+      D.tareasEquipo = data.tareasEquipo || [];
       if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
   });
@@ -1657,10 +1658,12 @@ function loadCreativosData() {
     supabase.from('creativos_clientes').select('*').order('name'),
     supabase.from('creativos_productos').select('*').order('name'),
     supabase.from('creativos_editores').select('*').order('name'),
-    supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false })
+    supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false }),
+    supabase.from('tareas_equipo').select('id, nombre, rol, activo').order('nombre')
   ]).then(function(ress) {
-    var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4];
+    var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4], tareasEqRes = ress[5];
     if (cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(cRes.error?.message || pRes.error?.message || eRes.error?.message || projRes.error?.message);
+    if (tareasEqRes.error) console.warn('[Creativos] No se pudo cargar tareas_equipo:', tareasEqRes.error.message);
     if (creditoRes.error) console.warn('[Creativos] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message, '- Se muestran solo clientes de Creativos.');
     var creditoById = {};
     (creditoRes.data || []).forEach(function(c) {
@@ -1703,7 +1706,15 @@ function loadCreativosData() {
         entregaEnteredAt: r.entrega_entered_at || null
       };
     });
-    return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos };
+    var tareasEquipo = (tareasEqRes.data || []).map(function(r) {
+      return {
+        id: r.id,
+        nombre: r.nombre || '',
+        rol: r.rol || '',
+        activo: r.activo !== false
+      };
+    });
+    return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos, tareasEquipo: tareasEquipo };
   }).catch(function(err) { console.error('[Creativos] loadCreativosData:', err); return null; });
 }
 
@@ -1715,6 +1726,7 @@ function reloadCreativosData(then) {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
+      D.tareasEquipo = data.tareasEquipo || [];
       if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
     return backfillEntregaEnteredAtIfMissing();
@@ -3076,7 +3088,11 @@ function openNewProjectModal() {
       <div class="form-group"><label class="form-label">Plataforma</label><select class="form-select" id="projPlatform">${PLATFORMS.map(p=>`<option>${p}</option>`).join('')}</select></div>
       <div class="form-group"><label class="form-label">Formato</label><select class="form-select" id="projFormat">${FORMATS.map(f=>`<option>${f}</option>`).join('')}</select></div>
     </div>
-      <div class="form-group"><label class="form-label">Editor</label><select class="form-select" id="projEditor"><option value="">Seleccionar...</option>${D.editors.map(e=>`<option value="${e.id}">${formatSelectTwoPart(e.name, e.specialty, 'Sin nombre')}</option>`).join('')}</select></div>
+      <div class="form-group">
+        <label class="form-label">Editor / integrante</label>
+        <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted)">Aparecen los editores de Creativos y el equipo de <strong>Carga de Trabajo</strong> (Tareas). Si eliges solo Tareas, se crea el editor en Creativos al guardar.</p>
+        <select class="form-select" id="projEditor">${renderProjectEditorSelectHTML('')}</select>
+      </div>
     <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="8" placeholder="Pega o escribe el guión aquí; se conservan los saltos de línea y párrafos."></textarea></div>
     <div class="form-group">
       <label class="form-label">Archivos de inspiración / referencia</label>
@@ -3113,51 +3129,85 @@ function saveProject() {
   var name = document.getElementById('projName').value.trim();
   if (!name) { showToast('error', 'El nombre es requerido'); return; }
   var productId = document.getElementById('projProduct').value || null;
-  var editorId = document.getElementById('projEditor').value || null;
+  var rawEditor = document.getElementById('projEditor').value || null;
   if (D.products.length > 0 && !productId) { showToast('error', 'Selecciona un producto'); return; }
-  if (D.editors.length > 0 && !editorId) { showToast('error', 'Selecciona un editor'); return; }
-  if (D.products.length === 0 || D.editors.length === 0) {
-    showToast('info', 'Crea productos y editores en sus secciones para asignarlos después.');
+  if (creativosProjectEditorSelectHasChoices() && !rawEditor) {
+    showToast('error', 'Selecciona un editor o integrante del equipo');
+    return;
+  }
+  if (D.products.length === 0 || !creativosProjectEditorSelectHasChoices()) {
+    showToast('info', 'Crea productos y editores (o define equipo en Tareas) para asignarlos después.');
   }
   var stages = createStageData();
   if (pendingFiles.length > 0) stages.inspiracion.files = pendingFiles.slice();
   var clientId = document.getElementById('projClient').value || null;
-  var row = {
-    name: name,
-    client_id: clientId || null,
-    product_id: productId || null,
-    editor_id: editorId || null,
-    type: document.getElementById('projType').value || '',
-    platform: document.getElementById('projPlatform').value || '',
-    format: document.getElementById('projFormat').value || '',
-    brief: document.getElementById('projBrief').value || '',
-    stages: stages,
-    cpa: 'pendiente',
-    published: false
-  };
-  if (supabase) {
-    supabase.from('creativos_proyectos').insert(row).then(function(r) {
-      if (r.error) { showToast('error', r.error.message || 'Error al crear proyecto'); return; }
+  function doInsertProyecto(editorUuid) {
+    var row = {
+      name: name,
+      client_id: clientId || null,
+      product_id: productId || null,
+      editor_id: editorUuid || null,
+      type: document.getElementById('projType').value || '',
+      platform: document.getElementById('projPlatform').value || '',
+      format: document.getElementById('projFormat').value || '',
+      brief: document.getElementById('projBrief').value || '',
+      stages: stages,
+      cpa: 'pendiente',
+      published: false
+    };
+    if (supabase) {
+      supabase.from('creativos_proyectos').insert(row).then(function(r) {
+        if (r.error) { showToast('error', r.error.message || 'Error al crear proyecto'); return; }
+        pendingFiles = [];
+        closeModal();
+        showToast('success', 'Proyecto creado');
+        reloadCreativosData(function() { renderPage(currentPage); });
+      });
+    } else {
+      var p = {
+        id: uid(), name: name,
+        clientId: clientId, productId: productId, editorId: editorUuid || null,
+        type: row.type, platform: row.platform, format: row.format, brief: row.brief,
+        stages: stages, cpa: 'pendiente', published: false,
+        createdAt: new Date().toISOString()
+      };
+      D.projects.push(p);
       pendingFiles = [];
+      logActivity('created', p.name);
       closeModal();
       showToast('success', 'Proyecto creado');
-      reloadCreativosData(function() { renderPage(currentPage); });
-    });
-  } else {
-    var p = {
-      id: uid(), name: name,
-      clientId: clientId, productId: productId, editorId: editorId,
-      type: row.type, platform: row.platform, format: row.format, brief: row.brief,
-      stages: stages, cpa: 'pendiente', published: false,
+      renderPage(currentPage);
+    }
+  }
+  if (rawEditor && rawEditor.indexOf('tareas:') === 0) {
+    var tid = rawEditor.slice(7);
+    var m = (D.tareasEquipo || []).find(function(x) { return String(x.id) === tid; });
+    if (!m) { showToast('error', 'Integrante no encontrado'); return; }
+    if (supabase) {
+      supabase.from('creativos_editores').insert({
+        name: (m.nombre || 'Editor').trim(),
+        specialty: (m.rol && String(m.rol).trim()) || 'Edición General'
+      }).select('id').single().then(function(ins) {
+        if (ins.error || !ins.data) {
+          showToast('error', (ins.error && ins.error.message) || 'No se pudo registrar el editor');
+          return;
+        }
+        doInsertProyecto(ins.data.id);
+      });
+      return;
+    }
+    var newEd = {
+      id: uid(),
+      name: (m.nombre || 'Editor').trim(),
+      specialty: (m.rol && String(m.rol).trim()) || 'Edición General',
+      email: '',
       createdAt: new Date().toISOString()
     };
-    D.projects.push(p);
-    pendingFiles = [];
-    logActivity('created', p.name);
-    closeModal();
-    showToast('success', 'Proyecto creado');
-    renderPage(currentPage);
+    D.editors.push(newEd);
+    doInsertProyecto(newEd.id);
+    return;
   }
+  doInsertProyecto(rawEditor);
 }
 
 // CLIENT MODAL
@@ -3602,6 +3652,52 @@ function formatSelectTwoPart(first, second, emptyLabel) {
   if (!b || a.toLowerCase() === b.toLowerCase()) return esc(a || b);
   if (!a) return esc(b);
   return esc(a) + ' — ' + esc(b);
+}
+
+function escAttr(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function findCreativosEditorForTareasMember(m) {
+  var n = (m.nombre || '').trim().toLowerCase();
+  if (!n) return null;
+  return D.editors.find(function(e) { return (e.name || '').trim().toLowerCase() === n; }) || null;
+}
+
+function tareasEquipoSoloSinEditorCreativos() {
+  return (D.tareasEquipo || []).filter(function(m) {
+    if (m.activo === false) return false;
+    if (!(m.nombre && String(m.nombre).trim())) return false;
+    return !findCreativosEditorForTareasMember(m);
+  });
+}
+
+function creativosProjectEditorSelectHasChoices() {
+  return D.editors.length > 0 || tareasEquipoSoloSinEditorCreativos().length > 0;
+}
+
+function renderProjectEditorSelectHTML(selectedId) {
+  var html = '<option value="">Seleccionar...</option>';
+  if (D.editors.length > 0) {
+    html += '<optgroup label="Editores (Creativos)">';
+    D.editors.forEach(function(e) {
+      var sel = selectedId === e.id ? ' selected' : '';
+      html += '<option value="' + escAttr(e.id) + '"' + sel + '>' + formatSelectTwoPart(e.name, e.specialty, 'Sin nombre') + '</option>';
+    });
+    html += '</optgroup>';
+  }
+  var solo = tareasEquipoSoloSinEditorCreativos();
+  if (solo.length > 0) {
+    html += '<optgroup label="Integrantes del equipo (Tareas)">';
+    solo.forEach(function(m) {
+      var val = 'tareas:' + m.id;
+      var sel = selectedId === val ? ' selected' : '';
+      html += '<option value="' + escAttr(val) + '"' + sel + '>' + formatSelectTwoPart(m.nombre, m.rol, 'Sin nombre') + '</option>';
+    });
+    html += '</optgroup>';
+  }
+  return html;
 }
 
 function renderEmptyState(title, text, action, btnText) {
