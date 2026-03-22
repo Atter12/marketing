@@ -1665,7 +1665,7 @@ function loadCreativosData() {
     var creditoById = {};
     (creditoRes.data || []).forEach(function(c) {
       var firstEmail = (c.emails && (Array.isArray(c.emails) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : null))) || '';
-      creditoById[c.id] = { name: c.name || '', company: c.biz || c.name || '', email: firstEmail };
+      creditoById[c.id] = { name: c.name || '', company: (c.biz || '').trim(), email: firstEmail };
     });
     var creditoIdsInCreativos = (cRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
     var clients = (cRes.data || []).map(function(r) {
@@ -1964,7 +1964,7 @@ function renderDashboard() {
                 const stageData = p.stages[stage];
                 return `<tr style="cursor:pointer;" onclick="openProjectDrawer('${p.id}')">
                   <td><strong>${esc(p.name)}</strong></td>
-                  <td>${cl ? esc(cl.company) : '—'}</td>
+                  <td>${cl ? formatSelectTwoPart(cl.name, cl.company, '—') : '—'}</td>
                   <td><span class="badge badge-orange"><span class="badge-dot"></span>${STAGE_NAMES[stage]}</span></td>
                   <td><span class="badge ${getStatusBadge(stageData.status)}"><span class="badge-dot"></span>${STAGE_STATUSES[stageData.status]}</span></td>
                   <td style="font-size:var(--text-xs);color:var(--color-text-muted);">${formatDate(p.createdAt)}</td>
@@ -2049,7 +2049,7 @@ function renderPipeline() {
           </select>
           <select class="pipeline-filter-select" id="pipeFilterClient" onchange="renderPage('pipeline')">
             <option value="">Todos los clientes</option>
-            ${D.clients.map(c => `<option value="${c.id}" ${filterClientId === c.id ? 'selected':''}>${esc(c.company)}</option>`).join('')}
+            ${D.clients.map(c => `<option value="${c.id}" ${filterClientId === c.id ? 'selected':''}>${formatSelectTwoPart(c.name, c.company, 'Sin nombre')}</option>`).join('')}
           </select>
         </div>
       </div>
@@ -2105,7 +2105,7 @@ function renderPipeline() {
                     <span class="kanban-card-type-badge">${esc(p.type)}</span>
                   </div>
                 </div>
-                <div class="kanban-card-meta">${client ? esc(client.company) : '—'}<span class="kanban-card-meta-sep">·</span>${esc(p.platform)}</div>
+                <div class="kanban-card-meta">${client ? formatSelectTwoPart(client.name, client.company, '—') : '—'}<span class="kanban-card-meta-sep">·</span>${esc(p.platform)}</div>
                 <div class="kanban-card-footer">
                   <div style="display:flex;align-items:center;gap:8px;">
                     ${editor ? `<div class="kanban-card-avatar" data-tooltip="${esc(editor.name)}">${editor.name.split(' ').map(n=>n[0]).join('')}</div>` : ''}
@@ -2339,7 +2339,7 @@ function renderProjectsList() {
             const stage = getProjectStage(p);
             return `<tr>
               <td><a href="#" onclick="openProjectDrawer('${p.id}');return false;" style="color:var(--color-text);text-decoration:none;font-weight:600;">${esc(p.name)}</a></td>
-              <td>${cl ? esc(cl.company) : '—'}</td>
+              <td>${cl ? formatSelectTwoPart(cl.name, cl.company, '—') : '—'}</td>
               <td><span class="badge badge-muted">${esc(p.type)}</span></td>
               <td style="font-size:var(--text-xs);">${esc(p.platform)}</td>
               <td style="font-size:var(--text-xs);">${ed ? esc(ed.name) : '—'}</td>
@@ -2647,7 +2647,7 @@ function renderPortfolioPage() {
           </div>
           <div class="portfolio-item-info">
             <div class="portfolio-item-title">${esc(p.name)}</div>
-            <div class="portfolio-item-meta">${client ? esc(client.company) : '—'}</div>
+            <div class="portfolio-item-meta">${client ? formatSelectTwoPart(client.name, client.company, '—') : '—'}</div>
           </div>
         </div>`;
       }).join('') : '<div style="grid-column:1/-1;text-align:center;padding:var(--space-16);color:var(--color-text-muted);"><h3>Portafolio vacío</h3><p>Publica proyectos completados para mostrarlos aquí.</p></div>'}
@@ -2690,7 +2690,7 @@ function openProjectDrawer(id) {
 
   body.innerHTML = `
     <div class="project-info-grid">
-      <div class="project-info-item"><div class="project-info-label">Cliente</div><div class="project-info-value">${cl ? esc(cl.company) : '—'}</div></div>
+      <div class="project-info-item"><div class="project-info-label">Cliente</div><div class="project-info-value">${cl ? formatSelectTwoPart(cl.name, cl.company, '—') : '—'}</div></div>
       <div class="project-info-item"><div class="project-info-label">Producto</div><div class="project-info-value">${prod ? esc(prod.name) : '—'}</div></div>
       <div class="project-info-item"><div class="project-info-label">Tipo</div><div class="project-info-value">${esc(p.type)}</div></div>
       <div class="project-info-item"><div class="project-info-label">Plataforma</div><div class="project-info-value">${esc(p.platform)}</div></div>
@@ -3069,14 +3069,14 @@ function openNewProjectModal() {
       <div class="form-group"><label class="form-label">Tipo de Video</label><select class="form-select" id="projType">${VIDEO_TYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Cliente</label><select class="form-select" id="projClient"><option value="">Seleccionar...</option>${D.clients.map(c=>`<option value="${c.id}">${esc(c.name)} — ${esc(c.company)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Cliente</label><select class="form-select" id="projClient"><option value="">Seleccionar...</option>${D.clients.map(c=>`<option value="${c.id}">${formatSelectTwoPart(c.name, c.company, 'Cliente sin nombre')}</option>`).join('')}</select></div>
       <div class="form-group"><label class="form-label">Producto</label><select class="form-select" id="projProduct"><option value="">Seleccionar...</option>${D.products.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Plataforma</label><select class="form-select" id="projPlatform">${PLATFORMS.map(p=>`<option>${p}</option>`).join('')}</select></div>
       <div class="form-group"><label class="form-label">Formato</label><select class="form-select" id="projFormat">${FORMATS.map(f=>`<option>${f}</option>`).join('')}</select></div>
     </div>
-    <div class="form-group"><label class="form-label">Editor</label><select class="form-select" id="projEditor"><option value="">Seleccionar...</option>${D.editors.map(e=>`<option value="${e.id}">${esc(e.name)} — ${esc(e.specialty)}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Editor</label><select class="form-select" id="projEditor"><option value="">Seleccionar...</option>${D.editors.map(e=>`<option value="${e.id}">${formatSelectTwoPart(e.name, e.specialty, 'Sin nombre')}</option>`).join('')}</select></div>
     <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="8" placeholder="Pega o escribe el guión aquí; se conservan los saltos de línea y párrafos."></textarea></div>
     <div class="form-group">
       <label class="form-label">Archivos de inspiración / referencia</label>
@@ -3591,6 +3591,17 @@ function esc(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+/** Una sola línea para selects: evita "Juan — Juan" o "Nombre — " cuando falta la segunda parte. */
+function formatSelectTwoPart(first, second, emptyLabel) {
+  var a = (first != null ? String(first) : '').trim();
+  var b = (second != null ? String(second) : '').trim();
+  var empty = emptyLabel != null ? emptyLabel : '—';
+  if (!a && !b) return esc(empty);
+  if (!b || a.toLowerCase() === b.toLowerCase()) return esc(a || b);
+  if (!a) return esc(b);
+  return esc(a) + ' — ' + esc(b);
 }
 
 function renderEmptyState(title, text, action, btnText) {
