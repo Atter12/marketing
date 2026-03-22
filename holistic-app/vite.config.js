@@ -14,7 +14,12 @@ function authConfigPlugin() {
       mkdirSync(dirname(out), { recursive: true });
       const url = process.env.PUBLIC_SUPABASE_URL || '';
       const key = process.env.PUBLIC_SUPABASE_ANON_KEY || '';
-      writeFileSync(out, `window.__SUPABASE_URL__="${url.replace(/"/g, '\\"')}";window.__SUPABASE_ANON_KEY__="${key.replace(/"/g, '\\"')}";\n`, 'utf8');
+      const storageApi = process.env.PUBLIC_MARKETING_STORAGE_API || '';
+      writeFileSync(
+        out,
+        `window.__SUPABASE_URL__="${url.replace(/"/g, '\\"')}";window.__SUPABASE_ANON_KEY__="${key.replace(/"/g, '\\"')}";window.__MARKETING_STORAGE_API__="${storageApi.replace(/"/g, '\\"')}";\n`,
+        'utf8'
+      );
     },
   };
 }

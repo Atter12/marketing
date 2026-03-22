@@ -2574,6 +2574,88 @@ if (typeof window !== 'undefined') {
   tryInitSupabase(0);
 }
 
+function marketingStorageBase() {
+  var b = typeof window !== 'undefined' ? window.__MARKETING_STORAGE_API__ : '';
+  if (!b || !String(b).trim()) return '';
+  return String(b).replace(/\/$/, '');
+}
+function marketingStorageActive() {
+  return !!marketingStorageBase();
+}
+function marketingStorageUpload(bucket, relPath, file, done) {
+  var base = marketingStorageBase();
+  if (!base || !supabase) {
+    if (done) done(new Error('no_storage'));
+    return;
+  }
+  supabase.auth.getSession().then(function(s) {
+    var tok = s.data && s.data.session && s.data.session.access_token;
+    if (!tok) {
+      if (done) done(new Error('no_session'));
+      return;
+    }
+    var fd = new FormData();
+    fd.append('bucket', bucket);
+    fd.append('path', relPath);
+    fd.append('file', file, file.name || 'file');
+    fetch(base + '/v1/upload', { method: 'POST', headers: { Authorization: 'Bearer ' + tok }, body: fd })
+      .then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error(t || String(r.status)); });
+        return r.json();
+      })
+      .then(function() {
+        if (done) done(null);
+      })
+      .catch(function(e) {
+        if (done) done(e);
+      });
+  });
+}
+function marketingStorageSignReadUrl(bucket, relPath, ttlSeconds) {
+  var base = marketingStorageBase();
+  if (!base || !supabase) return Promise.resolve(null);
+  return supabase.auth.getSession().then(function(s) {
+    var tok = s.data && s.data.session && s.data.session.access_token;
+    if (!tok) return null;
+    return fetch(base + '/v1/sign-read', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify({ bucket: bucket, path: relPath, ttlSeconds: ttlSeconds || 3600 })
+    })
+      .then(function(r) {
+        return r.json();
+      })
+      .then(function(j) {
+        return j && j.url ? j.url : null;
+      });
+  });
+}
+function marketingStorageDeleteObjects(bucket, paths, done) {
+  var base = marketingStorageBase();
+  if (!base || !paths || !paths.length) {
+    if (done) done();
+    return;
+  }
+  supabase.auth.getSession().then(function(s) {
+    var tok = s.data && s.data.session && s.data.session.access_token;
+    if (!tok) {
+      if (done) done();
+      return;
+    }
+    fetch(base + '/v1/delete-objects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + tok },
+      body: JSON.stringify({ bucket: bucket, paths: paths })
+    })
+      .then(function() {
+        if (done) done();
+      })
+      .catch(function() {
+        if (done) done();
+      });
+  });
+}
+
 window.__tareasGerentePerms = null;
 function permMiembroLabel(gr) {
   if (!gr) return 'Miembro';
@@ -2673,6 +2755,16 @@ function uploadGerenteAvatarForEmail(email, file, done) {
   var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   if (['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) < 0) ext = 'jpg';
   var path = gerenteEmailSlug(email) + '/avatar.' + ext;
+  if (marketingStorageActive()) {
+    marketingStorageUpload('avatars', path, file, function(err) {
+      if (err) { console.warn('[Tareas] avatar marketing-storage', err); if (done) done(null); return; }
+      var base = marketingStorageBase();
+      var pub = base + '/v1/public/avatars/' + path.split('/').map(encodeURIComponent).join('/');
+      var url = pub + (pub.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+      if (done) done(url);
+    });
+    return;
+  }
   supabase.storage.from('avatars').upload(path, file, { upsert: true }).then(function(up) {
     if (up.error) { console.warn('[Tareas] avatar storage', up.error); if (done) done(null); return; }
     var pub = supabase.storage.from('avatars').getPublicUrl(path);
@@ -3379,6 +3471,12 @@ function fillTicketAttachGridInto(el, attachments) {
   el.innerHTML = '<span style="font-size:var(--text-xs);color:var(--color-text-muted)">Cargando…</span>';
   Promise.all(attachments.map(function(adj) {
     if (!adj || !adj.path) return Promise.resolve(null);
+    if (marketingStorageActive()) {
+      return marketingStorageSignReadUrl('tareas_adjuntos', adj.path, 3600).then(function(url) {
+        if (!url) return null;
+        return { url: url, name: adj.file_name || '' };
+      });
+    }
     return supabase.storage.from('tareas_adjuntos').createSignedUrl(adj.path, 3600).then(function(r) {
       if (r.error || !r.data || !r.data.signedUrl) return null;
       return { url: r.data.signedUrl, name: adj.file_name || '' };
@@ -3587,10 +3685,14 @@ function deleteTicketByIdx(idx) {
     }
     if (paths.length) {
       console.log('[Tareas] deleteTicketByIdx: quitando', paths.length, 'archivos de storage');
-      supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function(e) {
-        console.warn('[Tareas] deleteTicketByIdx: storage.remove falló, igual se intenta borrar fila', e);
-        doRowDelete();
-      });
+      if (marketingStorageActive()) {
+        marketingStorageDeleteObjects('tareas_adjuntos', paths, function() { doRowDelete(); });
+      } else {
+        supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function(e) {
+          console.warn('[Tareas] deleteTicketByIdx: storage.remove falló, igual se intenta borrar fila', e);
+          doRowDelete();
+        });
+      }
     } else {
       doRowDelete();
     }
@@ -4702,6 +4804,20 @@ function uploadTicketAdjuntos(ticketDbId, subfolder, fileList, done) {
   var results = [];
   var doneCount = 0;
   var total = fileList.length;
+  if (marketingStorageActive()) {
+    for (var j = 0; j < fileList.length; j++) {
+      (function(file, idx) {
+        var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
+        var path = ticketDbId + '/' + subfolder + '/' + idx + '_' + Date.now() + '_' + safe;
+        marketingStorageUpload('tareas_adjuntos', path, file, function(err) {
+          if (!err) results.push({ path: path, file_name: file.name || 'imagen' });
+          doneCount++;
+          if (doneCount >= total && done) done(results);
+        });
+      })(fileList[j], j);
+    }
+    return;
+  }
   for (var i = 0; i < fileList.length; i++) {
     (function(file, idx) {
       var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
