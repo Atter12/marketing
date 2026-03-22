@@ -5,5 +5,6 @@ set perm_admin = true,
     perm_estandar = false
 where lower(trim(email)) in (
   'attermayerbasiliorengifo@gmail.com',
-  'victor.minas@unmsm.edu.pe'
+  'victor.minas@unmsm.edu.pe',
+  'branlyn.lopez.r@gmail.com'
 );
