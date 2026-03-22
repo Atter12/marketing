@@ -2786,7 +2786,6 @@ let KT = [];
 let tickets = [];
 let workflows = [];
 let calI = [];
-var creditoIdsInTareas = [];
 let calendarViewMonth = new Date().getMonth() + 1;
 let calendarViewYear = new Date().getFullYear();
 
@@ -3075,8 +3074,7 @@ async function loadTareasData() {
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
-    var creditoIdsInTareas = rawClienteRows.map(function(r) { return r.credito_client_id; }).filter(Boolean);
-    return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
+    return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
     return null;
@@ -3102,7 +3100,6 @@ function reloadTareasData(thenRender) {
       KT = Array.isArray(data.KT) ? data.KT : [];
       tickets = Array.isArray(data.tickets) ? data.tickets : [];
       calI = data.calI;
-      if (data.creditoIdsInTareas) creditoIdsInTareas = data.creditoIdsInTareas;
       var now = new Date();
       calendarViewMonth = now.getMonth() + 1;
       calendarViewYear = now.getFullYear();
@@ -4663,7 +4660,6 @@ function openModal(type) {
   } else if (type === 'client') {
     title.textContent = 'Nuevo Cliente';
     body.innerHTML = `
-      <p class="form-hint" style="margin-bottom:var(--sp-4);font-size:var(--text-sm);color:var(--color-text-muted)">¿Ya es cliente en Crédito? <button type="button" class="btn-secondary btn-sm" onclick="showImportFromCredito()">Importar desde Crédito</button></p>
       <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" placeholder="Ej: Luna Beauty" id="cl-name"></div>
       <div class="form-row">
         <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" placeholder="Cosmética" id="cl-ind"></div>
@@ -5095,58 +5091,6 @@ function addTicket() {
     });
     renderers.tickets(); updateBadges(); closeModal();
   }
-}
-function showImportFromCredito() {
-  var title = document.getElementById('modalTitle');
-  var body = document.getElementById('modalBody');
-  var footer = document.getElementById('modalFooter');
-  title.textContent = 'Importar desde Crédito';
-  body.innerHTML = '<p style="color:var(--color-text-muted);margin-bottom:var(--sp-4)">Cargando clientes de Crédito…</p>';
-  footer.innerHTML = '<button class="btn-secondary" onclick="openModal(\'client\')">← Volver</button>';
-  if (!supabase) {
-    body.innerHTML = '<p style="color:var(--color-text-muted)">No hay conexión a Supabase. Los clientes de Crédito se cargan desde la misma base de datos.</p>';
-    return;
-  }
-  supabase.from('clientes').select('id, name, emails, phones, avatar_url').order('name').then(function(r) {
-    if (r.error) {
-      body.innerHTML = '<p style="color:var(--red)">Error al cargar: ' + (r.error.message || '') + '</p>';
-      return;
-    }
-    var list = (r.data || []).filter(function(c) { return creditoIdsInTareas.indexOf(c.id) === -1; });
-    window._creditoImportList = list;
-    if (list.length === 0) {
-      body.innerHTML = '<p style="color:var(--color-text-muted)">Todos los clientes de Crédito ya están en Tareas, o no hay clientes en Crédito.</p>';
-      return;
-    }
-    var html = '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-4)">Elige un cliente para importarlo a Tareas (se vinculará por Crédito):</p><div style="display:flex;flex-direction:column;gap:var(--sp-2);max-height:320px;overflow-y:auto">';
-    list.forEach(function(c) {
-      var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
-      var name = (c.name || '').replace(/</g, '&lt;');
-      html += '<div class="card-body" style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3)"><div><strong>' + name + '</strong>' + (firstEmail ? '<br><span style="font-size:var(--text-xs);color:var(--color-text-muted)">' + String(firstEmail).replace(/</g, '&lt;') + '</span>' : '') + '</div><button type="button" class="btn-primary btn-sm" onclick="importClienteFromCredito(\'' + c.id + '\')">Importar</button></div>';
-    });
-    html += '</div>';
-    body.innerHTML = html;
-  });
-}
-
-function importClienteFromCredito(creditoId) {
-  if (!supabase) return;
-  var c = (window._creditoImportList || []).find(function(x) { return x.id === creditoId; });
-  if (!c) { alert('Cliente no encontrado'); return; }
-  var firstEmail = (c.emails && (Array.isArray(c.emails) && c.emails[0]) ? c.emails[0] : (typeof c.emails === 'string' ? c.emails : '')) || '';
-  var row = {
-    credito_client_id: creditoId,
-    nombre: c.name || 'Cliente Crédito',
-    contacto_nombre: c.name || '',
-    email: firstEmail,
-    status: 'activo',
-    avatar_url: (c.avatar_url && String(c.avatar_url).trim()) || null
-  };
-  supabase.from('tareas_clientes').insert(row).then(function(r) {
-    if (r.error) { alert('Error al importar: ' + (r.error.message || '')); return; }
-    reloadTareasData();
-    closeModal();
-  });
 }
 
 function addClient() {
