@@ -481,9 +481,112 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; }
 .upload-zone-pro .upload-zone-icon { width: 48px; height: 48px; color: var(--color-primary); opacity: 0.9; }
 .upload-zone-pro .upload-zone-icon svg { width: 100%; height: 100%; }
 .upload-zone-pro .upload-zone-title { font-size: var(--text-base); font-weight: 600; margin: 0; }
+.upload-zone-pro .upload-zone-sub {
+  font-size: var(--text-xs); color: var(--color-text-muted); max-width: 28rem; line-height: 1.45; margin: 0;
+}
 .file-list-pro { margin-top: var(--space-3); border: 1px solid var(--color-divider); border-radius: var(--radius-md); overflow: hidden; }
 .file-list-pro .file-item { border-bottom: 1px solid var(--color-divider); }
 .file-list-pro .file-item:last-child { border-bottom: none; }
+
+/* Referencias / inspiración — vista previa en grid */
+.ref-previews-wrap {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-surface-offset);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-lg);
+  display: none;
+}
+.ref-previews-wrap.ref-previews-wrap--visible { display: block; }
+.ref-previews-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.ref-previews-title {
+  font-size: var(--text-sm); font-weight: 700; color: var(--color-text);
+  margin: 0; letter-spacing: 0.01em;
+}
+.ref-previews-count {
+  font-size: var(--text-xs); font-weight: 600; color: var(--color-text-muted);
+  background: var(--color-surface-2); padding: 4px 10px; border-radius: var(--radius-full);
+  border: 1px solid var(--color-divider);
+}
+.ref-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(152px, 1fr));
+  gap: var(--space-3);
+}
+.ref-preview-card {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-2);
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.ref-preview-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+}
+.ref-preview-media {
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(160deg, var(--color-surface-dynamic), var(--color-surface-offset));
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.ref-preview-thumb {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+video.ref-preview-thumb {
+  object-fit: cover;
+  background: #111;
+}
+.ref-preview-icon-slot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-2); padding: var(--space-3);
+  text-align: center;
+}
+.ref-preview-icon-slot svg {
+  width: 44px; height: 44px; color: var(--color-primary); opacity: 0.9; flex-shrink: 0;
+}
+.ref-preview-ext {
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.06em;
+  color: var(--color-text-muted); text-transform: uppercase;
+}
+.ref-preview-body { padding: 10px 10px 12px; }
+.ref-preview-name {
+  font-size: 0.72rem; font-weight: 600; line-height: 1.35;
+  color: var(--color-text);
+  display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden; word-break: break-word;
+}
+.ref-preview-meta {
+  margin-top: 6px;
+  font-size: 0.65rem; color: var(--color-text-muted);
+  display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center;
+}
+.ref-preview-kind {
+  text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;
+  color: var(--color-text-faint); font-size: 0.6rem;
+}
+.ref-preview-remove {
+  position: absolute; top: 8px; right: 8px;
+  width: 30px; height: 30px; border-radius: var(--radius-full);
+  border: none; cursor: pointer;
+  background: rgba(0,0,0,.58); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 140ms ease, transform 140ms ease;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.ref-preview-remove:hover { background: var(--color-error); transform: scale(1.05); }
+.ref-preview-remove svg { width: 14px; height: 14px; pointer-events: none; }
+[data-theme="dark"] .ref-preview-card { box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+[data-theme="dark"] .ref-preview-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.35); }
+[data-theme="dark"] .ref-preview-remove { background: rgba(0,0,0,.75); }
 
 /* ============================================
    DRAWER (slide-in from right)
@@ -1305,7 +1408,7 @@ body.kanban-pipeline-dragging {
       </button>
       <button class="nav-item" data-page="editors" onclick="navigateTo('editors')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M17 10v1a5 5 0 0 1-10 0v-1"/><line x1="12" y1="19" x2="12" y2="22"/></svg>
-        Editores
+        Equipo
       </button>
 
       <div class="sidebar-section-label">Informes</div>
@@ -1414,7 +1517,8 @@ body.kanban-pipeline-dragging {
 /* ============================================
    DATA MODEL
    ============================================ */
-let D = { projects: [], clients: [], editors: [], products: [], tareasEquipo: [] };
+let D = { projects: [], clients: [], editors: [], products: [] };
+var pendingFiles = [];
 let activityLog = [];
 let currentPage = 'dashboard';
 let currentSearchTerm = '';
@@ -1642,10 +1746,89 @@ function purgeExpiredEntregaProjects() {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
-      D.tareasEquipo = data.tareasEquipo || [];
       if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
   });
+}
+
+/**
+ * Editores en Creativos = gerentes (Tareas · Asistencia), enlazados por gerente_id (si existe en BD) y por email.
+ * Incluye asignaciones históricas sin gerente coincidente si aún tienen proyectos.
+ */
+function mergeCreativosEditorsWithGerentes(gerentesList, creativosEditoresRows, proyectoRows) {
+  var rows = creativosEditoresRows || [];
+  var byEmail = {};
+  var byGerenteId = {};
+  rows.forEach(function(r) {
+    var em = (r.email || '').trim().toLowerCase();
+    if (em) byEmail[em] = r;
+    if (r.gerente_id) byGerenteId[r.gerente_id] = r;
+  });
+  var gerenteEmails = {};
+  var seenCreativosIds = {};
+  var editors = [];
+  (gerentesList || []).forEach(function(g) {
+    var email = (g.email || '').trim();
+    if (!email) return;
+    var key = email.toLowerCase();
+    gerenteEmails[key] = true;
+    var parts = [g.nombre, g.apellido].filter(function(x) { return x && String(x).trim(); }).map(function(x) { return String(x).trim(); });
+    var disp = parts.join(' ');
+    if (!disp) disp = email.split('@')[0] || email;
+    var match = (g.id && byGerenteId[g.id]) || byEmail[key];
+    if (match) {
+      seenCreativosIds[match.id] = true;
+      editors.push({
+        id: match.id,
+        name: disp,
+        email: email,
+        specialty: match.specialty || 'Equipo',
+        gerenteId: g.id,
+        fromGerente: true,
+        createdAt: match.created_at
+      });
+    } else {
+      editors.push({
+        id: 'gerente:' + g.id,
+        gerenteId: g.id,
+        name: disp,
+        email: email,
+        specialty: 'Equipo / asistencia',
+        pendingCreativosEditor: true,
+        fromGerente: true,
+        createdAt: g.created_at
+      });
+    }
+  });
+  editors.sort(function(a, b) {
+    var an = (a.name || '').toLowerCase();
+    var bn = (b.name || '').toLowerCase();
+    if (an !== bn) return an < bn ? -1 : 1;
+    return (a.email || '').localeCompare(b.email || '');
+  });
+  var editorIdsInProjects = {};
+  (proyectoRows || []).forEach(function(r) {
+    if (r.editor_id) editorIdsInProjects[r.editor_id] = true;
+  });
+  rows.forEach(function(r) {
+    if (seenCreativosIds[r.id]) return;
+    if (r.gerente_id && byGerenteId[r.gerente_id] && byGerenteId[r.gerente_id].id === r.id) {
+      var stillInList = (gerentesList || []).some(function(g) { return g.id === r.gerente_id; });
+      if (stillInList) return;
+    }
+    var em = (r.email || '').trim().toLowerCase();
+    if (em && gerenteEmails[em]) return;
+    if (!editorIdsInProjects[r.id]) return;
+    editors.push({
+      id: r.id,
+      name: r.name || r.email || 'Editor',
+      email: r.email || '',
+      specialty: r.specialty || 'Histórico',
+      legacyEditor: true,
+      createdAt: r.created_at
+    });
+  });
+  return editors;
 }
 
 /* ============================================
@@ -1659,11 +1842,11 @@ function loadCreativosData() {
     supabase.from('creativos_productos').select('*').order('name'),
     supabase.from('creativos_editores').select('*').order('name'),
     supabase.from('creativos_proyectos').select('*').order('created_at', { ascending: false }),
-    supabase.from('tareas_equipo').select('id, nombre, rol, activo').order('nombre')
+    supabase.from('gerentes').select('id, email, nombre, apellido, created_at').order('email')
   ]).then(function(ress) {
-    var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4], tareasEqRes = ress[5];
+    var creditoRes = ress[0], cRes = ress[1], pRes = ress[2], eRes = ress[3], projRes = ress[4], gerentesRes = ress[5];
     if (cRes.error || pRes.error || eRes.error || projRes.error) throw new Error(cRes.error?.message || pRes.error?.message || eRes.error?.message || projRes.error?.message);
-    if (tareasEqRes.error) console.warn('[Creativos] No se pudo cargar tareas_equipo:', tareasEqRes.error.message);
+    if (gerentesRes.error) console.warn('[Creativos] No se pudo cargar gerentes (asistencia):', gerentesRes.error.message);
     if (creditoRes.error) console.warn('[Creativos] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message, '- Se muestran solo clientes de Creativos.');
     var creditoById = {};
     (creditoRes.data || []).forEach(function(c) {
@@ -1687,7 +1870,12 @@ function loadCreativosData() {
     });
     console.log('[Creativos] Clientes: Crédito=', (creditoRes.data || []).length, ', creativos_clientes=', (cRes.data || []).length, ', listado final=', clients.length);
     var products = (pRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', category: r.category || '', createdAt: r.created_at }; });
-    var editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', email: r.email || '', createdAt: r.created_at }; });
+    var editors;
+    if (gerentesRes.error) {
+      editors = (eRes.data || []).map(function(r) { return { id: r.id, name: r.name || '', specialty: r.specialty || '', email: r.email || '', createdAt: r.created_at }; });
+    } else {
+      editors = mergeCreativosEditorsWithGerentes(gerentesRes.data || [], eRes.data || [], projRes.data || []);
+    }
     var projects = (projRes.data || []).map(function(r) {
       return {
         id: r.id,
@@ -1706,15 +1894,7 @@ function loadCreativosData() {
         entregaEnteredAt: r.entrega_entered_at || null
       };
     });
-    var tareasEquipo = (tareasEqRes.data || []).map(function(r) {
-      return {
-        id: r.id,
-        nombre: r.nombre || '',
-        rol: r.rol || '',
-        activo: r.activo !== false
-      };
-    });
-    return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos, tareasEquipo: tareasEquipo };
+    return { clients: clients, products: products, editors: editors, projects: projects, creditoIdsInCreativos: creditoIdsInCreativos };
   }).catch(function(err) { console.error('[Creativos] loadCreativosData:', err); return null; });
 }
 
@@ -1726,7 +1906,6 @@ function reloadCreativosData(then) {
       D.products = data.products;
       D.editors = data.editors;
       D.projects = data.projects;
-      D.tareasEquipo = data.tareasEquipo || [];
       if (data.creditoIdsInCreativos) window.creditoIdsInCreativos = data.creditoIdsInCreativos;
     }
     return backfillEntregaEnteredAtIfMissing();
@@ -1764,13 +1943,13 @@ function seedData() {
   productList.forEach(p => D.products.push({ id: uid(), ...p, createdAt: randomDate(60) }));
 
   const editorList = [
-    { name:'Javier Quispe', specialty:'Motion Graphics' },
-    { name:'Sofía Huamán', specialty:'Edición General' },
-    { name:'Miguel Castillo', specialty:'Color Grading' },
-    { name:'Valentina Rojas', specialty:'Animación 2D' },
-    { name:'Andrés Paredes', specialty:'Efectos Visuales' },
+    { name:'Javier Quispe', specialty:'Equipo', email:'javier.quispe@videoforge.demo' },
+    { name:'Sofía Huamán', specialty:'Equipo', email:'sofia.huaman@videoforge.demo' },
+    { name:'Miguel Castillo', specialty:'Equipo', email:'miguel.castillo@videoforge.demo' },
+    { name:'Valentina Rojas', specialty:'Equipo', email:'valentina.rojas@videoforge.demo' },
+    { name:'Andrés Paredes', specialty:'Equipo', email:'andres.paredes@videoforge.demo' },
   ];
-  editorList.forEach(e => D.editors.push({ id: uid(), ...e, createdAt: randomDate(120) }));
+  editorList.forEach(e => D.editors.push({ id: uid(), ...e, fromGerente: true, createdAt: randomDate(120) }));
 
   const projectTemplates = [
     { name:'Lanzamiento App TechVista', client:0, product:0, type:'Comercial', platform:'YouTube', editor:0, format:'16:9', cpa:'muy_bueno', published: true, stageProgress: 5 },
@@ -1866,7 +2045,7 @@ function navigateTo(page) {
     n.classList.toggle('active', n.dataset.page === page);
   });
 
-  const titles = { dashboard:'Panel', pipeline:'Pipeline', projects:'Proyectos', clients:'Clientes', products:'Productos', editors:'Editores', analytics:'Analíticas' };
+  const titles = { dashboard:'Panel', pipeline:'Pipeline', projects:'Proyectos', clients:'Clientes', products:'Productos', editors:'Equipo', analytics:'Analíticas' };
   document.getElementById('headerTitle').textContent = titles[page] || 'Panel';
 
   // Show skeleton briefly
@@ -2057,7 +2236,7 @@ function renderPipeline() {
         <div class="pipeline-filters">
           <select class="pipeline-filter-select" id="pipeFilterEditor" onchange="renderPage('pipeline')">
             <option value="">Todos los editores</option>
-            ${D.editors.map(e => `<option value="${e.id}" ${filterEditorId === e.id ? 'selected':''}>${esc(e.name)}</option>`).join('')}
+            ${D.editors.map(e => `<option value="${e.id}" ${filterEditorId === e.id ? 'selected':''}>${e.email ? esc(e.name) + ' · ' + esc(e.email) : esc(e.name)}</option>`).join('')}
           </select>
           <select class="pipeline-filter-select" id="pipeFilterClient" onchange="renderPage('pipeline')">
             <option value="">Todos los clientes</option>
@@ -2342,7 +2521,7 @@ function renderProjectsList() {
     ${projects.length > 0 ? `<div class="data-table-wrapper">
       <table class="data-table">
         <thead><tr>
-          <th>Proyecto</th><th>Cliente</th><th>Tipo</th><th>Plataforma</th><th>Editor</th><th>Etapa</th><th>CPA</th><th>Fecha</th><th></th>
+          <th>Proyecto</th><th>Cliente</th><th>Tipo</th><th>Plataforma</th><th>Responsable</th><th>Etapa</th><th>CPA</th><th>Fecha</th><th></th>
         </tr></thead>
         <tbody>
           ${projects.map(p => {
@@ -2460,15 +2639,22 @@ function renderProducts() {
    ============================================ */
 function renderEditors() {
   if (D.editors.length === 0) {
-    return `<div class="page-view">${renderEmptyState('No hay editores', 'Agrega editores a tu equipo para asignarlos a proyectos.', 'openEditorModal()', 'Agregar Editor')}</div>`;
+    return `<div class="page-view">
+      <div class="empty-state">
+        <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <h3>No hay miembros visibles</h3>
+        <p style="max-width:26rem;margin-left:auto;margin-right:auto;line-height:1.55">El equipo sale de la tabla <strong>gerentes</strong> (Tareas · Asistencia). Los administradores ven a todos; el resto solo su propio correo. Alta y permisos se gestionan en Tareas.</p>
+        <button type="button" class="btn btn-primary" onclick="openEditorModal()">Cómo funciona</button>
+      </div>
+    </div>`;
   }
   return `<div class="page-view">
     <div class="section-header">
-      <h2>Equipo de Editores (${D.editors.length})</h2>
-      <button class="btn btn-primary" onclick="openEditorModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Nuevo Editor
-      </button>
+      <div>
+        <h2>Equipo (${D.editors.length})</h2>
+        <p style="margin:4px 0 0;font-size:var(--text-xs);color:var(--color-text-muted);font-weight:500">Mismas personas y correos que en <strong>Tareas · Asistencia</strong> (gerentes).</p>
+      </div>
+      <button type="button" class="btn btn-secondary" onclick="openEditorModal()">Información</button>
     </div>
     <div class="editor-cards-grid stagger-in">
       ${D.editors.map(e => {
@@ -2487,13 +2673,13 @@ function renderEditors() {
           </div>
           <div class="editor-card-info">
             <div class="editor-card-name">${esc(e.name)}</div>
-            <div class="editor-card-specialty">${esc(e.specialty)}</div>
-            ${e.email ? `<div class="editor-card-email" style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:2px">${esc(e.email)}</div>` : ''}
+            ${e.email ? `<div class="editor-card-email" style="font-size:var(--text-sm);font-weight:600;color:var(--color-text);margin-top:4px;word-break:break-all">${esc(e.email)}</div>` : ''}
+            <div class="editor-card-specialty" style="margin-top:6px">${e.legacyEditor ? esc(e.specialty) + ' · histórico' : esc(e.specialty)}</div>
             <div class="editor-card-stats">${projects.length} proyectos · ${completed} completados</div>
           </div>
           <div class="table-actions" style="flex-shrink:0;" onclick="event.stopPropagation();">
-            <button class="table-action-btn" onclick="openEditorModal('${e.id}')" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-            <button class="table-action-btn delete" onclick="deleteEditor('${e.id}')" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            <button class="table-action-btn" onclick="openEditorModal('${e.id}')" title="Ver ficha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
+            ${e.legacyEditor ? `<button class="table-action-btn delete" onclick="deleteEditor('${e.id}')" title="Quitar editor histórico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>` : ''}
           </div>
         </div>`;
       }).join('')}
@@ -2591,10 +2777,10 @@ function renderAnalytics() {
       </div>
 
       <div class="analytics-card" style="grid-column:1/-1;">
-        <h3>Ranking de Editores</h3>
+        <h3>Ranking del equipo</h3>
         <div class="data-table-wrapper" style="border:none;">
           <table class="data-table">
-            <thead><tr><th>#</th><th>Editor</th><th>Especialidad</th><th>Proyectos</th><th>Evaluados</th><th>Tasa de Éxito</th><th>Rendimiento</th></tr></thead>
+            <thead><tr><th>#</th><th>Miembro</th><th>Rol / etiqueta</th><th>Proyectos</th><th>Evaluados</th><th>Tasa de Éxito</th><th>Rendimiento</th></tr></thead>
             <tbody>
               ${editorStats.map((e,i) => `<tr style="cursor:pointer;" onclick="openEditorDetail('${e.id}')">
                 <td style="font-weight:600;color:var(--color-text-muted);">${i+1}</td>
@@ -2706,7 +2892,7 @@ function openProjectDrawer(id) {
       <div class="project-info-item"><div class="project-info-label">Producto</div><div class="project-info-value">${prod ? esc(prod.name) : '—'}</div></div>
       <div class="project-info-item"><div class="project-info-label">Tipo</div><div class="project-info-value">${esc(p.type)}</div></div>
       <div class="project-info-item"><div class="project-info-label">Plataforma</div><div class="project-info-value">${esc(p.platform)}</div></div>
-      <div class="project-info-item"><div class="project-info-label">Editor</div><div class="project-info-value">${ed ? esc(ed.name) : '—'}</div></div>
+      <div class="project-info-item"><div class="project-info-label">Responsable</div><div class="project-info-value">${ed ? (ed.email ? esc(ed.name) + ' · ' + esc(ed.email) : esc(ed.name)) : '—'}</div></div>
       <div class="project-info-item"><div class="project-info-label">Formato</div><div class="project-info-value">${esc(p.format)}</div></div>
       <div class="project-info-item"><div class="project-info-label">CPA</div><div class="project-info-value"><span class="badge ${CPA_BADGES[p.cpa]}">${CPA_LABELS[p.cpa]}</span></div></div>
       <div class="project-info-item"><div class="project-info-label">Publicado</div><div class="project-info-value">${p.published ? '<span class="badge badge-green"><span class="badge-dot"></span>Sí</span>' : '<span class="badge badge-muted">No</span>'}</div></div>
@@ -3075,6 +3261,8 @@ function closeModal() {
 
 // NEW PROJECT
 function openNewProjectModal() {
+  revokePendingFilePreviews();
+  pendingFiles = [];
   const body = `
     <div class="form-row">
       <div class="form-group"><label class="form-label">Nombre del Proyecto</label><input class="form-input" id="projName" placeholder="Ej: Campaña Verano 2026"></div>
@@ -3089,41 +3277,156 @@ function openNewProjectModal() {
       <div class="form-group"><label class="form-label">Formato</label><select class="form-select" id="projFormat">${FORMATS.map(f=>`<option>${f}</option>`).join('')}</select></div>
     </div>
       <div class="form-group">
-        <label class="form-label">Editor / integrante</label>
-        <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted)">Aparecen los editores de Creativos y el equipo de <strong>Carga de Trabajo</strong> (Tareas). Si eliges solo Tareas, se crea el editor en Creativos al guardar.</p>
+        <label class="form-label">Responsable (equipo / asistencia)</label>
+        <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted)">Son las mismas personas que en <strong>Tareas · Asistencia</strong> (tabla gerentes), con su <strong>correo</strong>. La primera vez que asignas a alguien se crea su fila en Creativos enlazada por email.</p>
         <select class="form-select" id="projEditor">${renderProjectEditorSelectHTML('')}</select>
       </div>
     <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="8" placeholder="Pega o escribe el guión aquí; se conservan los saltos de línea y párrafos."></textarea></div>
     <div class="form-group">
       <label class="form-label">Archivos de inspiración / referencia</label>
+      <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted);line-height:1.45">Aquí subes referencias visuales o guiones. <strong>Abajo verás una vista previa clara</strong> (miniatura en imágenes y videos; icono y nombre en PDFs y documentos).</p>
       <div class="upload-zone upload-zone-pro" id="uploadZone" onclick="document.getElementById('fileInput').click();"
         ondragover="event.preventDefault();this.classList.add('dragover');"
         ondragleave="this.classList.remove('dragover');"
         ondrop="event.preventDefault();this.classList.remove('dragover');handleFileDrop(event);">
         <div class="upload-zone-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
-        <p class="upload-zone-title">Arrastra archivos aquí o haz clic para seleccionar</p>
-        <div class="upload-hint">Imágenes, videos o documentos de referencia (se listan abajo)</div>
+        <p class="upload-zone-title">Suelta archivos aquí o haz clic para elegirlos</p>
+        <p class="upload-zone-sub">Puedes añadir varios a la vez. El contador y las tarjetas de vista previa aparecen debajo.</p>
       </div>
-      <input type="file" id="fileInput" multiple style="display:none;" onchange="handleFileSelect(this.files)">
-      <div class="file-list file-list-pro" id="fileList"></div>
+      <input type="file" id="fileInput" multiple style="display:none;"
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.rar"
+        onchange="handleFileSelect(this.files)">
+      <div class="ref-previews-wrap" id="refPreviewsWrap">
+        <div class="ref-previews-head">
+          <h4 class="ref-previews-title">Vista previa de archivos</h4>
+          <span class="ref-previews-count" id="refPreviewsCount">Ninguno</span>
+        </div>
+        <div class="ref-preview-grid" id="fileList"></div>
+      </div>
     </div>
   `;
-  const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProject()">Crear Proyecto</button>`;
+  const footer = `<button class="btn btn-secondary" onclick="cancelNewProjectModal()">Cancelar</button><button class="btn btn-primary" onclick="saveProject()">Crear Proyecto</button>`;
   openModal('Nuevo Proyecto', body, footer);
+  renderFileList();
 }
 
-let pendingFiles = [];
+function revokePendingFilePreviews() {
+  pendingFiles.forEach(function(entry) {
+    if (entry && entry.objectUrl) {
+      try { URL.revokeObjectURL(entry.objectUrl); } catch (e) {}
+    }
+  });
+}
+function formatRefFileSize(n) {
+  if (n == null || isNaN(n)) return '';
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB';
+  return (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + ' MB';
+}
+function classifyRefFile(file) {
+  var t = (file.type || '').toLowerCase();
+  var name = file.name || '';
+  if (t.indexOf('image/') === 0) return { label: 'Imagen', mode: 'image' };
+  if (t.indexOf('video/') === 0) return { label: 'Video', mode: 'video' };
+  if (t.indexOf('audio/') === 0) return { label: 'Audio', mode: 'icon', icon: 'audio' };
+  if (t === 'application/pdf' || /\.pdf$/i.test(name)) return { label: 'PDF', mode: 'icon', icon: 'pdf' };
+  if (/\.(zip|rar|7z)$/i.test(name)) return { label: 'Comprimido', mode: 'icon', icon: 'zip' };
+  if (/\.(doc|docx|txt|rtf)$/i.test(name) || /word|officedocument|text\/plain/i.test(t)) return { label: 'Documento', mode: 'icon', icon: 'doc' };
+  if (/\.(ppt|pptx)$/i.test(name) || /presentation/i.test(t)) return { label: 'Presentación', mode: 'icon', icon: 'slide' };
+  if (/\.(xls|xlsx|csv)$/i.test(name) || /spreadsheet/i.test(t)) return { label: 'Hoja', mode: 'icon', icon: 'sheet' };
+  var ext = (name.split('.').pop() || '').toUpperCase();
+  return { label: ext || 'Archivo', mode: 'icon', icon: 'file' };
+}
+function refPreviewIconHtml(icon) {
+  if (icon === 'pdf') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10 12h4M10 16h7"/></svg>';
+  }
+  if (icon === 'doc') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>';
+  }
+  if (icon === 'slide') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>';
+  }
+  if (icon === 'sheet') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>';
+  }
+  if (icon === 'audio') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+  }
+  if (icon === 'zip') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 8v13H3V8"/><path d="M10 8V2H3v6"/><path d="M14 8V2h7v6"/><path d="M10 12h4"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+}
+function renderRefPreviewMedia(entry, info) {
+  var url = entry.objectUrl;
+  if (info.mode === 'image' && url) {
+    return '<div class="ref-preview-media"><img class="ref-preview-thumb" src="' + escAttr(url) + '" alt="Vista previa"></div>';
+  }
+  if (info.mode === 'video' && url) {
+    return '<div class="ref-preview-media"><video class="ref-preview-thumb" muted playsinline preload="metadata" src="' + escAttr(url) + '"></video></div>';
+  }
+  var file = entry.file;
+  var ext = (file.name || '').split('.').pop() || '—';
+  return '<div class="ref-preview-media"><div class="ref-preview-icon-slot">' + refPreviewIconHtml(info.icon || 'file') + '<span class="ref-preview-ext">' + esc(ext) + '</span></div></div>';
+}
 function handleFileDrop(e) { handleFileSelect(e.dataTransfer.files); }
 function handleFileSelect(files) {
-  Array.from(files).forEach(f => pendingFiles.push(f.name));
+  Array.from(files || []).forEach(function(file) {
+    var entry = { file: file, objectUrl: null };
+    var t = (file.type || '').toLowerCase();
+    if (t.indexOf('image/') === 0 || t.indexOf('video/') === 0) {
+      try { entry.objectUrl = URL.createObjectURL(file); } catch (err) {}
+    }
+    pendingFiles.push(entry);
+  });
+  var inp = document.getElementById('fileInput');
+  if (inp) inp.value = '';
   renderFileList();
 }
 function renderFileList() {
-  const fl = document.getElementById('fileList');
+  var fl = document.getElementById('fileList');
+  var wrap = document.getElementById('refPreviewsWrap');
+  var cnt = document.getElementById('refPreviewsCount');
   if (!fl) return;
-  fl.innerHTML = pendingFiles.map((f,i) => `<div class="file-item"><span class="file-name">${esc(f)}</span><button class="file-remove" onclick="removeFile(${i})">✕</button></div>`).join('');
+  if (pendingFiles.length === 0) {
+    fl.innerHTML = '';
+    if (wrap) { wrap.classList.remove('ref-previews-wrap--visible'); }
+    if (cnt) cnt.textContent = 'Ninguno';
+    return;
+  }
+  if (wrap) wrap.classList.add('ref-previews-wrap--visible');
+  if (cnt) {
+    var n = pendingFiles.length;
+    cnt.textContent = n === 1 ? '1 archivo' : (n + ' archivos');
+  }
+  fl.innerHTML = pendingFiles.map(function(entry, i) {
+    var file = entry.file;
+    var info = classifyRefFile(file);
+    var sizeStr = formatRefFileSize(file.size);
+    return '<div class="ref-preview-card">' +
+      '<button type="button" class="ref-preview-remove" onclick="removePendingRefFile(' + i + ')" title="Quitar archivo" aria-label="Quitar">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
+      renderRefPreviewMedia(entry, info) +
+      '<div class="ref-preview-body">' +
+      '<div class="ref-preview-name">' + esc(file.name || 'Sin nombre') + '</div>' +
+      '<div class="ref-preview-meta"><span class="ref-preview-kind">' + esc(info.label) + '</span>' + (sizeStr ? '<span>' + esc(sizeStr) + '</span>' : '') + '</div>' +
+      '</div></div>';
+  }).join('');
 }
-function removeFile(i) { pendingFiles.splice(i,1); renderFileList(); }
+function removePendingRefFile(i) {
+  var entry = pendingFiles[i];
+  if (entry && entry.objectUrl) {
+    try { URL.revokeObjectURL(entry.objectUrl); } catch (e) {}
+  }
+  pendingFiles.splice(i, 1);
+  renderFileList();
+}
+function cancelNewProjectModal() {
+  revokePendingFilePreviews();
+  pendingFiles = [];
+  closeModal();
+}
 
 function saveProject() {
   var name = document.getElementById('projName').value.trim();
@@ -3132,14 +3435,16 @@ function saveProject() {
   var rawEditor = document.getElementById('projEditor').value || null;
   if (D.products.length > 0 && !productId) { showToast('error', 'Selecciona un producto'); return; }
   if (creativosProjectEditorSelectHasChoices() && !rawEditor) {
-    showToast('error', 'Selecciona un editor o integrante del equipo');
+    showToast('error', 'Selecciona un responsable del equipo');
     return;
   }
   if (D.products.length === 0 || !creativosProjectEditorSelectHasChoices()) {
-    showToast('info', 'Crea productos y editores (o define equipo en Tareas) para asignarlos después.');
+    showToast('info', 'Crea productos y asegúrate de tener miembros en Asistencia (gerentes) para asignarlos.');
   }
   var stages = createStageData();
-  if (pendingFiles.length > 0) stages.inspiracion.files = pendingFiles.slice();
+  if (pendingFiles.length > 0) {
+    stages.inspiracion.files = pendingFiles.map(function(x) { return x.file ? x.file.name : String(x); });
+  }
   var clientId = document.getElementById('projClient').value || null;
   function doInsertProyecto(editorUuid) {
     var row = {
@@ -3158,6 +3463,7 @@ function saveProject() {
     if (supabase) {
       supabase.from('creativos_proyectos').insert(row).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al crear proyecto'); return; }
+        revokePendingFilePreviews();
         pendingFiles = [];
         closeModal();
         showToast('success', 'Proyecto creado');
@@ -3172,6 +3478,7 @@ function saveProject() {
         createdAt: new Date().toISOString()
       };
       D.projects.push(p);
+      revokePendingFilePreviews();
       pendingFiles = [];
       logActivity('created', p.name);
       closeModal();
@@ -3179,14 +3486,15 @@ function saveProject() {
       renderPage(currentPage);
     }
   }
-  if (rawEditor && rawEditor.indexOf('tareas:') === 0) {
-    var tid = rawEditor.slice(7);
-    var m = (D.tareasEquipo || []).find(function(x) { return String(x.id) === tid; });
-    if (!m) { showToast('error', 'Integrante no encontrado'); return; }
+  if (rawEditor && rawEditor.indexOf('gerente:') === 0) {
+    var edPick = D.editors.find(function(e) { return e.id === rawEditor; });
+    if (!edPick || !edPick.email) { showToast('error', 'Miembro no encontrado o sin correo'); return; }
     if (supabase) {
       supabase.from('creativos_editores').insert({
-        name: (m.nombre || 'Editor').trim(),
-        specialty: (m.rol && String(m.rol).trim()) || 'Edición General'
+        name: (edPick.name || 'Equipo').trim(),
+        email: edPick.email.trim(),
+        specialty: (edPick.specialty && String(edPick.specialty).trim()) || 'Equipo / asistencia',
+        gerente_id: edPick.gerenteId || null
       }).select('id').single().then(function(ins) {
         if (ins.error || !ins.data) {
           showToast('error', (ins.error && ins.error.message) || 'No se pudo registrar el editor');
@@ -3198,9 +3506,11 @@ function saveProject() {
     }
     var newEd = {
       id: uid(),
-      name: (m.nombre || 'Editor').trim(),
-      specialty: (m.rol && String(m.rol).trim()) || 'Edición General',
-      email: '',
+      name: (edPick.name || 'Equipo').trim(),
+      email: edPick.email.trim(),
+      specialty: (edPick.specialty && String(edPick.specialty).trim()) || 'Equipo / asistencia',
+      gerenteId: edPick.gerenteId,
+      fromGerente: true,
       createdAt: new Date().toISOString()
     };
     D.editors.push(newEd);
@@ -3365,65 +3675,41 @@ function saveProduct() {
   }
 }
 
-// EDITOR MODAL
+// EDITOR / EQUIPO (origen: gerentes · asistencia)
 function openEditorModal(id) {
-  const e = id ? D.editors.find(ed => ed.id === id) : null;
-  editingId = id || null; editingType = 'editor';
-  const importLine = e ? '' : '<p class="form-hint" style="margin-bottom:1rem;font-size:var(--text-sm);color:var(--color-text-muted)">¿Tienes equipo en Tareas? <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:0.8125rem" onclick="showImportEditoresFromTareas()">Importar desde Carga de Trabajo</button></p>';
-  const body = `
-    ${importLine}
-    <div class="form-group"><label class="form-label">Nombre Completo</label><input class="form-input" id="editorName" value="${e ? esc(e.name) : ''}" placeholder="Ej: Javier Quispe"></div>
-    <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="editorEmail" type="email" value="${e ? esc(e.email || '') : ''}" placeholder="Ej: javier@videoforge.com"></div>
-    <div class="form-group"><label class="form-label">Especialidad</label><select class="form-select" id="editorSpecialty">${EDITOR_SPECIALTIES.map(s => `<option ${e && e.specialty === s ? 'selected':''}>${s}</option>`).join('')}</select></div>
-  `;
-  const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveEditor()">${e ? 'Guardar Cambios' : 'Agregar Editor'}</button>`;
-  openModal(e ? 'Editar Editor' : 'Nuevo Editor', body, footer);
-}
-function showImportEditoresFromTareas() {
-  var titleEl = document.getElementById('modalTitle');
-  var bodyEl = document.getElementById('modalBody');
-  var footerEl = document.getElementById('modalFooter');
-  if (!titleEl || !bodyEl || !footerEl) return;
-  titleEl.textContent = 'Importar desde Carga de Trabajo (Tareas)';
-  bodyEl.innerHTML = '<p style="color:var(--color-text-muted);margin-bottom:1rem">Cargando equipo de Tareas…</p>';
-  footerEl.innerHTML = '<button class="btn btn-secondary" onclick="openEditorModal()">← Volver</button>';
-  if (!supabase) {
-    bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">Se necesita Supabase para sincronizar con Tareas.</p>';
+  if (!id) {
+    openModal('Equipo y asistencia', `
+      <p style="font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.6;margin:0 0 var(--space-3) 0">
+        En Creativos, <strong>las personas que asignas a proyectos</strong> son las mismas filas de la tabla <strong>gerentes</strong> que usas en <strong>Tareas · Asistencia</strong>: nombre, apellido y <strong>correo</strong> (el mismo con el que inician sesión).
+      </p>
+      <p style="font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.6;margin:0">
+        Para dar de alta miembros, permisos o correos, usa la app de Tareas con una cuenta <strong>administradora</strong>. Al asignar un proyecto se usa <code style="font-size:0.85em">creativos_editores</code> con correo y, si aplica la migración 034, <strong>gerente_id</strong> hacia la tabla gerentes.
+      </p>
+    `, '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>');
     return;
   }
-  supabase.from('tareas_equipo').select('id, nombre, rol').order('nombre').then(function(r) {
-    if (r.error) {
-      bodyEl.innerHTML = '<p style="color:var(--color-error)">Error: ' + (r.error.message || '') + '</p>';
-      return;
-    }
-    var list = r.data || [];
-    var existingNames = (D.editors || []).map(function(ed) { return (ed.name || '').toLowerCase().trim(); });
-    list = list.filter(function(m) { return m.nombre && existingNames.indexOf((m.nombre || '').toLowerCase().trim()) === -1; });
-    if (list.length === 0) {
-      bodyEl.innerHTML = '<p style="color:var(--color-text-muted)">No hay miembros en Tareas o ya están como editores.</p>';
-      return;
-    }
-    window._tareasEquipoImportList = list;
-    var html = '<p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:1rem">Añadir como editores en Creativos:</p><div style="display:flex;flex-direction:column;gap:0.5rem;max-height:280px;overflow-y:auto">';
-    list.forEach(function(m) {
-      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem;background:var(--color-surface-offset);border-radius:var(--radius-md)"><div><strong>' + esc(m.nombre || '') + '</strong>' + (m.rol ? ' <span style="font-size:var(--text-xs);color:var(--color-text-muted)">' + esc(m.rol) + '</span>' : '') + '</div><button type="button" class="btn btn-primary" style="padding:4px 12px" onclick="importEditorFromTareas(\'' + m.id + '\')">Agregar</button></div>';
-    });
-    html += '</div>';
-    bodyEl.innerHTML = html;
-  });
-}
-function importEditorFromTareas(equipoId) {
-  if (!supabase) return;
-  var list = window._tareasEquipoImportList || [];
-  var m = list.find(function(x) { return x.id === equipoId; });
-  if (!m) { showToast('error', 'No encontrado'); return; }
-  supabase.from('creativos_editores').insert({ name: m.nombre || 'Editor', specialty: m.rol || 'Edición General' }).then(function(r) {
-    if (r.error) { showToast('error', r.error.message || 'Error'); return; }
-    showToast('success', m.nombre + ' agregado como editor');
-    list.splice(list.findIndex(function(x) { return x.id === equipoId; }), 1);
-    window._tareasEquipoImportList = list;
-    reloadCreativosData(function() { showImportEditoresFromTareas(); });
-  });
+  var e = D.editors.find(function(ed) { return ed.id === id; });
+  if (!e) return;
+  if (e.fromGerente || String(id).indexOf('gerente:') === 0) {
+    openModal('Miembro del equipo', `
+      <div style="font-size:var(--text-sm);line-height:1.55">
+        <p style="margin:0 0 var(--space-2) 0"><strong>${esc(e.name)}</strong></p>
+        ${e.email ? '<p style="margin:0 0 var(--space-3) 0;word-break:break-all"><span style="color:var(--color-text-muted)">Correo</span><br><strong>' + esc(e.email) + '</strong></p>' : ''}
+        <p class="form-hint" style="margin:0">Perfil y asistencia se administran en Tareas.</p>
+        ${e.legacyEditor ? '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-3)">Editor histórico sin coincidencia actual con un gerente (solo lectura en Creativos).</p>' : ''}
+      </div>
+    `, '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>');
+    return;
+  }
+  editingId = id;
+  editingType = 'editor';
+  var body = `
+    <p class="form-hint" style="margin-bottom:var(--space-3)">Editor no vinculado a un gerente actual; puedes ajustar etiquetas locales en Creativos.</p>
+    <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" id="editorName" value="${esc(e.name)}" placeholder="Nombre"></div>
+    <div class="form-group"><label class="form-label">Correo</label><input class="form-input" id="editorEmail" type="email" value="${esc(e.email || '')}" placeholder="correo@…"></div>
+    <div class="form-group"><label class="form-label">Especialidad</label><select class="form-select" id="editorSpecialty">${EDITOR_SPECIALTIES.map(s => `<option ${e.specialty === s ? 'selected':''}>${s}</option>`).join('')}</select></div>
+  `;
+  openModal('Editor (histórico)', body, '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button type="button" class="btn btn-primary" onclick="saveEditor()">Guardar</button>');
 }
 function saveEditor() {
   var name = document.getElementById('editorName').value.trim();
@@ -3574,13 +3860,22 @@ function deleteProduct(id) {
   renderPage(currentPage);
 }
 function deleteEditor(id) {
+  var ed = D.editors.find(function(x) { return x.id === id; });
+  if (ed && ed.fromGerente && !ed.legacyEditor) {
+    showToast('info', 'Los miembros del equipo se gestionan en Tareas · Asistencia (tabla gerentes).');
+    return;
+  }
+  if (String(id).indexOf('gerente:') === 0) {
+    showToast('info', 'Los miembros del equipo se gestionan en Tareas · Asistencia.');
+    return;
+  }
   if (D.projects.some(p => p.editorId === id)) {
     showToast('error', 'No se puede eliminar: tiene proyectos asociados');
     return;
   }
-  if (!confirm('¿Eliminar este editor?')) return;
+  if (!confirm('¿Quitar este editor histórico de la lista local?')) return;
   D.editors = D.editors.filter(e => e.id !== id);
-  showToast('success', 'Editor eliminado');
+  showToast('success', 'Editor quitado de la vista');
   renderPage(currentPage);
 }
 
@@ -3659,44 +3954,24 @@ function escAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
-function findCreativosEditorForTareasMember(m) {
-  var n = (m.nombre || '').trim().toLowerCase();
-  if (!n) return null;
-  return D.editors.find(function(e) { return (e.name || '').trim().toLowerCase() === n; }) || null;
-}
-
-function tareasEquipoSoloSinEditorCreativos() {
-  return (D.tareasEquipo || []).filter(function(m) {
-    if (m.activo === false) return false;
-    if (!(m.nombre && String(m.nombre).trim())) return false;
-    return !findCreativosEditorForTareasMember(m);
-  });
-}
-
 function creativosProjectEditorSelectHasChoices() {
-  return D.editors.length > 0 || tareasEquipoSoloSinEditorCreativos().length > 0;
+  return D.editors.length > 0;
+}
+
+function editorAssignOptionLabel(e) {
+  if (e.email) return esc(e.name || e.email) + ' — ' + esc(e.email);
+  return formatSelectTwoPart(e.name, e.specialty, 'Sin nombre');
 }
 
 function renderProjectEditorSelectHTML(selectedId) {
   var html = '<option value="">Seleccionar...</option>';
-  if (D.editors.length > 0) {
-    html += '<optgroup label="Editores (Creativos)">';
-    D.editors.forEach(function(e) {
-      var sel = selectedId === e.id ? ' selected' : '';
-      html += '<option value="' + escAttr(e.id) + '"' + sel + '>' + formatSelectTwoPart(e.name, e.specialty, 'Sin nombre') + '</option>';
-    });
-    html += '</optgroup>';
-  }
-  var solo = tareasEquipoSoloSinEditorCreativos();
-  if (solo.length > 0) {
-    html += '<optgroup label="Integrantes del equipo (Tareas)">';
-    solo.forEach(function(m) {
-      var val = 'tareas:' + m.id;
-      var sel = selectedId === val ? ' selected' : '';
-      html += '<option value="' + escAttr(val) + '"' + sel + '>' + formatSelectTwoPart(m.nombre, m.rol, 'Sin nombre') + '</option>';
-    });
-    html += '</optgroup>';
-  }
+  if (D.editors.length === 0) return html;
+  html += '<optgroup label="Equipo (gerentes · asistencia)">';
+  D.editors.forEach(function(e) {
+    var sel = selectedId === e.id ? ' selected' : '';
+    html += '<option value="' + escAttr(e.id) + '"' + sel + '>' + editorAssignOptionLabel(e) + '</option>';
+  });
+  html += '</optgroup>';
   return html;
 }
 
