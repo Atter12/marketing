@@ -2821,6 +2821,115 @@ function formatKanbanDate(dateStr) {
   return d.toLocaleDateString('es', { day: 'numeric', month: 'short' });
 }
 
+/** Evita filas duplicadas (mismo Crédito o mismo nombre manual). */
+function dedupeTareasClienteRows(rows) {
+  var list = rows || [];
+  var byCredito = Object.create(null);
+  var sinCredito = [];
+  list.forEach(function(r) {
+    if (r.credito_client_id) {
+      var cid = String(r.credito_client_id);
+      if (!byCredito[cid]) byCredito[cid] = r;
+    } else {
+      sinCredito.push(r);
+    }
+  });
+  var out = Object.keys(byCredito).map(function(k) { return byCredito[k]; });
+  var seenNombre = Object.create(null);
+  sinCredito.forEach(function(r) {
+    var nk = (r.nombre || '').trim().toLowerCase();
+    if (nk) {
+      if (seenNombre[nk]) return;
+      seenNombre[nk] = true;
+    }
+    out.push(r);
+  });
+  out.sort(function(a, b) {
+    return (a.nombre || '').trim().toLowerCase().localeCompare((b.nombre || '').trim().toLowerCase(), 'es', { sensitivity: 'base' });
+  });
+  return out;
+}
+
+function attendanceMembersSorted() {
+  return (ATTENDANCE_MEMBERS || []).slice().sort(function(a, b) {
+    var la = (a.n || a.email || '').toLowerCase();
+    var lb = (b.n || b.email || '').toLowerCase();
+    return la.localeCompare(lb, 'es', { sensitivity: 'base' });
+  });
+}
+
+/** Opciones &lt;select&gt; de clientes: value = id; etiqueta desambigua si hay mismo nombre. */
+function getTareasClientSelectOptionsHtml() {
+  var list = clients || [];
+  var nameCount = {};
+  list.forEach(function(c) {
+    var k = (c.n || '').trim().toLowerCase();
+    nameCount[k] = (nameCount[k] || 0) + 1;
+  });
+  return list.map(function(c) {
+    var id = String(c.id || '').replace(/"/g, '&quot;');
+    var base = escTareas(c.n || 'Sin nombre');
+    var k = (c.n || '').trim().toLowerCase();
+    var lab = (nameCount[k] > 1 && c.email) ? base + ' · ' + escTareas(c.email) : base;
+    return '<option value="' + id + '">' + lab + '</option>';
+  }).join('');
+}
+
+/** Entregables guardan equipo_ids (tareas_equipo). Si el responsable es de Asistencia, aseguramos fila enlazada por gerente_email. */
+function resolveEquipoIdForAssigneeEmail(email, done) {
+  var em = (email || '').trim().toLowerCase();
+  if (!em) { if (done) done(null); return; }
+  var existing = TEAM.find(function(t) { return (t.gerente_email || '').toLowerCase().trim() === em; });
+  if (existing) { if (done) done(existing.id); return; }
+  var attM = ATTENDANCE_MEMBERS.find(function(a) { return (a.email || '').toLowerCase().trim() === em; });
+  var nombre = attM ? attM.n : (em.indexOf('@') > 0 ? em.split('@')[0] : em);
+  var rol = attM ? attM.r : 'Equipo';
+  var color = attM ? attM.c : '#6366f1';
+  if (!supabase) {
+    var lid = 'local-eq-' + em.replace(/[^a-z0-9]+/g, '-').slice(0, 32);
+    if (!TEAM.some(function(t) { return t.id === lid; })) {
+      TEAM.push({ id: lid, n: nombre, r: rol, c: color, on: true, att: '', ci: '', co: '', checkinAt: null, checkoutAt: null, svc: '', gerente_email: em });
+    }
+    if (done) done(lid);
+    return;
+  }
+  var newId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : ('eq-' + Date.now());
+  supabase.from('tareas_equipo').insert({
+    id: newId,
+    nombre: nombre,
+    rol: rol,
+    color: color,
+    activo: true,
+    gerente_email: em,
+    servicio: null,
+    asistencia: null
+  }).select('id').single().then(function(ins) {
+    if (ins.error) {
+      console.warn('[Tareas] No se pudo crear fila de equipo para asistencia:', ins.error);
+      if (done) done(null);
+      return;
+    }
+    TEAM.push({ id: newId, n: nombre, r: rol, c: color, on: true, att: '', ci: '', co: '', checkinAt: null, checkoutAt: null, svc: '', gerente_email: em });
+    if (done) done(newId);
+  });
+}
+
+var _tareasRealtimeDebounce = null;
+function initTareasRealtimeSync() {
+  if (!supabase || window.__tareasRealtimeInited) return;
+  window.__tareasRealtimeInited = true;
+  try {
+    supabase.channel('tareas-app-clientes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tareas_clientes' }, function() {
+        if (_tareasRealtimeDebounce) clearTimeout(_tareasRealtimeDebounce);
+        _tareasRealtimeDebounce = setTimeout(function() { reloadTareasData(); }, 400);
+      })
+      .subscribe();
+  } catch (e) {
+    console.warn('[Tareas] Realtime clientes:', e);
+  }
+}
+
 async function loadTareasData() {
   if (!supabase) {
     console.warn('[Tareas] loadTareasData: supabase es null, no se puede cargar. Revisa los logs de tryInitSupabase.');
@@ -2918,10 +3027,12 @@ async function loadTareasData() {
       var photo = (r.avatar_url && String(r.avatar_url).trim()) || '';
       return { id: r.id, email: (r.email || '').toLowerCase().trim(), n: name, r: permMiembroLabel(r), photo: photo, c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, trust: r.att_trust || null, activeSeconds: r.att_active_seconds || 0, lastHeartbeat: r.att_last_heartbeat ? new Date(r.att_last_heartbeat) : null, ip: r.att_ip || '', device: r.att_device || '' };
     });
-    var clients = (clRes.data || []).map(function(r) {
+    var rawClienteRows = dedupeTareasClienteRows(clRes.data || []);
+    var clients = rawClienteRows.map(function(r) {
       var credito = r.credito_client_id ? creditoById[r.credito_client_id] : null;
       var n = credito ? credito.nombre : (r.nombre || '');
       var contact = credito ? credito.contacto_nombre : (r.contacto_nombre || '');
+      if (n && contact && String(contact).trim().toLowerCase() === String(n).trim().toLowerCase()) contact = '';
       var email = credito ? credito.email : (r.email || '');
       var phone = credito ? credito.telefono : (r.telefono || '');
       var healthVal = r.health != null && r.health !== '' ? Number(r.health) : null;
@@ -2930,6 +3041,9 @@ async function loadTareasData() {
       var fotoCredito = (credito && credito.avatar_url) ? String(credito.avatar_url).trim() : '';
       var photo = fotoTareas || fotoCredito;
       return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+    });
+    clients.sort(function(a, b) {
+      return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
     });
     var KT = (kbRes.data || []).map(function(r) {
       return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
@@ -2961,7 +3075,7 @@ async function loadTareasData() {
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
-    var creditoIdsInTareas = (clRes.data || []).map(function(r) { return r.credito_client_id; }).filter(Boolean);
+    var creditoIdsInTareas = rawClienteRows.map(function(r) { return r.credito_client_id; }).filter(Boolean);
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI, creditoIdsInTareas: creditoIdsInTareas };
   } catch (err) {
     console.error('[Tareas] loadTareasData:', err);
@@ -4500,12 +4614,12 @@ function openModal(type) {
       <div class="form-group"><label for="m-name">Nombre</label><input class="form-input" placeholder="Ej: Video Reel — Cliente X" id="m-name"></div>
       <div class="form-group"><label for="m-desc">Descripción</label><textarea class="form-textarea" placeholder="Detalles del entregable..." id="m-desc"></textarea></div>
       <div class="form-row">
-        <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client"><option value="">— Ninguno —</option>${(clients||[]).map(function(c){return '<option>' + (c.n||'').replace(/</g,'&lt;') + '</option>';}).join('')}</select></div>
+        <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client"><option value="">— Ninguno —</option>${getTareasClientSelectOptionsHtml()}</select></div>
         <div class="form-group"><label for="m-service">Servicio</label><select class="form-select" id="m-service"><option value="marketing">Marketing</option><option value="branding">Branding</option><option value="video">Video</option><option value="social">Social</option><option value="design">Diseño</option></select></div>
       </div>
       <div class="form-row-3">
         <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
-        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${(TEAM||[]).map(function(m){return '<option value="'+(m.id||'')+'">'+(m.n||'').replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
+        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${attendanceMembersSorted().filter(function(m){ return (m.email||'').trim(); }).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;'); return '<option value="'+em+'">'+escTareas(m.n||m.email)+'</option>'; }).join('')}</select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Misma lista que <strong>Asistencia</strong> (gerentes). Si es la primera asignación, se crea el enlace en equipo automáticamente.</p></div>
         <div class="form-group"><label for="m-due">Fecha Límite</label><input class="form-input" type="date" id="m-due"></div>
       </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
@@ -4523,7 +4637,7 @@ function openModal(type) {
         <div class="tk-file-preview" id="tk-file-preview"></div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label for="tk-client">Cliente <span style="font-weight:400;color:var(--color-text-faint)">(opcional)</span></label><select class="form-select" id="tk-client"><option value="">— Sin cliente —</option>${(clients||[]).map(function(c){var n=c.n||''; return '<option value="'+n.replace(/"/g,'&quot;')+'">'+n.replace(/</g,'&lt;')+'</option>';}).join('')}</select></div>
+        <div class="form-group"><label for="tk-client">Cliente <span style="font-weight:400;color:var(--color-text-faint)">(opcional)</span></label><select class="form-select" id="tk-client"><option value="">— Sin cliente —</option>${getTareasClientSelectOptionsHtml()}</select></div>
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Mejora">✨ Mejora</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
@@ -4537,7 +4651,7 @@ function openModal(type) {
           <option value="4320">3 días</option>
         </select></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${(ATTENDANCE_MEMBERS||[]).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;').replace(/</g,'&lt;'); var nm = (m.n||em).replace(/</g,'&lt;'); return '<option value="'+em+'">'+nm+'</option>'; }).join('')}</select></div>
+        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${attendanceMembersSorted().filter(function(m){ return (m.email||'').trim(); }).map(function(m){ var em = (m.email||'').replace(/"/g,'&quot;'); return '<option value="'+em+'">'+escTareas(m.n||m.email)+'</option>'; }).join('')}</select></div>
       </div>
       <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
@@ -4658,10 +4772,15 @@ function openClientDetail(idx) {
   var invBlock = pFin.finRead ? `<div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>` : '';
 
   document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
+  var detailSubParts = [];
+  if (c.tp && String(c.tp).trim()) detailSubParts.push(escTareas(c.tp));
+  if (c.contact && String(c.contact).trim()) detailSubParts.push(escTareas(c.contact));
+  if (c.email && String(c.email).trim()) detailSubParts.push(escTareas(c.email));
+  var detailSubLine = detailSubParts.join(' · ');
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5)">
       ${clientAvatarMarkup(c, { w: 50, h: 50, fs: '1.25rem' })}
-      <div><div style="font-size:var(--text-xl);font-weight:700">${c.n || '—'}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${c.tp || ''} · ${c.contact || ''} · ${c.email || ''}</div></div>
+      <div><div style="font-size:var(--text-xl);font-weight:700">${escTareas(c.n || '—')}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${detailSubLine || '—'}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
       ${invBlock}
@@ -4843,30 +4962,40 @@ function addTask() {
   var pr = document.getElementById('m-priority').value;
   var dueVal = document.getElementById('m-due').value;
   var due = dueVal ? dueVal : null;
-  var equipoId = document.getElementById('m-assignee').value;
-  var clNombre = document.getElementById('m-client').value;
+  var assignEmail = (document.getElementById('m-assignee').value || '').trim();
+  var clSel = document.getElementById('m-client').value;
+  var clNombre = '';
+  if (clSel) {
+    var cObj = clients.find(function(c) { return String(c.id) === String(clSel); });
+    if (cObj) clNombre = cObj.n || '';
+  }
+  function pushLocalKanban(equipoId) {
+    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', sv: sv, tg: tg, pr: pr, du: due || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
+    renderers.kanban(); updateBadges(); closeModal();
+  }
   if (supabase) {
-    supabase.from('tareas_kanban').insert({
-      columna: 'todo',
-      titulo: n,
-      descripcion: document.getElementById('m-desc').value || '',
-      servicio: tg,
-      prioridad: pr,
-      fecha_entrega: due,
-      progreso: 0,
-      equipo_ids: equipoId ? [equipoId] : [],
-      cliente_nombre: clNombre,
-      subtareas: '0/1',
-      orden: 0
-    }).select().single().then(function(r) {
-      if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
-      var row = r.data;
-      KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
-      renderers.kanban(); updateBadges(); closeModal();
+    resolveEquipoIdForAssigneeEmail(assignEmail, function(equipoId) {
+      supabase.from('tareas_kanban').insert({
+        columna: 'todo',
+        titulo: n,
+        descripcion: document.getElementById('m-desc').value || '',
+        servicio: tg,
+        prioridad: pr,
+        fecha_entrega: due,
+        progreso: 0,
+        equipo_ids: equipoId ? [equipoId] : [],
+        cliente_nombre: clNombre,
+        subtareas: '0/1',
+        orden: 0
+      }).select().single().then(function(r) {
+        if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
+        var row = r.data;
+        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
+        renderers.kanban(); updateBadges(); closeModal();
+      });
     });
   } else {
-    KT.unshift({col:'todo',tt:n,ds:document.getElementById('m-desc').value||'',sv,tg,pr,du:due||'Sin fecha',dc:'',pc:0,tm:equipoId?[equipoId]:[],cl:clNombre,sb:'0/1',ticketDbId:null});
-    renderers.kanban(); updateBadges(); closeModal();
+    resolveEquipoIdForAssigneeEmail(assignEmail, function(equipoId) { pushLocalKanban(equipoId); });
   }
 }
 function addTicket() {
@@ -4874,8 +5003,13 @@ function addTicket() {
   if (!n) { alert('Título requerido'); return; }
   var desc = document.getElementById('tk-desc').value || '';
   var pr = document.getElementById('tk-priority').value;
-  var clVal = document.getElementById('tk-client').value;
-  var clColor = clVal ? ((clients.find(function(c){ return c.n === clVal; }) || {}).c || '#666') : '#94a3b8';
+  var clSel = document.getElementById('tk-client').value;
+  var clVal = '';
+  var clColor = '#94a3b8';
+  if (clSel) {
+    var cPick = clients.find(function(c) { return String(c.id) === String(clSel); });
+    if (cPick) { clVal = cPick.n || ''; clColor = cPick.c || '#666'; }
+  }
   var cat = document.getElementById('tk-cat').value;
   var assignEmail = (document.getElementById('tk-assign').value || '').trim();
   var linkId = document.getElementById('tk-link').value || '';
@@ -5433,6 +5567,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showTareasLoading(false);
       initViews();
       initTareasAvatar();
+      initTareasRealtimeSync();
       attAutoStartHeartbeat();
       refreshTareasSessionPerms();
     }).catch(function(err) {
