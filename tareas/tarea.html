@@ -5840,6 +5840,7 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
   });
 }
 function deleteWorkloadMember(memberId, memberEmail, memberName) {
+  console.log('[Tareas] deleteWorkloadMember:start', { memberId: memberId, memberEmail: memberEmail, memberName: memberName, hasSupabase: !!supabase });
   if (!tareasEffectivePerms().admin) { alert('Solo administradores pueden eliminar miembros.'); return; }
   var name = memberName || memberEmail || memberId || 'miembro';
   if (!confirm('¿Eliminar miembro "' + name + '" del equipo?')) return;
@@ -5852,27 +5853,61 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
     return;
   }
   var em = String(memberEmail || '').trim().toLowerCase();
+  var myEmail = String(window.__tareasSessionEmail || '').trim().toLowerCase();
+  if (em && myEmail && em === myEmail) {
+    alert('No puedes eliminar tu propio usuario desde esta pantalla.');
+    console.warn('[Tareas] deleteWorkloadMember: blocked self-delete', { em: em });
+    return;
+  }
   function finishReload() {
+    console.log('[Tareas] deleteWorkloadMember: finishReload');
     reloadTareasData(function() {
-      renderers.workload?.();
-      renderers.attendance?.();
-      updateBadges();
-      updateDashboardStats();
+      try {
+        renderers.workload?.();
+        renderers.attendance?.();
+        updateBadges();
+        updateDashboardStats();
+      } catch (e) {
+        console.error('[Tareas] deleteWorkloadMember: render after reload failed', e);
+        try { initViews(); } catch (e2) {}
+      }
+    }).catch(function(err) {
+      console.error('[Tareas] deleteWorkloadMember: reload failed', err);
+      try { initViews(); } catch (e3) {}
     });
   }
   function deleteGerenteIfAny() {
     if (!memberId) { finishReload(); return; }
+    console.log('[Tareas] deleteWorkloadMember: deleting gerente', { memberId: memberId });
     supabase.from('gerentes').delete().eq('id', memberId).then(function(res) {
-      if (res.error) console.warn('[Tareas] delete gerente:', res.error.message);
+      if (res.error) {
+        console.error('[Tareas] delete gerente failed:', res.error);
+        alert('No se pudo eliminar en asistencia/gerentes: ' + (res.error.message || 'Error'));
+        finishReload();
+        return;
+      }
       finishReload();
-    }).catch(function() { finishReload(); });
+    }).catch(function(err) {
+      console.error('[Tareas] delete gerente exception:', err);
+      alert('Error eliminando en gerentes.');
+      finishReload();
+    });
   }
   if (em) {
+    console.log('[Tareas] deleteWorkloadMember: deleting tareas_equipo by email', { em: em });
     supabase.from('tareas_equipo').delete().eq('gerente_email', em).then(function(resp) {
-      if (resp.error) console.warn('[Tareas] delete tareas_equipo by email:', resp.error.message);
+      if (resp.error) {
+        console.error('[Tareas] delete tareas_equipo by email failed:', resp.error);
+        alert('No se pudo eliminar en equipo: ' + (resp.error.message || 'Error'));
+      }
       deleteGerenteIfAny();
-    }).catch(function() { deleteGerenteIfAny(); });
+    }).catch(function(err) {
+      console.error('[Tareas] delete tareas_equipo by email exception:', err);
+      alert('Error eliminando en equipo.');
+      deleteGerenteIfAny();
+    });
   } else {
+    console.log('[Tareas] deleteWorkloadMember: no email, skip equipo delete');
     deleteGerenteIfAny();
   }
 }
