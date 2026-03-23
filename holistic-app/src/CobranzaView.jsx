@@ -1464,6 +1464,11 @@ export default function CobranzaView({
                     srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Inter,system-ui,sans-serif;padding:16px;color:#0f172a;line-height:1.5;} .sbj{font-size:14px;color:#64748b;margin-bottom:8px} .ttl{font-weight:700;margin-bottom:14px;font-size:17px}</style></head><body><div class="sbj">Asunto:</div><div class="ttl">${(editAsunto || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>${editCuerpo || "<p>(vacío)</p>"}</body></html>`}
                     style={{ width: "100%", height: 360, border: "none" }}
                   />
+                  <p style={{ margin: "10px 12px 0", fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
+                    <strong>Al enviar por Resend</strong> el cliente recibe este mensaje dentro de un correo con marca{" "}
+                    <strong>Holistic Marketing</strong> (cabecera y pie profesionales) y un botón{" "}
+                    <strong>Entrar al panel Crédito</strong>, alineado con el mail de acceso al panel.
+                  </p>
                 </div>
               )}
 

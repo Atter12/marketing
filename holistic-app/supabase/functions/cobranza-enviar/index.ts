@@ -12,6 +12,77 @@ function normalizeEmail(email: string): string {
   return String(email || "").trim().toLowerCase();
 }
 
+function escapeHtml(s: string): string {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Misma línea visual que acceso Crédito (Resend): marca Holistic + panel. */
+function buildCobranzaEmail(opts: {
+  innerHtml: string;
+  brandName: string;
+  panelUrl: string;
+  plainBody: string;
+}): { html: string; text: string } {
+  const brand = escapeHtml(opts.brandName);
+  const panel = opts.panelUrl.replace(/\/$/, "");
+  const panelEsc = escapeHtml(panel);
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:28px 14px;">
+  <tr><td align="center">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,.08);border:1px solid #e2e8f0;">
+      <tr>
+        <td style="padding:26px 28px;background:linear-gradient(135deg,#1b2559 0%,#2d3a6e 100%);">
+          <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600;">Comunicación oficial</div>
+          <div style="font-size:22px;font-weight:800;color:#ffffff;margin-top:10px;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">Marketing digital · Gestión de cuentas</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:28px 28px 8px;color:#0f172a;font-size:15px;line-height:1.65;">
+          ${opts.innerHtml || "<p>(sin contenido)</p>"}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:8px 28px 24px;">
+          <div style="height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent);"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 28px 28px;">
+          <p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.5;">¿Necesitás ver tu cuenta o subir un comprobante?</p>
+          <a href="${panelEsc}" style="display:inline-block;padding:12px 22px;background:#1b2559;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">Entrar al panel Crédito</a>
+          <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">Si no reconocés este mensaje, podés ignorarlo o responder a este correo.</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:16px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;">
+          <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;text-align:center;">© ${brand} · Este correo es transaccional.</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+
+  const text =
+    `${opts.brandName}\n\n` +
+    `${opts.plainBody.trim()}\n\n` +
+    `---\n` +
+    `Entrar al panel Crédito: ${panel}\n` +
+    `Si no reconocés este mensaje, podés ignorarlo.\n`;
+
+  return { html, text };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -126,15 +197,29 @@ Deno.serve(async (req) => {
     }
 
     const from = Deno.env.get("RESEND_FROM") || "Holistic Marketing <onboarding@resend.dev>";
-    const subject = String(row.asunto || "Recordatorio — Holistic Marketing");
-    const html = String(row.cuerpo_html || "<p>(sin cuerpo)</p>");
+    const brandName = (Deno.env.get("COBRANZA_BRAND_NAME") || Deno.env.get("EMAIL_BRAND_NAME") || "Holistic Marketing").trim();
+    const panelUrl =
+      (Deno.env.get("COBRANZA_PANEL_URL") || Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "https://www.marketingconholistic.com/credito").trim();
+
+    const subject = String(row.asunto || `Mensaje de ${brandName}`);
+    const innerHtml = String(row.cuerpo_html || "<p>(sin cuerpo)</p>");
+    const plainBody =
+      (row.cuerpo_texto && String(row.cuerpo_texto).trim()) ||
+      innerHtml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+
+    const { html, text } = buildCobranzaEmail({
+      innerHtml,
+      brandName,
+      panelUrl,
+      plainBody,
+    });
 
     await adminClient.from("cobranza_bandeja").update({ estado: "sending", ultimo_error: null }).eq("id", id);
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify({ from, to, subject, html, text }),
     });
     const resData = await res.json().catch(() => ({}));
     if (!res.ok) {

@@ -10,6 +10,17 @@ supabase functions deploy cobranza-enviar --no-verify-jwt
 
 Secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, opcional `RESEND_FROM`.
 
+### Marca y enlace al panel (opcional)
+
+El HTML que guardás en `cuerpo_html` se **envuelve** en una plantilla tipo “correo oficial”: cabecera con nombre de empresa, colores Holistic (#1b2559), botón **Entrar al panel Crédito** y pie legal. Así el cliente ve algo **pro**, no solo el párrafo suelto.
+
+| Variable | Default | Uso |
+|----------|---------|-----|
+| `COBRANZA_BRAND_NAME` o `EMAIL_BRAND_NAME` | `Holistic Marketing` | Nombre en cabecera y pie |
+| `COBRANZA_PANEL_URL` o `APP_URL` / `PUBLIC_APP_URL` | `https://www.marketingconholistic.com/credito` | URL del botón y del pie |
+
+También se envía **`text`** (plano) a Resend usando `cuerpo_texto` si existe, para mejor entregabilidad.
+
 ## POST
 
 ```json
