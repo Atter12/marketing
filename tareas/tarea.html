@@ -1998,6 +1998,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   .stats-row { grid-template-columns: 1fr 1fr; }
   .tickets-stats { grid-template-columns: repeat(2, 1fr); }
   .kanban-board { min-height: 400px; }
+  .kanban-board { gap: var(--sp-3); padding-bottom: var(--sp-2); }
+  .kanban-col { min-width: min(86vw, 320px); width: min(86vw, 320px); }
+  .kanban-card { padding: var(--sp-2); }
+  .card-meta { gap: 6px; flex-wrap: wrap; }
+  .kanban-card-actions { margin-top: var(--sp-1); }
   .clients-grid { grid-template-columns: 1fr; }
   .ticket-detail-inner { grid-template-columns: 1fr; }
   .ticket-row, .tickets-thead { grid-template-columns: 60px 1fr 70px 80px; }
@@ -2013,6 +2018,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   .stats-row { grid-template-columns: 1fr; }
   .tickets-stats { grid-template-columns: 1fr 1fr; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .kanban-col { min-width: 92vw; width: 92vw; }
+  .card-title { font-size: var(--text-sm); }
+  .card-desc { -webkit-line-clamp: 3; line-clamp: 3; }
 }
 @media (hover: none) {
   .stat-card:hover, .kanban-card:hover, .client-table-row:hover { transform: none; }
@@ -2900,6 +2908,53 @@ function formatSlaMinutesOrHours(minutos, horasFallback) {
   }
   return formatSlaHours(horasFallback);
 }
+function getLiveCountdownInfo(deadlineIso) {
+  if (!deadlineIso) return { text: '—', status: 'ok' };
+  var deadline = new Date(deadlineIso);
+  if (isNaN(deadline.getTime())) return { text: '—', status: 'ok' };
+  var now = new Date();
+  var diffMs = deadline.getTime() - now.getTime();
+  if (diffMs <= 0) return { text: 'VENCIDO', status: 'breach' };
+  var mins = Math.floor(diffMs / 60000);
+  if (mins <= 60) return { text: mins + ' min', status: mins <= 15 ? 'warn' : 'ok' };
+  if (mins < 1440) {
+    var h = Math.floor(mins / 60);
+    var m = mins % 60;
+    return { text: h + 'h ' + m + 'm', status: mins <= 120 ? 'warn' : 'ok' };
+  }
+  return { text: (Math.floor(mins / 1440)) + 'd', status: 'ok' };
+}
+function updateLiveCountdownBadges() {
+  document.querySelectorAll('[data-live-deadline]').forEach(function(el) {
+    var info = getLiveCountdownInfo(el.getAttribute('data-live-deadline'));
+    var prefix = el.getAttribute('data-live-prefix') || '';
+    el.textContent = prefix + info.text;
+    if (el.classList.contains('live-sla-text')) {
+      el.style.color = info.status === 'breach' ? 'var(--red)' : (info.status === 'warn' ? 'var(--orange2)' : 'var(--green)');
+    }
+    var dot = el.parentElement && el.parentElement.querySelector('.sla-indicator');
+    if (dot) {
+      dot.classList.remove('sla-ok', 'sla-warn', 'sla-breach');
+      dot.classList.add(info.status === 'breach' ? 'sla-breach' : (info.status === 'warn' ? 'sla-warn' : 'sla-ok'));
+    }
+  });
+}
+var _liveCountdownTimer = null;
+function startLiveCountdownTimer() {
+  if (_liveCountdownTimer) return;
+  updateLiveCountdownBadges();
+  _liveCountdownTimer = setInterval(function() {
+    updateLiveCountdownBadges();
+  }, 30000);
+}
+function parseSlaMinutesFromInputs(valueRaw, unitRaw, fallbackMinutes) {
+  var n = Number(valueRaw);
+  if (!isFinite(n) || n <= 0) return fallbackMinutes;
+  var unit = String(unitRaw || 'min').toLowerCase();
+  if (unit === 'h') return Math.round(n * 60);
+  if (unit === 'd') return Math.round(n * 1440);
+  return Math.round(n);
+}
 function formatKanbanDate(dateStr) {
   if (!dateStr) return '';
   var d = new Date(dateStr);
@@ -3186,7 +3241,7 @@ async function loadTareasData() {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
     });
     var KT = (kbRes.data || []).map(function(r) {
-      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', slaMin: (r.plazo_minutos != null ? Number(r.plazo_minutos) : null), createdAt: r.created_at || null, sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
     });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
@@ -3213,7 +3268,7 @@ async function loadTareasData() {
       }
       var solAdj = Array.isArray(t.adjuntos_solicitud) ? t.adjuntos_solicitud : [];
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
-      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', dueAt: t.sla_vencimiento || null, created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
   } catch (err) {
@@ -3455,7 +3510,13 @@ renderers.kanban = function(snapshot) {
       const avsHtml = (t.tm || []).map(id => makeAvatar(id, 16)).join('');
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
       const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
-      const dateIcon = t.dc === 'dn' ? '✅' : '📅';
+      var deadlineIso = '';
+      if (t.slaMin && t.createdAt) {
+        var c = new Date(t.createdAt);
+        if (!isNaN(c.getTime())) deadlineIso = new Date(c.getTime() + (Number(t.slaMin) * 60000)).toISOString();
+      }
+      const dateIcon = t.dc === 'dn' ? '✅' : (deadlineIso ? '⏱' : (t.slaMin ? '⏱' : '📅'));
+      const dateLabel = deadlineIso ? '<span data-live-deadline="' + deadlineIso + '" data-live-prefix="">' + escTareas(getLiveCountdownInfo(deadlineIso).text) + '</span>' : (t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du);
       const kid = String(t.id || '').replace(/"/g, '&quot;');
       const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
       return `
@@ -3469,7 +3530,7 @@ renderers.kanban = function(snapshot) {
           <div class="card-title">${t.tt}</div>
           <div class="card-desc">${t.ds}</div>
           <div class="card-meta">
-            <span class="card-date ${dateCls}">${dateIcon} ${t.du}</span>
+            <span class="card-date ${dateCls}">${dateIcon} ${dateLabel || 'Sin fecha'}</span>
             <div class="kanban-card-participants" aria-label="Participan en esta tarea">${avsHtml}</div>
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
@@ -3633,8 +3694,9 @@ renderers.tickets = function() {
     const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En Proceso' : 'Resuelto';
     const prPill = tk.priority === 'urgente' ? 'pill-red' : tk.priority === 'alta' ? 'pill-orange2' : tk.priority === 'media' ? 'pill-orange' : 'pill-gray';
     const catPill= tk.category === 'Error' ? 'pill-red' : tk.category === 'Cambio' ? 'pill-orange2' : tk.category === 'Mejora' ? 'pill-green' : tk.category === 'Solicitud' ? 'pill-purple' : 'pill-gray';
-    const slaDot = tk.slaStatus === 'ok' ? 'sla-ok' : tk.slaStatus === 'warn' ? 'sla-warn' : 'sla-breach';
-    const slaColor = tk.slaStatus === 'ok' ? 'var(--green)' : tk.slaStatus === 'warn' ? 'var(--orange2)' : 'var(--red)';
+    const liveSla = getLiveCountdownInfo(tk.dueAt);
+    const slaDot = liveSla.status === 'ok' ? 'sla-ok' : liveSla.status === 'warn' ? 'sla-warn' : 'sla-breach';
+    const slaColor = liveSla.status === 'ok' ? 'var(--green)' : liveSla.status === 'warn' ? 'var(--orange2)' : 'var(--red)';
 
     const tlHtml = tk.timeline.map(function(t) {
       return '<div class="tl-entry ' + escTareas(t.type) + '"><div class="who">' + escTareas(t.who) + '</div><div class="what">' + escTareas(t.what) + '</div><div class="when">' + escTareas(t.when) + '</div></div>';
@@ -3674,7 +3736,7 @@ renderers.tickets = function() {
       <div role="cell"><span class="pill ${catPill}">${escTareas(tk.category)}</span></div>
       <div role="cell"><span class="pill ${prPill}">${escTareas(tk.priority)}</span></div>
       <div class="ticket-assignee" role="cell">${assigneeCellHtml}</div>
-      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span style="color:${slaColor}">${escTareas(tk.slaLeft)}</span></div>
+      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span class="live-sla-text" data-live-deadline="${escAttrUrlTareas(tk.dueAt || '')}" data-live-prefix="" style="color:${slaColor}">${escTareas(liveSla.text || tk.slaLeft)}</span></div>
       <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
     </div>
     <div class="ticket-detail" id="tkDetail-${idx}" role="region" aria-label="Detalle del ticket ${escTareas(tk.id)}">
@@ -3897,6 +3959,9 @@ function openEntregableDetailModal(kanbanId) {
   var body = '';
   body += '<div class="entregable-detail-block"><h4>Descripción</h4><div class="ticket-desc-body">' + escTareas(k.ds || 'Sin descripción.') + '</div></div>';
   body += '<div class="entregable-detail-block"><h4>Cliente y prioridad</h4><p style="font-size:var(--text-sm)">' + escTareas(k.cl || 'Sin cliente') + ' · ' + escTareas(k.pr) + '</p></div>';
+  if (k.slaMin) {
+    body += '<div class="entregable-detail-block"><h4>Tiempo máximo de cumplimiento</h4><p style="font-size:var(--text-sm)">⏱ ' + escTareas(formatSlaMinutesOrHours(k.slaMin, null)) + '</p></div>';
+  }
   body += '<div class="entregable-detail-block"><h4>Notas internas</h4><textarea class="form-textarea" id="ent-notes" rows="4" placeholder="Anota cambios, acuerdos o pendientes...">' + escTareas(k.notes || '') + '</textarea><div style="margin-top:8px"><button type="button" class="btn-primary btn-sm" onclick="saveEntregableNotes(\'' + String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">Guardar notas</button></div></div>';
   if (tk) {
     body += '<div class="entregable-detail-block"><h4>Ticket origen (' + escTareas(tk.id) + ')</h4><p style="font-size:var(--text-sm);color:var(--color-text-muted)">' + escTareas(tk.title) + '</p><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Referencias del reporte:</p><div class="ticket-attach-grid" id="entModalTkSol"></div></div>';
@@ -4830,7 +4895,7 @@ function openModal(type) {
       <div class="form-row-3">
         <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
         <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${tareasAssigneeOptionsHtml()}</select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Como administrador puedes asignar a cualquier miembro de Asistencia. La primera vez se enlaza automáticamente con equipo.' : 'Como asistente solo puedes asignarte a ti mismo. Un administrador puede asignar entregables a cualquiera del equipo.'}</p></div>
-        <div class="form-group"><label for="m-due">Fecha Límite</label><input class="form-input" type="date" id="m-due"></div>
+        <div class="form-group"><label for="m-sla">Tiempo máximo para cumplir</label><select class="form-select" id="m-sla"><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120" selected>2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
       </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
 
@@ -4851,15 +4916,7 @@ function openModal(type) {
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Mejora">✨ Mejora</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
-        <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla">
-          <option value="30">30 minutos</option>
-          <option value="60">1 hora</option>
-          <option value="120">2 horas</option>
-          <option value="240">4 horas</option>
-          <option value="480">8 horas</option>
-          <option value="1440" selected>1 día</option>
-          <option value="4320">3 días</option>
-        </select></div>
+        <div class="form-group"><label>Plazo para entregar</label><div class="form-row" style="grid-template-columns:1fr 1fr;gap:8px"><input class="form-input" id="tk-sla-value" type="number" min="1" step="1" value="1"><select class="form-select" id="tk-sla-unit"><option value="min">minutos</option><option value="h">horas</option><option value="d" selected>día</option></select></div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
         <div class="form-group"><label>Asignar a (uno o varios)</label><div style="border:1px solid var(--color-divider);border-radius:var(--r-md);padding:8px 10px;max-height:140px;overflow:auto">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
@@ -4998,7 +5055,7 @@ function openClientDetail(idx) {
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
     ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
-    ${relDel.length ? relDel.map(d=>`<article class="kanban-card" data-sv="${d.sv}" style="margin-bottom:var(--sp-2);cursor:pointer" onclick="openEntregableDetailModal('${String(d.id||'').replace(/"/g,'&quot;')}')"><div class="kanban-card-top"><span class="service-tag ${d.tg}">${d.sv}</span><div class="priority-dot ${d.pr}" title="Prioridad"></div></div><div class="card-title">${escTareas(d.tt || 'Entregable')}</div><div class="card-desc">${escTareas((d.notes || d.ds || '').trim() || 'Sin notas todavía')}</div><div class="card-meta"><span class="card-date">📅 ${escTareas(d.du || 'Sin fecha')}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc || 0}%</span></div></article>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
+    ${relDel.length ? relDel.map(d=>`<article class="kanban-card" data-sv="${d.sv}" style="margin-bottom:var(--sp-2);cursor:pointer" onclick="openEntregableDetailModal('${String(d.id||'').replace(/"/g,'&quot;')}')"><div class="kanban-card-top"><span class="service-tag ${d.tg}">${d.sv}</span><div class="priority-dot ${d.pr}" title="Prioridad"></div></div><div class="card-title">${escTareas(d.tt || 'Entregable')}</div><div class="card-desc">${escTareas((d.notes || d.ds || '').trim() || 'Sin notas todavía')}</div><div class="card-meta"><span class="card-date">${d.slaMin ? '⏱ ' + escTareas(formatSlaMinutesOrHours(d.slaMin, null)) : '📅 ' + escTareas(d.du || 'Sin fecha')}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc || 0}%</span></div></article>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
   if (c.id) {
     footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button>';
@@ -5169,8 +5226,17 @@ function addTask() {
   var sv = document.getElementById('m-service').value;
   var tg = tgMap[sv] || 'tag-mk';
   var pr = document.getElementById('m-priority').value;
-  var dueVal = document.getElementById('m-due').value;
-  var due = dueVal ? dueVal : null;
+  var slaMin = parseInt(document.getElementById('m-sla').value, 10);
+  if (isNaN(slaMin) || slaMin < 15 || slaMin > 1440) {
+    alert('El tiempo máximo debe estar entre 15 minutos y 1 día.');
+    return;
+  }
+  var dueDateObj = new Date();
+  dueDateObj.setMinutes(dueDateObj.getMinutes() + slaMin);
+  var yyyy = dueDateObj.getFullYear();
+  var mm = String(dueDateObj.getMonth() + 1).padStart(2, '0');
+  var dd = String(dueDateObj.getDate()).padStart(2, '0');
+  var due = yyyy + '-' + mm + '-' + dd;
   var assignEmail = (document.getElementById('m-assignee').value || '').trim();
   var clSel = document.getElementById('m-client').value;
   var clNombre = '';
@@ -5179,7 +5245,7 @@ function addTask() {
     if (cObj) clNombre = cObj.n || '';
   }
   function pushLocalKanban(equipoId) {
-    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', sv: sv, tg: tg, pr: pr, du: due || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
+    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', slaMin: slaMin, createdAt: new Date().toISOString(), sv: sv, tg: tg, pr: pr, du: formatKanbanDate(due) || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
     renderers.kanban(); updateBadges(); closeModal();
   }
   if (supabase) {
@@ -5191,6 +5257,7 @@ function addTask() {
         servicio: tg,
         prioridad: pr,
         fecha_entrega: due,
+        plazo_minutos: slaMin,
         progreso: 0,
         notas: null,
         equipo_ids: equipoId ? [equipoId] : [],
@@ -5200,7 +5267,7 @@ function addTask() {
       }).select().single().then(function(r) {
         if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
         var row = r.data;
-        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
+        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', slaMin: (row.plazo_minutos != null ? Number(row.plazo_minutos) : slaMin), createdAt: row.created_at || new Date().toISOString(), sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
         renderers.kanban(); updateBadges(); closeModal();
       });
     });
@@ -5224,7 +5291,15 @@ function addTicket() {
   var assigneeEmails = getTicketSelectedAssigneeEmails();
   var assignEmail = assigneeEmails.length ? assigneeEmails[0] : '';
   var notes = (document.getElementById('tk-notes').value || '').trim();
-  var slaMinutes = parseInt(document.getElementById('tk-sla').value, 10) || 1440;
+  var slaMinutes = parseSlaMinutesFromInputs(
+    document.getElementById('tk-sla-value') && document.getElementById('tk-sla-value').value,
+    document.getElementById('tk-sla-unit') && document.getElementById('tk-sla-unit').value,
+    1440
+  );
+  if (slaMinutes < 15 || slaMinutes > 1440) {
+    alert('El plazo del ticket debe estar entre 15 minutos y 1 día.');
+    return;
+  }
   var slaH = Math.max(1, Math.ceil(slaMinutes / 60));
   var vencimiento = new Date();
   vencimiento.setMinutes(vencimiento.getMinutes() + slaMinutes);
@@ -5296,7 +5371,7 @@ function addTicket() {
       id:'TK-'+String(tickets.length+1).padStart(3,'0'), dbId: null, title:n, sub:desc,
       client:clVal, clientColor:clColor, status:'open', priority:pr,
       category:cat, channel:'', assignee:'', assigneeEmail:assignEmail, assigneeEmails: assigneeEmails, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
-      created:'Ahora', due:'Pendiente', notes: notes || '',
+      dueAt: vencimiento.toISOString(), created:'Ahora', due:'Pendiente', notes: notes || '',
       timeline:[{who:'Sistema', what:comentarioSistema, when:'Ahora', type:'system'}],
       createdByEmail:'', slaMinutos: slaMinutes, solicitudAdjuntos:[], resolucionAdjuntos:[], resolucionDetalle:''
     });
@@ -5678,6 +5753,7 @@ function initViews() {
   observeFadeIns();
   updateBadges();
   updateDashboardStats();
+  startLiveCountdownTimer();
 }
 
 function initTareasAvatar() {
