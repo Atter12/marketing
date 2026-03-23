@@ -2955,6 +2955,24 @@ function tareasAssigneeOptionsHtml() {
     return '<option value="' + em + '">' + escTareas(m.n || m.email) + '</option>';
   }).join('');
 }
+function tareasAssigneeChecklistHtml(inputName) {
+  var list = attendanceMembersSorted().filter(function(m) { return (m.email || '').trim(); });
+  if (!tareasEffectivePerms().admin) {
+    var my = (window.__tareasSessionEmail || '').toLowerCase().trim();
+    list = my ? list.filter(function(m) { return (m.email || '').toLowerCase().trim() === my; }) : [];
+  }
+  if (!list.length) return '<div class="form-hint">No hay miembros disponibles para asignar.</div>';
+  return list.map(function(m, idx) {
+    var em = (m.email || '').trim();
+    var lab = escTareas(m.n || em);
+    var id = (inputName || 'tk-assign-multi') + '-' + idx;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:var(--text-sm)"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"><span>' + lab + '</span><span style="font-size:var(--text-xs);color:var(--color-text-faint)">' + escTareas(em) + '</span></label>';
+  }).join('');
+}
+function getTicketSelectedAssigneeEmails() {
+  var nodes = document.querySelectorAll('input[name="tk-assign-multi"]:checked');
+  return Array.prototype.slice.call(nodes).map(function(n) { return (n.value || '').trim().toLowerCase(); }).filter(Boolean);
+}
 
 function tareasUpdateMiembroRol(sel) {
   if (!supabase) return;
@@ -3168,7 +3186,7 @@ async function loadTareasData() {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
     });
     var KT = (kbRes.data || []).map(function(r) {
-      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
     });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
@@ -3195,7 +3213,7 @@ async function loadTareasData() {
       }
       var solAdj = Array.isArray(t.adjuntos_solicitud) ? t.adjuntos_solicitud : [];
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
-      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), linkedDeliverable: t.entregable_vinculado || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
   } catch (err) {
@@ -3441,7 +3459,7 @@ renderers.kanban = function(snapshot) {
       const kid = String(t.id || '').replace(/"/g, '&quot;');
       const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
       return `
-        <article class="kanban-card fade-in" data-sv="${t.sv}" data-id="${t.id||''}" role="article">
+        <article class="kanban-card fade-in" data-sv="${t.sv}" data-id="${t.id||''}" role="article" onclick="openEntregableDetailModal('${kid}')">
           ${ticketPill}
           <div class="kanban-card-top">
             <span class="service-tag ${t.tg}">${t.sv}</span>
@@ -3626,12 +3644,18 @@ renderers.tickets = function() {
       ? '<span class="client-dot" style="background:' + tk.clientColor + '"></span>' + escTareas(tk.client)
       : '<span class="client-dot" style="background:#cbd5e1"></span><span style="color:var(--color-text-faint)">—</span>';
 
+    var assignedEmails = Array.isArray(tk.assigneeEmails) ? tk.assigneeEmails.slice() : [];
+    if (!assignedEmails.length && tk.assigneeEmail) assignedEmails = [tk.assigneeEmail];
     var assigneeCellHtml;
-    if (tk.assigneeEmail) {
-      var gM = (ATTENDANCE_MEMBERS || []).find(function(x) { return x.email === tk.assigneeEmail; });
-      var shortName = gM ? gM.n : (tk.assigneeEmail.indexOf('@') > 0 ? tk.assigneeEmail.split('@')[0] : tk.assigneeEmail);
-      var letter = (tk.assigneeEmail[0] || '?').toUpperCase();
-      assigneeCellHtml = '<div class="tk-avatar" style="background:#6366f1;width:22px;height:22px;font-size:9px;flex-shrink:0" title="' + escTareas(tk.assigneeEmail) + '">' + escTareas(letter) + '</div><span>' + escTareas(shortName) + '</span>';
+    if (assignedEmails.length) {
+      var chips = assignedEmails.slice(0, 3).map(function(em) {
+        var gM = (ATTENDANCE_MEMBERS || []).find(function(x) { return x.email === em; });
+        var shortName = gM ? gM.n : (em.indexOf('@') > 0 ? em.split('@')[0] : em);
+        var letter = (em[0] || '?').toUpperCase();
+        return '<span style="display:inline-flex;align-items:center;gap:6px"><div class="tk-avatar" style="background:#6366f1;width:20px;height:20px;font-size:8px;flex-shrink:0" title="' + escTareas(em) + '">' + escTareas(letter) + '</div><span>' + escTareas(shortName) + '</span></span>';
+      }).join('');
+      if (assignedEmails.length > 3) chips += '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">+' + (assignedEmails.length - 3) + '</span>';
+      assigneeCellHtml = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + chips + '</div>';
     } else {
       assigneeCellHtml = makeTkAvatar(tk.assignee, 22) + '<span>' + escTareas(m && m.n ? m.n.split(' ')[0] : '') + '</span>';
     }
@@ -3670,8 +3694,8 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Vence</div><div class="val" style="color:${slaColor}">${escTareas(tk.due)}</div></div>
             <div class="info-item"><div class="lbl">Plazo acordado</div><div class="val">${escTareas(tk.sla)}</div></div>
             <div class="info-item"><div class="lbl">Cliente</div><div class="val">${tk.client ? escTareas(tk.client) : '—'}</div></div>
-            <div class="info-item"><div class="lbl">Asignado a</div><div class="val">${tk.assigneeEmail ? escTareas(tk.assigneeEmail) : (m && m.n ? escTareas(m.n) : '—')}</div></div>
-            <div class="info-item"><div class="lbl">Entregable vinculado</div><div class="val" style="color:var(--color-primary)">${tk.linkedDeliverable ? escTareas(tk.linkedDeliverable) : '—'}</div></div>
+            <div class="info-item"><div class="lbl">Asignado a</div><div class="val">${(assignedEmails.length ? assignedEmails.map(function(em){ return escTareas(em); }).join(', ') : (tk.assigneeEmail ? escTareas(tk.assigneeEmail) : (m && m.n ? escTareas(m.n) : '—')))}</div></div>
+            <div class="info-item"><div class="lbl">Notas</div><div class="val">${tk.notes ? escTareas(tk.notes) : '—'}</div></div>
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
           <div class="ticket-actions">
@@ -3873,6 +3897,7 @@ function openEntregableDetailModal(kanbanId) {
   var body = '';
   body += '<div class="entregable-detail-block"><h4>Descripción</h4><div class="ticket-desc-body">' + escTareas(k.ds || 'Sin descripción.') + '</div></div>';
   body += '<div class="entregable-detail-block"><h4>Cliente y prioridad</h4><p style="font-size:var(--text-sm)">' + escTareas(k.cl || 'Sin cliente') + ' · ' + escTareas(k.pr) + '</p></div>';
+  body += '<div class="entregable-detail-block"><h4>Notas internas</h4><textarea class="form-textarea" id="ent-notes" rows="4" placeholder="Anota cambios, acuerdos o pendientes...">' + escTareas(k.notes || '') + '</textarea><div style="margin-top:8px"><button type="button" class="btn-primary btn-sm" onclick="saveEntregableNotes(\'' + String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">Guardar notas</button></div></div>';
   if (tk) {
     body += '<div class="entregable-detail-block"><h4>Ticket origen (' + escTareas(tk.id) + ')</h4><p style="font-size:var(--text-sm);color:var(--color-text-muted)">' + escTareas(tk.title) + '</p><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Referencias del reporte:</p><div class="ticket-attach-grid" id="entModalTkSol"></div></div>';
   }
@@ -3885,6 +3910,23 @@ function openEntregableDetailModal(kanbanId) {
     (supabase && k.id ? '<button type="button" class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="deleteEntregable(\'' + kidEsc + '\')">🗑 Eliminar entregable</button>' : '');
   showModalOverlay();
   if (tk) setTimeout(function() { fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos); }, 60);
+}
+function saveEntregableNotes(kanbanId) {
+  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
+  if (!k) return;
+  var notes = (document.getElementById('ent-notes') && document.getElementById('ent-notes').value || '').trim();
+  if (!supabase || !k.id) {
+    k.notes = notes;
+    renderers.kanban();
+    alert('Notas guardadas en modo local.');
+    return;
+  }
+  supabase.from('tareas_kanban').update({ notas: notes || null }).eq('id', k.id).then(function(r) {
+    if (r.error) { alert('No se pudieron guardar las notas: ' + (r.error.message || '')); return; }
+    k.notes = notes;
+    renderers.kanban();
+    alert('Notas guardadas.');
+  });
 }
 
 function submitEntregableEvidence(kanbanId) {
@@ -4819,9 +4861,9 @@ function openModal(type) {
           <option value="4320">3 días</option>
         </select></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label for="tk-assign">Asignar a</label><select class="form-select" id="tk-assign"><option value="">— Sin asignar —</option>${tareasAssigneeOptionsHtml()}</select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a cualquier miembro.' : 'Solo puedes asignártelo a ti; un administrador puede reasignar a otra persona.'}</p></div>
+        <div class="form-group"><label>Asignar a (uno o varios)</label><div style="border:1px solid var(--color-divider);border-radius:var(--r-md);padding:8px 10px;max-height:140px;overflow:auto">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
-      <div class="form-group"><label for="tk-link">Entregable ya existente (opcional)</label><select class="form-select" id="tk-link"><option value="">— Sin vincular —</option>${(KT||[]).map(function(k){ return '<option value="'+String(k.id).replace(/"/g,'&quot;')+'">'+String(k.tt||'').replace(/</g,'&lt;')+'</option>'; }).join('')}</select></div>`;
+      <div class="form-group"><label for="tk-notes">Notas internas (opcional)</label><textarea class="form-textarea" id="tk-notes" placeholder="Contexto adicional para el equipo…"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
     setTimeout(function() {
       var fi = document.getElementById('tk-files');
@@ -4956,7 +4998,7 @@ function openClientDetail(idx) {
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
     ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
-    ${relDel.length ? relDel.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><span class="service-tag ${d.tg}" style="margin-right:4px">${d.sv}</span>${d.tt}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc}%</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
+    ${relDel.length ? relDel.map(d=>`<article class="kanban-card" data-sv="${d.sv}" style="margin-bottom:var(--sp-2);cursor:pointer" onclick="openEntregableDetailModal('${String(d.id||'').replace(/"/g,'&quot;')}')"><div class="kanban-card-top"><span class="service-tag ${d.tg}">${d.sv}</span><div class="priority-dot ${d.pr}" title="Prioridad"></div></div><div class="card-title">${escTareas(d.tt || 'Entregable')}</div><div class="card-desc">${escTareas((d.notes || d.ds || '').trim() || 'Sin notas todavía')}</div><div class="card-meta"><span class="card-date">📅 ${escTareas(d.du || 'Sin fecha')}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc || 0}%</span></div></article>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
   if (c.id) {
     footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button>';
@@ -5137,7 +5179,7 @@ function addTask() {
     if (cObj) clNombre = cObj.n || '';
   }
   function pushLocalKanban(equipoId) {
-    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', sv: sv, tg: tg, pr: pr, du: due || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
+    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', sv: sv, tg: tg, pr: pr, du: due || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
     renderers.kanban(); updateBadges(); closeModal();
   }
   if (supabase) {
@@ -5150,6 +5192,7 @@ function addTask() {
         prioridad: pr,
         fecha_entrega: due,
         progreso: 0,
+        notas: null,
         equipo_ids: equipoId ? [equipoId] : [],
         cliente_nombre: clNombre,
         subtareas: '0/1',
@@ -5157,7 +5200,7 @@ function addTask() {
       }).select().single().then(function(r) {
         if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
         var row = r.data;
-        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
+        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
         renderers.kanban(); updateBadges(); closeModal();
       });
     });
@@ -5178,13 +5221,9 @@ function addTicket() {
     if (cPick) { clVal = cPick.n || ''; clColor = cPick.c || '#666'; }
   }
   var cat = document.getElementById('tk-cat').value;
-  var assignEmail = (document.getElementById('tk-assign').value || '').trim();
-  var linkId = document.getElementById('tk-link').value || '';
-  var linkTitulo = '';
-  if (linkId) {
-    var kFound = KT.find(function(x){ return String(x.id) === String(linkId); });
-    linkTitulo = kFound ? kFound.tt : '';
-  }
+  var assigneeEmails = getTicketSelectedAssigneeEmails();
+  var assignEmail = assigneeEmails.length ? assigneeEmails[0] : '';
+  var notes = (document.getElementById('tk-notes').value || '').trim();
   var slaMinutes = parseInt(document.getElementById('tk-sla').value, 10) || 1440;
   var slaH = Math.max(1, Math.ceil(slaMinutes / 60));
   var vencimiento = new Date();
@@ -5215,11 +5254,12 @@ function addTicket() {
         canal: null,
         asignado_id: null,
         asignado_email: assignEmail || null,
+        asignados_emails: assigneeEmails,
         sla_horas: slaH,
         sla_minutos: slaMinutes,
         sla_vencimiento: vencimiento.toISOString(),
         sla_status: 'ok',
-        entregable_vinculado: linkTitulo || null,
+        notas: notes || null,
         creado_por_email: userEmail || null,
         adjuntos_solicitud: []
       }).select('id').single().then(function(r) {
@@ -5255,8 +5295,8 @@ function addTicket() {
     tickets.unshift({
       id:'TK-'+String(tickets.length+1).padStart(3,'0'), dbId: null, title:n, sub:desc,
       client:clVal, clientColor:clColor, status:'open', priority:pr,
-      category:cat, channel:'', assignee:'', assigneeEmail:assignEmail, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
-      created:'Ahora', due:'Pendiente', linkedDeliverable:linkTitulo||'—',
+      category:cat, channel:'', assignee:'', assigneeEmail:assignEmail, assigneeEmails: assigneeEmails, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
+      created:'Ahora', due:'Pendiente', notes: notes || '',
       timeline:[{who:'Sistema', what:comentarioSistema, when:'Ahora', type:'system'}],
       createdByEmail:'', slaMinutos: slaMinutes, solicitudAdjuntos:[], resolucionAdjuntos:[], resolucionDetalle:''
     });
