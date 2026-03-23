@@ -4559,6 +4559,7 @@ renderers.workload = function() {
       <div style="text-align:center" role="columnheader">Hechas</div>
       <div style="text-align:center" role="columnheader">Carga</div>
       <div role="columnheader">Rol</div>
+      <div role="columnheader">Acción</div>
     </div>`;
   var list = (ATTENDANCE_MEMBERS && ATTENDANCE_MEMBERS.length) ? ATTENDANCE_MEMBERS : (TEAM || []);
   list.forEach(m => {
@@ -4579,6 +4580,12 @@ renderers.workload = function() {
         + '<option value="asistente"' + (m.permAdmin ? '' : ' selected') + '>Asistente</option>'
         + '<option value="admin"' + (m.permAdmin ? ' selected' : '') + '>Administrador</option>'
         + '</select>'
+      : '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">—</span>';
+    var actionCell = isAdm
+      ? '<button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteWorkloadMember('
+        + JSON.stringify(m.id || '') + ','
+        + JSON.stringify((m.email || m.gerente_email || '')) + ','
+        + JSON.stringify((m.n || '')) + ')">Eliminar</button>'
       : '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">—</span>';
     var roleSub = (isAdm && hasGerenteMeta) ? '' : '<div class="wl-role">' + String(m.r || 'Miembro').replace(/</g, '&lt;') + '</div>';
     const row = document.createElement('div');
@@ -4601,7 +4608,8 @@ renderers.workload = function() {
       <div class="wl-num" role="cell" style="font-variant-numeric:tabular-nums">${tot}</div>
       <div class="wl-num" role="cell" style="color:var(--green);font-variant-numeric:tabular-nums">${done}</div>
       <div class="wl-cap ${capCls}" role="cell" style="font-variant-numeric:tabular-nums">${cap}%</div>
-      <div role="cell">${roleCell}</div>`;
+      <div role="cell">${roleCell}</div>
+      <div role="cell">${actionCell}</div>`;
     table.appendChild(row);
   });
 };
@@ -5763,22 +5771,42 @@ function makeUniqueEquipoId(email) {
   }
   return id;
 }
+function safeRefreshAfterInvite(done) {
+  try { closeModal(); } catch (e) {}
+  reloadTareasData(function() {
+    try {
+      renderers.workload?.();
+      renderers.attendance?.();
+      updateBadges();
+      updateDashboardStats();
+    } catch (e2) {
+      console.error('[Tareas] post-invite render fallback:', e2);
+      try { initViews(); } catch (e3) {}
+    }
+    if (done) done();
+  }).catch(function(err) {
+    console.error('[Tareas] reload after invite failed:', err);
+    try { initViews(); } catch (e4) {}
+    if (done) done();
+  });
+}
 function insertEquipoAndFinish(nombre, apellido, email, color) {
   var nombreFull = (nombre + ' ' + apellido).trim();
   var displayName = nombreFull || email.split('@')[0];
   function finalizeInvite() {
     invokeInviteGerenteEmail(email, function(inviteOk, msg) {
-      reloadTareasData(function() { closeModal(); });
-      if (inviteOk) {
-        if (msg && /ya estaba registrado|ya estaba/i.test(String(msg))) {
-          alert('Miembro registrado. ' + msg);
+      safeRefreshAfterInvite(function() {
+        if (inviteOk) {
+          if (msg && /ya estaba registrado|ya estaba/i.test(String(msg))) {
+            alert('Miembro registrado. ' + msg);
+          } else {
+            alert('Miembro registrado. Se envió un correo de invitación a ' + email + ' para que active su acceso.');
+          }
         } else {
-          alert('Miembro registrado. Se envió un correo de invitación a ' + email + ' para que active su acceso.');
+          var hint = msg ? (' ' + msg) : '';
+          alert('Miembro registrado en asistencia y equipo. No se pudo enviar el correo de invitación (¿desplegaste la función invite-gerente?).' + hint);
         }
-      } else {
-        var hint = msg ? (' ' + msg) : '';
-        alert('Miembro registrado en asistencia y equipo. No se pudo enviar el correo de invitación (¿desplegaste la función invite-gerente?).' + hint);
-      }
+      });
     });
   }
   supabase.from('tareas_equipo').select('id').eq('gerente_email', email).maybeSingle().then(function(ex) {
@@ -5803,6 +5831,43 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
     console.warn('[Tareas] tareas_equipo lookup:', err);
     finalizeInvite();
   });
+}
+function deleteWorkloadMember(memberId, memberEmail, memberName) {
+  if (!tareasEffectivePerms().admin) { alert('Solo administradores pueden eliminar miembros.'); return; }
+  var name = memberName || memberEmail || memberId || 'miembro';
+  if (!confirm('¿Eliminar miembro "' + name + '" del equipo?')) return;
+  if (!supabase) {
+    TEAM = (TEAM || []).filter(function(t) { return String(t.id) !== String(memberId); });
+    ATTENDANCE_MEMBERS = (ATTENDANCE_MEMBERS || []).filter(function(m) { return String(m.id) !== String(memberId); });
+    renderers.workload?.();
+    renderers.attendance?.();
+    updateBadges();
+    return;
+  }
+  var em = String(memberEmail || '').trim().toLowerCase();
+  function finishReload() {
+    reloadTareasData(function() {
+      renderers.workload?.();
+      renderers.attendance?.();
+      updateBadges();
+      updateDashboardStats();
+    });
+  }
+  function deleteGerenteIfAny() {
+    if (!memberId) { finishReload(); return; }
+    supabase.from('gerentes').delete().eq('id', memberId).then(function(res) {
+      if (res.error) console.warn('[Tareas] delete gerente:', res.error.message);
+      finishReload();
+    }).catch(function() { finishReload(); });
+  }
+  if (em) {
+    supabase.from('tareas_equipo').delete().eq('gerente_email', em).then(function(resp) {
+      if (resp.error) console.warn('[Tareas] delete tareas_equipo by email:', resp.error.message);
+      deleteGerenteIfAny();
+    }).catch(function() { deleteGerenteIfAny(); });
+  } else {
+    deleteGerenteIfAny();
+  }
 }
 function submitEquipoInvite() {
   if (!tareasEffectivePerms().invite) { alert('No tienes permiso para invitar miembros (solo administradores).'); return; }
