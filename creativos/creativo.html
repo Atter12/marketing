@@ -3052,7 +3052,7 @@ function renderStageAttachmentsGrid(p, stage) {
     }
     html += '<div class="stage-attach-actions">';
     if (canPreview) {
-      html += '<button type="button" class="btn btn-sm btn-primary" onclick="openCreativosFilePreview(' + JSON.stringify(fn) + ',' + JSON.stringify(path) + ',' + JSON.stringify(previewDataUrl) + ',' + JSON.stringify(previewKind) + ')">Ver</button>';
+      html += '<button type="button" class="btn btn-sm btn-primary" onclick="openStageAttachmentPreviewByIndex(\'' + p.id + '\',\'' + stage + '\',' + i + ')">Ver</button>';
     }
     if (can) {
       html += '<button type="button" class="btn btn-sm btn-secondary" onclick="downloadCreativosFileByPath(' + JSON.stringify(fn) + ',' + JSON.stringify(path) + ')">Descargar</button>';
@@ -3230,7 +3230,7 @@ function renderDeliverablesSection(p, stage) {
       }
       html += '<div class="stage-attach-actions" style="margin-top:8px">';
       if (can) {
-        html += '<button type="button" class="btn btn-sm btn-primary" onclick="openCreativosFilePreview(' + JSON.stringify(fn) + ',' + JSON.stringify(d.filePath) + ')">Ver</button>';
+        html += '<button type="button" class="btn btn-sm btn-primary" onclick="openDeliverablePreviewByIndex(\'' + p.id + '\',\'' + stage + '\',' + idx + ')">Ver</button>';
         html += '<button type="button" class="btn btn-sm btn-secondary" onclick="downloadDeliverableByIndex(\'' + p.id + '\',\'' + stage + '\',' + idx + ')">Descargar</button>';
       } else {
         html += '<span style="font-size:0.6rem;color:var(--color-text-faint)">Sin archivo en servidor</span>';
@@ -3331,6 +3331,21 @@ function downloadDeliverableByIndex(pid, stage, index) {
   if (!p || !supabase) return;
   var d = (p.stages[stage].deliverables || [])[index];
   downloadCreativosFileByPath(d && d.fileName, d && d.filePath);
+}
+function openDeliverablePreviewByIndex(pid, stage, index) {
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p) return;
+  var d = (p.stages[stage].deliverables || [])[index];
+  if (!d) return;
+  openCreativosFilePreview(d.fileName, d.filePath, d.previewDataUrl || null, d.previewKind || null);
+}
+function openStageAttachmentPreviewByIndex(pid, stage, index) {
+  var p = D.projects.find(function(pr) { return pr.id === pid; });
+  if (!p || !p.stages || !p.stages[stage]) return;
+  var raw = (p.stages[stage].files || [])[index];
+  if (raw == null) return;
+  var meta = normalizeStageAttachFile(raw);
+  openCreativosFilePreview(meta.fileName || 'Archivo', meta.filePath || null, meta.previewDataUrl || null, meta.previewKind || null);
 }
 function renderStageActions(p, stage, stageIdx) {
   const s = p.stages[stage];
