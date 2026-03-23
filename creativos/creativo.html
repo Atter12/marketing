@@ -649,6 +649,10 @@ video.ref-preview-thumb {
   transition: transform 300ms var(--ease-golden);
   box-shadow: var(--shadow-xl);
 }
+.modal.modal-preview {
+  width: min(1140px, 96vw);
+  max-height: 94vh;
+}
 .modal-overlay.active .modal { transform: scale(1) translateY(0); }
 .modal-header {
   padding: var(--space-5) var(--space-5) var(--space-3);
@@ -1032,10 +1036,10 @@ body.kanban-pipeline-dragging {
 }
 .deliverable-card-meta { padding: 8px 10px 10px; font-size: 0.65rem; color: var(--color-text-muted); }
 
-.creativos-preview-img-wrap { text-align: center; max-height: min(72vh, 640px); overflow: auto; }
+.creativos-preview-img-wrap { text-align: center; max-height: min(84vh, 900px); overflow: auto; }
 .creativos-preview-img-wrap img { max-width: 100%; height: auto; border-radius: var(--radius-md); }
-.creativos-preview-video { width: 100%; max-height: min(70vh, 560px); border-radius: var(--radius-md); background: #111; }
-.creativos-preview-iframe { width: 100%; min-height: min(70vh, 560px); border: none; border-radius: var(--radius-md); background: var(--color-surface-offset); }
+.creativos-preview-video { width: 100%; max-height: min(82vh, 860px); border-radius: var(--radius-md); background: #111; }
+.creativos-preview-iframe { width: 100%; min-height: min(82vh, 860px); border: none; border-radius: var(--radius-md); background: var(--color-surface-offset); }
 
 /* ============================================
    PORTFOLIO
@@ -2955,12 +2959,16 @@ function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKin
       var offlineBody = '<div class="creativos-preview-img-wrap"><img src="' + escAttr(previewDataUrl) + '" alt=""></div>';
       var offlineFooter = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>';
       openModal('Vista previa · ' + esc(fileName || 'archivo'), offlineBody, offlineFooter);
+      var modalOffline = document.querySelector('#modalOverlay .modal');
+      if (modalOffline) modalOffline.classList.add('modal-preview');
       return;
     }
     if ((previewKind || '').toLowerCase() === 'pdf') {
       var pdfBody = '<div class="ref-preview-media" style="padding:20px"><div class="ref-preview-icon-slot" style="width:180px;height:220px;margin:0 auto">' + refPreviewIconHtml('pdf') + '</div></div><p class="form-hint" style="text-align:center;margin:10px 0 0 0">PDF sin copia en servidor. Esta tarjeta queda como referencia visual.</p>';
       var pdfFooter = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>';
       openModal('Vista previa · ' + esc(fileName || 'archivo'), pdfBody, pdfFooter);
+      var modalPdf = document.querySelector('#modalOverlay .modal');
+      if (modalPdf) modalPdf.classList.add('modal-preview');
       return;
     }
     showToast('info', 'No hay copia en servidor ni vista previa disponible para este archivo.');
@@ -2988,6 +2996,8 @@ function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKin
     var footer = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button><a class="btn btn-primary" href="' + escAttr(url) + '" target="_blank" rel="noopener">Abrir en pestaña</a>';
     try {
       openModal('Vista previa · ' + esc(fileName || 'archivo'), body, footer);
+      var modalOnline = document.querySelector('#modalOverlay .modal');
+      if (modalOnline) modalOnline.classList.add('modal-preview');
       console.log('[Creativos] preview modal opened:', { fileName: fileName, filePath: filePath });
     } catch (e) {
       console.error('[Creativos] preview modal error, fallback to new tab:', e);
@@ -3004,17 +3014,41 @@ function downloadCreativosFileByPath(fileName, filePath) {
       showToast('error', 'No se pudo generar el enlace');
       return;
     }
+    downloadBySignedUrl(fileName, url);
+  });
+}
+function triggerBrowserDownload(fileName, href) {
+  var a = document.createElement('a');
+  a.href = href;
+  a.setAttribute('download', fileName || 'archivo');
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+function downloadBySignedUrl(fileName, url) {
+  // Force a real browser download (blob) so images do not open in a new tab.
+  fetch(url, { credentials: 'omit' }).then(function(res) {
+    if (!res.ok) throw new Error('http_' + res.status);
+    return res.blob();
+  }).then(function(blob) {
+    var blobUrl = URL.createObjectURL(blob);
     try {
-      var a = document.createElement('a');
-      a.href = url;
-      a.setAttribute('download', fileName || 'archivo');
-      a.rel = 'noopener';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      triggerBrowserDownload(fileName, blobUrl);
+      setTimeout(function() {
+        try { URL.revokeObjectURL(blobUrl); } catch (e) {}
+      }, 5000);
     } catch (e) {
-      console.error('[Creativos] download fallback to new tab:', e);
+      console.error('[Creativos] blob download trigger error, fallback direct download attr:', e);
+      triggerBrowserDownload(fileName, url);
+    }
+  }).catch(function(err) {
+    console.error('[Creativos] blob download failed, fallback direct/new tab:', err);
+    try {
+      triggerBrowserDownload(fileName, url);
+    } catch (e2) {
+      console.error('[Creativos] direct download attr failed, fallback new tab:', e2);
       window.open(url, '_blank', 'noopener');
     }
   });
@@ -3032,6 +3066,38 @@ function stageAttachThumbInner(fileName, previewDataUrl, previewKind) {
   if (info.mode === 'video') return '<div class="stage-attach-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>';
   return '<div class="stage-attach-thumb">' + refPreviewIconHtml(info.icon || 'file') + '</div>';
 }
+function compactFileDisplayName(name, atIso) {
+  var original = String(name || 'archivo').trim();
+  if (!original) return 'archivo';
+  var dot = original.lastIndexOf('.');
+  var ext = dot > 0 ? original.slice(dot + 1).toLowerCase() : '';
+  var stem = dot > 0 ? original.slice(0, dot) : original;
+  var monthMap = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  var m = stem.match(/captura de pantalla\s+(\d{4})-(\d{2})-(\d{2})\s+(\d{2})(\d{2})(\d{2})/i);
+  if (m) {
+    var moIdx = Math.max(1, Math.min(12, parseInt(m[2], 10))) - 1;
+    return 'cap_' + m[3] + monthMap[moIdx] + '_' + m[4] + '-' + m[5] + (ext ? '.' + ext : '');
+  }
+  var datePart = '';
+  if (atIso) {
+    var d = new Date(atIso);
+    if (!isNaN(d.getTime())) {
+      var da = String(d.getDate()).padStart(2, '0');
+      var moShort = monthMap[d.getMonth()];
+      datePart = '_' + da + moShort;
+    }
+  }
+  var safe = stem
+    .toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w.-]/g, '')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  if (!safe) safe = 'archivo';
+  var maxStem = 20;
+  if (safe.length > maxStem) safe = safe.slice(0, maxStem).replace(/_+$/g, '');
+  return safe + datePart + (ext ? '.' + ext : '');
+}
 function renderStageAttachmentsGrid(p, stage) {
   var s = p.stages[stage];
   if (!s || !s.files || !s.files.length) return '';
@@ -3039,6 +3105,7 @@ function renderStageAttachmentsGrid(p, stage) {
   s.files.forEach(function(raw, i) {
     var meta = normalizeStageAttachFile(raw);
     var fn = meta.fileName || 'Archivo';
+    var shown = compactFileDisplayName(fn);
     var path = meta.filePath;
     var previewDataUrl = meta.previewDataUrl || null;
     var previewKind = meta.previewKind || null;
@@ -3046,7 +3113,7 @@ function renderStageAttachmentsGrid(p, stage) {
     var canPreview = can || !!previewDataUrl;
     html += '<div class="stage-attach-card">';
     html += stageAttachThumbInner(fn, previewDataUrl, previewKind);
-    html += '<div class="stage-attach-body"><div class="stage-attach-name">' + esc(fn) + '</div>';
+    html += '<div class="stage-attach-body"><div class="stage-attach-name" title="' + escAttr(fn) + '">' + esc(shown) + '</div>';
     if (!path && !previewDataUrl) {
       html += '<p class="stage-attach-nopath">Sin copia en servidor (proyecto antiguo o modo local) y sin miniatura guardada.</p>';
     }
@@ -3217,12 +3284,13 @@ function renderDeliverablesSection(p, stage) {
     list.forEach(function(d, idx) {
       const upAt = d.uploadedAt ? (formatDate(d.uploadedAt) + ' ' + new Date(d.uploadedAt).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })) : '';
       const fn = d.fileName || 'Archivo';
+      const shown = compactFileDisplayName(fn, d.uploadedAt);
       const can = !!(d.filePath && canCreativosStorageRead());
       html += '<div class="deliverable-card">';
       html += stageAttachThumbInner(fn);
       html += '<div class="deliverable-card-meta">';
       html += '<span class="badge badge-teal">v' + (d.version || idx + 1) + '</span> ';
-      html += '<strong style="font-size:0.7rem;color:var(--color-text)">' + esc(fn) + '</strong>';
+      html += '<strong style="font-size:0.7rem;color:var(--color-text)" title="' + escAttr(fn) + '">' + esc(shown) + '</strong>';
       if (d.fileSize) html += '<div style="margin-top:4px">' + (d.fileSize < 1024 ? d.fileSize + ' B' : (d.fileSize < 1048576 ? (d.fileSize/1024).toFixed(1) + ' KB' : (d.fileSize/1048576).toFixed(1) + ' MB')) + '</div>';
       html += '<div style="margin-top:4px">Subido por ' + esc(d.uploadedBy || '—') + ' · ' + upAt + '</div>';
       if (d.rejectedBy || d.rejectionNote) {
@@ -3513,12 +3581,16 @@ function saveStageNoteAndClose(stage) {
   renderPage('pipeline');
 }
 function openModal(title, bodyHtml, footerHtml) {
+  var modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) modalEl.classList.remove('modal-preview');
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalBody').innerHTML = bodyHtml;
   document.getElementById('modalFooter').innerHTML = footerHtml;
   document.getElementById('modalOverlay').classList.add('active');
 }
 function closeModal() {
+  var modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) modalEl.classList.remove('modal-preview');
   document.getElementById('modalOverlay').classList.remove('active');
   editingId = null; editingType = null;
 }
@@ -3782,13 +3854,14 @@ function renderFileList() {
   fl.innerHTML = pendingFiles.map(function(entry, i) {
     var file = entry.file;
     var info = classifyRefFile(file);
+    var shown = compactFileDisplayName(file.name || 'Sin nombre');
     var sizeStr = formatRefFileSize(file.size);
     return '<div class="ref-preview-card">' +
       '<button type="button" class="ref-preview-remove" onclick="removePendingRefFile(' + i + ')" title="Quitar archivo" aria-label="Quitar">' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
       renderRefPreviewMedia(entry, info) +
       '<div class="ref-preview-body">' +
-      '<div class="ref-preview-name">' + esc(file.name || 'Sin nombre') + '</div>' +
+      '<div class="ref-preview-name" title="' + escAttr(file.name || 'Sin nombre') + '">' + esc(shown) + '</div>' +
       '<div class="ref-preview-meta"><span class="ref-preview-kind">' + esc(info.label) + '</span>' + (sizeStr ? '<span>' + esc(sizeStr) + '</span>' : '') + '</div>' +
       '</div></div>';
   }).join('');
