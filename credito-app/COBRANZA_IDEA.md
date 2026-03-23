@@ -1,4 +1,16 @@
-# Cobranza en Credito - Idea guardada
+# Cobranza en Credito - Implementacion en curso
+
+## Estado actual (23-03-2026)
+- [x] Base SQL creada para MVP (bandeja, historial, estados, helper anti-duplicado)
+- [x] UI `Cobranza` en Crédito (`holistic-app/src/CobranzaView.jsx` + menú en `App.jsx`)
+- [x] Generador de borradores (clientes con deuda neta > 0 y email)
+- [x] Aprobar / Rechazar / editar asunto y cuerpo
+- [x] Envío vía Edge Function `cobranza-enviar` + Resend (o «Marcar enviado» manual)
+- [x] Eventos en `cobranza_eventos` (trazabilidad básica)
+
+## Migrations agregadas
+- `supabase/migrations/039_cobranza_bandeja_historial.sql`
+- `holistic-app/supabase/migrations/20260323000000_cobranza_bandeja_historial.sql`
 
 ## Objetivo
 Crear una nueva seccion en Credito llamada `Cobranza` para preparar correos de cobro personalizados y enviarlos de forma masiva, con control humano antes del envio.

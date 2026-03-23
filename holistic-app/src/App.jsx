@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
+import CobranzaView from "./CobranzaView";
 import TableScrollWrap from "./TableScrollWrap";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
@@ -305,7 +306,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (n != null) { const v = String(n).trim(); setGerenteNombre(v); S.s("gerente_nombre", v); }
   };
 
-  const validPages = ["dashboard", "clientes", "gastos", "cobros", "reportes", "garantias", "client-detail"];
+  const validPages = ["dashboard", "clientes", "gastos", "cobros", "cobranza", "reportes", "garantias", "client-detail"];
   const getInitialPage = () => {
     if (typeof window === "undefined") return { page: "dashboard", curCl: null };
     const hash = window.location.hash.slice(1);
@@ -1250,13 +1251,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "clientes", icon: <Users size={18} />, label: "Clientes", accent: "#0891b2" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN, accent: "#d97706" },
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros", accent: "#059669" },
+        { id: "cobranza", icon: <Mail size={18} />, label: "Cobranza", accent: "#e11d48" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías", accent: "#7c3aed" },
         { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", section: "Sistema", accent: "#64748b" },
       ];
 
   const pct = curDDisplay && (curDDisplay.tG + curDDisplay.tF) > 0 ? (curDDisplay.tP / (curDDisplay.tG + curDDisplay.tF)) * 100 : 0;
 
-  const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
+  const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", cobranza: "Cobranza", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
     <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
@@ -1959,6 +1961,17 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             })()}
           </div></div>
         </div>)}
+
+        {/* ══ COBRANZA (solo gerente) ══ */}
+        {page === "cobranza" && !isCliente && (
+          <CobranzaView
+            supabase={supabase}
+            clients={clients}
+            getClienteDeudaNeta={(id) => cData(id).net}
+            userEmail={userEmail}
+            onRefetchClients={refetchData}
+          />
+        )}
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
