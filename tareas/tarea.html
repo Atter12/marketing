@@ -1117,6 +1117,10 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .sla-ok     { background: var(--green); }
 .sla-warn   { background: var(--orange2); }
 .sla-breach { background: var(--red); animation: pulse 1.5s infinite; }
+.live-sla-text.is-warn { color: var(--orange2) !important; font-weight: 700; animation: pulse 1.8s infinite; }
+.live-sla-text.is-breach { color: var(--red) !important; font-weight: 800; animation: pulse 1.2s infinite; }
+.live-countdown.is-warn { color: var(--orange2); font-weight: 700; }
+.live-countdown.is-breach { color: var(--red); font-weight: 800; }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
 /* Ticket Detail Panel */
@@ -2929,6 +2933,9 @@ function updateLiveCountdownBadges() {
     var info = getLiveCountdownInfo(el.getAttribute('data-live-deadline'));
     var prefix = el.getAttribute('data-live-prefix') || '';
     el.textContent = prefix + info.text;
+    el.classList.remove('is-warn', 'is-breach');
+    if (info.status === 'warn') el.classList.add('is-warn');
+    if (info.status === 'breach') el.classList.add('is-breach');
     if (el.classList.contains('live-sla-text')) {
       el.style.color = info.status === 'breach' ? 'var(--red)' : (info.status === 'warn' ? 'var(--orange2)' : 'var(--green)');
     }
@@ -3516,7 +3523,7 @@ renderers.kanban = function(snapshot) {
         if (!isNaN(c.getTime())) deadlineIso = new Date(c.getTime() + (Number(t.slaMin) * 60000)).toISOString();
       }
       const dateIcon = t.dc === 'dn' ? '✅' : (deadlineIso ? '⏱' : (t.slaMin ? '⏱' : '📅'));
-      const dateLabel = deadlineIso ? '<span data-live-deadline="' + deadlineIso + '" data-live-prefix="">' + escTareas(getLiveCountdownInfo(deadlineIso).text) + '</span>' : (t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du);
+      const dateLabel = deadlineIso ? '<span class="live-countdown" data-live-deadline="' + deadlineIso + '" data-live-prefix="">' + escTareas(getLiveCountdownInfo(deadlineIso).text) + '</span>' : (t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du);
       const kid = String(t.id || '').replace(/"/g, '&quot;');
       const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
       return `
@@ -3554,6 +3561,7 @@ renderers.kanban = function(snapshot) {
   });
   board.innerHTML = fullHtml;
   board.querySelectorAll('.kanban-card.fade-in').forEach(function(el) { el.classList.add('visible'); });
+  updateLiveCountdownBadges();
   initKanbanDrag();
 };
 
@@ -3781,6 +3789,7 @@ renderers.tickets = function() {
   });
   html += '</div>';
   grid.innerHTML = html;
+  updateLiveCountdownBadges();
 };
 
 function toggleTicketDetail(idx) {
