@@ -3009,6 +3009,26 @@ function parseSlaMinutesFromInputs(valueRaw, unitRaw, fallbackMinutes) {
   if (unit === 'd') return Math.round(n * 1440);
   return Math.round(n);
 }
+function normalizeTicketAssigneeEmails(tk) {
+  var emails = [];
+  if (tk && Array.isArray(tk.assigneeEmails)) emails = emails.concat(tk.assigneeEmails);
+  if (tk && tk.assigneeEmail) emails.push(tk.assigneeEmail);
+  var uniq = {};
+  return emails.map(function(e) { return String(e || '').toLowerCase().trim(); }).filter(function(e) {
+    if (!e || uniq[e]) return false;
+    uniq[e] = true;
+    return true;
+  });
+}
+function getVisibleTicketsForSession(list) {
+  var rows = Array.isArray(list) ? list : [];
+  if (tareasEffectivePerms().admin) return rows.slice();
+  var my = (window.__tareasSessionEmail || '').toLowerCase().trim();
+  if (!my) return [];
+  return rows.filter(function(tk) {
+    return normalizeTicketAssigneeEmails(tk).indexOf(my) >= 0;
+  });
+}
 function formatKanbanDate(dateStr) {
   if (!dateStr) return '';
   var d = new Date(dateStr);
@@ -3717,13 +3737,14 @@ function filterKanban(sv, btn) {
 
 // ─── TICKETS ───
 renderers.tickets = function() {
-  var open   = tickets.filter(function(t){ return t.status === 'open'; }).length;
-  var prog   = tickets.filter(function(t){ return t.status === 'progress'; }).length;
-  var res    = tickets.filter(function(t){ return t.status === 'closed'; }).length;
-  var breach = tickets.filter(function(t){ return t.slaStatus === 'breach'; }).length;
+  var visibleTickets = getVisibleTicketsForSession(tickets);
+  var open   = visibleTickets.filter(function(t){ return t.status === 'open'; }).length;
+  var prog   = visibleTickets.filter(function(t){ return t.status === 'progress'; }).length;
+  var res    = visibleTickets.filter(function(t){ return t.status === 'closed'; }).length;
+  var breach = visibleTickets.filter(function(t){ return t.slaStatus === 'breach'; }).length;
 
   document.getElementById('ticketsStats').innerHTML = `
-    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${tickets.length}</div><div class="ticket-stat-lbl">Total</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${visibleTickets.length}</div><div class="ticket-stat-lbl">Total</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--color-primary);font-variant-numeric:tabular-nums">${open}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-primary);display:inline-block;margin-right:3px"></span>Abiertos</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--orange2);font-variant-numeric:tabular-nums">${prog}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--orange2);display:inline-block;margin-right:3px"></span>En Proceso</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--red);font-variant-numeric:tabular-nums">${breach}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px"></span>SLA Breach</div></div>
@@ -3743,7 +3764,9 @@ renderers.tickets = function() {
       <div role="columnheader">Estado</div>
     </div>`;
 
-  tickets.forEach((tk, idx) => {
+  visibleTickets.forEach((tk, idx) => {
+    var realIdx = tickets.indexOf(tk);
+    if (realIdx < 0) realIdx = idx;
     const m = TEAM.find(x => x.id === tk.assignee);
     const stPill = tk.status === 'open' ? 'pill-orange' : tk.status === 'progress' ? 'pill-orange2' : 'pill-green';
     const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En Proceso' : 'Resuelto';
@@ -3780,11 +3803,11 @@ renderers.tickets = function() {
     const resBlock = (tk.resolucionDetalle || (tk.resolucionAdjuntos && tk.resolucionAdjuntos.length))
       ? '<p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);margin:var(--sp-4) 0 var(--sp-2)">Cierre / evidencia</p>'
         + (tk.resolucionDetalle ? '<div class="ticket-desc-body">' + escTareas(tk.resolucionDetalle) + '</div>' : '')
-        + '<div class="ticket-attach-grid" id="tkAttRes-' + idx + '"></div>'
+        + '<div class="ticket-attach-grid" id="tkAttRes-' + realIdx + '"></div>'
       : '';
 
     html += `
-    <div class="ticket-row" data-st="${tk.status}" onclick="toggleTicketDetail(${idx})" role="row" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTicketDetail(${idx})">
+    <div class="ticket-row" data-st="${tk.status}" onclick="toggleTicketDetail(${realIdx})" role="row" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTicketDetail(${realIdx})">
       <div class="ticket-id" role="cell">${escTareas(tk.id)}</div>
       <div class="ticket-title-col" role="cell"><span class="main">${escTareas(tk.title)}</span><span class="sub">${escTareas(tk.sub)}</span></div>
       <div class="ticket-client" role="cell">${clientCell}</div>
@@ -3794,14 +3817,14 @@ renderers.tickets = function() {
       <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span class="live-sla-text" data-live-deadline="${escAttrUrlTareas(tk.dueAt || '')}" data-live-prefix="" style="color:${slaColor}">${escTareas(liveSla.text || tk.slaLeft)}</span></div>
       <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
     </div>
-    <div class="ticket-detail" id="tkDetail-${idx}" role="region" aria-label="Detalle del ticket ${escTareas(tk.id)}">
+    <div class="ticket-detail" id="tkDetail-${realIdx}" role="region" aria-label="Detalle del ticket ${escTareas(tk.id)}">
       <div class="ticket-detail-inner">
         <div class="detail-section">
           <h4>📝 Solicitud</h4>
           ${tk.createdByEmail ? '<p style="font-size:var(--text-sm);margin-bottom:var(--sp-2)"><span style="color:var(--color-text-muted)">Quién reporta (sesión):</span> <strong>' + escTareas(tk.createdByEmail) + '</strong></p>' : '<p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:var(--sp-2)">Sin correo de sesión registrado (inicia sesión con Google para asociarlo).</p>'}
           ${tk.sub ? '<div class="ticket-desc-body">' + escTareas(tk.sub) + '</div>' : '<p style="font-size:var(--text-xs);color:var(--color-text-faint)">Sin texto de detalle.</p>'}
           <p style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.06em;color:var(--color-text-faint);margin:var(--sp-4) 0 var(--sp-2)">Imágenes / referencias</p>
-          <div class="ticket-attach-grid" id="tkAttSol-${idx}"></div>
+          <div class="ticket-attach-grid" id="tkAttSol-${realIdx}"></div>
           ${resBlock}
         </div>
         <div class="detail-section">
@@ -3816,19 +3839,19 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
           <div class="ticket-actions">
-            ${tk.status !== 'closed' && supabase && tk.dbId ? `<button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();createEntregableFromTicket(${idx})">📦 Pasar a entregable</button>` : ''}
-            ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();openResolveTicketModal(${idx})">✅ Resolver con evidencia</button>` : ''}
+            ${tk.status !== 'closed' && supabase && tk.dbId ? `<button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();createEntregableFromTicket(${realIdx})">📦 Pasar a entregable</button>` : ''}
+            ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();openResolveTicketModal(${realIdx})">✅ Resolver con evidencia</button>` : ''}
             ${tk.status === 'open' ? `<button type="button" class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${escTareas(tk.id)}')">▶ Tomar ticket</button>` : ''}
             ${tk.priority !== 'urgente' ? `<button type="button" class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${escTareas(tk.id)}')">⬆ Escalar</button>` : ''}
-            <button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="event.stopPropagation();deleteTicketByIdx(${idx})">🗑 Eliminar ticket</button>
+            <button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="event.stopPropagation();deleteTicketByIdx(${realIdx})">🗑 Eliminar ticket</button>
           </div>
         </div>
         <div class="detail-section">
           <h4>💬 Historial</h4>
           <div class="ticket-timeline">${tlHtml}</div>
           <div class="comment-box">
-            <input class="comment-input" placeholder="Comentario (se guarda con tu correo si hay sesión)…" id="tkComment-${idx}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){addTicketComment(${idx});event.stopPropagation()}" aria-label="Agregar comentario al ticket">
-            <button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();addTicketComment(${idx})">Enviar</button>
+            <input class="comment-input" placeholder="Comentario (se guarda con tu correo si hay sesión)…" id="tkComment-${realIdx}" onclick="event.stopPropagation()" onkeydown="if(event.key==='Enter'){addTicketComment(${realIdx});event.stopPropagation()}" aria-label="Agregar comentario al ticket">
+            <button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();addTicketComment(${realIdx})">Enviar</button>
           </div>
         </div>
       </div>
@@ -4197,6 +4220,21 @@ function addTicketComment(idx) {
   if (!v) return;
   var tk = tickets[idx];
   if (!tk) return;
+  var keepDbId = tk.dbId || null;
+  var keepCode = tk.id || null;
+  function reopenTicketDetail() {
+    var nextIdx = tickets.findIndex(function(t) {
+      if (keepDbId && t.dbId) return String(t.dbId) === String(keepDbId);
+      return String(t.id || '') === String(keepCode || '');
+    });
+    if (nextIdx >= 0) {
+      toggleTicketDetail(nextIdx);
+      setTimeout(function() {
+        var reinp = document.getElementById('tkComment-' + nextIdx);
+        if (reinp) reinp.focus();
+      }, 30);
+    }
+  }
   if (supabase && tk.dbId) {
     supabase.auth.getUser().then(function(ar) {
       var quien = (ar.data && ar.data.user && ar.data.user.email) ? ar.data.user.email : getCurrentUserNameTareas();
@@ -4209,13 +4247,14 @@ function addTicketComment(idx) {
       }).then(function(r) {
         if (r.error) { alert('Error al agregar comentario'); return; }
         inp.value = '';
-        reloadTareasData();
+        reloadTareasData(function() { reopenTicketDetail(); });
       });
     });
   } else {
     tk.timeline.push({ who: getCurrentUserNameTareas(), what: v, when: 'Ahora', type: 'comment' });
     inp.value = '';
     renderers.tickets();
+    reopenTicketDetail();
   }
 }
 function resolveTicket(id) {
@@ -4863,7 +4902,8 @@ function markAllPresent() {
 
 // ─── SIDEBAR BADGE UPDATES ───
 function updateBadges() {
-  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed'; }).length;
+  var visTickets = getVisibleTicketsForSession(tickets);
+  var tkOpen = visTickets.filter(function(t) { return t.status !== 'closed'; }).length;
   var el = document.getElementById('badge-tickets');
   if (el) el.textContent = tkOpen;
   var clEl = document.getElementById('badge-clients');
@@ -4879,8 +4919,9 @@ function updateBadges() {
 function updateDashboardStats() {
   var total = KT.length;
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
-  var tkOpen = tickets.filter(function(t) { return t.status !== 'closed'; }).length;
-  var vencidos = tickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
+  var visTickets = getVisibleTicketsForSession(tickets);
+  var tkOpen = visTickets.filter(function(t) { return t.status !== 'closed'; }).length;
+  var vencidos = visTickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
   var attMembers = ATTENDANCE_MEMBERS || [];
   var present = attMembers.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
   var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
@@ -4975,7 +5016,7 @@ function openModal(type) {
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Mejora">✨ Mejora</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
-        <div class="form-group"><label>Plazo para entregar</label><div class="ticket-sla-inline"><input class="form-input" id="tk-sla-value" type="number" min="1" step="1" value="1"><select class="form-select" id="tk-sla-unit"><option value="min">minutos</option><option value="h">horas</option><option value="d" selected>día</option></select></div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
+        <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla"><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
         <div class="form-group ticket-assign-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
@@ -5352,11 +5393,7 @@ function addTicket() {
   var assigneeEmails = getTicketSelectedAssigneeEmails();
   var assignEmail = assigneeEmails.length ? assigneeEmails[0] : '';
   var notes = (document.getElementById('tk-notes').value || '').trim();
-  var slaMinutes = parseSlaMinutesFromInputs(
-    document.getElementById('tk-sla-value') && document.getElementById('tk-sla-value').value,
-    document.getElementById('tk-sla-unit') && document.getElementById('tk-sla-unit').value,
-    1440
-  );
+  var slaMinutes = parseInt(document.getElementById('tk-sla').value, 10) || 15;
   if (slaMinutes < 15 || slaMinutes > 1440) {
     alert('El plazo del ticket debe estar entre 15 minutos y 1 día.');
     return;
