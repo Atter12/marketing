@@ -1749,6 +1749,17 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .form-textarea { resize: vertical; min-height: 60px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
 .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-3); }
+.ticket-meta-grid {
+  grid-template-columns: minmax(160px, 1fr) minmax(150px, 1fr) minmax(280px, 1.7fr);
+  align-items: start;
+}
+.ticket-assign-wrap {
+  border: 1px solid var(--color-divider);
+  border-radius: var(--r-md);
+  padding: 8px 10px;
+  max-height: 140px;
+  overflow: auto;
+}
 
 /* ══════════════════════════════════════════════
    NOTIFICATION PANEL
@@ -2017,11 +2028,16 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   .welcome-stats { display: none; }
   .ticket-row > :nth-child(5), .tickets-thead > :nth-child(5) { display: none; }
   .cmd-palette { margin: 0 var(--sp-4); }
+  .ticket-meta-grid { grid-template-columns: 1fr 1fr; }
+  .ticket-meta-grid .form-group:last-child { grid-column: 1 / -1; }
 }
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }
   .tickets-stats { grid-template-columns: 1fr 1fr; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .ticket-meta-grid { grid-template-columns: 1fr; }
+  .ticket-meta-grid .form-group:last-child { grid-column: auto; }
+  .ticket-assign-wrap { max-height: 96px; }
   .kanban-col { min-width: 92vw; width: 92vw; }
   .card-title { font-size: var(--text-sm); }
   .card-desc { -webkit-line-clamp: 3; line-clamp: 3; }
@@ -4901,7 +4917,7 @@ function openModal(type) {
         <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client"><option value="">— Ninguno —</option>${getTareasClientSelectOptionsHtml()}</select></div>
         <div class="form-group"><label for="m-service">Servicio</label><select class="form-select" id="m-service"><option value="marketing">Marketing</option><option value="branding">Branding</option><option value="video">Video</option><option value="social">Social</option><option value="design">Diseño</option></select></div>
       </div>
-      <div class="form-row-3">
+      <div class="form-row-3 ticket-meta-grid">
         <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
         <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${tareasAssigneeOptionsHtml()}</select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Como administrador puedes asignar a cualquier miembro de Asistencia. La primera vez se enlaza automáticamente con equipo.' : 'Como asistente solo puedes asignarte a ti mismo. Un administrador puede asignar entregables a cualquiera del equipo.'}</p></div>
         <div class="form-group"><label for="m-sla">Tiempo máximo para cumplir</label><select class="form-select" id="m-sla"><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120" selected>2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
@@ -4927,7 +4943,7 @@ function openModal(type) {
       <div class="form-row-3">
         <div class="form-group"><label>Plazo para entregar</label><div class="form-row" style="grid-template-columns:1fr 1fr;gap:8px"><input class="form-input" id="tk-sla-value" type="number" min="1" step="1" value="1"><select class="form-select" id="tk-sla-unit"><option value="min">minutos</option><option value="h">horas</option><option value="d" selected>día</option></select></div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label>Asignar a (uno o varios)</label><div style="border:1px solid var(--color-divider);border-radius:var(--r-md);padding:8px 10px;max-height:140px;overflow:auto">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
+        <div class="form-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
       <div class="form-group"><label for="tk-notes">Notas internas (opcional)</label><textarea class="form-textarea" id="tk-notes" placeholder="Contexto adicional para el equipo…"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
