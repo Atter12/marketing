@@ -2913,7 +2913,18 @@ function invokeInviteGerenteEmail(email, done) {
     }).then(function(r) {
       return r.json().then(function(j) { return { ok: r.ok, status: r.status, body: j }; });
     }).then(function(x) {
-      if (done) done(x.ok, x.body && (x.body.error || x.body.message) || (x.ok ? '' : 'Error ' + x.status));
+      var rawMsg = x.body && (x.body.error || x.body.message) || (x.ok ? '' : 'Error ' + x.status);
+      var low = String(rawMsg || '').toLowerCase();
+      var alreadyAuth =
+        low.indexOf('already been registered') >= 0 ||
+        low.indexOf('already registered') >= 0 ||
+        low.indexOf('already exists') >= 0 ||
+        low.indexOf('user with this email') >= 0;
+      if (alreadyAuth) {
+        if (done) done(true, 'El correo ya estaba registrado en Auth; el miembro puede entrar directo con su acceso.');
+        return;
+      }
+      if (done) done(x.ok, rawMsg);
     }).catch(function(e) {
       if (done) done(false, e && e.message ? e.message : 'Red');
     });
@@ -5741,7 +5752,11 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
     invokeInviteGerenteEmail(email, function(inviteOk, msg) {
       reloadTareasData(function() { closeModal(); });
       if (inviteOk) {
-        alert('Miembro registrado. Se envió un correo de invitación a ' + email + ' para que active su acceso.');
+        if (msg && /ya estaba registrado|ya estaba/i.test(String(msg))) {
+          alert('Miembro registrado. ' + msg);
+        } else {
+          alert('Miembro registrado. Se envió un correo de invitación a ' + email + ' para que active su acceso.');
+        }
       } else {
         var hint = msg ? (' ' + msg) : '';
         alert('Miembro registrado en asistencia y equipo. No se pudo enviar el correo de invitación (¿desplegaste la función invite-gerente?).' + hint);
