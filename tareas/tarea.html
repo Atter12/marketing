@@ -3487,6 +3487,13 @@ function makeTkAvatar(id, size=22) {
 function escAttrUrlTareas(u) {
   return String(u || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '%3C');
 }
+function escJsSingleTareas(v) {
+  return String(v == null ? '' : v)
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n');
+}
 
 /** Avatar con foto (Crédito / tareas_clientes.avatar_url) o iniciales. */
 function clientAvatarMarkup(c, opts) {
@@ -4582,10 +4589,10 @@ renderers.workload = function() {
         + '</select>'
       : '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">—</span>';
     var actionCell = isAdm
-      ? '<button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteWorkloadMember('
-        + JSON.stringify(m.id || '') + ','
-        + JSON.stringify((m.email || m.gerente_email || '')) + ','
-        + JSON.stringify((m.n || '')) + ')">Eliminar</button>'
+      ? '<button type="button" class="btn-secondary btn-sm" style="border-color:var(--red);color:var(--red)" onclick="deleteWorkloadMember(\''
+        + escJsSingleTareas(m.id || '') + '\',\''
+        + escJsSingleTareas((m.email || m.gerente_email || '')) + '\',\''
+        + escJsSingleTareas((m.n || '')) + '\')">Eliminar</button>'
       : '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">—</span>';
     var roleSub = (isAdm && hasGerenteMeta) ? '' : '<div class="wl-role">' + String(m.r || 'Miembro').replace(/</g, '&lt;') + '</div>';
     const row = document.createElement('div');
