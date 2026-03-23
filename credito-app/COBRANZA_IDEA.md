@@ -14,6 +14,22 @@
 - [x] **Guardar** sin cerrar o **Guardar y cerrar**; motivo de rechazo en el modal
 - [x] Borradores **Agradecimiento** para clientes al día (sin deuda)
 
+## Roadmap — redacción con IA (Opus / Claude) **(pendiente, no implementado)**
+
+Objetivo: que un modelo genere **asunto + cuerpo** más natural y distinto por caso; el borrador **sigue** pasando por revisión y aprobación humana antes de Resend.
+
+| Paso | Estado | Notas |
+|------|--------|--------|
+| 1. Cuenta y API **Anthropic** (Claude Opus u otro modelo Claude) | Pendiente | Opus es un modelo de **Anthropic**, no un producto aparte: necesitás **API key** en [console.anthropic.com](https://console.anthropic.com) y plan/billing según uso. |
+| 2. Secret en Supabase `ANTHROPIC_API_KEY` (solo servidor) | Pendiente | Nunca en el frontend. |
+| 3. Edge Function ej. `cobranza-generar-ia` | Pendiente | Recibe contexto CRM + tono; devuelve JSON `{ asunto, cuerpo_texto }`; opcional log en `cobranza_eventos`. |
+| 4. Botón en `CobranzaView` “Generar con IA” / lote | Pendiente | Inserta o actualiza fila en `cobranza_bandeja` en `pending_approval`. |
+| 5. Límites y costos | Pendiente | Tope diario, modelo más barato para pruebas (ej. Sonnet), etc. |
+
+**Qué necesitás sí o sí para Opus:** la **API de Anthropic** (`ANTHROPIC_API_KEY`). Sin eso no hay llamada al modelo desde el backend.
+
+*(Alternativa: OpenAI u otro proveedor; el roadmap es el mismo, cambia el nombre del secret y el endpoint.)*
+
 ## Migrations agregadas
 - `supabase/migrations/039_cobranza_bandeja_historial.sql`
 - `holistic-app/supabase/migrations/20260323000000_cobranza_bandeja_historial.sql`
@@ -76,14 +92,11 @@ Crear una nueva seccion en Credito llamada `Cobranza` para preparar correos de c
 - `{{link_pago}}` (si aplica)
 - `{{resumen_servicios}}`
 
-## IA (fase siguiente)
-- Usar `OPENAI_API_KEY` (en backend/servidor) para:
-  - Ajustar tono (amable, firme, recuperacion).
-  - Personalizar mensaje con contexto CRM.
-  - Generar versiones A/B.
-- Importante:
-  - Nunca exponer API key en frontend.
-  - Log de prompts/respuestas para auditoria.
+## IA (detalle; ver Roadmap arriba)
+- **Preferencia equipo:** Claude **Opus** vía **Anthropic API** (`ANTHROPIC_API_KEY`).
+- Alternativa: `OPENAI_API_KEY` u otro proveedor (misma idea: solo Edge Function).
+- Funciones: tono (amable, firme, recuperación), contexto CRM, opcional A/B.
+- Reglas: nunca API key en frontend; logs para auditoría y control de costos.
 
 ## Envio de correo "como la empresa"
 - Usar proveedor transaccional (Resend/SMTP/SendGrid) con dominio propio.
@@ -117,6 +130,7 @@ Crear una nueva seccion en Credito llamada `Cobranza` para preparar correos de c
 5. Historial basico.
 
 ## Pendientes futuros
+- **Redacción IA (Opus)** — ver sección **Roadmap** (API Anthropic + función + UI).
 - Regla automatica por riesgo de cliente.
 - Segmentacion por comportamiento de pago.
 - Programacion de envios (fecha/hora).

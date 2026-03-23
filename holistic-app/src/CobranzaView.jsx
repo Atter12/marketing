@@ -106,6 +106,10 @@ function stripHtmlPreview(html, max = 140) {
   }
 }
 
+function correoTipo(r) {
+  return r?.variables?.tipo_correo === "agradecimiento" ? "agradecimiento" : "cobro";
+}
+
 function htmlToPlainText(html) {
   if (!html) return "";
   try {
@@ -233,6 +237,8 @@ export default function CobranzaView({
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [filterEstado, setFilterEstado] = useState("activos");
+  const [filterTipo, setFilterTipo] = useState("all");
+  const [sortBy, setSortBy] = useState("nuevos");
   const [q, setQ] = useState("");
   const [detail, setDetail] = useState(null);
   const [editAsunto, setEditAsunto] = useState("");
@@ -332,6 +338,9 @@ export default function CobranzaView({
     } else if (filterEstado !== "all") {
       list = list.filter((r) => r.estado === filterEstado);
     }
+    if (filterTipo !== "all") {
+      list = list.filter((r) => correoTipo(r) === filterTipo);
+    }
     const qq = q.trim().toLowerCase();
     if (qq) {
       list = list.filter((r) => {
@@ -342,8 +351,27 @@ export default function CobranzaView({
         return blob.includes(qq);
       });
     }
+    if (sortBy === "viejos") {
+      list = list.slice().sort((a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime());
+    } else if (sortBy === "cobro_primero") {
+      list = list.slice().sort((a, b) => {
+        const at = correoTipo(a) === "cobro" ? 0 : 1;
+        const bt = correoTipo(b) === "cobro" ? 0 : 1;
+        if (at !== bt) return at - bt;
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+    } else if (sortBy === "agradecimiento_primero") {
+      list = list.slice().sort((a, b) => {
+        const at = correoTipo(a) === "agradecimiento" ? 0 : 1;
+        const bt = correoTipo(b) === "agradecimiento" ? 0 : 1;
+        if (at !== bt) return at - bt;
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+    } else {
+      list = list.slice().sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    }
     return list;
-  }, [rows, filterEstado, q]);
+  }, [rows, filterEstado, filterTipo, q, sortBy]);
 
   const pendingFiltered = useMemo(
     () => filtered.filter((r) => r.estado === "pending_approval"),
@@ -898,6 +926,39 @@ export default function CobranzaView({
                 <option value="rejected">Rechazados</option>
                 <option value="failed">Fallidos</option>
               </select>
+              <select
+                value={filterTipo}
+                onChange={(e) => setFilterTipo(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  background: "#fff",
+                }}
+                title="Filtrar por tipo de correo"
+              >
+                <option value="all">Tipo: Todos</option>
+                <option value="cobro">Tipo: Cobro</option>
+                <option value="agradecimiento">Tipo: Agradecimiento</option>
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                style={{
+                  padding: "8px 12px",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  fontSize: 13,
+                  background: "#fff",
+                }}
+                title="Orden de la bandeja"
+              >
+                <option value="nuevos">Orden: Más nuevos</option>
+                <option value="viejos">Orden: Más viejos</option>
+                <option value="cobro_primero">Orden: Cobro primero</option>
+                <option value="agradecimiento_primero">Orden: Agradecimiento primero</option>
+              </select>
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
@@ -1065,8 +1126,7 @@ export default function CobranzaView({
                     )}
                     {!loading &&
                       filtered.map((r) => {
-                        const tipo =
-                          r.variables?.tipo_correo === "agradecimiento" ? "Agradecimiento" : "Cobro";
+                        const tipo = correoTipo(r) === "agradecimiento" ? "Agradecimiento" : "Cobro";
                         const canSel = r.estado === "pending_approval";
                         return (
                           <tr key={r.id}>
