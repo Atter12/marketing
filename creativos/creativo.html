@@ -2916,7 +2916,9 @@ function normalizeStageAttachFile(f) {
   if (typeof f === 'string') return { fileName: f, filePath: null };
   return {
     fileName: (f.fileName != null ? String(f.fileName) : (f.name != null ? String(f.name) : '')) || '',
-    filePath: f.filePath || null
+    filePath: f.filePath || null,
+    previewDataUrl: (typeof f.previewDataUrl === 'string' && f.previewDataUrl) ? f.previewDataUrl : null,
+    previewKind: (typeof f.previewKind === 'string' && f.previewKind) ? f.previewKind : null
   };
 }
 function canCreativosStorageRead() {
@@ -2933,9 +2935,21 @@ function getCreativosEntregablesSignedUrl(filePath, ttlSec, cb) {
     cb((r.data && r.data.signedUrl) || null);
   });
 }
-function openCreativosFilePreview(fileName, filePath) {
+function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKind) {
   if (!filePath) {
-    showToast('info', 'Solo está guardado el nombre del archivo (sin copia en el servidor).');
+    if (previewDataUrl && /^data:image\//i.test(previewDataUrl)) {
+      var offlineBody = '<div class="creativos-preview-img-wrap"><img src="' + escAttr(previewDataUrl) + '" alt=""></div>';
+      var offlineFooter = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>';
+      openModal('Vista previa · ' + esc(fileName || 'archivo'), offlineBody, offlineFooter);
+      return;
+    }
+    if ((previewKind || '').toLowerCase() === 'pdf') {
+      var pdfBody = '<div class="ref-preview-media" style="padding:20px"><div class="ref-preview-icon-slot" style="width:180px;height:220px;margin:0 auto">' + refPreviewIconHtml('pdf') + '</div></div><p class="form-hint" style="text-align:center;margin:10px 0 0 0">PDF sin copia en servidor. Esta tarjeta queda como referencia visual.</p>';
+      var pdfFooter = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>';
+      openModal('Vista previa · ' + esc(fileName || 'archivo'), pdfBody, pdfFooter);
+      return;
+    }
+    showToast('info', 'No hay copia en servidor ni vista previa disponible para este archivo.');
     return;
   }
   if (!canCreativosStorageRead()) { showToast('error', 'No hay acceso al almacenamiento'); return; }
@@ -2965,7 +2979,13 @@ function downloadCreativosFileByPath(fileName, filePath) {
     else showToast('error', 'No se pudo generar el enlace');
   });
 }
-function stageAttachThumbInner(fileName) {
+function stageAttachThumbInner(fileName, previewDataUrl, previewKind) {
+  if (previewDataUrl && /^data:image\//i.test(previewDataUrl)) {
+    return '<div class="stage-attach-thumb" style="padding:0;overflow:hidden"><img src="' + escAttr(previewDataUrl) + '" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></div>';
+  }
+  if ((previewKind || '').toLowerCase() === 'pdf') {
+    return '<div class="stage-attach-thumb">' + refPreviewIconHtml('pdf') + '</div>';
+  }
   var fake = { name: fileName || '', type: '' };
   var info = classifyRefFile(fake);
   if (info.mode === 'image') return '<div class="stage-attach-thumb" style="background:linear-gradient(135deg,var(--color-primary-soft),var(--color-surface-dynamic))"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>';
@@ -2980,16 +3000,21 @@ function renderStageAttachmentsGrid(p, stage) {
     var meta = normalizeStageAttachFile(raw);
     var fn = meta.fileName || 'Archivo';
     var path = meta.filePath;
+    var previewDataUrl = meta.previewDataUrl || null;
+    var previewKind = meta.previewKind || null;
     var can = !!(path && canCreativosStorageRead());
+    var canPreview = can || !!previewDataUrl;
     html += '<div class="stage-attach-card">';
-    html += stageAttachThumbInner(fn);
+    html += stageAttachThumbInner(fn, previewDataUrl, previewKind);
     html += '<div class="stage-attach-body"><div class="stage-attach-name">' + esc(fn) + '</div>';
-    if (!path) {
-      html += '<p class="stage-attach-nopath">Sin copia en servidor (proyectos antiguos o modo local). Sube referencias al crear proyectos nuevos con Supabase para ver aquí.</p>';
+    if (!path && !previewDataUrl) {
+      html += '<p class="stage-attach-nopath">Sin copia en servidor (proyecto antiguo o modo local) y sin miniatura guardada.</p>';
     }
     html += '<div class="stage-attach-actions">';
+    if (canPreview) {
+      html += '<button type="button" class="btn btn-sm btn-primary" onclick="openCreativosFilePreview(' + JSON.stringify(fn) + ',' + JSON.stringify(path) + ',' + JSON.stringify(previewDataUrl) + ',' + JSON.stringify(previewKind) + ')">Ver</button>';
+    }
     if (can) {
-      html += '<button type="button" class="btn btn-sm btn-primary" onclick="openCreativosFilePreview(' + JSON.stringify(fn) + ',' + JSON.stringify(path) + ')">Ver</button>';
       html += '<button type="button" class="btn btn-sm btn-secondary" onclick="downloadCreativosFileByPath(' + JSON.stringify(fn) + ',' + JSON.stringify(path) + ')">Descargar</button>';
     }
     html += '</div></div></div>';
@@ -3023,7 +3048,12 @@ function runSeriesInspiracionUploads(projectId, pendingEntries, onDone) {
     var entry = pendingEntries[i];
     var f = entry && entry.file;
     if (!f) {
-      results.push({ fileName: String(entry && entry.name != null ? entry.name : 'archivo'), filePath: null });
+      results.push({
+        fileName: String(entry && entry.name != null ? entry.name : 'archivo'),
+        filePath: null,
+        previewDataUrl: (entry && typeof entry.previewDataUrl === 'string') ? entry.previewDataUrl : null,
+        previewKind: (entry && typeof entry.previewKind === 'string') ? entry.previewKind : null
+      });
       i++;
       step();
       return;
@@ -3031,7 +3061,12 @@ function runSeriesInspiracionUploads(projectId, pendingEntries, onDone) {
     var safe = (f.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
     var relPath = projectId + '/inspiracion/ref_' + i + '_' + Date.now() + '_' + safe;
     uploadBlobToCreativosBucket(relPath, f, function(err, pth) {
-      results.push({ fileName: f.name || 'archivo', filePath: pth });
+      results.push({
+        fileName: f.name || 'archivo',
+        filePath: pth,
+        previewDataUrl: (entry && typeof entry.previewDataUrl === 'string') ? entry.previewDataUrl : null,
+        previewKind: (entry && typeof entry.previewKind === 'string') ? entry.previewKind : null
+      });
       i++;
       step();
     });
@@ -3544,13 +3579,128 @@ function renderRefPreviewMedia(entry, info) {
   var ext = (file.name || '').split('.').pop() || '—';
   return '<div class="ref-preview-media"><div class="ref-preview-icon-slot">' + refPreviewIconHtml(info.icon || 'file') + '<span class="ref-preview-ext">' + esc(ext) + '</span></div></div>';
 }
+function ensurePdfJsReady(cb) {
+  if (window.pdfjsLib) { cb(window.pdfjsLib); return; }
+  if (window._pdfJsLoadingQueue) { window._pdfJsLoadingQueue.push(cb); return; }
+  window._pdfJsLoadingQueue = [cb];
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+  s.async = true;
+  s.onload = function() {
+    var lib = window.pdfjsLib || window['pdfjs-dist/build/pdf'] || null;
+    if (lib && lib.GlobalWorkerOptions) {
+      lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+    var q = window._pdfJsLoadingQueue || [];
+    window._pdfJsLoadingQueue = null;
+    q.forEach(function(fn) { try { fn(lib); } catch (e) {} });
+  };
+  s.onerror = function() {
+    var q = window._pdfJsLoadingQueue || [];
+    window._pdfJsLoadingQueue = null;
+    q.forEach(function(fn) { try { fn(null); } catch (e) {} });
+  };
+  document.head.appendChild(s);
+}
+function generateVideoPreviewDataUrl(file, done) {
+  try {
+    var url = URL.createObjectURL(file);
+    var v = document.createElement('video');
+    v.preload = 'metadata';
+    v.muted = true;
+    v.playsInline = true;
+    v.src = url;
+    var finished = false;
+    function finish(dataUrl) {
+      if (finished) return;
+      finished = true;
+      try { URL.revokeObjectURL(url); } catch (e) {}
+      done(dataUrl || null);
+    }
+    v.onloadeddata = function() {
+      try {
+        var w = Math.max(1, Math.min(640, v.videoWidth || 320));
+        var h = Math.max(1, Math.round((v.videoHeight || 180) * (w / Math.max(1, (v.videoWidth || 320)))));
+        var c = document.createElement('canvas');
+        c.width = w;
+        c.height = h;
+        var ctx = c.getContext('2d');
+        ctx.drawImage(v, 0, 0, w, h);
+        finish(c.toDataURL('image/jpeg', 0.82));
+      } catch (e) { finish(null); }
+    };
+    v.onerror = function() { finish(null); };
+    setTimeout(function() { finish(null); }, 2500);
+  } catch (e) { done(null); }
+}
+function generatePdfPreviewDataUrl(file, done) {
+  ensurePdfJsReady(function(lib) {
+    if (!lib) { done(null); return; }
+    try {
+      var fr = new FileReader();
+      fr.onload = function() {
+        try {
+          var bytes = new Uint8Array(fr.result);
+          lib.getDocument({ data: bytes }).promise.then(function(pdf) {
+            return pdf.getPage(1);
+          }).then(function(page) {
+            var vp = page.getViewport({ scale: 1 });
+            var targetW = 420;
+            var scale = targetW / Math.max(1, vp.width);
+            var viewport = page.getViewport({ scale: scale });
+            var canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            var ctx = canvas.getContext('2d');
+            return page.render({ canvasContext: ctx, viewport: viewport }).promise.then(function() {
+              done(canvas.toDataURL('image/jpeg', 0.85));
+            });
+          }).catch(function() { done(null); });
+        } catch (e) { done(null); }
+      };
+      fr.onerror = function() { done(null); };
+      fr.readAsArrayBuffer(file);
+    } catch (e) { done(null); }
+  });
+}
 function handleFileDrop(e) { handleFileSelect(e.dataTransfer.files); }
 function handleFileSelect(files) {
   Array.from(files || []).forEach(function(file) {
-    var entry = { file: file, objectUrl: null };
+    var entry = { file: file, objectUrl: null, previewDataUrl: null, previewKind: null };
     var t = (file.type || '').toLowerCase();
     if (t.indexOf('image/') === 0 || t.indexOf('video/') === 0) {
       try { entry.objectUrl = URL.createObjectURL(file); } catch (err) {}
+    }
+    if (t.indexOf('image/') === 0 && (file.size || 0) > 0 && (file.size || 0) <= 4 * 1024 * 1024) {
+      entry.previewKind = 'image';
+      try {
+        var reader = new FileReader();
+        reader.onload = function() {
+          if (typeof reader.result === 'string') {
+            entry.previewDataUrl = reader.result;
+            renderFileList();
+          }
+        };
+        reader.readAsDataURL(file);
+      } catch (e) {}
+    }
+    if (t.indexOf('video/') === 0 && (file.size || 0) <= 80 * 1024 * 1024) {
+      entry.previewKind = 'video';
+      generateVideoPreviewDataUrl(file, function(dataUrl) {
+        if (typeof dataUrl === 'string' && dataUrl) {
+          entry.previewDataUrl = dataUrl;
+          renderFileList();
+        }
+      });
+    }
+    if ((t === 'application/pdf' || /\.pdf$/i.test(file.name || '')) && (file.size || 0) <= 15 * 1024 * 1024) {
+      entry.previewKind = 'pdf';
+      generatePdfPreviewDataUrl(file, function(dataUrl) {
+        if (typeof dataUrl === 'string' && dataUrl) {
+          entry.previewDataUrl = dataUrl;
+          renderFileList();
+        }
+      });
     }
     pendingFiles.push(entry);
   });
@@ -3617,7 +3767,17 @@ function saveProject() {
   }
   var stages = createStageData();
   if (pendingFiles.length > 0) {
-    stages.inspiracion.files = pendingFiles.map(function(x) { return x.file ? x.file.name : String(x); });
+    stages.inspiracion.files = pendingFiles.map(function(x) {
+      if (x && x.file) {
+        return {
+          fileName: x.file.name || 'archivo',
+          filePath: null,
+          previewDataUrl: (typeof x.previewDataUrl === 'string') ? x.previewDataUrl : null,
+          previewKind: (typeof x.previewKind === 'string') ? x.previewKind : null
+        };
+      }
+      return String(x);
+    });
   }
   var clientId = document.getElementById('projClient').value || null;
   function doInsertProyecto(editorUuid) {
@@ -3653,7 +3813,12 @@ function saveProject() {
         runSeriesInspiracionUploads(newId, uploadQueue, function(_err, results) {
           var nextStages = JSON.parse(JSON.stringify(row.stages));
           nextStages.inspiracion.files = (results || []).map(function(x) {
-            return { fileName: x.fileName, filePath: x.filePath || null };
+            return {
+              fileName: x.fileName,
+              filePath: x.filePath || null,
+              previewDataUrl: (typeof x.previewDataUrl === 'string') ? x.previewDataUrl : null,
+              previewKind: (typeof x.previewKind === 'string') ? x.previewKind : null
+            };
           });
           supabase.from('creativos_proyectos').update({ stages: nextStages }).eq('id', newId).then(function(up) {
             if (up.error) console.warn('[Creativos] actualizar rutas de inspiración:', up.error);
