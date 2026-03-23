@@ -1656,6 +1656,14 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   transition: transform 0.28s cubic-bezier(0.16,1,0.3,1);
   border: 1px solid var(--color-divider);
 }
+.modal.modal-compact .modal-header { padding: var(--sp-3) var(--sp-4); }
+.modal.modal-compact .modal-body { padding: var(--sp-3) var(--sp-4); }
+.modal.modal-compact .modal-footer { padding: var(--sp-3) var(--sp-4); }
+.modal.modal-compact .form-group { margin-bottom: var(--sp-3); }
+.modal.modal-compact .form-input,
+.modal.modal-compact .form-select { min-height: 38px; padding: 8px 10px; }
+.modal.modal-compact .form-textarea { min-height: 54px; padding: 8px 10px; }
+.modal.modal-compact .ticket-assign-wrap { max-height: 84px; }
 .modal-overlay.show .modal { transform: scale(1) translateY(0); }
 
 /* Loading overlay (carga desde Supabase) */
@@ -1750,15 +1758,33 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
 .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-3); }
 .ticket-meta-grid {
-  grid-template-columns: minmax(160px, 1fr) minmax(150px, 1fr) minmax(280px, 1.7fr);
+  grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr);
   align-items: start;
 }
+.ticket-meta-grid .ticket-assign-group { grid-column: 1 / -1; }
+.ticket-sla-inline { display: grid; grid-template-columns: minmax(72px, 100px) minmax(110px, 140px); gap: 8px; }
 .ticket-assign-wrap {
   border: 1px solid var(--color-divider);
   border-radius: var(--r-md);
   padding: 8px 10px;
   max-height: 140px;
   overflow: auto;
+}
+.ticket-assign-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  font-size: var(--text-sm);
+}
+.ticket-assign-item input { margin-top: 2px; }
+.ticket-assign-name { font-weight: 600; color: var(--color-text); line-height: 1.25; }
+.ticket-assign-email {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* ══════════════════════════════════════════════
@@ -2028,16 +2054,21 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   .welcome-stats { display: none; }
   .ticket-row > :nth-child(5), .tickets-thead > :nth-child(5) { display: none; }
   .cmd-palette { margin: 0 var(--sp-4); }
-  .ticket-meta-grid { grid-template-columns: 1fr 1fr; }
-  .ticket-meta-grid .form-group:last-child { grid-column: 1 / -1; }
+  .ticket-meta-grid { grid-template-columns: 1fr; }
+  .ticket-meta-grid .ticket-assign-group { grid-column: auto; }
 }
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }
   .tickets-stats { grid-template-columns: 1fr 1fr; }
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
   .ticket-meta-grid { grid-template-columns: 1fr; }
-  .ticket-meta-grid .form-group:last-child { grid-column: auto; }
+  .ticket-meta-grid .ticket-assign-group { grid-column: auto; }
+  .ticket-sla-inline { grid-template-columns: 1fr 1fr; }
   .ticket-assign-wrap { max-height: 96px; }
+  .modal { max-width: 96vw; max-height: 94vh; border-radius: var(--r-lg); }
+  .modal-header { padding: var(--sp-3); }
+  .modal-body { padding: var(--sp-3); }
+  .modal-footer { padding: var(--sp-3); }
   .kanban-col { min-width: 92vw; width: 92vw; }
   .card-title { font-size: var(--text-sm); }
   .card-desc { -webkit-line-clamp: 3; line-clamp: 3; }
@@ -3044,7 +3075,7 @@ function tareasAssigneeChecklistHtml(inputName) {
     var em = (m.email || '').trim();
     var lab = escTareas(m.n || em);
     var id = (inputName || 'tk-assign-multi') + '-' + idx;
-    return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:var(--text-sm)"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"><span>' + lab + '</span><span style="font-size:var(--text-xs);color:var(--color-text-faint)">' + escTareas(em) + '</span></label>';
+    return '<label class="ticket-assign-item"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"><span><span class="ticket-assign-name">' + lab + '</span> <span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
   }).join('');
 }
 function getTicketSelectedAssigneeEmails() {
@@ -4907,6 +4938,8 @@ function openModal(type) {
   const title   = document.getElementById('modalTitle');
   const body    = document.getElementById('modalBody');
   const footer  = document.getElementById('modalFooter');
+  const modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) modalEl.classList.remove('modal-compact');
 
   if (type === 'task') {
     title.textContent = 'Nuevo Entregable';
@@ -4925,6 +4958,7 @@ function openModal(type) {
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
 
   } else if (type === 'ticket') {
+    if (modalEl) modalEl.classList.add('modal-compact');
     title.textContent = 'Nuevo ticket';
     body.innerHTML = `
       <p class="form-hint" style="margin:0 0 var(--sp-4);font-size:var(--text-sm);color:var(--color-text-muted)">Describe el cambio o mejora con el mayor detalle posible. El solicitante se registra con el correo de tu sesión.</p>
@@ -4941,9 +4975,9 @@ function openModal(type) {
         <div class="form-group"><label for="tk-cat">Categoría</label><select class="form-select" id="tk-cat"><option value="Cambio">🔄 Cambio</option><option value="Mejora">✨ Mejora</option><option value="Solicitud">📥 Solicitud</option><option value="Error">🐛 Error</option><option value="Consulta">❓ Consulta</option></select></div>
       </div>
       <div class="form-row-3">
-        <div class="form-group"><label>Plazo para entregar</label><div class="form-row" style="grid-template-columns:1fr 1fr;gap:8px"><input class="form-input" id="tk-sla-value" type="number" min="1" step="1" value="1"><select class="form-select" id="tk-sla-unit"><option value="min">minutos</option><option value="h">horas</option><option value="d" selected>día</option></select></div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
+        <div class="form-group"><label>Plazo para entregar</label><div class="ticket-sla-inline"><input class="form-input" id="tk-sla-value" type="number" min="1" step="1" value="1"><select class="form-select" id="tk-sla-unit"><option value="min">minutos</option><option value="h">horas</option><option value="d" selected>día</option></select></div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
+        <div class="form-group ticket-assign-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
       <div class="form-group"><label for="tk-notes">Notas internas (opcional)</label><textarea class="form-textarea" id="tk-notes" placeholder="Contexto adicional para el equipo…"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
@@ -5049,6 +5083,8 @@ function closeModal(e) {
   var overlay = document.getElementById('modalOverlay');
   if (!overlay) return;
   if (e && e.target !== overlay) return;
+  var modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) modalEl.classList.remove('modal-compact');
   hideModalOverlay();
 }
 
