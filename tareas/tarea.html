@@ -3359,7 +3359,18 @@ async function loadTareasData() {
       if (!id || typeof id !== 'string') return 220;
       var h = 0; for (var i = 0; i < id.length; i++) h = ((h << 5) - h) + id.charCodeAt(i); return Math.abs(h % 360);
     };
-    var ATTENDANCE_MEMBERS = (gerentesRes.data || []).map(function(r) {
+    var activeByGerenteEmail = {};
+    (eqRes.data || []).forEach(function(eq) {
+      var eem = (eq && eq.gerente_email ? String(eq.gerente_email).toLowerCase().trim() : '');
+      if (!eem) return;
+      activeByGerenteEmail[eem] = (eq.activo !== false);
+    });
+    var ATTENDANCE_MEMBERS = (gerentesRes.data || []).filter(function(r) {
+      var em = (r && r.email ? String(r.email).toLowerCase().trim() : '');
+      if (!em) return true;
+      if (!Object.prototype.hasOwnProperty.call(activeByGerenteEmail, em)) return true;
+      return activeByGerenteEmail[em] !== false;
+    }).map(function(r) {
       var fn = (r.nombre && String(r.nombre).trim()) || '';
       var ln = (r.apellido && String(r.apellido).trim()) || '';
       var name = [fn, ln].filter(Boolean).join(' ');
@@ -5879,19 +5890,47 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
   }
   function finishReload() {
     console.log('[Tareas] deleteWorkloadMember: finishReload');
+    function autoRecoverIfBlank(stage) {
+      setTimeout(function() {
+        var main = document.getElementById('main-content');
+        var hasViews = document.querySelectorAll('.view').length > 0;
+        var activeView = document.querySelector('.view.active');
+        var txt = main ? String(main.textContent || '').replace(/\s+/g, ' ').trim() : '';
+        var looksBlank = !main || !hasViews || !activeView || txt.length < 12;
+        if (!looksBlank) return;
+        console.warn('[Tareas] deleteWorkloadMember: blank-like UI detected at', stage, { hasMain: !!main, hasViews: hasViews, hasActiveView: !!activeView, textLen: txt.length });
+        try {
+          initViews();
+        } catch (e) {
+          console.error('[Tareas] deleteWorkloadMember: initViews auto-recover failed', e);
+        }
+        setTimeout(function() {
+          var main2 = document.getElementById('main-content');
+          var txt2 = main2 ? String(main2.textContent || '').replace(/\s+/g, ' ').trim() : '';
+          var stillBlank = !main2 || !document.querySelector('.view.active') || txt2.length < 12;
+          if (stillBlank) {
+            console.warn('[Tareas] deleteWorkloadMember: forcing hard reload after failed auto-recover');
+            window.location.reload();
+          }
+        }, 240);
+      }, 180);
+    }
     reloadTareasData(function() {
       try {
         renderers.workload?.();
         renderers.attendance?.();
         updateBadges();
         updateDashboardStats();
+        autoRecoverIfBlank('post-reload-render');
       } catch (e) {
         console.error('[Tareas] deleteWorkloadMember: render after reload failed', e);
         try { initViews(); } catch (e2) { console.error('[Tareas] initViews fallback failed', e2); }
+        autoRecoverIfBlank('render-catch');
       }
     }).catch(function(err) {
       console.error('[Tareas] deleteWorkloadMember: reload failed', err);
       try { initViews(); } catch (e3) { console.error('[Tareas] initViews fallback failed', e3); }
+      autoRecoverIfBlank('reload-catch');
     });
   }
   function ensureDeactivatedRowByEmail(emailLower, done) {
