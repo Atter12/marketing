@@ -1831,6 +1831,28 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .notif-text { font-size: var(--text-xs); color: var(--color-text); }
 .notif-time { font-size: 0.5625rem; color: var(--color-text-faint); margin-top: 2px; }
+.ticket-toast-stack {
+  position: fixed;
+  right: var(--sp-4);
+  bottom: var(--sp-4);
+  z-index: 700;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(92vw, 360px);
+}
+.ticket-toast {
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  border-left: 4px solid var(--color-primary);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-xl);
+  padding: 10px 12px;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+.ticket-toast.warn { border-left-color: var(--orange2); }
+.ticket-toast.breach { border-left-color: var(--red); }
 
 /* ══════════════════════════════════════════════
    COMMAND PALETTE
@@ -2564,6 +2586,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
     No hay notificaciones nuevas. Los avisos reales se conectarán aquí cuando estén disponibles.
   </div>
 </div>
+<div class="ticket-toast-stack" id="ticketToastStack" aria-live="polite" aria-atomic="true"></div>
 
 <!-- ══════════════════════════════════
      COMMAND PALETTE (Ctrl+K)
@@ -2992,6 +3015,7 @@ function updateLiveCountdownBadges() {
       dot.classList.add(info.status === 'breach' ? 'sla-breach' : (info.status === 'warn' ? 'sla-warn' : 'sla-ok'));
     }
   });
+  evalTicketDeadlinePopups();
 }
 var _liveCountdownTimer = null;
 function startLiveCountdownTimer() {
@@ -3084,22 +3108,29 @@ function tareasAssigneeOptionsHtml() {
     return '<option value="' + em + '">' + escTareas(m.n || m.email) + '</option>';
   }).join('');
 }
-function tareasAssigneeChecklistHtml(inputName) {
+function tareasAssigneeChecklistHtml(inputName, preselectedEmails) {
   var list = attendanceMembersSorted().filter(function(m) { return (m.email || '').trim(); });
   if (!tareasEffectivePerms().admin) {
     var my = (window.__tareasSessionEmail || '').toLowerCase().trim();
     list = my ? list.filter(function(m) { return (m.email || '').toLowerCase().trim() === my; }) : [];
   }
+  var selected = {};
+  (preselectedEmails || []).forEach(function(em) {
+    var k = String(em || '').toLowerCase().trim();
+    if (k) selected[k] = true;
+  });
   if (!list.length) return '<div class="form-hint">No hay miembros disponibles para asignar.</div>';
   return list.map(function(m, idx) {
     var em = (m.email || '').trim();
     var lab = escTareas(m.n || em);
     var id = (inputName || 'tk-assign-multi') + '-' + idx;
-    return '<label class="ticket-assign-item"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"><span><span class="ticket-assign-name">' + lab + '</span> <span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
+    var chk = selected[String(em).toLowerCase().trim()] ? ' checked' : '';
+    return '<label class="ticket-assign-item"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"' + chk + '><span><span class="ticket-assign-name">' + lab + '</span> <span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
   }).join('');
 }
-function getTicketSelectedAssigneeEmails() {
-  var nodes = document.querySelectorAll('input[name="tk-assign-multi"]:checked');
+function getTicketSelectedAssigneeEmails(inputName) {
+  var sel = inputName || 'tk-assign-multi';
+  var nodes = document.querySelectorAll('input[name="' + sel + '"]:checked');
   return Array.prototype.slice.call(nodes).map(function(n) { return (n.value || '').trim().toLowerCase(); }).filter(Boolean);
 }
 
@@ -3840,6 +3871,7 @@ renderers.tickets = function() {
           </div>
           <div class="ticket-actions">
             ${tk.status !== 'closed' && supabase && tk.dbId ? `<button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();createEntregableFromTicket(${realIdx})">📦 Pasar a entregable</button>` : ''}
+            ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm" onclick="event.stopPropagation();openReassignTicketModal(${realIdx})">👥 Reasignar</button>` : ''}
             ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();openResolveTicketModal(${realIdx})">✅ Resolver con evidencia</button>` : ''}
             ${tk.status === 'open' ? `<button type="button" class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${escTareas(tk.id)}')">▶ Tomar ticket</button>` : ''}
             ${tk.priority !== 'urgente' ? `<button type="button" class="btn-secondary btn-sm btn-danger" onclick="event.stopPropagation();escalateTicket('${escTareas(tk.id)}')">⬆ Escalar</button>` : ''}
@@ -3981,6 +4013,58 @@ function createEntregableFromTicket(idx) {
 }
 
 var _resolveTicketIdx = null;
+var _reassignTicketIdx = null;
+function openReassignTicketModal(idx) {
+  _reassignTicketIdx = idx;
+  var tk = tickets[idx];
+  if (!tk) return;
+  var selected = normalizeTicketAssigneeEmails(tk);
+  document.getElementById('modalTitle').textContent = 'Reasignar ' + (tk.id || 'ticket');
+  document.getElementById('modalBody').innerHTML = `
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-3)">Selecciona uno o varios responsables del equipo.</p>
+    <div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-reassign-multi', selected)}</div>
+    <p class="form-hint" style="margin-top:var(--sp-2)">Si no marcas a nadie, el ticket quedará sin asignar.</p>`;
+  document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal();_reassignTicketIdx=null">Cancelar</button><button type="button" class="btn-primary" onclick="submitReassignTicket()">Guardar asignación</button>';
+  showModalOverlay();
+}
+function submitReassignTicket() {
+  var idx = _reassignTicketIdx;
+  if (idx == null) return;
+  var tk = tickets[idx];
+  if (!tk) { _reassignTicketIdx = null; closeModal(); return; }
+  var selected = getTicketSelectedAssigneeEmails('tk-reassign-multi');
+  var first = selected.length ? selected[0] : null;
+  function finishLocal() {
+    tk.assigneeEmail = first || '';
+    tk.assigneeEmails = selected.slice();
+    _reassignTicketIdx = null;
+    renderers.tickets();
+    updateBadges();
+    closeModal();
+  }
+  if (!supabase || !tk.dbId) { finishLocal(); return; }
+  supabase.from('tareas_tickets').update({
+    asignado_email: first,
+    asignados_emails: selected
+  }).eq('id', tk.dbId).then(function(r) {
+    if (r.error) { alert('No se pudo reasignar: ' + (r.error.message || '')); return; }
+    var q = selected.length ? ('👥 Reasignado a: ' + selected.join(', ')) : '👥 Ticket sin asignación.';
+    supabase.from('tareas_ticket_comentarios').insert({
+      ticket_id: tk.dbId,
+      quien: 'Sistema',
+      que: q,
+      cuando: 'Ahora',
+      tipo: 'system'
+    }).then(function() {
+      _reassignTicketIdx = null;
+      reloadTareasData(function() {
+        renderers.tickets();
+        updateBadges();
+      });
+      closeModal();
+    });
+  });
+}
 function openResolveTicketModal(idx) {
   _resolveTicketIdx = idx;
   var tk = tickets[idx];
@@ -5018,7 +5102,7 @@ function openModal(type) {
       <div class="form-row-3">
         <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla"><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group ticket-assign-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
+        <div class="form-group ticket-assign-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi', [])}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
       </div>
       <div class="form-group"><label for="tk-notes">Notas internas (opcional)</label><textarea class="form-textarea" id="tk-notes" placeholder="Contexto adicional para el equipo…"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
@@ -5722,6 +5806,77 @@ function globalSearch() {
 function toggleNotifPanel() {
   const p = document.getElementById('notifPanel');
   p.classList.toggle('show');
+}
+var _notifItems = [];
+var _ticketPopupSeen = {};
+function pushNotifItem(msg, tone) {
+  _notifItems.unshift({ msg: msg, tone: tone || 'info', at: new Date() });
+  if (_notifItems.length > 30) _notifItems = _notifItems.slice(0, 30);
+  var body = document.getElementById('notifPanelBody');
+  if (body) {
+    if (!_notifItems.length) {
+      body.innerHTML = 'No hay notificaciones nuevas.';
+    } else {
+      body.innerHTML = _notifItems.map(function(n) {
+        return '<div class="notif-item unread"><span class="notif-dot-marker" style="background:' + (n.tone === 'breach' ? 'var(--red)' : (n.tone === 'warn' ? 'var(--orange2)' : 'var(--color-primary)')) + '"></span><div><div class="notif-text">' + escTareas(n.msg) + '</div><div class="notif-time">' + formatTicketWhen(n.at.toISOString()) + '</div></div></div>';
+      }).join('');
+    }
+  }
+  var dot = document.querySelector('#notifBtn .notif-dot');
+  if (dot) dot.style.display = _notifItems.length ? 'inline-block' : 'none';
+}
+function openTicketFromNotification(ticketCode) {
+  if (!ticketCode) return;
+  try {
+    navigate('tickets', document.querySelector('.nav-item[data-view="tickets"]'));
+  } catch (e) {}
+  var allTab = document.querySelector('#ticketTabs .tab');
+  if (allTab && typeof filterTickets === 'function') {
+    try { filterTickets('all', allTab); } catch (e2) {}
+  }
+  setTimeout(function() {
+    var idx = tickets.findIndex(function(t) { return String(t.id || '') === String(ticketCode); });
+    if (idx < 0) return;
+    var row = document.querySelector('.ticket-row[onclick*="toggleTicketDetail(' + idx + ')"]');
+    if (row && row.style.display === 'none') return;
+    var det = document.getElementById('tkDetail-' + idx);
+    if (det && !det.classList.contains('show')) toggleTicketDetail(idx);
+  }, 120);
+}
+function showTicketPopup(msg, tone, onClick) {
+  var stack = document.getElementById('ticketToastStack');
+  if (!stack) return;
+  var el = document.createElement('div');
+  el.className = 'ticket-toast ' + (tone || 'info');
+  el.textContent = msg;
+  if (typeof onClick === 'function') {
+    el.style.cursor = 'pointer';
+    el.title = 'Abrir ticket';
+    el.onclick = function() { onClick(); };
+  }
+  stack.appendChild(el);
+  setTimeout(function() {
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }, 4800);
+}
+function ticketPopupNotifyOnce(key, msg, tone, onClick) {
+  if (!key || _ticketPopupSeen[key]) return;
+  _ticketPopupSeen[key] = true;
+  showTicketPopup(msg, tone, onClick);
+  pushNotifItem(msg, tone);
+}
+function evalTicketDeadlinePopups() {
+  var vis = getVisibleTicketsForSession(tickets);
+  vis.forEach(function(tk) {
+    if (!tk || tk.status === 'closed' || !tk.dueAt) return;
+    var info = getLiveCountdownInfo(tk.dueAt);
+    var code = tk.id || 'ticket';
+    if (info.status === 'warn') {
+      ticketPopupNotifyOnce('warn:' + code, 'Ticket ' + code + ' por vencer: ' + info.text, 'warn', function() { openTicketFromNotification(code); });
+    } else if (info.status === 'breach') {
+      ticketPopupNotifyOnce('breach:' + code, 'Ticket ' + code + ' vencido. Revisar ahora.', 'breach', function() { openTicketFromNotification(code); });
+    }
+  });
 }
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
