@@ -7,6 +7,12 @@
 - [x] Aprobar / Rechazar / editar asunto y cuerpo
 - [x] Envío vía Edge Function `cobranza-enviar` + Resend (o «Marcar enviado» manual)
 - [x] Eventos en `cobranza_eventos` (trazabilidad básica)
+- [x] Pestaña **Historial** (eventos con cliente/asunto)
+- [x] Flujo visual en 4 pasos + texto «revisión humana»
+- [x] Selección múltiple: aprobar / rechazar en lote
+- [x] Modal: pestañas Editar / Vista previa / Variables / Historial del correo
+- [x] **Guardar** sin cerrar o **Guardar y cerrar**; motivo de rechazo en el modal
+- [x] Borradores **Agradecimiento** para clientes al día (sin deuda)
 
 ## Migrations agregadas
 - `supabase/migrations/039_cobranza_bandeja_historial.sql`
