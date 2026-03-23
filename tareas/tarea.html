@@ -2913,13 +2913,31 @@ function invokeInviteGerenteEmail(email, done) {
     }).then(function(r) {
       return r.json().then(function(j) { return { ok: r.ok, status: r.status, body: j }; });
     }).then(function(x) {
-      var rawMsg = x.body && (x.body.error || x.body.message) || (x.ok ? '' : 'Error ' + x.status);
+      function extractInviteMsg(v) {
+        if (v == null) return '';
+        if (typeof v === 'string') return v;
+        if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+        if (Array.isArray(v)) return v.map(extractInviteMsg).filter(Boolean).join(' | ');
+        if (typeof v === 'object') {
+          var parts = [];
+          ['error', 'message', 'msg', 'detail', 'hint', 'code', 'name'].forEach(function(k) {
+            if (v[k] != null) parts.push(extractInviteMsg(v[k]));
+          });
+          if (!parts.length) {
+            try { parts.push(JSON.stringify(v)); } catch (e) {}
+          }
+          return parts.filter(Boolean).join(' | ');
+        }
+        return String(v);
+      }
+      var rawMsg = extractInviteMsg(x.body) || (x.ok ? '' : ('Error ' + x.status));
       var low = String(rawMsg || '').toLowerCase();
       var alreadyAuth =
         low.indexOf('already been registered') >= 0 ||
         low.indexOf('already registered') >= 0 ||
         low.indexOf('already exists') >= 0 ||
-        low.indexOf('user with this email') >= 0;
+        low.indexOf('user with this email') >= 0 ||
+        low.indexOf('email address has already been registered') >= 0;
       if (alreadyAuth) {
         if (done) done(true, 'El correo ya estaba registrado en Auth; el miembro puede entrar directo con su acceso.');
         return;
