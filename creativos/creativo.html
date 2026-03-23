@@ -2928,14 +2928,28 @@ function getCreativosEntregablesSignedUrl(filePath, ttlSec, cb) {
   if (!filePath || !supabase) { cb(null); return; }
   var ttl = ttlSec || 3600;
   if (marketingStorageActive()) {
-    marketingStorageSignReadUrl('creativos_entregables', filePath, ttl).then(function(u) { cb(u || null); });
+    marketingStorageSignReadUrl('creativos_entregables', filePath, ttl).then(function(u) {
+      cb(u || null);
+    }).catch(function(err) {
+      console.error('[Creativos] sign url (marketing storage) error:', { filePath: filePath, ttl: ttl, err: err });
+      cb(null);
+    });
     return;
   }
   supabase.storage.from('creativos_entregables').createSignedUrl(filePath, ttl).then(function(r) {
     cb((r.data && r.data.signedUrl) || null);
+  }).catch(function(err) {
+    console.error('[Creativos] sign url (supabase storage) error:', { filePath: filePath, ttl: ttl, err: err });
+    cb(null);
   });
 }
 function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKind) {
+  console.log('[Creativos] open preview click:', {
+    fileName: fileName,
+    filePath: filePath,
+    hasPreviewDataUrl: !!previewDataUrl,
+    previewKind: previewKind || null
+  });
   if (!filePath) {
     if (previewDataUrl && /^data:image\//i.test(previewDataUrl)) {
       var offlineBody = '<div class="creativos-preview-img-wrap"><img src="' + escAttr(previewDataUrl) + '" alt=""></div>';
@@ -2955,7 +2969,11 @@ function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKin
   if (!canCreativosStorageRead()) { showToast('error', 'No hay acceso al almacenamiento'); return; }
   showToast('info', 'Generando vista previa…');
   getCreativosEntregablesSignedUrl(filePath, 3600, function(url) {
-    if (!url) { showToast('error', 'No se pudo generar el enlace'); return; }
+    if (!url) {
+      console.error('[Creativos] preview failed: signed URL null', { fileName: fileName, filePath: filePath });
+      showToast('error', 'No se pudo generar el enlace de vista previa');
+      return;
+    }
     var lower = (fileName || '').toLowerCase();
     var body;
     if (/(\.png|\.jpe?g|\.gif|\.webp|\.svg|\.bmp)$/i.test(lower)) {
@@ -2968,15 +2986,37 @@ function openCreativosFilePreview(fileName, filePath, previewDataUrl, previewKin
       body = '<p style="font-size:var(--text-sm);word-break:break-all">' + esc(fileName || 'Archivo') + '</p><p class="form-hint" style="margin-top:8px">No hay vista previa integrada para este tipo. Usa «Abrir en pestaña».</p>';
     }
     var footer = '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button><a class="btn btn-primary" href="' + escAttr(url) + '" target="_blank" rel="noopener">Abrir en pestaña</a>';
-    openModal('Vista previa · ' + esc(fileName || 'archivo'), body, footer);
+    try {
+      openModal('Vista previa · ' + esc(fileName || 'archivo'), body, footer);
+      console.log('[Creativos] preview modal opened:', { fileName: fileName, filePath: filePath });
+    } catch (e) {
+      console.error('[Creativos] preview modal error, fallback to new tab:', e);
+      window.open(url, '_blank', 'noopener');
+    }
   });
 }
 function downloadCreativosFileByPath(fileName, filePath) {
   if (!filePath) { showToast('error', 'Archivo no disponible'); return; }
   if (!canCreativosStorageRead()) { showToast('error', 'No hay acceso al almacenamiento'); return; }
   getCreativosEntregablesSignedUrl(filePath, 120, function(url) {
-    if (url) window.open(url);
-    else showToast('error', 'No se pudo generar el enlace');
+    if (!url) {
+      console.error('[Creativos] download failed: signed URL null', { fileName: fileName, filePath: filePath });
+      showToast('error', 'No se pudo generar el enlace');
+      return;
+    }
+    try {
+      var a = document.createElement('a');
+      a.href = url;
+      a.setAttribute('download', fileName || 'archivo');
+      a.rel = 'noopener';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error('[Creativos] download fallback to new tab:', e);
+      window.open(url, '_blank', 'noopener');
+    }
   });
 }
 function stageAttachThumbInner(fileName, previewDataUrl, previewKind) {
