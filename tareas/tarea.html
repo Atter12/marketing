@@ -4555,6 +4555,19 @@ function workloadTasksForMember(m) {
   }
   return [];
 }
+function workloadVisibleMembers() {
+  var att = (ATTENDANCE_MEMBERS || []).slice();
+  if (!att.length) return (TEAM || []).slice().filter(function(m) { return m && m.on !== false; });
+  return att.filter(function(m) {
+    var em = String((m && (m.email || m.gerente_email)) || '').toLowerCase().trim();
+    if (!em) return true;
+    var tm = (TEAM || []).find(function(t) {
+      return String((t && t.gerente_email) || '').toLowerCase().trim() === em;
+    });
+    if (!tm) return true;
+    return tm.on !== false;
+  });
+}
 
 renderers.workload = function() {
   const table = document.getElementById('workloadTable');
@@ -4568,7 +4581,7 @@ renderers.workload = function() {
       <div role="columnheader">Rol</div>
       <div role="columnheader">Acción</div>
     </div>`;
-  var list = (ATTENDANCE_MEMBERS && ATTENDANCE_MEMBERS.length) ? ATTENDANCE_MEMBERS : (TEAM || []);
+  var list = workloadVisibleMembers();
   list.forEach(m => {
     const ts = workloadTasksForMember(m);
     const done = ts.filter(x => x.d).length;
@@ -5843,10 +5856,15 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
   console.log('[Tareas] deleteWorkloadMember:start', { memberId: memberId, memberEmail: memberEmail, memberName: memberName, hasSupabase: !!supabase });
   if (!tareasEffectivePerms().admin) { alert('Solo administradores pueden eliminar miembros.'); return; }
   var name = memberName || memberEmail || memberId || 'miembro';
-  if (!confirm('¿Eliminar miembro "' + name + '" del equipo?')) return;
+  if (!confirm('¿Eliminar miembro "' + name + '" del equipo?\n\nSe desactivará (no se borra definitivamente).')) return;
   if (!supabase) {
-    TEAM = (TEAM || []).filter(function(t) { return String(t.id) !== String(memberId); });
-    ATTENDANCE_MEMBERS = (ATTENDANCE_MEMBERS || []).filter(function(m) { return String(m.id) !== String(memberId); });
+    TEAM = (TEAM || []).map(function(t) {
+      if (!t) return t;
+      var emx = String((t.gerente_email || '')).toLowerCase().trim();
+      var targetEm = String(memberEmail || '').toLowerCase().trim();
+      if ((memberId && String(t.id) === String(memberId)) || (targetEm && emx === targetEm)) t.on = false;
+      return t;
+    });
     renderers.workload?.();
     renderers.attendance?.();
     updateBadges();
@@ -5900,40 +5918,62 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
       verifyUiNotBlank();
     });
   }
-  function deleteGerenteIfAny() {
-    if (!memberId) { finishReload(); return; }
-    console.log('[Tareas] deleteWorkloadMember: deleting gerente', { memberId: memberId });
-    supabase.from('gerentes').delete().eq('id', memberId).then(function(res) {
-      if (res.error) {
-        console.error('[Tareas] delete gerente failed:', res.error);
-        alert('No se pudo eliminar en asistencia/gerentes: ' + (res.error.message || 'Error'));
-        finishReload();
-        return;
-      }
-      finishReload();
-    }).catch(function(err) {
-      console.error('[Tareas] delete gerente exception:', err);
-      alert('Error eliminando en gerentes.');
-      finishReload();
+  function applyLocalHide() {
+    var targetId = String(memberId || '');
+    var targetEm = String(memberEmail || '').toLowerCase().trim();
+    TEAM = (TEAM || []).map(function(t) {
+      if (!t) return t;
+      var emx = String((t.gerente_email || '')).toLowerCase().trim();
+      if ((targetId && String(t.id) === targetId) || (targetEm && emx === targetEm)) t.on = false;
+      return t;
     });
-  }
-  if (em) {
-    console.log('[Tareas] deleteWorkloadMember: deleting tareas_equipo by email', { em: em });
-    supabase.from('tareas_equipo').delete().eq('gerente_email', em).then(function(resp) {
-      if (resp.error) {
-        console.error('[Tareas] delete tareas_equipo by email failed:', resp.error);
-        alert('No se pudo eliminar en equipo: ' + (resp.error.message || 'Error'));
-      }
-      deleteGerenteIfAny();
-    }).catch(function(err) {
-      console.error('[Tareas] delete tareas_equipo by email exception:', err);
-      alert('Error eliminando en equipo.');
-      deleteGerenteIfAny();
+    ATTENDANCE_MEMBERS = (ATTENDANCE_MEMBERS || []).filter(function(m) {
+      var emx = String((m.email || m.gerente_email || '')).toLowerCase().trim();
+      if (targetId && String(m.id || '') === targetId) return false;
+      if (targetEm && emx === targetEm) return false;
+      return true;
     });
-  } else {
-    console.log('[Tareas] deleteWorkloadMember: no email, skip equipo delete');
-    deleteGerenteIfAny();
+    try {
+      renderers.workload?.();
+      renderers.attendance?.();
+      updateBadges();
+      updateDashboardStats();
+    } catch (e) {
+      console.error('[Tareas] applyLocalHide render failed:', e);
+    }
   }
+  console.log('[Tareas] deleteWorkloadMember: deactivating in tareas_equipo', { em: em, memberId: memberId });
+  function deactivateByIdFallback() {
+    if (!memberId) return Promise.resolve({ data: [] });
+    return supabase.from('tareas_equipo').update({ activo: false }).eq('id', memberId).select('id,gerente_email,activo');
+  }
+  var firstQ = em
+    ? supabase.from('tareas_equipo').update({ activo: false }).ilike('gerente_email', em).select('id,gerente_email,activo')
+    : deactivateByIdFallback();
+  Promise.resolve(firstQ).then(function(resp) {
+    console.log('[Tareas] deleteWorkloadMember: deactivate response', resp);
+    if (resp && resp.error) throw resp.error;
+    if (!resp || !resp.data || !resp.data.length) {
+      console.warn('[Tareas] deactivate member: 0 rows on first query, trying id fallback');
+      return deactivateByIdFallback();
+    }
+    return resp;
+  }).then(function(resp2) {
+    if (resp2 && resp2.error) throw resp2.error;
+    if (!resp2 || !resp2.data || !resp2.data.length) {
+      console.warn('[Tareas] deactivate member: still 0 rows, hiding locally only');
+      applyLocalHide();
+      finishReload();
+      return;
+    }
+    applyLocalHide();
+    finishReload();
+  }).catch(function(err) {
+    console.error('[Tareas] deactivate member exception:', err);
+    alert('Error al desactivar miembro.');
+    applyLocalHide();
+    finishReload();
+  });
 }
 function submitEquipoInvite() {
   if (!tareasEffectivePerms().invite) { alert('No tienes permiso para invitar miembros (solo administradores).'); return; }
