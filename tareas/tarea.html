@@ -2899,7 +2899,11 @@ function invokeInviteGerenteEmail(email, done) {
     }
     var redirect = '';
     try {
-      if (window.location && window.location.href) redirect = window.location.href.split('#')[0];
+      if (window.location && window.location.origin) {
+        redirect = window.location.origin + '/tareas';
+      } else if (window.location && window.location.href) {
+        redirect = window.location.href.split('#')[0];
+      }
     } catch (e) {}
     var url = String(base).replace(/\/$/, '') + '/functions/v1/invite-gerente';
     fetch(url, {
@@ -2914,6 +2918,19 @@ function invokeInviteGerenteEmail(email, done) {
       if (done) done(false, e && e.message ? e.message : 'Red');
     });
   });
+}
+function ensureCurrentSessionMemberActive(done) {
+  if (!supabase) { if (done) done(); return; }
+  supabase.auth.getUser().then(function(ar) {
+    var u = ar.data && ar.data.user;
+    var em = (u && u.email) ? String(u.email).trim().toLowerCase() : '';
+    if (!em) { if (done) done(); return; }
+    supabase.from('tareas_equipo').update({ activo: true }).eq('gerente_email', em).then(function() {
+      if (done) done();
+    }).catch(function() {
+      if (done) done();
+    });
+  }).catch(function() { if (done) done(); });
 }
 
 function uploadGerenteAvatarForEmail(email, file, done) {
@@ -5719,10 +5736,8 @@ function makeUniqueEquipoId(email) {
 }
 function insertEquipoAndFinish(nombre, apellido, email, color) {
   var nombreFull = (nombre + ' ' + apellido).trim();
-  var id = makeUniqueEquipoId(email);
-  var rowEq = { id: id, nombre: nombreFull || email.split('@')[0], rol: 'Miembro', servicio: '', color: color, activo: true, gerente_email: email };
-  supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
-    if (re.error) console.warn('[Tareas] tareas_equipo:', re.error.message);
+  var displayName = nombreFull || email.split('@')[0];
+  function finalizeInvite() {
     invokeInviteGerenteEmail(email, function(inviteOk, msg) {
       reloadTareasData(function() { closeModal(); });
       if (inviteOk) {
@@ -5732,6 +5747,28 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
         alert('Miembro registrado en asistencia y equipo. No se pudo enviar el correo de invitación (¿desplegaste la función invite-gerente?).' + hint);
       }
     });
+  }
+  supabase.from('tareas_equipo').select('id').eq('gerente_email', email).maybeSingle().then(function(ex) {
+    if (ex && ex.data && ex.data.id) {
+      supabase.from('tareas_equipo').update({
+        nombre: displayName,
+        color: color,
+        activo: true
+      }).eq('id', ex.data.id).then(function(up) {
+        if (up.error) console.warn('[Tareas] tareas_equipo update existente:', up.error.message);
+        finalizeInvite();
+      });
+      return;
+    }
+    var id = makeUniqueEquipoId(email);
+    var rowEq = { id: id, nombre: displayName, rol: 'Miembro', servicio: '', color: color, activo: false, gerente_email: email };
+    supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
+      if (re.error) console.warn('[Tareas] tareas_equipo insert:', re.error.message);
+      finalizeInvite();
+    });
+  }).catch(function(err) {
+    console.warn('[Tareas] tareas_equipo lookup:', err);
+    finalizeInvite();
   });
 }
 function submitEquipoInvite() {
@@ -5759,24 +5796,49 @@ function submitEquipoInvite() {
     perm_gestor_financiero: !!gf,
     perm_analista_financiero: !!af
   };
-  supabase.from('gerentes').insert(rowG).select('id').single().then(function(r) {
-    if (r.error) {
-      alert('No se pudo guardar el miembro: ' + (r.error.message || '') + (String(r.error.code) === '23505' ? ' · ¿Ya existe ese correo en gerentes?' : ''));
+  function upsertGerenteAndContinue(avatarUrl, existingId) {
+    var payload = {
+      nombre: nombre,
+      apellido: apellido,
+      perm_admin: !!adm,
+      perm_estandar: !!std,
+      perm_gestor_financiero: !!gf,
+      perm_analista_financiero: !!af
+    };
+    if (avatarUrl) payload.avatar_url = avatarUrl;
+    if (existingId) {
+      supabase.from('gerentes').update(payload).eq('id', existingId).then(function(up) {
+        if (up.error) console.warn('[Tareas] gerentes update existente:', up.error.message);
+        insertEquipoAndFinish(nombre, apellido, email, color);
+      });
       return;
     }
-    var gid = r.data && r.data.id;
-    function afterAvatar(url) {
-      if (url && gid) {
-        supabase.from('gerentes').update({ avatar_url: url }).eq('id', gid).then(function(up) {
-          if (up.error) console.warn('[Tareas] avatar_url update', up.error);
-          insertEquipoAndFinish(nombre, apellido, email, color);
-        });
-      } else {
-        insertEquipoAndFinish(nombre, apellido, email, color);
+    var rowInsert = Object.assign({}, rowG);
+    if (avatarUrl) rowInsert.avatar_url = avatarUrl;
+    supabase.from('gerentes').insert(rowInsert).select('id').single().then(function(ins) {
+      if (ins.error) {
+        alert('No se pudo guardar el miembro: ' + (ins.error.message || ''));
+        return;
       }
+      insertEquipoAndFinish(nombre, apellido, email, color);
+    });
+  }
+  function withAvatarThen(existingId) {
+    if (file) {
+      uploadGerenteAvatarForEmail(email, file, function(url) { upsertGerenteAndContinue(url, existingId); });
+    } else {
+      upsertGerenteAndContinue(null, existingId);
     }
-    if (file) uploadGerenteAvatarForEmail(email, file, afterAvatar);
-    else afterAvatar(null);
+  }
+  supabase.from('gerentes').select('id,email').eq('email', email).maybeSingle().then(function(ex) {
+    if (ex && ex.data && ex.data.id) {
+      withAvatarThen(ex.data.id);
+      return;
+    }
+    withAvatarThen(null);
+  }).catch(function(err) {
+    console.warn('[Tareas] gerentes lookup antes de invitar:', err);
+    withAvatarThen(null);
   });
 }
 
@@ -6050,11 +6112,13 @@ document.addEventListener('DOMContentLoaded', function() {
         calI = data.calI;
       }
       showTareasLoading(false);
-      initViews();
-      initTareasAvatar();
-      initTareasRealtimeSync();
-      attAutoStartHeartbeat();
-      refreshTareasSessionPerms();
+      ensureCurrentSessionMemberActive(function() {
+        initViews();
+        initTareasAvatar();
+        initTareasRealtimeSync();
+        attAutoStartHeartbeat();
+        refreshTareasSessionPerms();
+      });
     }).catch(function(err) {
       console.error('[Tareas] Error cargando datos:', err);
       showTareasLoading(false);
