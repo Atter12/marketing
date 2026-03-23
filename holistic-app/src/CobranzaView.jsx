@@ -106,6 +106,34 @@ function stripHtmlPreview(html, max = 140) {
   }
 }
 
+function htmlToPlainText(html) {
+  if (!html) return "";
+  try {
+    const withBreaks = String(html)
+      .replace(/<\s*br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n\n")
+      .replace(/<p[^>]*>/gi, "");
+    const d = document.createElement("div");
+    d.innerHTML = withBreaks;
+    return (d.textContent || "").replace(/\n{3,}/g, "\n\n").trim();
+  } catch {
+    return "";
+  }
+}
+
+function plainTextToHtml(text) {
+  const t = String(text || "").trim();
+  if (!t) return "";
+  const esc = t
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return esc
+    .split(/\n{2,}/)
+    .map((p) => `<p>${p.replace(/\n/g, "<br>")}</p>`)
+    .join("\n");
+}
+
 const Btn = ({ variant = "primary", size, children, ...p }) => {
   const vs = {
     primary: {
@@ -209,6 +237,8 @@ export default function CobranzaView({
   const [detail, setDetail] = useState(null);
   const [editAsunto, setEditAsunto] = useState("");
   const [editCuerpo, setEditCuerpo] = useState("");
+  const [editTexto, setEditTexto] = useState("");
+  const [editorMode, setEditorMode] = useState("texto");
   const [detailEvents, setDetailEvents] = useState([]);
   const [modalTab, setModalTab] = useState("editar");
   const [saveHint, setSaveHint] = useState("");
@@ -344,6 +374,8 @@ export default function CobranzaView({
     setDetail(r);
     setEditAsunto(r.asunto || "");
     setEditCuerpo(r.cuerpo_html || "");
+    setEditTexto((r.cuerpo_texto && String(r.cuerpo_texto).trim()) || htmlToPlainText(r.cuerpo_html || ""));
+    setEditorMode("texto");
     setModalTab("editar");
     setSaveHint("");
     setRejectMotivo("");
@@ -358,7 +390,7 @@ export default function CobranzaView({
       .update({
         asunto: editAsunto,
         cuerpo_html: editCuerpo,
-        cuerpo_texto: stripHtmlPreview(editCuerpo, 4000),
+        cuerpo_texto: (editTexto && String(editTexto).trim()) || htmlToPlainText(editCuerpo),
         updated_at: new Date().toISOString(),
       })
       .eq("id", detail.id);
@@ -1328,21 +1360,91 @@ export default function CobranzaView({
                       fontSize: 14,
                     }}
                   />
-                  <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Cuerpo (HTML)</label>
-                  <textarea
-                    value={editCuerpo}
-                    onChange={(e) => setEditCuerpo(e.target.value)}
-                    rows={14}
-                    style={{
-                      width: "100%",
-                      marginTop: 6,
-                      padding: "10px 12px",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 10,
-                      fontSize: 13,
-                      fontFamily: "ui-monospace, monospace",
-                    }}
-                  />
+                  <div style={{ display: "flex", gap: 8, marginBottom: 8, marginTop: 2 }}>
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode("texto")}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: editorMode === "texto" ? "#ecfeff" : "#fff",
+                        color: editorMode === "texto" ? "#0e7490" : "#64748b",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Editor simple (recomendado)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode("html")}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 8,
+                        padding: "6px 10px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: editorMode === "html" ? "#fef2f2" : "#fff",
+                        color: editorMode === "html" ? "#b91c1c" : "#64748b",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Avanzado (HTML)
+                    </button>
+                  </div>
+                  {editorMode === "texto" ? (
+                    <>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
+                        Mensaje (texto normal)
+                      </label>
+                      <textarea
+                        value={editTexto}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setEditTexto(v);
+                          setEditCuerpo(plainTextToHtml(v));
+                        }}
+                        rows={14}
+                        placeholder="Escribí acá como WhatsApp o email normal. Se formatea solo al enviar."
+                        style={{
+                          width: "100%",
+                          marginTop: 6,
+                          padding: "10px 12px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 10,
+                          fontSize: 13.5,
+                          lineHeight: 1.5,
+                        }}
+                      />
+                      <p style={{ marginTop: 8, fontSize: 12, color: "#64748b" }}>
+                        Vista real del correo en la pestaña <strong>Vista previa</strong>.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>Cuerpo (HTML)</label>
+                      <textarea
+                        value={editCuerpo}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setEditCuerpo(v);
+                          setEditTexto(htmlToPlainText(v));
+                        }}
+                        rows={14}
+                        style={{
+                          width: "100%",
+                          marginTop: 6,
+                          padding: "10px 12px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 10,
+                          fontSize: 13,
+                          fontFamily: "ui-monospace, monospace",
+                        }}
+                      />
+                    </>
+                  )}
                 </>
               )}
 
@@ -1359,7 +1461,7 @@ export default function CobranzaView({
                   <iframe
                     title="preview"
                     sandbox=""
-                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Inter,system-ui,sans-serif;padding:16px;color:#0f172a;line-height:1.5;}</style></head><body>${editCuerpo || "<p>(vacío)</p>"}</body></html>`}
+                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Inter,system-ui,sans-serif;padding:16px;color:#0f172a;line-height:1.5;} .sbj{font-size:14px;color:#64748b;margin-bottom:8px} .ttl{font-weight:700;margin-bottom:14px;font-size:17px}</style></head><body><div class="sbj">Asunto:</div><div class="ttl">${(editAsunto || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>${editCuerpo || "<p>(vacío)</p>"}</body></html>`}
                     style={{ width: "100%", height: 360, border: "none" }}
                   />
                 </div>
