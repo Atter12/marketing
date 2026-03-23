@@ -5879,43 +5879,45 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
   }
   function finishReload() {
     console.log('[Tareas] deleteWorkloadMember: finishReload');
-    var done = false;
-    function verifyUiNotBlank() {
-      setTimeout(function() {
-        var root = document.getElementById('main-content');
-        var txt = root ? String(root.textContent || '').replace(/\s+/g, ' ').trim() : '';
-        if (!txt || txt.length < 10) {
-          console.warn('[Tareas] deleteWorkloadMember: blank UI detected, forcing hard reload');
-          window.location.reload();
-        }
-      }, 180);
-    }
-    var guard = setTimeout(function() {
-      if (done) return;
-      console.warn('[Tareas] deleteWorkloadMember: reload timeout guard, forcing initViews');
-      try { initViews(); } catch (e5) {}
-      verifyUiNotBlank();
-    }, 3000);
     reloadTareasData(function() {
-      done = true;
-      clearTimeout(guard);
       try {
         renderers.workload?.();
         renderers.attendance?.();
         updateBadges();
         updateDashboardStats();
-        verifyUiNotBlank();
       } catch (e) {
         console.error('[Tareas] deleteWorkloadMember: render after reload failed', e);
-        try { initViews(); } catch (e2) {}
-        verifyUiNotBlank();
+        try { initViews(); } catch (e2) { console.error('[Tareas] initViews fallback failed', e2); }
       }
     }).catch(function(err) {
-      done = true;
-      clearTimeout(guard);
       console.error('[Tareas] deleteWorkloadMember: reload failed', err);
-      try { initViews(); } catch (e3) {}
-      verifyUiNotBlank();
+      try { initViews(); } catch (e3) { console.error('[Tareas] initViews fallback failed', e3); }
+    });
+  }
+  function ensureDeactivatedRowByEmail(emailLower, done) {
+    if (!emailLower) { if (done) done(); return; }
+    var existing = (TEAM || []).find(function(t) {
+      return String((t && t.gerente_email) || '').toLowerCase().trim() === emailLower;
+    });
+    var fallbackId = existing && existing.id ? existing.id : makeUniqueEquipoId(emailLower);
+    var fallbackColor = existing && existing.c ? existing.c : '#6b7280';
+    var fallbackName = memberName || (emailLower.split('@')[0] || 'Miembro');
+    var rowEq = {
+      id: fallbackId,
+      nombre: fallbackName,
+      rol: 'Miembro',
+      servicio: '',
+      color: fallbackColor,
+      activo: false,
+      gerente_email: emailLower
+    };
+    console.log('[Tareas] deleteWorkloadMember: creating fallback deactivated row', rowEq);
+    supabase.from('tareas_equipo').insert(rowEq).then(function(ins) {
+      if (ins.error) console.warn('[Tareas] fallback deactivated row insert failed:', ins.error.message);
+      if (done) done();
+    }).catch(function(err) {
+      console.warn('[Tareas] fallback deactivated row exception:', err);
+      if (done) done();
     });
   }
   function applyLocalHide() {
@@ -5963,7 +5965,7 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
     if (!resp2 || !resp2.data || !resp2.data.length) {
       console.warn('[Tareas] deactivate member: still 0 rows, hiding locally only');
       applyLocalHide();
-      finishReload();
+      ensureDeactivatedRowByEmail(em, function() { finishReload(); });
       return;
     }
     applyLocalHide();
