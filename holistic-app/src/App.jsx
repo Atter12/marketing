@@ -9,7 +9,7 @@ import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl } from "./supabase";
+import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl, isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
 const LOGO_URL = import.meta.env.DEV ? "/logo/logoh.png" : (import.meta.env.BASE_URL || "/") + "logo/logoh.png";
@@ -111,6 +111,7 @@ const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || "";
 function resolveAvatarSrc(avatarUrl) {
   const raw = avatarUrl == null ? "" : String(avatarUrl).replace(/&amp;/gi, "&").trim();
   if (!raw) return "";
+  if (isLikelyBlockedAvatarHotlinkUrl(raw)) return "";
 
   // data: URLs (no se tocan)
   if (/^data:/i.test(raw)) return raw;
@@ -147,8 +148,9 @@ function Av({ name, size = 34, avatarUrl }) {
   const style = { width: s, height: s, borderRadius: s > 40 ? 16 : 10, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "12", color: c, fontWeight: 700, fontSize: s * 0.34, letterSpacing: -0.3 };
   const resolvedSrc = avatarUrl && avatarUrl.trim() ? resolveAvatarSrc(avatarUrl) : "";
   const showImg = !!resolvedSrc && !imgError;
+  const isOurSupabaseAvatar = !!(SUPABASE_URL && resolvedSrc && resolvedSrc.startsWith(SUPABASE_URL));
   useEffect(() => { setImgError(false); }, [avatarUrl]);
-  if (showImg) return <div style={style}><img src={resolvedSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { console.warn("[Av] Error cargando avatar:", { avatarUrl, resolvedSrc }); setImgError(true); }} /></div>;
+  if (showImg) return <div style={style}><img src={resolvedSrc} alt="" loading="lazy" decoding="async" referrerPolicy={isOurSupabaseAvatar ? undefined : "no-referrer"} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => { setImgError(true); }} /></div>;
   return <div style={style}>{ini(name)}</div>;
 }
 
@@ -920,7 +922,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!(cf.ig || "").trim()) return alert("Completá Instagram (ej. @usuario o — si no aplica).");
     if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
     if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
-    const c = { id: editId || undefined, codigo: codigo || "", name, ig: (cf.ig || "").trim(), phones, emails, biz: (cf.biz || "").trim(), notes: (cf.notes || "").trim(), avatar_url: cf.avatar_url || "" }; await mutations.saveClient(c); closeMdl();
+    const av = (cf.avatar_url || "").trim().replace(/&amp;/gi, "&");
+    if (av && isLikelyBlockedAvatarHotlinkUrl(av)) {
+      if (!confirm("Las URLs de WhatsApp / Meta / Instagram suelen dar error 403 en Crédito (el servidor no deja mostrar la imagen aquí). Lo estable es usar «Subir foto» para guardarla en Supabase.\n\n¿Guardar esta URL igualmente?")) return;
+    }
+    const c = { id: editId || undefined, codigo: codigo || "", name, ig: (cf.ig || "").trim(), phones, emails, biz: (cf.biz || "").trim(), notes: (cf.notes || "").trim(), avatar_url: av || "" }; await mutations.saveClient(c); closeMdl();
   };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
   const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstEmail = (client?.emails || []).filter(Boolean)[0]; if (!firstEmail || !String(firstEmail).includes("@")) { alert("Este cliente no tiene correo. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const redirectTo = typeof window !== "undefined" ? (window.location.origin + "/credito") : ""; const res = await darAccesoCliente(editId, { regenerate, redirect_to: redirectTo }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
@@ -2078,6 +2084,12 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
+        {isLikelyBlockedAvatarHotlinkUrl(String(cf.avatar_url || "").replace(/&amp;/gi, "&")) && (
+          <div role="alert" style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 12.5, lineHeight: 1.5 }}>
+            <strong style={{ display: "block", marginBottom: 4 }}>Foto que no se verá en Crédito ni en Tareas</strong>
+            Los enlaces de WhatsApp / Meta suelen dar <strong>403</strong> al mostrarse aquí. En Crédito la foto del cliente es la que se sincroniza con el resto del sistema: <strong>subí un archivo</strong> con «{editId ? "Cambiar foto" : "tras guardar, Editá el cliente → Cambiar foto"}» (se guarda en Supabase).
+          </div>
+        )}
         <Inp label={editId ? "Código de cliente *" : "Código de cliente"} value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Obligatorio al editar."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram *" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario o —" /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Al menos un número.</p></div>
@@ -2087,7 +2099,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Foto de perfil</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-            <div style={{ flex: "1 1 200px", minWidth: 0 }}><Inp value={cf.avatar_url} onChange={(e) => setCf({ ...cf, avatar_url: e.target.value })} placeholder="URL (opcional)" /></div>
+            <div style={{ flex: "1 1 200px", minWidth: 0 }}><Inp value={cf.avatar_url} onChange={(e) => setCf({ ...cf, avatar_url: e.target.value })} placeholder="URL pública (opcional)" hint="No pegues enlaces de WhatsApp: suelen dar 403. Preferí «Subir foto»." /></div>
             {editId && (
               <>
                 <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#0f172a", cursor: "pointer", whiteSpace: "nowrap" }}>

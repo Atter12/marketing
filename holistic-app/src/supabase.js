@@ -27,6 +27,28 @@ export async function getClientIdForUser() {
   return data?.client_id ?? null;
 }
 
+/**
+ * CDN de WhatsApp/Meta/Instagram suele responder 403 (o expira el enlace) al usarlo como <img src> fuera de su app.
+ * En Crédito conviene subir la foto al bucket `avatars` (URL pública de Supabase) u otra URL estable.
+ */
+export function isLikelyBlockedAvatarHotlinkUrl(raw) {
+  const u = String(raw || "").trim().replace(/&amp;/gi, "&");
+  if (!u || /^data:/i.test(u)) return false;
+  const lower = u.toLowerCase();
+  if (!/^https?:\/\//i.test(u)) {
+    return /whatsapp\.net|fbcdn\.net|cdninstagram\.com/i.test(lower);
+  }
+  try {
+    const host = new URL(u).hostname.toLowerCase();
+    if (host === "whatsapp.com" || host.endsWith(".whatsapp.net")) return true;
+    if (host.endsWith("fbcdn.net") || host.includes("fbcdn.net")) return true;
+    if (host.includes("cdninstagram.com")) return true;
+    return false;
+  } catch {
+    return /whatsapp\.net|fbcdn\.net|cdninstagram\.com/i.test(lower);
+  }
+}
+
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
 

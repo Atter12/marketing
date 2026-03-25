@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CreditCard, Plus, ChevronLeft, ChevronRight, Edit3, Camera, Trash2, KeyRound, Download, Paperclip } from "lucide-react";
 import TableScrollWrap from "./TableScrollWrap";
+import { isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
 
 const Slot = ({ content }) => content;
 
@@ -57,9 +58,13 @@ export default function ClientDetailView(props) {
 
   const handleSavePhoto = async () => {
     if (!updateClientAvatar) return;
+    const t = (photoUrl || "").trim().replace(/&amp;/gi, "&");
+    if (t && isLikelyBlockedAvatarHotlinkUrl(t)) {
+      if (!confirm("Esa URL suele dar error 403 (WhatsApp/Meta no deja mostrarla aquí). Usá «Cambiar foto» para subirla a Crédito.\n\n¿Guardar esta URL igualmente?")) return;
+    }
     setSavingPhoto(true);
     try {
-      await updateClientAvatar(photoUrl.trim() || null);
+      await updateClientAvatar(t || null);
     } catch (e) {
       alert(e?.message || "No se pudo actualizar la foto.");
     } finally {
@@ -127,6 +132,18 @@ export default function ClientDetailView(props) {
           </div>
           <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 22, fontWeight: 700 }}>{curC.name}</h2>{curC.codigo && <div style={{ fontSize: 12, color: "#5f6577", fontFamily: "var(--font-mono)", marginTop: 2, fontWeight: 600 }}>Código: {curC.codigo}</div>}<div style={{ display: "flex", flexWrap: "wrap", gap: 14, fontSize: 13, color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
         </div>,
+        isLikelyBlockedAvatarHotlinkUrl(String(curC.avatar_url || "").replace(/&amp;/gi, "&")) && (
+          <div role="alert" style={{ marginBottom: 22, padding: "14px 16px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 13, lineHeight: 1.5, maxWidth: 720 }}>
+            <strong style={{ display: "block", marginBottom: 6 }}>Foto del cliente inestable (WhatsApp / Meta)</strong>
+            Esta URL no se puede mostrar bien en Crédito ni en Tareas (error 403). <strong>En Crédito es donde se define la foto que sincroniza el resto:</strong> subí la imagen como archivo para guardarla en Supabase.
+            {!isCliente && (
+              <span style={{ display: "block", marginTop: 10 }}>
+                <button type="button" onClick={() => openMdl("client", curCl)} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#c2410c", color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Abrir Editar cliente → Subir foto</button>
+              </span>
+            )}
+            {isCliente && <span style={{ display: "block", marginTop: 8 }}>Usá el botón <strong>Cambiar foto</strong> arriba (subir archivo), no un enlace pegado.</span>}
+          </div>
+        ),
         setClientDetailPeriodo && (
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
