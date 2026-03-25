@@ -127,9 +127,10 @@ export function useSupabaseData(role, clientId) {
   const mutations = {
     saveClient: async (payload) => {
       if (role !== "gerente") return;
-      const { id, name, codigo, ig, phones, emails, biz, notes, avatar_url } = payload;
+      const { id, newClientId, name, codigo, ig, phones, emails, biz, notes, avatar_url } = payload;
       const genCodigo = () => "CL-" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null, avatar_url: avatar_url || null, codigo: (codigo && String(codigo).trim()) ? String(codigo).trim() : null };
+      const uuidOk = (s) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
       if (id) {
         if (row.codigo === null) delete row.codigo;
         const { error: e } = await supabase.from("clientes").update(row).eq("id", id);
@@ -138,7 +139,9 @@ export function useSupabaseData(role, clientId) {
         return id;
       } else {
         if (!row.codigo) row.codigo = genCodigo();
-        const { data, error: e } = await supabase.from("clientes").insert(row).select("id").single();
+        const insertRow = { ...row };
+        if (uuidOk(newClientId)) insertRow.id = String(newClientId).trim();
+        const { data, error: e } = await supabase.from("clientes").insert(insertRow).select("id").single();
         if (e) throw e;
         await fetchAll();
         return data?.id ?? null;
