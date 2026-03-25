@@ -107,15 +107,48 @@ function parsePeriodoInput(s) {
 
 /* ═══════ UI COMPONENTS ═══════ */
 const AVATAR_SIZE_SCALE = 1.35; // fotos de clientes 35% más grandes
+const SUPABASE_URL = import.meta.env.PUBLIC_SUPABASE_URL || "";
+function resolveAvatarSrc(avatarUrl) {
+  const raw = avatarUrl == null ? "" : String(avatarUrl).replace(/&amp;/gi, "&").trim();
+  if (!raw) return "";
+
+  // data: URLs (no se tocan)
+  if (/^data:/i.test(raw)) return raw;
+  // URL completa (como la de Renzo)
+  if (/^https?:\/\//i.test(raw)) return raw;
+
+  // Si ya es una ruta completa del bucket pero sin dominio
+  if (raw.startsWith("/storage/")) {
+    return SUPABASE_URL ? SUPABASE_URL + raw : raw;
+  }
+  if (raw.startsWith("storage/")) {
+    return SUPABASE_URL ? SUPABASE_URL + "/" + raw : raw;
+  }
+
+  // Si guardaron "avatars/<clientId>/avatar.ext"
+  if (raw.toLowerCase().startsWith("avatars/")) {
+    const cleaned = raw.replace(/^avatars\//i, "").replace(/^\/+/, "");
+    return SUPABASE_URL ? `${SUPABASE_URL}/storage/v1/object/public/${"avatars"}/${cleaned}` : raw;
+  }
+
+  // Si guardaron solo "<clientId>/avatar.ext" (sin el prefijo avatars/)
+  if (SUPABASE_URL) {
+    const cleaned = raw.replace(/^\/+/, "");
+    return `${SUPABASE_URL}/storage/v1/object/public/avatars/${cleaned}`;
+  }
+
+  // Último recurso: usar lo que venga (probablemente fallará y caerá a iniciales)
+  return raw;
+}
 function Av({ name, size = 34, avatarUrl }) {
   const [imgError, setImgError] = useState(false);
   const c = clr(name);
   const s = Math.round(size * AVATAR_SIZE_SCALE);
   const style = { width: s, height: s, borderRadius: s > 40 ? 16 : 10, flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: c + "12", color: c, fontWeight: 700, fontSize: s * 0.34, letterSpacing: -0.3 };
-  const showImg = avatarUrl && avatarUrl.trim() && !imgError;
+  const resolvedSrc = avatarUrl && avatarUrl.trim() ? resolveAvatarSrc(avatarUrl) : "";
+  const showImg = !!resolvedSrc && !imgError;
   useEffect(() => { setImgError(false); }, [avatarUrl]);
-  const imgSrc = showImg ? (avatarUrl.replace(/&amp;/gi, "&")) : "";
-  if (showImg) return <div style={style}><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} /></div>;
+  if (showImg) return <div style={style}><img src={resolvedSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => { console.warn("[Av] Error cargando avatar:", { avatarUrl, resolvedSrc }); setImgError(true); }} /></div>;
   return <div style={style}>{ini(name)}</div>;
 }
 
