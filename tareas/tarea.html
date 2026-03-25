@@ -2677,6 +2677,39 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 //  SUPABASE (misma BD que Crédito/Creativos)
 // ══════════════════════════════════════════════════════════════════
 var supabase = null;
+/** Evita UI vacía: DOMContentLoaded puede correr antes de que tryInitSupabase termine (script CDN lento o carga dinámica). */
+var __tareasDataBootstrapDone = false;
+function tryRunTareasAppBootstrap() {
+  if (__tareasDataBootstrapDone || !supabase) return;
+  if (document.readyState === 'loading') return;
+  __tareasDataBootstrapDone = true;
+  showTareasLoading(true);
+  loadTareasData().then(function(data) {
+    if (data) {
+      TEAM = data.TEAM;
+      ATTENDANCE_MEMBERS = data.ATTENDANCE_MEMBERS || [];
+      MT = data.MT;
+      clients = data.clients;
+      KT = data.KT;
+      tickets = data.tickets;
+      calI = data.calI;
+    }
+    showTareasLoading(false);
+    ensureCurrentSessionMemberActive(function() {
+      initViews();
+      initTareasAvatar();
+      initTareasRealtimeSync();
+      attAutoStartHeartbeat();
+      refreshTareasSessionPerms();
+    });
+  }).catch(function(err) {
+    console.error('[Tareas] Error cargando datos:', err);
+    showTareasLoading(false);
+    initViews();
+    initTareasAvatar();
+    refreshTareasSessionPerms();
+  });
+}
 function tryInitSupabase(retryCount) {
   retryCount = retryCount || 0;
   var url = window.__SUPABASE_URL__;
@@ -2724,6 +2757,7 @@ function tryInitSupabase(retryCount) {
   try {
     supabase = createClientFn(url, key);
     console.log('[Tareas] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
+    tryRunTareasAppBootstrap();
   } catch (e) {
     console.warn('[Tareas] Supabase createClient error:', e);
   }
@@ -6344,34 +6378,8 @@ function initTareasAvatar() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  if (supabase) {
-    showTareasLoading(true);
-    loadTareasData().then(function(data) {
-      if (data) {
-        TEAM = data.TEAM;
-        ATTENDANCE_MEMBERS = data.ATTENDANCE_MEMBERS || [];
-        MT = data.MT;
-        clients = data.clients;
-        KT = data.KT;
-        tickets = data.tickets;
-        calI = data.calI;
-      }
-      showTareasLoading(false);
-      ensureCurrentSessionMemberActive(function() {
-        initViews();
-        initTareasAvatar();
-        initTareasRealtimeSync();
-        attAutoStartHeartbeat();
-        refreshTareasSessionPerms();
-      });
-    }).catch(function(err) {
-      console.error('[Tareas] Error cargando datos:', err);
-      showTareasLoading(false);
-      initViews();
-      initTareasAvatar();
-      refreshTareasSessionPerms();
-    });
-  } else {
+  tryRunTareasAppBootstrap();
+  if (!__tareasDataBootstrapDone && !supabase) {
     initViews();
     initTareasAvatar();
     refreshTareasSessionPerms();
