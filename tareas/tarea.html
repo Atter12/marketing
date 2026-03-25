@@ -1249,6 +1249,10 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   font-size: 0.5625rem; font-weight: 700; padding: 2px 7px; border-radius: 4px;
   background: rgba(234, 88, 12, 0.12); color: var(--color-primary); margin-bottom: 4px; display: inline-block;
 }
+.kanban-ref-pill {
+  font-size: 0.625rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;
+  background: rgba(37, 99, 235, 0.1); color: #2563eb; margin-bottom: 4px; margin-left: 4px; display: inline-block; vertical-align: middle;
+}
 .form-file-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 4px; }
 /* Invitar miembro (equipo / asistencia) */
 .eq-invite-stepper { display: flex; gap: var(--sp-4); margin-bottom: var(--sp-4); padding-bottom: var(--sp-3); border-bottom: 1px solid var(--color-divider); }
@@ -3437,7 +3441,7 @@ async function loadTareasData() {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
     });
     var KT = (kbRes.data || []).map(function(r) {
-      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', slaMin: (r.plazo_minutos != null ? Number(r.plazo_minutos) : null), createdAt: r.created_at || null, sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null };
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', slaMin: (r.plazo_minutos != null ? Number(r.plazo_minutos) : null), createdAt: r.created_at || null, sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null, refAdj: Array.isArray(r.adjuntos_referencia) ? r.adjuntos_referencia : [] };
     });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
@@ -3722,9 +3726,10 @@ renderers.kanban = function(snapshot) {
       const dateLabel = deadlineIso ? '<span class="live-countdown" data-live-deadline="' + deadlineIso + '" data-live-prefix="">' + escTareas(getLiveCountdownInfo(deadlineIso).text) + '</span>' : (t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du);
       const kid = String(t.id || '').replace(/"/g, '&quot;');
       const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
+      const refPill = (t.refAdj && t.refAdj.length) ? '<div class="kanban-ref-pill" title="Tiene imagen de referencia">📷</div>' : '';
       return `
         <article class="kanban-card fade-in" data-sv="${t.sv}" data-id="${t.id||''}" role="article" onclick="openEntregableDetailModal('${kid}')">
-          ${ticketPill}
+          ${ticketPill}${refPill}
           <div class="kanban-card-top">
             <span class="service-tag ${t.tg}">${t.sv}</span>
             <div class="priority-dot ${t.pr}" title="Prioridad: ${t.pr === 'hi' ? 'Alta' : t.pr === 'md' ? 'Media' : 'Baja'}"></div>
@@ -4219,6 +4224,7 @@ function openEntregableDetailModal(kanbanId) {
   document.getElementById('modalTitle').textContent = k.tt || 'Entregable';
   var body = '';
   body += '<div class="entregable-detail-block"><h4>Descripción</h4><div class="ticket-desc-body">' + escTareas(k.ds || 'Sin descripción.') + '</div></div>';
+  body += '<div class="entregable-detail-block"><h4>Imagen de referencia</h4><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Capturas subidas al crear el entregable (problema, mockup, pantalla).</p><div class="ticket-attach-grid" id="entModalRefImgs"></div></div>';
   body += '<div class="entregable-detail-block"><h4>Cliente y prioridad</h4><p style="font-size:var(--text-sm)">' + escTareas(k.cl || 'Sin cliente') + ' · ' + escTareas(k.pr) + '</p></div>';
   if (k.slaMin) {
     body += '<div class="entregable-detail-block"><h4>Tiempo máximo de cumplimiento</h4><p style="font-size:var(--text-sm)">⏱ ' + escTareas(formatSlaMinutesOrHours(k.slaMin, null)) + '</p></div>';
@@ -4235,7 +4241,10 @@ function openEntregableDetailModal(kanbanId) {
   document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal()">Cerrar</button>' +
     (supabase && k.id ? '<button type="button" class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="deleteEntregable(\'' + kidEsc + '\')">🗑 Eliminar entregable</button>' : '');
   showModalOverlay();
-  if (tk) setTimeout(function() { fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos); }, 60);
+  setTimeout(function() {
+    fillTicketAttachGridInto(document.getElementById('entModalRefImgs'), k.refAdj || []);
+    if (tk) fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos);
+  }, 60);
 }
 function saveEntregableNotes(kanbanId) {
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
@@ -5190,6 +5199,12 @@ function openModal(type) {
     body.innerHTML = `
       <div class="form-group"><label for="m-name">Nombre</label><input class="form-input" placeholder="Ej: Video Reel — Cliente X" id="m-name"></div>
       <div class="form-group"><label for="m-desc">Descripción</label><textarea class="form-textarea" placeholder="Detalles del entregable..." id="m-desc"></textarea></div>
+      <div class="form-group">
+        <label for="m-files">Captura / referencia visual (opcional)</label>
+        <input type="file" class="form-input" id="m-files" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+        <div class="form-file-hint">Subí una o más fotos del problema, mockup o pantalla para verlo en el detalle del entregable.</div>
+        <div class="tk-file-preview" id="m-file-preview"></div>
+      </div>
       <div class="form-row">
         <div class="form-group"><label for="m-client">Cliente</label><select class="form-select" id="m-client"><option value="">— Ninguno —</option>${getTareasClientSelectOptionsHtml()}</select></div>
         <div class="form-group"><label for="m-service">Servicio</label><select class="form-select" id="m-service"><option value="marketing">Marketing</option><option value="branding">Branding</option><option value="video">Video</option><option value="social">Social</option><option value="design">Diseño</option></select></div>
@@ -5200,6 +5215,10 @@ function openModal(type) {
         <div class="form-group"><label for="m-sla">Tiempo máximo para cumplir</label><select class="form-select" id="m-sla"><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120" selected>2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
       </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
+    setTimeout(function() {
+      var fi = document.getElementById('m-files');
+      if (fi) fi.onchange = function() { previewMTaskFiles(this); };
+    }, 80);
 
   } else if (type === 'ticket') {
     if (modalEl) modalEl.classList.add('modal-compact');
@@ -5489,6 +5508,65 @@ function previewTkFiles(inp) {
   }
 }
 
+function previewMTaskFiles(inp) {
+  var prev = document.getElementById('m-file-preview');
+  if (!prev) return;
+  prev.innerHTML = '';
+  if (!inp || !inp.files || !inp.files.length) return;
+  for (var i = 0; i < inp.files.length; i++) {
+    var f = inp.files[i];
+    if (f.type.indexOf('image/') !== 0) continue;
+    var url = URL.createObjectURL(f);
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tk-preview-thumb';
+    btn.setAttribute('aria-label', 'Vista previa');
+    btn.onclick = function(u, name) { return function() { openTicketImageLightbox(u, name); }; }(url, f.name || '');
+    var img = document.createElement('img');
+    img.src = url;
+    img.alt = f.name || '';
+    btn.appendChild(img);
+    prev.appendChild(btn);
+  }
+}
+
+/** Sube imágenes de referencia del entregable a tareas_adjuntos (misma política que tickets). */
+function uploadKanbanReferenciaAdjuntos(kanbanDbId, fileList, done) {
+  if (!supabase || !fileList || !fileList.length) { if (done) done([]); return; }
+  var results = [];
+  var doneCount = 0;
+  var total = fileList.length;
+  var baseFolder = String(kanbanDbId) + '/entregable-ref';
+  if (marketingStorageActive()) {
+    for (var j = 0; j < fileList.length; j++) {
+      (function(file, idx) {
+        var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
+        var path = baseFolder + '/' + idx + '_' + Date.now() + '_' + safe;
+        marketingStorageUpload('tareas_adjuntos', path, file, function(err) {
+          if (!err) results.push({ path: path, file_name: file.name || 'imagen' });
+          doneCount++;
+          if (doneCount >= total && done) done(results);
+        });
+      })(fileList[j], j);
+    }
+    return;
+  }
+  for (var i = 0; i < fileList.length; i++) {
+    (function(file, idx) {
+      var safe = (file.name || 'img').replace(/[^a-zA-Z0-9._-]/g, '_');
+      var path = baseFolder + '/' + idx + '_' + Date.now() + '_' + safe;
+      supabase.storage.from('tareas_adjuntos').upload(path, file, { upsert: false }).then(function(r) {
+        if (!r.error) results.push({ path: path, file_name: file.name || 'imagen' });
+        doneCount++;
+        if (doneCount >= total && done) done(results);
+      }).catch(function() {
+        doneCount++;
+        if (doneCount >= total && done) done(results);
+      });
+    })(fileList[i], i);
+  }
+}
+
 function uploadTicketAdjuntos(ticketDbId, subfolder, fileList, done) {
   if (!supabase || !fileList || !fileList.length) { if (done) done([]); return; }
   var results = [];
@@ -5550,9 +5628,11 @@ function addTask() {
     if (cObj) clNombre = cObj.n || '';
   }
   function pushLocalKanban(equipoId) {
-    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', slaMin: slaMin, createdAt: new Date().toISOString(), sv: sv, tg: tg, pr: pr, du: formatKanbanDate(due) || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null });
+    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', slaMin: slaMin, createdAt: new Date().toISOString(), sv: sv, tg: tg, pr: pr, du: formatKanbanDate(due) || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null, refAdj: [] });
     renderers.kanban(); updateBadges(); closeModal();
   }
+  var filesEl = document.getElementById('m-files');
+  var fileList = filesEl && filesEl.files ? Array.prototype.slice.call(filesEl.files) : [];
   if (supabase) {
     resolveEquipoIdForAssigneeEmail(assignEmail, function(equipoId) {
       supabase.from('tareas_kanban').insert({
@@ -5572,8 +5652,25 @@ function addTask() {
       }).select().single().then(function(r) {
         if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
         var row = r.data;
-        KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', slaMin: (row.plazo_minutos != null ? Number(row.plazo_minutos) : slaMin), createdAt: row.created_at || new Date().toISOString(), sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null });
-        renderers.kanban(); updateBadges(); closeModal();
+        function pushKtAndClose(refAdj) {
+          var ra = refAdj && refAdj.length ? refAdj : [];
+          KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', slaMin: (row.plazo_minutos != null ? Number(row.plazo_minutos) : slaMin), createdAt: row.created_at || new Date().toISOString(), sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null, refAdj: ra });
+          renderers.kanban(); updateBadges(); closeModal();
+        }
+        if (fileList.length) {
+          uploadKanbanReferenciaAdjuntos(row.id, fileList, function(adjuntos) {
+            if (!adjuntos || !adjuntos.length) {
+              pushKtAndClose([]);
+              return;
+            }
+            supabase.from('tareas_kanban').update({ adjuntos_referencia: adjuntos }).eq('id', row.id).then(function(ur) {
+              if (ur.error) console.warn('[Tareas] No se guardaron adjuntos del entregable:', ur.error);
+              pushKtAndClose(adjuntos);
+            });
+          });
+        } else {
+          pushKtAndClose([]);
+        }
       });
     });
   } else {
