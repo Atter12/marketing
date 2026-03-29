@@ -775,7 +775,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       }
     }
     if (type === "cobro" && !eid) { setCof(emptyCof); setCofFilterCliente(""); setCofFilterPeriodo(""); setCobroEditComprobantePaths([]); }
-    if (type === "garantia" && !eid) { setGafFilterPeriodo(""); setGarantiaEditComprobantePaths([]); setGarantiaImagenNewFiles([]); }
+    if (type === "garantia" && !eid) { setGarantiaEditComprobantePaths([]); setGarantiaImagenNewFiles([]); }
   };
   const closeMdl = () => {
     setModal(null);
@@ -801,7 +801,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setBulkFeeScope("selected");
     setNewClientDraftId(null);
   };
-  const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); setGafFilterPeriodo(""); };
+  const openGarantiaForClientId = (cid) => { setGaf({ ...emptyGaf, clientId: cid || "" }); setModal("garantia"); setEditId(null); };
   const openCobroForGastoId = (gid) => { const g = sGastos.find((x) => x.id === gid); if (g) setCof({ ...emptyCof, gastoIds: [g.id], monto: g._pend.toFixed(2), fecha: td() }); setEditId(null); setModal("cobro"); };
 
   useEffect(() => {
@@ -811,8 +811,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
     if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
-    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { const pr = (gar.periodoResumen && String(gar.periodoResumen).trim()) ? normalizePeriod(gar.periodoResumen) : (mesGarantiaResumen(gar, gastos) || tm()); setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "", periodoResumen: pr }); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
-    else if (modal === "garantia") { const pr0 = (clientDetailPeriodo && normalizePeriod(clientDetailPeriodo)) || tm(); setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId, periodoResumen: pr0 })); setGarantiaEditComprobantePaths([]); }
+    if (modal === "garantia" && editId) { const gar = garantias.find((x) => x.id === editId); if (gar) { const pr = (gar.periodoResumen && String(gar.periodoResumen).trim()) ? normalizePeriod(gar.periodoResumen) : (mesGarantiaResumen(gar, gastos) || tm()); setGaf({ clientId: gar.clientId, gastoId: gar.gastoId || "", tipo: gar.tipo || "Cuenta TikTok", desc: gar.desc || "", valor: gar.valor || "", estado: gar.estado || "Vigente", fechaColocacion: gar.fechaColocacion || "", periodoResumen: pr }); setGafFilterPeriodo(pr); const urls = gar.imagen_urls; setGarantiaEditComprobantePaths(Array.isArray(urls) ? [...urls] : urls ? [urls] : []); } }
+    else if (modal === "garantia") { const pr0 = (clientDetailPeriodo && normalizePeriod(clientDetailPeriodo)) || tm(); setGaf((p) => ({ ...emptyGaf, clientId: curCl || p.clientId, periodoResumen: pr0 })); setGafFilterPeriodo(pr0); setGarantiaEditComprobantePaths([]); }
     if (modal === "cobro" && editId) {
       const co = cobros.find((x) => x.id === editId);
       if (co) {
@@ -2562,13 +2562,14 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período en resumen (mes) *</label>
-          <input type="month" value={(gaf.periodoResumen && String(gaf.periodoResumen).length >= 7) ? String(gaf.periodoResumen).slice(0, 7) : tm()} onChange={(e) => setGaf({ ...gaf, periodoResumen: e.target.value || tm() })} style={{ width: "100%", maxWidth: 200, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} title="Mes en que esta garantía cuenta en el resumen (Crédito / Mi cuenta)" />
+          <input type="month" value={(gaf.periodoResumen && String(gaf.periodoResumen).length >= 7) ? String(gaf.periodoResumen).slice(0, 7) : tm()} onChange={(e) => { const v = e.target.value || tm(); setGaf({ ...gaf, periodoResumen: v }); setGafFilterPeriodo(normalizePeriod(v)); }} style={{ width: "100%", maxWidth: 200, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} title="Mes en que esta garantía cuenta en el resumen (Crédito / Mi cuenta)" />
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Debe coincidir con el mes que ves en el resumen (ej. marzo). No es lo mismo que la fecha del depósito.</div>
         </div>
         {gaf.clientId && (
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
           <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Se rellena solo con el mes del resumen (arriba). Borrá el campo si querés ver gastos de todos los meses.</div>
         </div>
         )}
         <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).filter((g) => !gafFilterPeriodo || g.mes === gafFilterPeriodo).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp + " " : ""}· ${fmt(g.gasto)}</option>)}</Inp>
