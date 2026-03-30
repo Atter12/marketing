@@ -155,7 +155,7 @@ function Av({ name, size = 34, avatarUrl }) {
 }
 
 const Bdg = ({ type = "n", children, style: customStyle }) => {
-  const m = { ok: ["#ecfdf5", "#059669", "#d1fae5"], err: ["#fef2f2", "#dc2626", "#fecaca"], warn: ["#fffbeb", "#d97706", "#fde68a"], acc: ["#eff6ff", "#2563eb", "#bfdbfe"], n: ["#f5f3ee", "#64748b", "#e2e8f0"], gar: ["#f5f3ff", "#7c3aed", "#ddd6fe"] };
+  const m = { ok: ["#ecfdf5", "#059669", "#d1fae5"], err: ["#fef2f2", "#dc2626", "#fecaca"], warn: ["#fffbeb", "#d97706", "#fde68a"], acc: ["#eff6ff", "#2563eb", "#bfdbfe"], n: ["var(--color-bg)", "var(--sidebar-text)", "var(--sidebar-border)"], gar: ["#f5f3ff", "#7c3aed", "#ddd6fe"] };
   const [bg, fg, ring] = m[type] || m.n;
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 13px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: bg, color: fg, whiteSpace: "nowrap", letterSpacing: -0.1, border: `1px solid ${ring}`, ...customStyle }}><span style={{ width: 6, height: 6, borderRadius: "50%", background: fg, flexShrink: 0 }} />{children}</span>;
 };
@@ -163,28 +163,28 @@ const Bdg = ({ type = "n", children, style: customStyle }) => {
 const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: (PC[method] || "#94a3b8") + "14", color: PC[method] || "#64748b", letterSpacing: -0.1 }}>{PI[method] || "💰"} {method}</span>;
 
 const Stat = ({ icon, value, label, color, sub }) => (
-  <div className="stat-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "28px 28px 24px", transition: "all .25s cubic-bezier(.4,0,.2,1)", position: "relative", overflow: "hidden" }}>
+  <div className="stat-card" style={{ background: "var(--color-surface)", border: "1px solid var(--color-divider)", borderRadius: "var(--radius-xl)", padding: "var(--sp-5)", position: "relative", overflow: "hidden" }}>
     <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: color + "08", pointerEvents: "none" }} />
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-      <div style={{ width: 46, height: 46, borderRadius: 14, background: `linear-gradient(135deg, ${color}18, ${color}08)`, color, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${color}20` }}>{icon}</div>
+      <div style={{ width: 46, height: 46, borderRadius: "var(--radius-lg)", background: `linear-gradient(135deg, ${color}18, ${color}08)`, color, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${color}20` }}>{icon}</div>
     </div>
-    <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 32, fontWeight: 700, letterSpacing: -1.2, color: "#0f172a", marginBottom: 6, lineHeight: 1 }}>{value}</div>
-    <div style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 500, letterSpacing: 0.2, textTransform: "uppercase" }}>{label}</div>
-    {sub && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 8, padding: "4px 0", borderTop: "1px solid #f1f5f9" }}>{sub}</div>}
+    <div style={{ fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 32, fontWeight: 700, letterSpacing: -1.2, color: "var(--sidebar-text-active)", marginBottom: 6, lineHeight: 1 }}>{value}</div>
+    <div style={{ fontSize: 11.5, color: "var(--color-text-muted)", fontWeight: 500, letterSpacing: 0.2, textTransform: "uppercase" }}>{label}</div>
+    {sub && <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: 8, padding: "4px 0", borderTop: "1px solid var(--color-divider)" }}>{sub}</div>}
   </div>
 );
 
 const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
-    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.65)", backdropFilter: "blur(12px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto", animation: "fadeSlideIn .2s ease-out" }}>
-      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 22, width: "94%", maxWidth: 640, boxShadow: "0 32px 100px rgba(0,0,0,.2), 0 0 0 1px rgba(0,0,0,.05)", border: "none", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0, animation: "fadeSlideIn .25s ease-out" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "22px 28px", background: "linear-gradient(180deg, #f5f3ee, #fff)", borderBottom: "1px solid #e5e7eb", borderRadius: "22px 22px 0 0", minWidth: 0 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.4 }}>{title}</h3>
-          <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", color: "#94a3b8", borderRadius: 10, cursor: "pointer", fontSize: 16, transition: "all .15s" }} aria-label="Cerrar">✕</button>
+    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,25,23,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto", animation: "fadeSlideIn .2s ease-out" }}>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "var(--color-surface)", borderRadius: "var(--radius-xl)", width: "94%", maxWidth: 640, boxShadow: "var(--shadow-xl)", border: "1px solid var(--color-divider)", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0, animation: "fadeSlideIn .25s ease-out" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "var(--sp-5) var(--sp-6)", background: "var(--color-surface)", borderBottom: "1px solid var(--color-divider)", borderRadius: "var(--radius-xl) var(--radius-xl) 0 0", minWidth: 0 }}>
+          <h3 style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--sidebar-text-active)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.4, fontFamily: "var(--font-display)" }}>{title}</h3>
+          <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--color-divider)", background: "var(--color-surface-2)", color: "var(--color-text-muted)", borderRadius: "var(--radius-md)", cursor: "pointer", fontSize: 16, transition: "var(--tr)" }} aria-label="Cerrar">✕</button>
         </div>
         <div style={{ padding: "24px 28px", overflowX: "hidden", minWidth: 0, boxSizing: "border-box" }}>{children}</div>
-        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "18px 28px 22px", background: "linear-gradient(0deg, #f5f3ee, #fff)", borderTop: "1px solid #e5e7eb", borderRadius: "0 0 22px 22px" }}>{footer}</div>}
+        {footer && <div className="hm-modal-footer" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "18px 28px 22px", background: "var(--color-surface-offset)", borderTop: "1px solid var(--color-divider)", borderRadius: "0 0 var(--radius-xl) var(--radius-xl)" }}>{footer}</div>}
       </div>
     </div>
   );
@@ -192,9 +192,9 @@ const Mdl = ({ open, onClose, title, children, footer }) => {
 
 const Inp = ({ label, hint, ...p }) => (
   <div style={{ marginBottom: 16, minWidth: 0 }}>
-    {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 7, letterSpacing: -0.1 }}>{label}</label>}
-    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f5f3ee", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", resize: "vertical", minHeight: 72, transition: "all .2s", ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f5f3ee", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 36, transition: "all .2s", ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "#f5f3ee", border: "1.5px solid #e2e8f0", borderRadius: 11, color: "#0f172a", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", transition: "all .2s", ...(p.style || {}) }} />}
-    {hint && <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 5, lineHeight: 1.4 }}>{hint}</div>}
+    {label && <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--color-text)", marginBottom: 7, letterSpacing: -0.1 }}>{label}</label>}
+    {p.type === "textarea" ? <textarea {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 11, color: "var(--sidebar-text-active)", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", resize: "vertical", minHeight: 72, transition: "all .2s", ...(p.style || {}) }} /> : p.type === "select" ? <select {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 11, color: "var(--sidebar-text-active)", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", cursor: "pointer", WebkitAppearance: "none", paddingRight: 36, transition: "all .2s", ...(p.style || {}) }}>{p.children}</select> : <input {...p} style={{ width: "100%", maxWidth: "100%", boxSizing: "border-box", padding: "12px 15px", background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 11, color: "var(--sidebar-text-active)", fontFamily: "'Inter',sans-serif", fontSize: 14, outline: "none", transition: "all .2s", ...(p.style || {}) }} />}
+    {hint && <div style={{ fontSize: 12, color: "var(--sidebar-text-muted)", marginTop: 5, lineHeight: 1.4 }}>{hint}</div>}
   </div>
 );
 
@@ -225,7 +225,7 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
   }, [query, filtered, onChange]);
   return (
     <div style={{ marginBottom: compact ? 0 : 14, minWidth: 0, position: "relative" }}>
-      {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>{label}</label>}
+      {label && <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>{label}</label>}
       <input
         type="text"
         value={displayText}
@@ -233,27 +233,27 @@ function SearchSelect({ label, options, value, onChange, placeholder = "Buscar p
         onFocus={() => setOpen(true)}
         onBlur={() => setTimeout(() => { applySingleMatch(); setOpen(false); }, 180)}
         placeholder={placeholder}
-        style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, color: "#0f172a", fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }}
+        style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", paddingRight: 36, background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, color: "var(--sidebar-text-active)", fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }}
       />
       {open && filtered.length > 0 && (
-        <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, margin: 0, padding: 4, listStyle: "none", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 100, maxHeight: 220, overflowY: "auto" }}>
+        <ul style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, margin: 0, padding: 4, listStyle: "none", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,.1)", zIndex: 100, maxHeight: 220, overflowY: "auto" }}>
           {filtered.map((o) => (
-            <li key={o.value} onMouseDown={() => { onChange(o.value); setQuery(""); setOpen(false); }} style={{ padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13.5, color: o.value === value ? "#2563eb" : "#1a1d26", fontWeight: o.value === value ? 600 : 400, background: o.value === value ? "#eff6ff" : "transparent" }}>{o.label}</li>
+            <li key={o.value} onMouseDown={() => { onChange(o.value); setQuery(""); setOpen(false); }} style={{ padding: "8px 12px", cursor: "pointer", borderRadius: 6, fontSize: 13.5, color: o.value === value ? "var(--color-blue)" : "var(--color-text)", fontWeight: o.value === value ? 600 : 400, background: o.value === value ? "var(--color-info-soft)" : "transparent" }}>{o.label}</li>
           ))}
         </ul>
       )}
-      {open && query.trim() && filtered.length === 0 && <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, padding: "12px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, color: "#94a3b8", zIndex: 100 }}>{emptyMessage}</div>}
+      {open && query.trim() && filtered.length === 0 && <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 2, padding: "12px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, color: "var(--sidebar-text-muted)", zIndex: 100 }}>{emptyMessage}</div>}
     </div>
   );
 }
 
 const Btn = ({ variant = "primary", size, children, ...p }) => {
   const vs = {
-    primary: { bg: "linear-gradient(135deg, #0f172a, #1e293b)", color: "#fff", border: "none", shadow: "0 2px 8px rgba(15,23,42,.2)" },
-    accent: { bg: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "#fff", border: "none", shadow: "0 2px 8px rgba(37,99,235,.25)" },
-    outline: { bg: "#fff", color: "#0f172a", border: "1.5px solid #e2e8f0", shadow: "none" },
-    ghost: { bg: "transparent", color: "#94a3b8", border: "none", shadow: "none" },
-    danger: { bg: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", shadow: "none" }
+    primary: { bg: "linear-gradient(135deg, #0f172a, #1e293b)", color: "var(--color-text-inverse)", border: "none", shadow: "0 2px 8px rgba(15,23,42,.2)" },
+    accent: { bg: "linear-gradient(135deg, #2563eb, #1d4ed8)", color: "var(--color-text-inverse)", border: "none", shadow: "0 2px 8px rgba(37,99,235,.25)" },
+    outline: { bg: "var(--color-surface-2)", color: "var(--sidebar-text-active)", border: "1.5px solid var(--sidebar-border)", shadow: "none" },
+    ghost: { bg: "transparent", color: "var(--sidebar-text-muted)", border: "none", shadow: "none" },
+    danger: { bg: "var(--color-error-soft)", color: "var(--red)", border: "1px solid var(--red-bg)", shadow: "none" }
   };
   const s = vs[variant] || vs.primary;
   return <button {...p} style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: size === "sm" ? "8px 14px" : "10px 22px", borderRadius: 11, fontFamily: "'Inter',sans-serif", fontSize: size === "sm" ? 13 : 14, fontWeight: 600, border: s.border, background: s.bg, color: s.color, cursor: "pointer", whiteSpace: "nowrap", transition: "all .2s cubic-bezier(.4,0,.2,1)", letterSpacing: -0.2, boxShadow: s.shadow, ...(p.style || {}) }}>{children}</button>;
@@ -265,11 +265,11 @@ const Multi = ({ values, onChange, placeholder, type = "text" }) => (
   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
     {values.map((v, i) => (
       <div key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13.5, fontFamily: "'Inter',sans-serif", outline: "none", boxSizing: "border-box" }} />
-        <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2626", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
+        <input type={type} value={v} onChange={(e) => { const n = [...values]; n[i] = e.target.value; onChange(n); }} placeholder={placeholder} style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13.5, fontFamily: "'Inter',sans-serif", outline: "none", boxSizing: "border-box" }} />
+        <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "var(--color-error-soft)", color: "var(--red)", borderRadius: 6, cursor: "pointer", fontSize: 16, flexShrink: 0 }}>×</button>
       </div>
     ))}
-    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#2563eb", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'Inter',sans-serif" }}>+ Agregar</button>
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--color-blue)", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'Inter',sans-serif" }}>+ Agregar</button>
   </div>
 );
 const MultiPhone = ({ values, onChange }) => (
@@ -278,25 +278,26 @@ const MultiPhone = ({ values, onChange }) => (
       const { prefix, num } = parsePhone(v);
       return (
         <div key={i} style={{ display: "flex", gap: 6, alignItems: "center", minWidth: 0 }}>
-          <select value={prefix} onChange={(e) => { const n = [...values]; n[i] = (e.target.value + " " + num).trim(); onChange(n); }} style={{ width: 88, flexShrink: 0, padding: "9px 8px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'Inter',sans-serif", outline: "none", cursor: "pointer" }}>
+          <select value={prefix} onChange={(e) => { const n = [...values]; n[i] = (e.target.value + " " + num).trim(); onChange(n); }} style={{ width: 88, flexShrink: 0, padding: "9px 8px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontFamily: "'Inter',sans-serif", outline: "none", cursor: "pointer" }}>
             {PREFIXES.map((p) => <option key={p.c} value={p.c}>{p.c} {p.l}</option>)}
           </select>
-          <input type="tel" value={num} onChange={(e) => { const n = [...values]; n[i] = (prefix + " " + e.target.value).trim(); onChange(n); }} placeholder="999 999 999" style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13.5, fontFamily: "'Inter',sans-serif", outline: "none", boxSizing: "border-box" }} />
-          <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "#fdf0f2", color: "#dc2626", borderRadius: 6, cursor: "pointer", fontSize: 16 }}>×</button>
+          <input type="tel" value={num} onChange={(e) => { const n = [...values]; n[i] = (prefix + " " + e.target.value).trim(); onChange(n); }} placeholder="999 999 999" style={{ flex: 1, minWidth: 0, padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13.5, fontFamily: "'Inter',sans-serif", outline: "none", boxSizing: "border-box" }} />
+          <button onClick={() => values.length > 1 ? onChange(values.filter((_, j) => j !== i)) : onChange([""])} style={{ width: 30, height: 30, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "var(--color-error-soft)", color: "var(--red)", borderRadius: 6, cursor: "pointer", fontSize: 16 }}>×</button>
         </div>
       );
     })}
-    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#2563eb", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'Inter',sans-serif" }}>+ Agregar</button>
+    <button onClick={() => onChange([...values, ""])} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "var(--color-blue)", cursor: "pointer", padding: "4px 0", border: "none", background: "none", fontFamily: "'Inter',sans-serif" }}>+ Agregar</button>
   </div>
 );
 
-const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: danger ? "#fef2f2" : "#f5f3ee", borderRadius: 10, cursor: "pointer", color: danger ? "#dc2626" : "#64748b", transition: "all .2s cubic-bezier(.4,0,.2,1)", ...s }}>{icon}</button>;
+const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <button onClick={onClick} title={btnTitle} {...p} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", background: danger ? "var(--color-error-soft)" : "var(--color-bg)", borderRadius: 10, cursor: "pointer", color: danger ? "var(--red)" : "var(--sidebar-text)", transition: "all .2s cubic-bezier(.4,0,.2,1)", ...s }}>{icon}</button>;
 
-const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" && !msg.includes("🎉") && !msg.includes("📋") ? "📋 " + msg : msg; return <tr><td colSpan={cols} style={{ textAlign: "center", padding: "56px 20px", color: "#94a3b8", fontSize: 14, background: "linear-gradient(180deg, #fff, #f5f3ee)" }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}><div style={{ width: 48, height: 48, borderRadius: 14, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}><FileText size={22} style={{ color: "#cbd5e1" }} /></div><span>{displayMsg}</span></div></td></tr>; };
+const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" && !msg.includes("🎉") && !msg.includes("📋") ? "📋 " + msg : msg; return <tr><td colSpan={cols} style={{ textAlign: "center", padding: "56px 20px", color: "var(--sidebar-text-muted)", fontSize: 14, background: "linear-gradient(180deg, var(--color-surface-2), var(--color-bg))" }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}><div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--sidebar-hover)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}><FileText size={22} style={{ color: "var(--color-text-faint)" }} /></div><span>{displayMsg}</span></div></td></tr>; };
 
 /* ═══════ TABLE STYLES ═══════ */
-const TH = { textAlign: "left", padding: "14px 24px", fontSize: 11.5, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1, background: "#f5f3ee", borderBottom: "1px solid #e5e7eb" };
-const TD = { padding: "16px 24px", fontSize: 14, borderBottom: "1px solid #f1f5f9", verticalAlign: "middle" };
+/* Cabeceras / celdas alineadas a tablas Tareas (clients-thead / filas) */
+const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)" };
+const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle" };
 const MN = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
 
 /* ═══════ MAIN APP ═══════ */
@@ -516,7 +517,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = rows.reduce((a, r) => ({ ads: a.ads + r.ads, fee: a.fee + r.fee, total: a.total + r.total, paid: a.paid + r.paid, gar: a.gar + r.gar, pending: a.pending + r.pending, netPending: a.netPending + r.netPending }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, pending: 0, netPending: 0 });
 
     const pie = (t.ads + t.fee) > 0
-      ? [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "#0f172a" }].filter((d) => d.value > 0)
+      ? [{ name: "ADS", value: t.ads, color: "#059669" }, { name: "FEE", value: t.fee, color: "var(--sidebar-text-active)" }].filter((d) => d.value > 0)
       : t.gar > 0
         ? [{ name: "Garantías (período)", value: t.gar, color: "#7c3aed" }]
         : [];
@@ -926,8 +927,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
 
   /* Early returns only after all hooks have run */
-  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3ee", fontFamily: "'Inter',sans-serif" }}><div style={{ color: "#64748b", fontSize: 15 }}>Cargando datos…</div></div>);
-  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3ee", fontFamily: "'Inter',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "#dc2626", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#0f172a", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
+  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", fontFamily: "'Inter',sans-serif" }}><div style={{ color: "var(--sidebar-text)", fontSize: 15 }}>Cargando datos…</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", fontFamily: "'Inter',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "var(--red)", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "var(--sidebar-text-active)", color: "var(--color-text-inverse)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
   const validateEmail = (e) => typeof e === "string" && e.trim().includes("@") && e.trim().length >= 5;
@@ -1308,7 +1309,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
     const R = Math.PI / 180, r = innerRadius + (outerRadius - innerRadius) * 1.5;
-    return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="#5f6577" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>{(percent * 100).toFixed(1)}%</text>;
+    return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="var(--color-text-muted)" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>{(percent * 100).toFixed(1)}%</text>;
   };
 
   /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
@@ -1335,13 +1336,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", cobros: "Cobros", cobranza: "Cobranza", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
-      <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-manual"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "#94a3b8" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></TableScrollWrap>
-      {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "#f5f3ee", borderTop: "1px solid #f1f5f9", flexWrap: "wrap" }}>
-        <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
-        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "#94a3b8", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
+    <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+      <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-manual"><table><thead><tr>{["Fecha", "Concepto", "Monto", "Tipo", "Nota", ...(isCliente ? [] : [""])].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead><tbody>{curManDisplay.map((m) => <tr key={m.id}><td style={TD}>{fmtD(m.fecha)}</td><td style={{ ...TD, fontWeight: 600 }}>{m.conc}</td><td style={{ ...TD, ...MN, color: m.tipo === "Gasto" ? "#dc2640" : m.tipo === "Ingreso" ? "#0d9f6e" : "#1a1d26" }}>{m.tipo === "Nota" ? "—" : (m.tipo === "Gasto" ? "-$" : "+$") + fmt(m.monto)}</td><td style={TD}><Bdg type={m.tipo === "Gasto" ? "err" : m.tipo === "Ingreso" ? "ok" : "n"}>{m.tipo}</Bdg></td><td style={{ ...TD, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>{m.nota || "—"}</td>{!isCliente && <td className="hm-col-actions" style={TD}><IBtn onClick={() => mutations.delManual(m.id)} icon={<Trash2 size={13} />} danger /></td>}</tr>)}{!curManDisplay.length && <Empty cols={isCliente ? 5 : 6} msg="Sin registros" />}</tbody></table></TableScrollWrap>
+      {!isCliente && <div style={{ display: "flex", gap: 10, alignItems: "flex-end", padding: "14px 18px", background: "var(--color-bg)", borderTop: "1px solid var(--sidebar-hover)", flexWrap: "wrap" }}>
+        <div style={{ flex: .7 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", marginBottom: 4 }}>Fecha</label><input type="date" value={mf.fecha} onChange={(e) => setMf({ ...mf, fecha: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: 1.2 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", marginBottom: 4 }}>Concepto</label><input value={mf.conc} onChange={(e) => setMf({ ...mf, conc: e.target.value })} placeholder="Concepto" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", marginBottom: 4 }}>Monto</label><input type="number" value={mf.monto} onChange={(e) => setMf({ ...mf, monto: e.target.value })} placeholder="0.00" step="0.01" style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }} /></div>
+        <div style={{ flex: .6 }}><label style={{ display: "block", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", marginBottom: 4 }}>Tipo</label><select value={mf.tipo} onChange={(e) => setMf({ ...mf, tipo: e.target.value })} style={{ padding: "7px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 7, fontFamily: "'Inter'", outline: "none", width: "100%" }}><option>Gasto</option><option>Ingreso</option><option>Nota</option></select></div>
         <Btn size="sm" onClick={saveMan} style={{ height: 34, marginBottom: 1 }}>+ Agregar</Btn>
       </div>}
     </div>
@@ -1351,18 +1352,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
   return (
-    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", background: "var(--color-bg)", color: "var(--color-text)", lineHeight: 1.55, WebkitFontSmoothing: "antialiased", zoom: 0.9 }}>
+    <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "var(--font-body)", background: "var(--color-bg)", color: "var(--color-text)", lineHeight: 1.55, WebkitFontSmoothing: "antialiased" }}>
       <style>{`*{box-sizing:border-box}
+::selection{background:var(--color-primary-highlight);color:var(--color-text)}
 
-/* === STAT CARDS === */
-.stat-card{transition:all .25s cubic-bezier(.4,0,.2,1)}
-.stat-card:hover{box-shadow:0 12px 40px rgba(15,23,42,.1);transform:translateY(-4px);border-color:#cbd5e1!important}
+/* === STAT CARDS (mismo hover que tareas/tarea.html .stat-card) === */
+.stat-card{transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);border-color:var(--color-primary)!important}
 
 /* === TABLES === */
 table{width:100%;border-collapse:collapse;min-width:600px}
 tbody tr{transition:all .15s ease}
-tbody tr:hover{background:linear-gradient(90deg,var(--color-surface-offset),var(--color-surface-2))!important}
-.hm-table-wrap.hm-table-clientes tbody tr:hover{background:linear-gradient(90deg,transparent,#f1f5f9,transparent)!important}
+tbody tr:hover{background:var(--color-primary-highlight)!important}
+.hm-table-wrap.hm-table-clientes tbody tr:hover{background:var(--color-primary-highlight)!important}
 tbody tr:last-child td{border-bottom:none}
 thead th{position:relative}
 
@@ -1370,7 +1372,7 @@ thead th{position:relative}
 .hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
 .hm-modal-box .hm-form-grid>div{min-width:0}
 
-/* === FOCUS STATES (Creativos / marca) === */
+/* === FOCUS STATES (misma marca que Tareas) === */
 input:focus,select:focus,textarea:focus{border-color:var(--color-primary)!important;box-shadow:0 0 0 3px var(--color-primary-soft)!important;outline:none!important}
 
 /* === SIDEBAR NAV === */
@@ -1386,12 +1388,12 @@ button{transition:all .15s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .hm-page-content{animation:fadeSlideIn .3s ease-out}
 
-/* === CHART CONTAINERS === */
-.hm-chart-card{background:#fff;border:1px solid #e5e7eb;border-radius:18px;padding:26px 28px;transition:all .2s ease}
-.hm-chart-card:hover{box-shadow:0 8px 30px rgba(15,23,42,.06);border-color:#cbd5e1}
+/* === CHART CONTAINERS (superficie / radio como .card en Tareas) === */
+.hm-chart-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);padding:26px 28px;transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
+.hm-chart-card:hover{box-shadow:var(--shadow-md);border-color:var(--color-primary);transform:translateY(-1px)}
 @keyframes debtCardEnter{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 .hm-debt-chart-card{animation:debtCardEnter .5s cubic-bezier(0.34,1.56,0.64,1) both}
-.hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:#f87171!important}
+.hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:var(--red)!important}
 
 /* === RESPONSIVE === */
 @media (max-width:768px){
@@ -1433,7 +1435,7 @@ button{transition:all .15s ease}
 .hm-sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);backdrop-filter:blur(4px);z-index:150;opacity:0;pointer-events:none;transition:opacity .3s}
 
 /* === MOBILE HEADER === */
-.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;align-items:center;padding:0 20px;z-index:101;gap:14px}
+.hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:color-mix(in srgb,var(--color-surface-2) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-divider);align-items:center;padding:0 20px;z-index:101;gap:14px}
 
 /* === TABLE WRAPS === Mismo criterio que COBROS (se ve bien): card overflow hidden + wrap overflow-x auto + tabla con min-width para que quepan todas las columnas === */
 .hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px;position:relative}
@@ -1453,9 +1455,9 @@ button{transition:all .15s ease}
 .hm-table-wrap.hm-table-garantias table th,.hm-table-wrap.hm-table-garantias table td,
 .hm-table-wrap.hm-table-cobros table th,.hm-table-wrap.hm-table-cobros table td{padding:12px 14px!important;font-size:13px!important;vertical-align:middle}
 .hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions,
-.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:#fff;min-width:130px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
-.hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions,.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:#f5f3ee}
-.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions,.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:#f1f5f9}
+.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:var(--color-surface-2);min-width:130px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions,.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:var(--color-bg)}
+.hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions,.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:var(--sidebar-hover)}
 .hm-table-wrap.hm-table-clientes th{font-size:11.5px}
 /* Flechitas de scroll horizontal quitadas: supervisores prefieren ver todo con zoom/scroll nativo */
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
@@ -1463,8 +1465,8 @@ button{transition:all .15s ease}
 /* === SCROLLBARS === */
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
-::-webkit-scrollbar-thumb:hover{background:#94a3b8}
+::-webkit-scrollbar-thumb{background:var(--color-surface-dynamic);border-radius:var(--radius-full)}
+::-webkit-scrollbar-thumb:hover{background:var(--color-text-faint)}
 
 /* === SELECTION COLOR === */
 ::selection{background:var(--color-primary-highlight);color:var(--color-text)}
@@ -1473,7 +1475,7 @@ button{transition:all .15s ease}
 .hm-page-content button:hover{opacity:.85}
 
 /* === SIDEBAR LOGOUT HOVER === */
-.hm-sidebar>div:last-child>button:hover{background:#fef2f2!important;color:#dc2626!important;border-color:#fecaca!important}
+.hm-sidebar>div:last-child>button:hover{background:var(--color-error-soft)!important;color:var(--red)!important;border-color:var(--red-bg)!important}
 
 /* === Hover effect para action buttons === */
 .hm-table-wrap button:hover{transform:scale(1.08)}
@@ -1499,8 +1501,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* Cabecera móvil */}
       <header className="hm-mobile-header">
-        <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", background: "#fff", borderRadius: 12, color: "#0f172a", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
-        <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, color: "#0f172a", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
+        <button onClick={() => setMenuOpen(true)} style={{ width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", background: "var(--color-surface-2)", borderRadius: 12, color: "var(--sidebar-text-active)", cursor: "pointer" }} aria-label="Abrir menú"><Menu size={22} /></button>
+        <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, color: "var(--sidebar-text-active)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{pageTitles[page] || "Holistic"}</span>
         {!isCliente && (
           <div style={{ flexShrink: 0 }}>
             <Av name={displayName} size={36} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
@@ -1515,7 +1517,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* ═══ SIDEBAR ═══ */}
       <aside className="hm-sidebar" style={{ width: 260, background: "linear-gradient(180deg, var(--sidebar-bg) 0%, #f8fafc 100%)", borderRight: "1px solid var(--sidebar-border)", position: "fixed", top: 0, left: 0, bottom: 0, display: "flex", flexDirection: "column", zIndex: 100 }}>
-        <div style={{ padding: "24px 22px 20px", borderBottom: "1px solid #f1f5f9" }}>
+        <div style={{ padding: "24px 22px 20px", borderBottom: "1px solid var(--sidebar-hover)" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={LOGO_URL} alt="Holistic Marketing" style={{ height: 48, width: 200, maxWidth: "100%", objectFit: "contain", display: "block" }} />
           </div>
@@ -1524,7 +1526,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             tabIndex={!isCliente ? 0 : undefined}
             onClick={!isCliente ? () => avatarInputRef.current?.click() : undefined}
             onKeyDown={!isCliente ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); avatarInputRef.current?.click(); } } : undefined}
-            style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid #f1f5f9", background: "linear-gradient(135deg, #f5f3ee 0%, #eff6ff 50%, #f5f3ff 100%)", margin: "18px -22px 0", padding: "18px 20px", borderRadius: 14, boxShadow: "0 2px 12px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8)", cursor: !isCliente ? "pointer" : undefined }}
+            style={{ display: "flex", alignItems: "flex-start", gap: 14, marginTop: 18, paddingTop: 18, borderTop: "1px solid var(--sidebar-hover)", background: "linear-gradient(135deg, #f5f3ee 0%, #eff6ff 50%, #f5f3ff 100%)", margin: "18px -22px 0", padding: "18px 20px", borderRadius: 14, boxShadow: "0 2px 12px rgba(15,23,42,.06), inset 0 1px 0 rgba(255,255,255,.8)", cursor: !isCliente ? "pointer" : undefined }}
             title={!isCliente ? "Clic para cambiar foto" : undefined}
           >
             <input
@@ -1551,42 +1553,42 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               ) : (
                 <Av name={displayName} size={48} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
               )}
-              <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
+              <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid var(--color-surface-2)", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
               {!isCliente && (
-                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "var(--color-primary)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px var(--color-primary-glow)", pointerEvents: "none" }} title="Clic para poner tu foto">
+                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "var(--color-primary)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px var(--color-primary-glow)", pointerEvents: "none" }} title="Clic para poner tu foto">
                   <Camera size={11} strokeWidth={2.2} />
                 </div>
               )}
             </div>
             <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: "#64748b", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Bienvenido</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--sidebar-text)", letterSpacing: 0.5, textTransform: "uppercase", marginBottom: 4 }}>Bienvenido</div>
               <div style={{ fontSize: 15, fontWeight: 700, color: "var(--sidebar-text-active)", lineHeight: 1.35, wordBreak: "break-word", overflowWrap: "break-word" }}>{displayName}</div>
-              {!isCliente && <div style={{ fontSize: 10.5, color: "#94a3b8", marginTop: 4 }}>Clic para poner tu foto</div>}
+              {!isCliente && <div style={{ fontSize: 10.5, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Clic para poner tu foto</div>}
               {subLabel && <div style={{ marginTop: 8 }}><span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#059669", background: "rgba(16,185,129,.12)", padding: "4px 10px", borderRadius: 8, letterSpacing: 0.3 }}><span style={{ width: 5, height: 5, borderRadius: "50%", background: "#10b981" }} /> {subLabel}</span></div>}
             </div>
           </div>
         </div>
         <nav style={{ flex: 1, padding: "18px 14px", overflowY: "auto" }}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px" }}>General</div>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sidebar-text-muted)", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px" }}>General</div>
           {nav.map((it) => (
             <div key={it.id}>
-              {it.section && <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px", marginTop: 16 }}>{it.section}</div>}
+              {it.section && <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sidebar-text-muted)", textTransform: "uppercase", letterSpacing: 1.6, padding: "8px 14px 8px", marginTop: 16 }}>{it.section}</div>}
               {it.external ? (
-                <a href={it.external} target="_blank" rel="noopener noreferrer" className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: 500, color: "#64748b", background: "transparent", cursor: "pointer", margin: "2px 0", textDecoration: "none", borderLeft: "3px solid transparent" }}>
-                  <span style={{ color: "#94a3b8" }}>{it.icon}</span><span>{it.label}</span><ExternalLink size={13} style={{ marginLeft: "auto", opacity: 0.5 }} />
+                <a href={it.external} target="_blank" rel="noopener noreferrer" className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: 500, color: "var(--sidebar-text)", background: "transparent", cursor: "pointer", margin: "2px 0", textDecoration: "none", borderLeft: "3px solid transparent" }}>
+                  <span style={{ color: "var(--sidebar-text-muted)" }}>{it.icon}</span><span>{it.label}</span><ExternalLink size={13} style={{ marginLeft: "auto", opacity: 0.5 }} />
                 </a>
               ) : (
                 <div onClick={() => goTo(it.id)} className="hm-nav-item" style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, fontSize: 14, fontWeight: page === it.id ? 600 : 500, color: page === it.id ? "var(--color-primary)" : "var(--sidebar-text)", background: page === it.id ? "var(--sidebar-active)" : "transparent", cursor: "pointer", margin: "2px 0", borderLeft: page === it.id ? "3px solid var(--color-primary)" : "3px solid transparent" }}>
                   <span style={{ color: page === it.id ? "var(--color-primary)" : "var(--sidebar-text-muted)", transition: "color .15s" }}>{it.icon}</span><span>{it.label}</span>
-                  {it.badge > 0 && <span style={{ marginLeft: "auto", background: `linear-gradient(135deg, ${it.accent || "#dc2626"}, ${it.accent || "#dc2626"}cc)`, color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 12, minWidth: 20, textAlign: "center", boxShadow: `0 2px 6px ${it.accent || "#dc2626"}40` }}>{it.badge}</span>}
+                  {it.badge > 0 && <span style={{ marginLeft: "auto", background: `linear-gradient(135deg, ${it.accent || "#dc2626"}, ${it.accent || "#dc2626"}cc)`, color: "var(--color-text-inverse)", fontSize: 11, fontWeight: 700, padding: "2px 9px", borderRadius: 12, minWidth: 20, textAlign: "center", boxShadow: `0 2px 6px ${it.accent || "#dc2626"}40` }}>{it.badge}</span>}
                 </div>
               )}
             </div>
           ))}
         </nav>
-        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, #e2e8f0, transparent)", margin: "16px 14px 8px" }} />
-        <div style={{ padding: "16px 22px", borderTop: "1px solid #f1f5f9" }}>
-          <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "10px 14px", border: "1.5px solid #e2e8f0", borderRadius: 10, background: "#fff", color: "#64748b", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", transition: "all .15s" }}><LogOut size={15} /> Cerrar sesión</button>
+        <div style={{ height: 1, background: "linear-gradient(90deg, transparent, var(--sidebar-border), transparent)", margin: "16px 14px 8px" }} />
+        <div style={{ padding: "16px 22px", borderTop: "1px solid var(--sidebar-hover)" }}>
+          <button onClick={async () => { await supabase?.auth?.signOut?.(); }} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "10px 14px", border: "1.5px solid var(--sidebar-border)", borderRadius: 10, background: "var(--color-surface-2)", color: "var(--sidebar-text)", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", transition: "all .15s" }}><LogOut size={15} /> Cerrar sesión</button>
         </div>
       </aside>
 
@@ -1596,17 +1598,17 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
           <div>
-            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", color: "#fff", padding: "64px 48px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
+            <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", color: "var(--color-text-inverse)", padding: "64px 48px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,.08) 0%, transparent 70%)", pointerEvents: "none" }} />
               <div style={{ maxWidth: 680, margin: "0 auto", position: "relative" }}>
                 <h1 style={{ fontSize: "clamp(30px, 4vw, 42px)", fontWeight: 800, letterSpacing: -0.8, marginBottom: 14, lineHeight: 1.1 }}>Crédito</h1>
                 <p style={{ fontSize: 17, opacity: 0.85, lineHeight: 1.7 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
-                <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 28, padding: "14px 28px", background: "#fff", color: "#0f172a", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
+                <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 28, padding: "14px 28px", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
               </div>
             </div>
             <div className="hm-credito-content" style={{ maxWidth: 800, margin: "0 auto", padding: "40px 36px" }}>
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 22, padding: "48px 40px", textAlign: "center", color: "#64748b", lineHeight: 1.7, fontSize: 16, boxShadow: "0 4px 20px rgba(15,23,42,.06)", position: "relative", overflow: "hidden" }}>
-                <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 16, background: "linear-gradient(135deg, #2563eb15, #7c3aed10)", display: "flex", alignItems: "center", justifyContent: "center" }}><CreditCard size={28} style={{ color: "#2563eb" }} /></div>
+              <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 22, padding: "48px 40px", textAlign: "center", color: "var(--sidebar-text)", lineHeight: 1.7, fontSize: 16, boxShadow: "0 4px 20px rgba(15,23,42,.06)", position: "relative", overflow: "hidden" }}>
+                <div style={{ width: 56, height: 56, margin: "0 auto 20px", borderRadius: 16, background: "linear-gradient(135deg, #2563eb15, #7c3aed10)", display: "flex", alignItems: "center", justifyContent: "center" }}><CreditCard size={28} style={{ color: "var(--color-blue)" }} /></div>
                 Próximamente más información sobre opciones de crédito.
               </div>
             </div>
@@ -1615,20 +1617,20 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ DASHBOARD: cliente = Resumen actual; gerente = vista Reportes (Relación de Cuentas) ══ */}
         {page === "dashboard" && isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #eff6ff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-header" style={{ background: "var(--color-surface)", borderBottom: "1px solid var(--color-divider)", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, position: "sticky", top: 0, zIndex: 50, boxShadow: "var(--shadow-sm)" }}>
             <div>
               <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)" }} />Resumen general</h2>
-              <p style={{ fontSize: 13, color: "#94a3b8", margin: "4px 0 0", maxWidth: 480 }}>{dashboardPeriodo ? <>Período: <strong style={{ color: "#0f172a" }}>{fmtM(dashboardPeriodo)}</strong></> : <>Últimos 6 meses: {months[0]?.label} — {months[months.length - 1]?.label}</>}. Para análisis detallado usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
+              <p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", margin: "4px 0 0", maxWidth: 480 }}>{dashboardPeriodo ? <>Período: <strong style={{ color: "var(--sidebar-text-active)" }}>{fmtM(dashboardPeriodo)}</strong></> : <>Últimos 6 meses: {months[0]?.label} — {months[months.length - 1]?.label}</>}. Para análisis detallado usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "var(--color-blue)", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-              <div className="hm-dashboard-periodo-tablita" style={{ display: "inline-flex", background: "#fff", border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
-                <div style={{ display: "flex", alignItems: "center", borderRight: "1px solid #e2e8f0", padding: "8px 14px", background: "#f5f3ee", fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.6 }}>Período (mes)</div>
+              <div className="hm-dashboard-periodo-tablita" style={{ display: "inline-flex", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 12, overflow: "hidden", boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", borderRight: "1px solid var(--sidebar-border)", padding: "8px 14px", background: "var(--color-bg)", fontSize: 11, fontWeight: 700, color: "var(--sidebar-text)", textTransform: "uppercase", letterSpacing: 0.6 }}>Período (mes)</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
-                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={15} /></button>
-                <div style={{ minWidth: 88, textAlign: "center", padding: "6px 12px", fontSize: 12.5, fontWeight: 600, color: dashboardPeriodo ? "#0f172a" : "#94a3b8", fontFamily: "'Inter',sans-serif" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
-                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid #e2e8f0", background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={15} /></button>
-                  <input type="month" value={dashboardPeriodo || tm()} onChange={(e) => { const v = e.target.value; if (v) setDashboardPeriodo(v); }} style={{ width: 118, boxSizing: "border-box", padding: "6px 10px", border: "none", borderRight: "1px solid #e2e8f0", fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: "#fff" }} title="Elegir mes" />
-                {dashboardPeriodo ? <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "6px 12px", border: "none", background: "#f1f5f9", color: "#64748b", fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Todos</button> : null}
+                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid var(--sidebar-border)", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={15} /></button>
+                <div style={{ minWidth: 88, textAlign: "center", padding: "6px 12px", fontSize: 12.5, fontWeight: 600, color: dashboardPeriodo ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)", fontFamily: "'Inter',sans-serif" }}>{dashboardPeriodo ? fmtM(dashboardPeriodo) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = dashboardPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setDashboardPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "none", borderRight: "1px solid var(--sidebar-border)", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={15} /></button>
+                  <input type="month" value={dashboardPeriodo || tm()} onChange={(e) => { const v = e.target.value; if (v) setDashboardPeriodo(v); }} style={{ width: 118, boxSizing: "border-box", padding: "6px 10px", border: "none", borderRight: "1px solid var(--sidebar-border)", fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: "var(--color-surface-2)" }} title="Elegir mes" />
+                {dashboardPeriodo ? <button type="button" onClick={() => setDashboardPeriodo("")} style={{ padding: "6px 12px", border: "none", background: "var(--sidebar-hover)", color: "var(--sidebar-text)", fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Todos</button> : null}
                 </div>
               </div>
               <Btn variant="outline" size="sm" onClick={() => goTo("reportes")}><FileText size={14} /> Reportes</Btn>
@@ -1642,39 +1644,39 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Stat icon={<AlertCircle size={22} />} value={`$${fmt(dashboardTots.net)}`} label="Deuda Neta" color="#e11d48" sub={dashboardTots.tGar > 0 ? `Garantías descontadas: -$${fmt(dashboardTots.tGar)}` : ""} />
             </div>
             <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 32 }}>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#2563eb" radius={[8, 8, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Inversión + fees por mes</p>
+                <ResponsiveContainer width="100%" height={240}><BarChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="var(--color-blue)" radius={[8, 8, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Distribución por medio de pago</p>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Distribución por medio de pago</p>
                 <ResponsiveContainer width="100%" height={240}><PieChart><Pie data={dashboardCharts.methods} cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={4} cornerRadius={4} dataKey="value" label={cLabel}>{dashboardCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart></ResponsiveContainer>
               </div>
             </div>
             <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 32 }}>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={240}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "#fff", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#2563eb" strokeWidth={3} dot={{ r: 5, fill: "#2563eb", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#2563eb", stroke: "#fff", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Evolución mensual</p>
+                <ResponsiveContainer width="100%" height={240}><LineChart data={dashboardCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="var(--color-blue)" strokeWidth={3} dot={{ r: 5, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card hm-debt-chart-card" style={{ background: "linear-gradient(180deg, #fff 0%, #fef2f2 100%)", border: "1px solid #fecaca", borderRadius: 18, padding: "28px 24px 32px", transition: "transform .25s cubic-bezier(0.34,1.56,0.64,1), box-shadow .25s ease", boxShadow: "0 4px 20px rgba(220,38,38,.06)", marginBottom: 8 }}>
-                <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, letterSpacing: -0.2, color: "#0f172a" }}>Deuda Neta por Cliente</h4>
-                <p style={{ fontSize: 12.5, color: "#64748b", marginBottom: 24, lineHeight: 1.4 }}>Incluye descuento de garantías. Clientes con saldo pendiente.</p>
+              <div className="hm-chart-card hm-debt-chart-card" style={{ background: "linear-gradient(180deg, var(--color-surface-2) 0%, var(--color-error-soft) 100%)", border: "1px solid var(--red-bg)", borderRadius: "var(--radius-xl)", padding: "28px 24px 32px", transition: "transform .25s cubic-bezier(0.34,1.56,0.64,1), box-shadow .25s ease", boxShadow: "var(--shadow-md)", marginBottom: 8 }}>
+                <h4 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6, letterSpacing: -0.2, color: "var(--sidebar-text-active)" }}>Deuda Neta por Cliente</h4>
+                <p style={{ fontSize: 12.5, color: "var(--sidebar-text)", marginBottom: 24, lineHeight: 1.4 }}>Incluye descuento de garantías. Clientes con saldo pendiente.</p>
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={dashboardCharts.debt} layout="vertical" margin={{ top: 8, right: 16, bottom: 8, left: 8 }}>
                     <defs><linearGradient id="debtGradient" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs>
                     <CartesianGrid strokeDasharray="4 4" stroke="#fecaca" vertical={false} />
                     <XAxis type="number" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 500 }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12.5, fill: "#0f172a", fontWeight: 500 }} axisLine={false} tickLine={false} width={100} />
+                    <YAxis dataKey="name" type="category" tick={{ fontSize: 12.5, fill: "var(--sidebar-text-active)", fontWeight: 500 }} axisLine={false} tickLine={false} width={100} />
                     <Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "1px solid #fecaca", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "12px 16px" }} formatter={(v) => [`$${fmt(v)}`, "Deuda neta"]} />
                     <Bar dataKey="debt" fill="url(#debtGradient)" radius={[0, 10, 10, 0]} isAnimationActive animationDuration={700} animationEasing="ease-out" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
-              <div style={{ padding: "20px 26px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #dc2626, #f97316)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Pendientes de Cobro</h3></div>
+            <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+              <div style={{ padding: "20px 26px", borderBottom: "1px solid var(--sidebar-hover)", display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #dc2626, #f97316)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2 }}>Pendientes de Cobro</h3></div>
               <TableScrollWrap className="hm-table-wrap hm-table-dashboard"><table><thead><tr>{["Cliente", "Fecha de movimiento", "Gasto", "Fee", "Total", "Pagado", "Pendiente", "Estado"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2626" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
+                <tbody>{dashboardPendientes.map((g) => { const c = clients.find((x) => x.id === g.clientId); return <tr key={g.id} onClick={() => goTo("client-detail", g.clientId)} style={{ cursor: "pointer" }}><td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtM(g.mes)}</td><td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{g.fee}%</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#dc2626" }}>${fmt(g._pend)}</td><td style={TD}><Bdg type={g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td></tr>; })}
                 {dashboardPendientes.length === 0 && <Empty cols={8} msg={dashboardPeriodo ? "Sin pendientes en este período" : "🎉 Todo cobrado — sin pendientes"} />}</tbody></table></TableScrollWrap>
             </div>
           </div>
@@ -1682,7 +1684,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
         {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
-          <div style={{ background: "linear-gradient(135deg, #8c837f 0%, #f8ac78 42%, #dc7223 100%)", padding: "36px 48px 32px", color: "#fff", position: "relative", overflow: "hidden" }}>
+          <div style={{ background: "linear-gradient(135deg, #8c837f 0%, #f8ac78 42%, #dc7223 100%)", padding: "36px 48px 32px", color: "var(--color-text-inverse)", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.18)", pointerEvents: "none" }} />
             <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,.08)", pointerEvents: "none" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", maxWidth: "none", margin: "0 auto", position: "relative" }}>
@@ -1690,20 +1692,20 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6 }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400 }}>Análisis detallado por período y cliente</p></div>
             </div>
           </div>
-          <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
+          <div className="hm-page-header" style={{ background: "var(--color-surface-2)", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
             {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-            <div className="hm-report-calendar-wrap" style={{ background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 14, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
+            <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#64748b" }}>Período:</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-text)" }}>Período:</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#0f172a" : "#94a3b8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
                 </div>
-                {repPeriodoMes && <span style={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
               </div>
             </div>
           </div>
@@ -1724,13 +1726,13 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             </div>
             <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
-              <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
-                <div style={{ padding: "20px 24px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+              <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
+                <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--sidebar-hover)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2, margin: 0 }}>Desglose por Usuario</h3></div>
                   {repData.rows.length > 0 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", whiteSpace: "nowrap" }}>Ordenar:</label>
-                      <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'Inter'", background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer", minWidth: 200 }}>
+                      <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
+                      <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
                         <option value="nombre">Nombre (A-Z)</option>
                         <option value="deuda">Quien más debe (Pend. neto ↓)</option>
                         <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
@@ -1744,43 +1746,43 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }}><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
-                    <tr style={{ background: "linear-gradient(90deg, #f5f3ee, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "#2563eb", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "#2563eb", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+                    {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
+                    <tr style={{ background: "linear-gradient(90deg, #f5f3ee, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
                     {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
                   </tbody></table></TableScrollWrap>
               </div>
               {/* Composición de Cuentas: abajo, ancho completo */}
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)", display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+              <div className="hm-chart-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
                 <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, letterSpacing: -0.2, alignSelf: "flex-start", width: "100%" }}>Composición de Cuentas</h4>
                 <div style={{ width: "100%", maxWidth: 420, margin: "0 auto" }}>
                   {repData.pie.length > 0 ? (
                     <ResponsiveContainer width="100%" height={260}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={62} outerRadius={98} paddingAngle={5} cornerRadius={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
                   ) : (
-                    <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: 14, textAlign: "center", padding: 24 }}>Sin movimiento en este período.<br /><span style={{ fontSize: 12.5, marginTop: 8, display: "block" }}>Si cargaste garantías para este mes, revisá en Garantías que <strong>Período en resumen</strong> sea exactamente este mes.</span></div>
+                    <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: 24 }}>Sin movimiento en este período.<br /><span style={{ fontSize: 12.5, marginTop: 8, display: "block" }}>Si cargaste garantías para este mes, revisá en Garantías que <strong>Período en resumen</strong> sea exactamente este mes.</span></div>
                   )}
                 </div>
                 <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 36, fontWeight: 700, marginTop: 10, letterSpacing: -1.5, background: repData.t.total > 0 ? "linear-gradient(135deg, #c2410c, #f97316)" : repData.t.gar > 0 ? "linear-gradient(135deg, #5b21b6, #7c3aed)" : "linear-gradient(135deg, #c2410c, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{fmtK(repData.t.total > 0 ? repData.t.total : repData.t.gar > 0 ? repData.t.gar : 0)}</div>
-                <div style={{ fontSize: 13, color: "#94a3b8", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>{repData.t.total > 0 ? "Total General (Ads+Fee)" : repData.t.gar > 0 ? "Solo garantías este mes" : "Total General"}</div>
+                <div style={{ fontSize: 13, color: "var(--sidebar-text-muted)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>{repData.t.total > 0 ? "Total General (Ads+Fee)" : repData.t.gar > 0 ? "Solo garantías este mes" : "Total General"}</div>
               </div>
             </div>
             <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 28, marginBottom: 28 }}>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={240}><BarChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="#2563eb" radius={[8, 8, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Inversión + fees por mes</p>
+                <ResponsiveContainer width="100%" height={240}><BarChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="var(--color-blue)" radius={[8, 8, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Distribución por medio de pago</p>
-                <ResponsiveContainer width="100%" height={240}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={4} cornerRadius={4} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Distribución por medio de pago</p>
+                <ResponsiveContainer width="100%" height={240}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={4} cornerRadius={4} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
               </div>
             </div>
             <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 32 }}>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={240}><LineChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "#fff", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="#2563eb" strokeWidth={3} dot={{ r: 5, fill: "#2563eb", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#2563eb", stroke: "#fff", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Evolución mensual</p>
+                <ResponsiveContainer width="100%" height={240}><LineChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="var(--color-blue)" strokeWidth={3} dot={{ r: 5, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card" style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: "26px 28px", transition: "all .2s ease", boxShadow: "0 1px 4px rgba(15,23,42,.03)" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={240}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical"><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs><CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} /><XAxis type="number" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "#94a3b8" }} axisLine={false} tickLine={false} width={80} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 8, 8, 0]} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "#94a3b8", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
+              <div className="hm-chart-card">
+                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Incluye descuento de garantías</p>
+                <ResponsiveContainer width="100%" height={240}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical"><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis type="number" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} width={80} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 8, 8, 0]} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -1795,15 +1797,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 {search.trim() ? `${clientsFilteredAndSorted.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "#64748b", whiteSpace: "nowrap" }}>Ordenar:</label>
-                <select value={sortClientesBy} onChange={(e) => { setSortClientesBy(e.target.value); setPageNum((p) => ({ ...p, clientes: 1 })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontFamily: "'Inter'", background: "#fff", color: "#0f172a", outline: "none", cursor: "pointer", minWidth: 160 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
+                <select value={sortClientesBy} onChange={(e) => { setSortClientesBy(e.target.value); setPageNum((p) => ({ ...p, clientes: 1 })); }} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 160 }}>
                   <option value="nombre">Nombre (A-Z)</option>
                   <option value="deuda">Quien más debe</option>
                   <option value="gasto">Mayor gasto</option>
                   <option value="cobrado">Más cobrado</option>
                 </select>
               </div>
-              <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "#f5f3ee", border: "1px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }} /></div>
+              <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }} /></div>
               <Btn variant="outline" size="sm" onClick={expClientes}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
@@ -1824,12 +1826,12 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                       {sinTelefono.length > 0 && <li><strong>{sinTelefono.length}</strong> sin teléfono</li>}
                       {sinDatos.length > 0 && <li><strong>{sinDatos.length}</strong> con nombre, código, Instagram, negocio o notas faltantes</li>}
                     </ul>
-                    <p style={{ margin: "8px 0 0", fontSize: 12, color: "#64748b" }}>Entrá a cada cliente y usá <strong>Editar</strong> para completar los datos. El correo es el más importante.</p>
+                    <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--sidebar-text)" }}>Entrá a cada cliente y usá <strong>Editar</strong> para completar los datos. El correo es el más importante.</p>
                   </div>
                 </div>
               ) : null;
             })()}
-            <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+            <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.clientes, totalPages);
@@ -1837,11 +1839,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               return (
                 <>
                   <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-clientes"><table><thead><tr>{["Cliente", "Código", "Instagram", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h} style={TH} className={i === 10 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "#94a3b8" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{c.codigo || "—"}</td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "#f5f3ee", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "#f5f3ee", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "#0f172a" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "#2563eb" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > 0 ? <span style={{ background: "#fef2f2", padding: "4px 10px", borderRadius: 8, color: "#e11d48", fontWeight: 600 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#059669" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= 0 ? "ok" : d.net > 0 ? "err" : "warn"; const stT = d.gross <= 0 ? "Al día" : d.net > 0 ? "Con deuda" : "Cubierto"; const TDC = { ...TD, fontSize: 14 }; const btnSize = { width: 34, height: 34 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} avatarUrl={c.avatar_url} /><div><div style={{ fontWeight: 600, fontSize: 14.5 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 12, color: "var(--sidebar-text-muted)" }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 600, color: "var(--sidebar-text-active)" }}>{c.codigo || "—"}</td><td style={{ ...TDC, color: "#e1306c", fontWeight: 600 }}>{c.ig ? "📷 " + c.ig : "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "3px 8px", background: "var(--color-bg)", borderRadius: 4, fontSize: 12 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "3px 8px", background: "var(--color-bg)", borderRadius: 4, fontSize: 12 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "var(--color-blue)" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > 0 ? <span style={{ background: "#fef2f2", padding: "4px 10px", borderRadius: 8, color: "#e11d48", fontWeight: 600 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 5 }}><IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={15} />} title="Dar acceso" style={{ ...btnSize, color: "#059669" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={15} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={15} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={11} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, clientes: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, #ea580c, #f97316)" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, clientes: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid var(--sidebar-border)", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))" : "var(--color-surface-2)", color: n === currentPage ? "var(--color-text-inverse)" : "var(--sidebar-text-active)", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1921,19 +1923,19 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 14 }}>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ position: "relative" }}>
-                <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
+                <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} />
                 <input
                   value={gastosSearch}
                   onChange={(e) => setGastosSearch(e.target.value)}
                   placeholder="Buscar por cliente, campaña o código..."
-                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "#f5f3ee", border: "1.5px solid #e2e8f0", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }}
+                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }}
                 />
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha desde" /><span style={{ color: "#94a3b8", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha desde" /><span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha hasta" /></div>
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.gastos, totalPages);
@@ -1951,11 +1953,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                     </div>
                   )}
                   <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-gastos"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined} title={h === "A cobrar" ? "Deuda neta del cliente: total pendiente menos garantías vigentes. Es el mismo monto en todas las filas de ese cliente (lo que falta cobrarle)." : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{g.codigo || "—"}</td><td style={{ ...TD, ...MN, color: "#0f172a" }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "#2563eb" }}>${fmt(g._f)}</td><td style={TD}><span style={{ background: "#f5f3ee", padding: "5px 10px", borderRadius: 8, border: "1px solid #e5e7eb", fontWeight: 700, color: "#0f172a" }}>${fmt(g._t)}</span></td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48" }}>${fmt(g._pend)}</td><td style={TD}><span style={{ fontWeight: 700, color: netCobrar > 0 ? "#e11d48" : "#059669" }} title={garVal > 0 ? "Pendiente menos garantía del cliente" : "Igual al pendiente (sin garantía)"}>${fmt(netCobrar)}</span></td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? <Bdg type="ok">Prepago</Bdg> : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#059669" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></TableScrollWrap>
+                    <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "var(--sidebar-text-active)" }}>{g.codigo || "—"}</td><td style={{ ...TD, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>${fmt(g._f)}</td><td style={TD}><span style={{ background: "var(--color-bg)", padding: "5px 10px", borderRadius: 8, border: "1px solid var(--sidebar-border)", fontWeight: 700, color: "var(--sidebar-text-active)" }}>${fmt(g._t)}</span></td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48" }}>${fmt(g._pend)}</td><td style={TD}><span style={{ fontWeight: 700, color: netCobrar > 0 ? "#e11d48" : "#059669" }} title={garVal > 0 ? "Pendiente menos garantía del cliente" : "Igual al pendiente (sin garantía)"}>${fmt(netCobrar)}</span></td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? <Bdg type="ok">Prepago</Bdg> : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "var(--sidebar-text)" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#059669" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></TableScrollWrap>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, gastos: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, #ea580c, #f97316)" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, gastos: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid var(--sidebar-border)", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))" : "var(--color-surface-2)", color: n === currentPage ? "var(--color-text-inverse)" : "var(--sidebar-text-active)", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -1975,15 +1977,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               </div>
               <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Filtrar por fecha de pago (también filtra la tabla)">
-                <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} />
-                <span style={{ color: "#94a3b8", fontSize: 11 }}>a</span>
-                <input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} />
+                <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} />
+                <span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span>
+                <input type="date" value={expRango.cobros.fin} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} />
               </div>
               <Btn variant="outline" size="sm" onClick={expCobros}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("cobro")}><Plus size={16} /> Registrar Cobro</Btn>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(cobrosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.cobros, totalPages);
@@ -2008,15 +2010,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                         <tr key={co.id}>
                           <td style={TD}><input type="checkbox" checked={sel.includes(co.id)} onChange={() => toggleSelect("cobros", co.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>
                           <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{co.codigo || "—"}</td>
-                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#64748b" }}>{g?.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "var(--sidebar-text-active)" }}>{co.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--sidebar-text)" }}>{g?.codigo || "—"}</td>
                           <td style={TD}>{fmtD(co.fecha)}</td>
                           <td style={TD}>{fmtT(co.hora)}</td>
                           <td style={TD}>{g ? fmtM(g.mes) + " " + (g.camp || "") : "—"}</td>
                           <td style={TD}><span style={{ background: "#ecfdf5", padding: "4px 10px", borderRadius: 8, border: "1px solid #d1fae5", color: "#059669", fontWeight: 700 }}>+${fmt(co.monto)}</span></td>
                           <td style={TD}><PayB method={co.metodo} /></td>
-                          <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={co.created_by || ""}>{createdByStr}</td>
-                          <td style={{ ...TD, fontSize: 11.5, color: "#94a3b8" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12, color: "var(--sidebar-text)" }} title={co.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "var(--sidebar-text-muted)" }} title={co.created_at ? fmtDt(co.created_at) : ""}>{co.created_at ? fmtDt(co.created_at) : "—"}</td>
                           <td style={{ ...TD, fontSize: 12.5, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}>{co.notas ? co.notas : <span style={{ color: "#cbd5e1" }}>Sin notas</span>}</td>
                           <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "cobro", id: co.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", border: "none", borderRadius: 8, background: "linear-gradient(135deg, #eff6ff, #dbeafe)", color: "#1d4ed8", fontSize: 12.5, fontWeight: 600, cursor: "pointer", boxShadow: "0 1px 4px rgba(37,99,235,.1)", transition: "all .15s" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td className="hm-col-actions" style={TD}><div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("cobro", co.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delCobro(co.id)} icon={<Trash2 size={13} />} danger /></div></td>
@@ -2026,7 +2028,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, cobros: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, #ea580c, #f97316)" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, cobros: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid var(--sidebar-border)", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))" : "var(--color-surface-2)", color: n === currentPage ? "var(--color-text-inverse)" : "var(--sidebar-text-active)", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -2056,12 +2058,12 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
               {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-              {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
+              {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
               <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(garantiasFiltradas.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.garantias, totalPages);
@@ -2088,16 +2090,16 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                         <tr key={g.id}>
                           {!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("garantias", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}
                           <td style={TD}>{c ? <div style={{ display: "flex", alignItems: "center", gap: 10 }}><Av name={c.name} size={30} avatarUrl={c.avatar_url} /><span style={{ fontWeight: 600, fontSize: 13 }}>{c.name}</span></div> : "—"}</td>
-                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "#0f172a" }}>{g.codigoVerificacion || "—"}</td>
-                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#64748b" }}>{gastoAsoc?.codigo || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "var(--sidebar-text-active)" }}>{g.codigoVerificacion || "—"}</td>
+                          <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--sidebar-text)" }}>{gastoAsoc?.codigo || "—"}</td>
                           <td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td>
                           <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
-                          <td style={{ ...TD, color: "#64748b", maxWidth: 200 }}>{g.desc || "—"}</td>
+                          <td style={{ ...TD, color: "var(--sidebar-text)", maxWidth: 200 }}>{g.desc || "—"}</td>
                           <td style={TD}><span style={{ background: "#f5f3ff", padding: "4px 10px", borderRadius: 8, border: "1px solid #ddd6fe", color: "#7c3aed", fontWeight: 600 }}>${fmt(g.valor)}</span></td>
                           <td style={TD}><Bdg type={estadoBdg}>{g.estado === "Vigente" ? "🛡️ " + g.estado : g.estado === "Ejecutada" ? "⚡ " + g.estado : g.estado === "Devuelta" ? "↩️ " + g.estado : g.estado}</Bdg></td>
                           <td style={TD}>{g.fechaColocacion ? fmtDD(g.fechaColocacion) : "—"}</td>
-                          <td style={{ ...TD, fontSize: 12, color: "#64748b" }} title={g.created_by || ""}>{createdByStr}</td>
-                          <td style={{ ...TD, fontSize: 11.5, color: "#94a3b8" }} title={g.created_at ? fmtDt(g.created_at) : ""}>{g.created_at ? fmtDt(g.created_at) : "—"}</td>
+                          <td style={{ ...TD, fontSize: 12, color: "var(--sidebar-text)" }} title={g.created_by || ""}>{createdByStr}</td>
+                          <td style={{ ...TD, fontSize: 11.5, color: "var(--sidebar-text-muted)" }} title={g.created_at ? fmtDt(g.created_at) : ""}>{g.created_at ? fmtDt(g.created_at) : "—"}</td>
                           <td style={TD}>{paths.length > 0 ? <button type="button" onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })} style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "5px 12px", border: "none", borderRadius: 8, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 12.5, fontWeight: 600, cursor: "pointer", boxShadow: "0 1px 4px rgba(124,58,237,.1)", transition: "all .15s" }}><Paperclip size={12} /> {paths.length}</button> : "—"}</td>
                           <td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("garantia", g.id)} icon={<Edit3 size={13} />} title="Editar" /><IBtn onClick={() => delGar(g.id)} icon={<Trash2 size={13} />} danger /></div>}</td>
                         </tr>
@@ -2106,7 +2108,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, garantias: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid #e2e8f0", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, #ea580c, #f97316)" : "#fff", color: n === currentPage ? "#fff" : "#0f172a", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
+                        <button key={n} type="button" onClick={() => setPageNum((p) => ({ ...p, garantias: n }))} style={{ minWidth: 36, height: 36, padding: "0 10px", border: n === currentPage ? "none" : "1.5px solid var(--sidebar-border)", borderRadius: 10, background: n === currentPage ? "linear-gradient(135deg, var(--color-primary-hover), var(--color-primary))" : "var(--color-surface-2)", color: n === currentPage ? "var(--color-text-inverse)" : "var(--sidebar-text-active)", fontWeight: n === currentPage ? 700 : 500, fontSize: 13.5, cursor: "pointer", fontFamily: "'Inter'", transition: "all .2s cubic-bezier(.4,0,.2,1)", boxShadow: n === currentPage ? "0 2px 8px rgba(249,115,22,.28)" : "none" }}>{n}</button>
                       ))}
                     </div>
                   )}
@@ -2127,16 +2129,16 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         )}
         <Inp label={editId ? "Código de cliente *" : "Código de cliente"} value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Obligatorio al editar."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram *" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario o —" /></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Al menos un número.</p></div>
-        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Correos * <span style={{ fontWeight: 500, color: "#dc2626" }}>(más importante)</span></label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /><p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Al menos un correo válido (con @).</p></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un número.</p></div>
+        <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Correos * <span style={{ fontWeight: 500, color: "#dc2626" }}>(más importante)</span></label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un correo válido (con @).</p></div>
         <Inp label="Negocio *" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce... o —" />
         <Inp label="Notas *" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional... o —" />
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Foto de perfil</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Foto de perfil</label>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {(editId || newClientDraftId) && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#0f172a", border: "1px solid #0f172a", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>
+                <label style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", background: "#0f172a", border: "1px solid #0f172a", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "var(--color-text-inverse)", cursor: "pointer", whiteSpace: "nowrap" }}>
                   <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={async (e) => {
                     const f = e.target.files?.[0];
                     const cid = editId || newClientDraftId;
@@ -2156,7 +2158,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   {uploadingAvatar ? "Subiendo…" : editId ? "Cambiar foto" : "Subir foto"}
                 </label>
                 {cf.avatar_url && (
-                  <button type="button" onClick={() => setCf((p) => ({ ...p, avatar_url: "" }))} style={{ padding: "8px 14px", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#dc2626", background: "#fff", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  <button type="button" onClick={() => setCf((p) => ({ ...p, avatar_url: "" }))} style={{ padding: "8px 14px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: "#dc2626", background: "var(--color-surface-2)", cursor: "pointer", whiteSpace: "nowrap" }}>
                     Eliminar foto
                   </button>
                 )}
@@ -2171,7 +2173,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       <Mdl open={modal === "gasto"} onClose={closeMdl} title={editId ? "Editar Gasto" : "Nuevo Gasto Mensual"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveGasto}>Guardar</Btn></>}>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Cliente *</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Cliente *</label>
           {(() => {
             const norm = (s) => (s || "").toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
             const resolveClient = (txt) => { if (!txt.trim()) return null; const exact = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (exact) return exact; const list = clients.filter((c) => norm(c.name || "").includes(norm(txt))); return list.length === 1 ? list[0] : null; };
@@ -2182,59 +2184,59 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             return (
             <>
           <div style={{ position: "relative" }}>
-            <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
+            <input type="text" value={gfClientNameInput} onChange={(e) => setGfClientNameInput(e.target.value)} placeholder="Escribí el nombre o elegí una sugerencia..." style={{ width: "100%", boxSizing: "border-box", padding: "10px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} onBlur={() => { const txt = gfClientNameInput.trim(); if (!txt) { setGf({ ...gf, clientId: "" }); return; } const c = clients.find((x) => norm((x.name || "").trim()) === norm(txt)); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else setGf({ ...gf, clientId: "" }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const c = resolveClient(gfClientNameInput); if (c) { setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); } else if (q) setGf({ ...gf, clientId: "" }); e.currentTarget.blur(); } }} />
             {showSuggestions && (
-            <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
-              <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "#94a3b8", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
+            <div style={{ position: "absolute", left: 0, right: 0, top: "100%", marginTop: 4, background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, boxShadow: "0 4px 12px rgba(0,0,0,.08)", maxHeight: 220, overflowY: "auto", zIndex: 20 }}>
+              <div style={{ padding: "6px 10px", fontSize: 11, fontWeight: 600, color: "var(--sidebar-text-muted)", borderBottom: "1px solid #eee" }}>Solo nombres que coinciden — elegí uno o seguí escribiendo</div>
               {sug.map((c) => (
-                <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "#0f172a", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#eff6ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
+                <button key={c.id} type="button" onMouseDown={(ev) => { ev.preventDefault(); setGf({ ...gf, clientId: c.id }); setGfClientNameInput(c.name); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 13px", border: "none", background: "none", fontFamily: "'Inter',sans-serif", fontSize: 13, color: "var(--sidebar-text-active)", cursor: "pointer" }} onMouseEnter={(e) => { e.currentTarget.style.background = "#eff6ff"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>{c.name}</button>
               ))}
             </div>
             )}
           </div>
-          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>
+          <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Escribí el nombre (aparecen solo los que coinciden). Enter o clic afuera fija el cliente.</p>
             </>
             );
           })()}
         </div>
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período * (solo mes y año)</label>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Período * (solo mes y año)</label>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <input type="month" value={gf.mes || tm()} onChange={(e) => { const v = e.target.value; if (v) setGf((p) => ({ ...p, mes: v, fechaMovimiento: v + "-15", periodoInput: v })); }} style={{ width: 160, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} title="Mes y año" />
-            <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#eff6ff", color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Este mes</button>
-            <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#f5f3ee", color: "#64748b", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Mes pasado</button>
-            <span style={{ fontSize: 12, color: "#94a3b8" }}>o</span>
-            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 120, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} />
+            <input type="month" value={gf.mes || tm()} onChange={(e) => { const v = e.target.value; if (v) setGf((p) => ({ ...p, mes: v, fechaMovimiento: v + "-15", periodoInput: v })); }} style={{ width: 160, boxSizing: "border-box", padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} title="Mes y año" />
+            <button type="button" onClick={() => { const y = new Date().getFullYear(), m = String(new Date().getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "#eff6ff", color: "var(--color-blue)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Este mes</button>
+            <button type="button" onClick={() => { const d = new Date(); d.setMonth(d.getMonth() - 1); const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, "0"); const key = `${y}-${m}`; setGf((p) => ({ ...p, mes: key, fechaMovimiento: key + "-15", periodoInput: key })); }} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-bg)", color: "var(--sidebar-text)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter'" }}>Mes pasado</button>
+            <span style={{ fontSize: 12, color: "var(--sidebar-text-muted)" }}>o</span>
+            <input type="text" placeholder="MM/AAAA o 2025-01" value={gf.periodoInput ?? gf.mes ?? ""} onChange={(e) => setGf({ ...gf, periodoInput: e.target.value })} onBlur={(e) => { const parsed = parsePeriodoInput(e.target.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const parsed = parsePeriodoInput(e.currentTarget.value); if (parsed) setGf((p) => ({ ...p, mes: parsed, fechaMovimiento: parsed + "-15", periodoInput: parsed })); e.currentTarget.blur(); } }} style={{ width: 120, boxSizing: "border-box", padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13.5, outline: "none" }} />
           </div>
-          <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>Solo mes y año. La fecha de movimiento se guarda como día 15 del mes.</div>
+          <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Solo mes y año. La fecha de movimiento se guarda como día 15 del mes.</div>
         </div>
         <Inp label="Campaña / referencia" value={gf.camp} onChange={(e) => setGf({ ...gf, camp: e.target.value })} placeholder="Ej. Campaña Feb 2025" />
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#0f172a" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "#64748b", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}><input type="checkbox" id="gf-prepago" checked={!!gf.prepago} onChange={(e) => setGf({ ...gf, prepago: e.target.checked })} style={{ width: 18, height: 18, accentColor: "#0f172a" }} /><label htmlFor="gf-prepago" style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-text)", cursor: "pointer" }}>Prepago (recarga) — marca este gasto como prepago (S/N en la tabla)</label></div>
         <Inp label="Gasto en Ads ($) *" type="number" step="0.01" min="0" value={gf.gasto} onChange={(e) => setGf({ ...gf, gasto: e.target.value })} placeholder="0.00" hint="Inversión en TikTok Ads (u otra red)" />
         <Inp label="Fee / Comisión (%)" type="number" step="0.1" min="0" max="100" value={gf.fee} onChange={(e) => setGf({ ...gf, fee: e.target.value })} hint="Porcentaje sobre el gasto" />
-        <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", padding: "16px 18px", borderRadius: 14, fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 15, fontWeight: 600, textAlign: "center", marginBottom: 18, color: "#0f172a", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}><span style={{ color: "#2563eb" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))}</span><span style={{ color: "#94a3b8" }}>→</span><span style={{ fontSize: 17, color: "#059669", fontWeight: 700 }}>Total: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</span></div>
+        <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", padding: "16px 18px", borderRadius: 14, fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 15, fontWeight: 600, textAlign: "center", marginBottom: 18, color: "var(--sidebar-text-active)", border: "1px solid #bfdbfe", display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}><span style={{ color: "var(--color-blue)" }}>Fee: ${fmt(parseFloat(gf.gasto || 0) * (parseFloat(gf.fee || 0) / 100))}</span><span style={{ color: "var(--sidebar-text-muted)" }}>→</span><span style={{ fontSize: 17, color: "#059669", fontWeight: 700 }}>Total: ${fmt(parseFloat(gf.gasto || 0) * (1 + parseFloat(gf.fee || 0) / 100))}</span></div>
         <Inp label="Notas" type="textarea" value={gf.notas} onChange={(e) => setGf({ ...gf, notas: e.target.value })} placeholder="Detalles del gasto o campaña..." />
         {editId && gf.prepago && !isCliente && (() => {
           const g = sGastos.find((x) => x.id === editId);
           if (!g || g._st === "Pagado") return null;
           const clienteNombre = clients.find((c) => c.id === g.clientId)?.name || "este gasto";
           return (
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>Cobro para este gasto (prepago)</div>
+            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--sidebar-hover)" }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", marginBottom: 8 }}>Cobro para este gasto (prepago)</div>
               <button type="button" onClick={() => openCobroForGastoId(editId)} style={{ display: "inline-flex", alignItems: "center", gap: 12, padding: "14px 20px", border: "2px dashed #10b981", borderRadius: 14, background: "linear-gradient(135deg, #ecfdf5, #d1fae5)", color: "#047857", fontSize: 14, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center", transition: "all .2s", boxShadow: "0 2px 8px rgba(5,150,105,.08)" }}>
                 <CreditCard size={20} /> Añadir cobro — {clienteNombre} · {g.codigo || fmtM(g.mes)} (pendiente ${fmt(g._pend)})
               </button>
-              <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>Se abre el formulario de cobro con este gasto y el monto pendiente ya cargados.</div>
+              <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 6 }}>Se abre el formulario de cobro con este gasto y el monto pendiente ya cargados.</div>
             </div>
           );
         })()}
         {gf.clientId && !isCliente && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #f1f5f9" }}>
-            <div style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 8 }}>Garantía para este cliente</div>
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--sidebar-hover)" }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", marginBottom: 8 }}>Garantía para este cliente</div>
             <button type="button" onClick={() => openGarantiaForClientId(gf.clientId)} style={{ display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 20px", border: "2px dashed #8b5cf6", borderRadius: 14, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 14, fontWeight: 600, fontFamily: "inherit", cursor: "pointer", width: "100%", justifyContent: "center", transition: "all .2s" }}>
               <Shield size={18} /> Añadir garantía para {clients.find((c) => c.id === gf.clientId)?.name || "este cliente"}
             </button>
-            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>Las garantías se descuentan de la deuda al calcular el pendiente neto.</div>
+            <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 6 }}>Las garantías se descuentan de la deuda al calcular el pendiente neto.</div>
           </div>
         )}
       </Mdl>
@@ -2245,7 +2247,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         title="Edición masiva de Fee"
         footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={applyBulkFee} disabled={!bulkFee.trim()}>Aplicar</Btn></>}
       >
-        <div style={{ marginBottom: 12, fontSize: 12.5, color: "#64748b" }}>
+        <div style={{ marginBottom: 12, fontSize: 12.5, color: "var(--sidebar-text)" }}>
           Elegí si querés actualizar solo los gastos seleccionados o todos los que están filtrados en la tabla, y luego defini el nuevo porcentaje de Fee.
         </div>
         <div style={{ marginBottom: 14, display: "flex", flexDirection: "column", gap: 6 }}>
@@ -2261,7 +2263,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <span>
               Solo gastos seleccionados
               {" "}
-              <span style={{ color: "#94a3b8" }}>({selectedIds.gastos.length} seleccionado(s))</span>
+              <span style={{ color: "var(--sidebar-text-muted)" }}>({selectedIds.gastos.length} seleccionado(s))</span>
             </span>
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
@@ -2275,7 +2277,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <span>
               Todos los gastos filtrados en la tabla
               {" "}
-              <span style={{ color: "#94a3b8" }}>({gastosFiltrados.length} gasto(s))</span>
+              <span style={{ color: "var(--sidebar-text-muted)" }}>({gastosFiltrados.length} gasto(s))</span>
             </span>
           </label>
         </div>
@@ -2288,7 +2290,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           onChange={(e) => setBulkFee(e.target.value)}
           hint="Se aplicará este porcentaje al gasto de cada fila incluida en el alcance elegido."
         />
-        <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>
+        <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>
           El total a cobrar de cada gasto se recalculará automáticamente según el nuevo Fee.
         </div>
       </Mdl>
@@ -2301,54 +2303,54 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 700, color: "#166534", marginBottom: 10 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />¿Cuánto pagó el cliente? ($) *</label>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <input type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="Ej. 1500" style={{ width: "100%", maxWidth: 260, padding: "16px 18px", fontSize: 24, fontWeight: 700, border: "2px solid #22c55e", borderRadius: 14, fontFamily: "var(--font-mono)", outline: "none", boxSizing: "border-box", background: "#f0fdf4", letterSpacing: -0.5 }} />
-            <button type="button" onClick={() => { const m = parseFloat(cof.monto) || 0; if (m <= 0) return; let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const ordenados = [...pendientes].sort((a, b) => (a.mes || "").localeCompare(b.mes || "") || (a.fechaMovimiento || "").localeCompare(b.fechaMovimiento || "")); let sum = 0; const ids = []; for (const g of ordenados) { ids.push(g.id); sum += g._pend; if (sum >= m) break; } setCof({ ...cof, gastoIds: ids }); }} style={{ padding: "10px 18px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, background: "linear-gradient(135deg, #22c55e, #10b981)", color: "#fff", cursor: "pointer", boxShadow: "0 2px 8px rgba(16,185,129,.3)" }}>✨ Sugerir gastos</button>
+            <button type="button" onClick={() => { const m = parseFloat(cof.monto) || 0; if (m <= 0) return; let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const ordenados = [...pendientes].sort((a, b) => (a.mes || "").localeCompare(b.mes || "") || (a.fechaMovimiento || "").localeCompare(b.fechaMovimiento || "")); let sum = 0; const ids = []; for (const g of ordenados) { ids.push(g.id); sum += g._pend; if (sum >= m) break; } setCof({ ...cof, gastoIds: ids }); }} style={{ padding: "10px 18px", fontSize: 13, fontWeight: 600, border: "none", borderRadius: 10, background: "linear-gradient(135deg, #22c55e, #10b981)", color: "var(--color-text-inverse)", cursor: "pointer", boxShadow: "0 2px 8px rgba(16,185,129,.3)" }}>✨ Sugerir gastos</button>
           </div>
           <p style={{ fontSize: 11, color: "#166534", marginTop: 8, marginBottom: 0 }}>Con este monto el sistema te mostrará qué gastos se cubren (total o parcial) y el resumen exacto del voucher.</p>
         </div>
         <div style={{ marginBottom: 14 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#64748b", display: "block", marginBottom: 6 }}>Aplicar monto</span>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--sidebar-text)", display: "block", marginBottom: 6 }}>Aplicar monto</span>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "orden"} onChange={() => setCof({ ...cof, distribucion: "orden" })} />En orden (primero el más antiguo)</label>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}><input type="radio" name="cof-distribucion" checked={cof.distribucion === "proporcional"} onChange={() => setCof({ ...cof, distribucion: "proporcional" })} />Proporcional al pendiente</label>
           </div>
-          <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
+          <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>En orden: se cubre primero el gasto más antiguo; si sobra, el siguiente. Pago parcial en un gasto (ej. $200 de $300) deja el resto pendiente.</p>
         </div>
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18, marginBottom: 14 }}>
-          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>{cof.sinAsignarGasto ? "Cliente del cobro *" : "Cliente (filtrar)"}</label><SearchSelect compact options={[{ value: "", label: cof.sinAsignarGasto ? "Elegir cliente..." : "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.sinAsignarGasto ? cof.clientId : cofFilterCliente} onChange={(id) => { const v = id || ""; if (cof.sinAsignarGasto) setCof({ ...cof, clientId: v }); setCofFilterCliente(v); }} placeholder={cof.sinAsignarGasto ? "Buscar cliente..." : "Todos..."} emptyMessage="Ningún cliente" /></div>
+          <div><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>{cof.sinAsignarGasto ? "Cliente del cobro *" : "Cliente (filtrar)"}</label><SearchSelect compact options={[{ value: "", label: cof.sinAsignarGasto ? "Elegir cliente..." : "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.sinAsignarGasto ? cof.clientId : cofFilterCliente} onChange={(id) => { const v = id || ""; if (cof.sinAsignarGasto) setCof({ ...cof, clientId: v }); setCofFilterCliente(v); }} placeholder={cof.sinAsignarGasto ? "Buscar cliente..." : "Todos..."} emptyMessage="Ningún cliente" /></div>
           <div style={{ opacity: cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período (filtrar)</label>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Período (filtrar)</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: cof.sinAsignarGasto ? "#f5f3ee" : "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "#0f172a" : "#94a3b8" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
-              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
-              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} disabled={cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: cof.sinAsignarGasto ? "#f5f3ee" : "#fff" }} title="Escribí 0125, 01/25 o MM/AAAA" />
-              {cofFilterPeriodo && <button type="button" disabled={cof.sinAsignarGasto} onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button>}
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontWeight: 600, color: cofFilterPeriodo ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{cofFilterPeriodo ? fmtM(cofFilterPeriodo) : "Todos"}</div>
+              <button type="button" disabled={cof.sinAsignarGasto} onClick={() => { const base = cofFilterPeriodo || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCofFilterPeriodo(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
+              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cofFilterPeriodo} onChange={(e) => setCofFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCofFilterPeriodo(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setCofFilterPeriodo(p); e.currentTarget.blur(); } }} disabled={cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: cof.sinAsignarGasto ? "var(--color-bg)" : "var(--color-surface-2)" }} title="Escribí 0125, 01/25 o MM/AAAA" />
+              {cofFilterPeriodo && <button type="button" disabled={cof.sinAsignarGasto} onClick={() => setCofFilterPeriodo("")} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button>}
             </div>
-            {cof.sinAsignarGasto && <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>Deshabilitado cuando el cobro es sin asignar. Usá «Período (mes/año)» más abajo.</div>}
+            {cof.sinAsignarGasto && <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 3 }}>Deshabilitado cuando el cobro es sin asignar. Usá «Período (mes/año)» más abajo.</div>}
           </div>
         </div>
         </>
         )}
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Gastos</label>
-          <p style={{ fontSize: 11, color: "#94a3b8", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Gastos</label>
+          <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginBottom: 6 }}>Elegí uno o varios gastos a los que se aplicará el pago, o <strong>Ninguna</strong> para registrar un cobro sin asignar a ningún gasto (ej. depósito general).</p>
           <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: cof.sinAsignarGasto ? "#fef3c7" : "transparent", border: cof.sinAsignarGasto ? "1px solid #f59e0b" : "1px solid #e5e7eb" }}>
             <input type="radio" name="cof-gasto-mode" checked={cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: true, gastoIds: [], clientId: cofFilterCliente || cof.clientId || "" })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#d97706" }} />
             <span style={{ fontSize: 13, fontWeight: cof.sinAsignarGasto ? 600 : 500, color: cof.sinAsignarGasto ? "#92400e" : "#1a1d26" }}>Ninguna — cobro sin asignar a ningún gasto</span>
           </label>
           <label style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", marginBottom: 8, borderRadius: 8, cursor: "pointer", background: !cof.sinAsignarGasto && (cof.gastoIds || []).length > 0 ? "#e6f7f0" : "transparent", border: !cof.sinAsignarGasto ? "1px solid #e5e7eb" : "1px solid #e5e7eb" }}>
             <input type="radio" name="cof-gasto-mode" checked={!cof.sinAsignarGasto} onChange={() => setCof({ ...cof, sinAsignarGasto: false })} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
-            <span style={{ fontSize: 13, fontWeight: 500, color: "#0f172a" }}>Asignar a uno o más gastos (elegir abajo)</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: "var(--sidebar-text-active)" }}>Asignar a uno o más gastos (elegir abajo)</span>
           </label>
           {editId && cof.sinAsignarGasto && (
             <div style={{ marginBottom: 12 }}>
-              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Cliente del cobro *</label>
+              <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Cliente del cobro *</label>
               <SearchSelect options={[{ value: "", label: "Elegir cliente..." }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={cof.clientId} onChange={(id) => setCof({ ...cof, clientId: id || "" })} placeholder="Buscar por nombre..." emptyMessage="Ningún cliente coincide" />
             </div>
           )}
-          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "#f5f3ee" : "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
-          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid #e5e7eb", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
-            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "#94a3b8" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+          <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "var(--color-bg)" : "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--sidebar-border)", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
+            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, cursor: "pointer", background: checked ? "linear-gradient(135deg, #ecfdf5, #d1fae5)" : "transparent", border: checked ? "1px solid #86efac" : "1px solid transparent", transition: "all .15s", marginBottom: 2 }}>
                 <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, sinAsignarGasto: false, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
                 <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} · {g.camp || "—"} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>
@@ -2358,19 +2360,19 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           {(cof.gastoIds || []).length > 0 && (
           <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "#059669", padding: "4px 10px", background: "#ecfdf5", borderRadius: 8 }}>Seleccionados: {(cof.gastoIds || []).length} — Pendiente sumado: ${fmt((cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0))}</span>
-            {!editId && <button type="button" onClick={() => { const sum = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, monto: sum > 0 ? sum.toFixed(2) : cof.monto }); }} style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: "none", borderRadius: 8, background: "linear-gradient(135deg, #059669, #10b981)", color: "#fff", cursor: "pointer", boxShadow: "0 2px 6px rgba(5,150,105,.2)" }}>Rellenar monto</button>}
+            {!editId && <button type="button" onClick={() => { const sum = (cof.gastoIds || []).reduce((a, gid) => { const g = sGastos.find((x) => x.id === gid); return a + (g ? g._pend : 0); }, 0); setCof({ ...cof, monto: sum > 0 ? sum.toFixed(2) : cof.monto }); }} style={{ padding: "6px 14px", fontSize: 12, fontWeight: 600, border: "none", borderRadius: 8, background: "linear-gradient(135deg, #059669, #10b981)", color: "var(--color-text-inverse)", cursor: "pointer", boxShadow: "0 2px 6px rgba(5,150,105,.2)" }}>Rellenar monto</button>}
           </div>
           )}
         </div>
         {!editId && (cof.gastoIds || []).length > 0 && parseFloat(cof.monto) > 0 && (
         <div style={{ marginBottom: 16, padding: "18px 20px", background: "linear-gradient(135deg, #f5f3ee, #eff6ff)", border: "1.5px solid #bfdbfe", borderRadius: 16, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: "50%", background: "rgba(37,99,235,.06)", pointerEvents: "none" }} />
-          <div style={{ fontSize: 14, fontWeight: 700, color: "#0f172a", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #059669)" }} />Resumen de aplicación</div>
-          <div style={{ fontSize: 13, color: "#334155", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>Total pagado: <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#059669", fontSize: 16, padding: "2px 8px", background: "#ecfdf5", borderRadius: 6 }}>${fmt(parseFloat(cof.monto) || 0)}</span></div>
-          <div style={{ overflowX: "auto", maxHeight: 220, overflowY: "auto", borderRadius: 10, border: "1px solid #e5e7eb", background: "#fff" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "var(--sidebar-text-active)", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #059669)" }} />Resumen de aplicación</div>
+          <div style={{ fontSize: 13, color: "var(--color-text)", marginBottom: 12, display: "flex", alignItems: "center", gap: 6 }}>Total pagado: <span style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: "#059669", fontSize: 16, padding: "2px 8px", background: "#ecfdf5", borderRadius: 6 }}>${fmt(parseFloat(cof.monto) || 0)}</span></div>
+          <div style={{ overflowX: "auto", maxHeight: 220, overflowY: "auto", borderRadius: 10, border: "1px solid var(--sidebar-border)", background: "var(--color-surface-2)" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5 }}>
-              <thead><tr style={{ background: "#f5f3ee" }}><th style={{ textAlign: "left", padding: "10px 12px", color: "#64748b", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Campaña</th><th style={{ textAlign: "left", padding: "10px 12px", color: "#64748b", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Período</th><th style={{ textAlign: "left", padding: "10px 12px", color: "#64748b", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Código</th><th style={{ textAlign: "right", padding: "10px 12px", color: "#64748b", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Antes</th><th style={{ textAlign: "right", padding: "10px 12px", color: "#059669", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Aplicado</th><th style={{ textAlign: "right", padding: "10px 12px", color: "#64748b", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Después</th></tr></thead>
-              <tbody>{resumenCobro.lineas.filter((l) => l.montoAplicado > 0).map((l, idx) => <tr key={l.gastoId} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#fff" : "#fafbfc" }}><td style={{ padding: "10px 12px", fontWeight: 500 }}>{l.camp}</td><td style={{ padding: "10px 12px" }}>{fmtM(l.mes)}</td><td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontSize: 11.5, color: "#0f172a" }}>{l.codigo}</td><td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "var(--font-mono)" }}>${fmt(l.pendienteAntes)}</td><td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: "#059669", fontFamily: "var(--font-mono)" }}>+${fmt(l.montoAplicado)}</td><td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: l.pendienteDespues > 0 ? "#e11d48" : "#059669", fontWeight: 600 }}>${fmt(l.pendienteDespues)}</td></tr>)}</tbody>
+              <thead><tr style={{ background: "var(--color-bg)" }}><th style={{ textAlign: "left", padding: "10px 12px", color: "var(--sidebar-text)", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Campaña</th><th style={{ textAlign: "left", padding: "10px 12px", color: "var(--sidebar-text)", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Período</th><th style={{ textAlign: "left", padding: "10px 12px", color: "var(--sidebar-text)", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Código</th><th style={{ textAlign: "right", padding: "10px 12px", color: "var(--sidebar-text)", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Antes</th><th style={{ textAlign: "right", padding: "10px 12px", color: "#059669", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Aplicado</th><th style={{ textAlign: "right", padding: "10px 12px", color: "var(--sidebar-text)", fontWeight: 600, borderBottom: "1px solid #e5e7eb", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }}>Después</th></tr></thead>
+              <tbody>{resumenCobro.lineas.filter((l) => l.montoAplicado > 0).map((l, idx) => <tr key={l.gastoId} style={{ borderBottom: "1px solid var(--sidebar-hover)", background: idx % 2 === 0 ? "var(--color-surface-2)" : "var(--color-surface)" }}><td style={{ padding: "10px 12px", fontWeight: 500 }}>{l.camp}</td><td style={{ padding: "10px 12px" }}>{fmtM(l.mes)}</td><td style={{ padding: "10px 12px", fontFamily: "var(--font-mono)", fontSize: 11.5, color: "var(--sidebar-text-active)" }}>{l.codigo}</td><td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "var(--font-mono)" }}>${fmt(l.pendienteAntes)}</td><td style={{ padding: "10px 12px", textAlign: "right", fontWeight: 700, color: "#059669", fontFamily: "var(--font-mono)" }}>+${fmt(l.montoAplicado)}</td><td style={{ padding: "10px 12px", textAlign: "right", fontFamily: "var(--font-mono)", color: l.pendienteDespues > 0 ? "#e11d48" : "#059669", fontWeight: 600 }}>${fmt(l.pendienteDespues)}</td></tr>)}</tbody>
             </table>
           </div>
           {resumenCobro.excedente > 0 && <div style={{ marginTop: 12, padding: "12px 14px", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", border: "1.5px solid #fbbf24", borderRadius: 10, fontSize: 13, color: "#92400e", fontWeight: 600, display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 18 }}>⚡</span> Excedente ${fmt(resumenCobro.excedente)} → se registra como garantía para el siguiente mes</div>}
@@ -2380,15 +2382,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           {editId && <div><Inp label="Monto total ($) *" type="number" step="0.01" min="0" value={cof.monto} onChange={(e) => setCof({ ...cof, monto: e.target.value })} placeholder="0.00" /></div>}
           <Inp label={cof.sinAsignarGasto ? "Fecha de pago" : "Fecha"} type="date" value={cof.fecha} onChange={(e) => setCof({ ...cof, fecha: e.target.value })} />
           <div style={{ marginBottom: 14, minWidth: 0, opacity: !cof.sinAsignarGasto ? 0.5 : 1, pointerEvents: !cof.sinAsignarGasto ? "none" : "auto" }}>
-            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período (mes/año) para el resumen</label>
+            <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Período (mes/año) para el resumen</label>
             <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-              <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => { const base = (cof.periodoResumen && String(cof.periodoResumen).trim()) || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCof({ ...cof, periodoResumen: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") }); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
-              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 600, color: (cof.periodoResumen && String(cof.periodoResumen).trim()) ? "#0f172a" : "#94a3b8" }}>{(cof.periodoResumen && String(cof.periodoResumen).trim()) ? fmtM(normalizePeriod(String(cof.periodoResumen).trim())) : "Elegir mes"}</div>
-              <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => { const base = (cof.periodoResumen && String(cof.periodoResumen).trim()) || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCof({ ...cof, periodoResumen: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") }); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#0f172a", cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
-              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cof.periodoResumen ?? ""} onChange={(e) => setCof({ ...cof, periodoResumen: e.target.value })} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, periodoResumen: p }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, periodoResumen: p }); e.currentTarget.blur(); } } }} disabled={!cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: !cof.sinAsignarGasto ? "#f5f3ee" : "#fff" }} title="Escribí 0125, 01/25 o MM/AAAA. Mes en que cuenta este cobro en el resumen; la fecha de pago no se modifica." />
-              {(cof.periodoResumen && String(cof.periodoResumen).trim()) ? <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => setCof({ ...cof, periodoResumen: "" })} style={{ padding: "6px 10px", border: "1px solid #e5e7eb", borderRadius: 8, background: "#fff", color: "#94a3b8", fontSize: 11, fontWeight: 600, cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button> : null}
+              <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => { const base = (cof.periodoResumen && String(cof.periodoResumen).trim()) || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setCof({ ...cof, periodoResumen: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") }); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={18} /></button>
+              <div style={{ flex: 1, minWidth: 100, textAlign: "center", padding: "8px 10px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontWeight: 600, color: (cof.periodoResumen && String(cof.periodoResumen).trim()) ? "#0f172a" : "#94a3b8" }}>{(cof.periodoResumen && String(cof.periodoResumen).trim()) ? fmtM(normalizePeriod(String(cof.periodoResumen).trim())) : "Elegir mes"}</div>
+              <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => { const base = (cof.periodoResumen && String(cof.periodoResumen).trim()) || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setCof({ ...cof, periodoResumen: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") }); }} style={{ width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={18} /></button>
+              <input type="text" placeholder="0125, 01/25, MM/AAAA" value={cof.periodoResumen ?? ""} onChange={(e) => setCof({ ...cof, periodoResumen: e.target.value })} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setCof({ ...cof, periodoResumen: p }); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) { setCof({ ...cof, periodoResumen: p }); e.currentTarget.blur(); } } }} disabled={!cof.sinAsignarGasto} style={{ width: 100, boxSizing: "border-box", padding: "8px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none", background: !cof.sinAsignarGasto ? "var(--color-bg)" : "var(--color-surface-2)" }} title="Escribí 0125, 01/25 o MM/AAAA. Mes en que cuenta este cobro en el resumen; la fecha de pago no se modifica." />
+              {(cof.periodoResumen && String(cof.periodoResumen).trim()) ? <button type="button" disabled={!cof.sinAsignarGasto} onClick={() => setCof({ ...cof, periodoResumen: "" })} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: !cof.sinAsignarGasto ? "not-allowed" : "pointer" }}>Limpiar</button> : null}
             </div>
-            <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 3 }}>{cof.sinAsignarGasto ? "En qué mes debe aparecer en el resumen (ej. marzo). La <strong>Fecha</strong> de pago es independiente: podés pagar en febrero y que cuente para marzo." : "Solo para cobros sin asignar. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
+            <div style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 3 }}>{cof.sinAsignarGasto ? "En qué mes debe aparecer en el resumen (ej. marzo). La <strong>Fecha</strong> de pago es independiente: podés pagar en febrero y que cuente para marzo." : "Solo para cobros sin asignar. Si asignás a gastos, usá «Período (filtrar)» arriba."}</div>
           </div>
           {editId && <span />}
         </div>
@@ -2419,8 +2421,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         )}
         <Inp label="Notas" type="textarea" value={cof.notas} onChange={(e) => setCof({ ...cof, notas: e.target.value })} placeholder="Nro. operación..." />
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
-          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--sidebar-text-active)", marginBottom: 6 }}>Comprobantes de pago (opcional)</label>
+          <p style={{ fontSize: 12, color: "var(--sidebar-text)", marginBottom: 8 }}>Podés subir fotos de comprobantes de pago (imagen o PDF, máx. 10 MB cada uno).</p>
           {editId && cobroEditComprobantePaths.length > 0 && (
             <ul style={{ marginBottom: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
               {cobroEditComprobantePaths.map((path, i) => {
@@ -2429,24 +2431,24 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
                 const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && e.preventDefault() && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "var(--sidebar-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid var(--color-blue)" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
-                        <FileText size={28} style={{ color: "#64748b" }} />
+                        <FileText size={28} style={{ color: "var(--sidebar-text)" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
+                        <span style={{ fontSize: 10, color: "var(--sidebar-text-muted)" }}>Cargando…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "var(--sidebar-text-active)", minWidth: 0 }} title={name}>{name}</span>
                     <button type="button" onClick={(e) => { e.stopPropagation(); setCobroEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
@@ -2466,24 +2468,24 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 const isPdf = f.type === "application/pdf";
                 const canPreview = !!url;
                 return (
-                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf, name: f.name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf, name: f.name }))}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "var(--sidebar-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid var(--color-blue)" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
                       ) : url && isPdf ? (
-                        <FileText size={28} style={{ color: "#64748b" }} />
+                        <FileText size={28} style={{ color: "var(--sidebar-text)" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>…</span>
+                        <span style={{ fontSize: 10, color: "var(--sidebar-text-muted)" }}>…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={f.name}>{f.name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "var(--sidebar-text-active)", minWidth: 0 }} title={f.name}>{f.name}</span>
                     <button type="button" onClick={() => setCobroComprobanteFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
@@ -2501,17 +2503,17 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           onClick={() => setCobroPreviewViewer(null)}
           style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.85)", backdropFilter: "blur(16px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, boxSizing: "border-box" }}
         >
-          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "95vw", maxHeight: "95vh", display: "flex", flexDirection: "column", alignItems: "center", background: "#fff", borderRadius: 20, overflow: "hidden", boxShadow: "0 32px 100px rgba(0,0,0,.35)", border: "1px solid rgba(255,255,255,.1)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #e5e7eb", width: "100%", background: "#f5f3ee" }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(95vw - 100px)" }}>{cobroPreviewViewer.name}</span>
-              <button type="button" onClick={() => setCobroPreviewViewer(null)} style={{ width: 36, height: 36, border: "none", background: "#e5e7eb", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} aria-label="Cerrar"><X size={18} style={{ color: "#64748b" }} /></button>
+          <div onClick={(e) => e.stopPropagation()} style={{ position: "relative", maxWidth: "95vw", maxHeight: "95vh", display: "flex", flexDirection: "column", alignItems: "center", background: "var(--color-surface-2)", borderRadius: 20, overflow: "hidden", boxShadow: "0 32px 100px rgba(0,0,0,.35)", border: "1px solid rgba(255,255,255,.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid #e5e7eb", width: "100%", background: "var(--color-bg)" }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-text-active)", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "calc(95vw - 100px)" }}>{cobroPreviewViewer.name}</span>
+              <button type="button" onClick={() => setCobroPreviewViewer(null)} style={{ width: 36, height: 36, border: "none", background: "var(--sidebar-border)", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} aria-label="Cerrar"><X size={18} style={{ color: "var(--sidebar-text)" }} /></button>
             </div>
             <div style={{ padding: 16, maxHeight: "85vh", overflow: "auto", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {cobroPreviewViewer.isPdf ? (
                 <div style={{ textAlign: "center", padding: "24px 32px" }}>
-                  <FileText size={48} style={{ color: "#64748b", marginBottom: 12 }} />
-                  <p style={{ fontSize: 14, color: "#64748b", marginBottom: 16 }}>PDF — abrirlo para ver el contenido</p>
-                  <a href={cobroPreviewViewer.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "#2563eb", color: "#fff", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={16} /> Abrir en nueva pestaña</a>
+                  <FileText size={48} style={{ color: "var(--sidebar-text)", marginBottom: 12 }} />
+                  <p style={{ fontSize: 14, color: "var(--sidebar-text)", marginBottom: 16 }}>PDF — abrirlo para ver el contenido</p>
+                  <a href={cobroPreviewViewer.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", background: "var(--color-blue)", color: "var(--color-text-inverse)", borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={16} /> Abrir en nueva pestaña</a>
                 </div>
               ) : (
                 <img src={cobroPreviewViewer.url} alt="" style={{ maxWidth: "85vw", maxHeight: "80vh", width: "auto", height: "auto", objectFit: "contain", display: "block" }} referrerPolicy="no-referrer" />
@@ -2531,26 +2533,26 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div style={{ padding: "16px 0" }}>
                 <p style={{ fontSize: 13, color: "#059669", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.message}</p>
                 <div style={{ background: "linear-gradient(135deg, #f5f3ee, #ecfdf5)", borderRadius: 14, padding: 20, fontSize: 14, border: "1px solid #d1fae5" }}>
-                  <div style={{ marginBottom: 8 }}><span style={{ color: "#64748b", fontSize: 12 }}>Correo:</span> <strong style={{ color: "#0f172a" }}>{accesoResultado.email}</strong></div>
+                  <div style={{ marginBottom: 8 }}><span style={{ color: "var(--sidebar-text)", fontSize: 12 }}>Correo:</span> <strong style={{ color: "var(--sidebar-text-active)" }}>{accesoResultado.email}</strong></div>
                   {accesoResultado.link && (
                     <div style={{ marginTop: 12 }}>
-                      <span style={{ fontSize: 12, color: "#64748b", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
-                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "monospace", background: "#fff" }} />
+                      <span style={{ fontSize: 12, color: "var(--sidebar-text)", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
+                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "monospace", background: "var(--color-surface-2)" }} />
                     </div>
                   )}
                 </div>
                 {accesoResultado.alreadyHadAccess && !accesoResultado.link && (
-                  <p style={{ fontSize: 11, color: "#94a3b8", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
+                  <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "var(--color-blue)", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
                 )}
               </div>
             );
           }
           return (
             <>
-              <p style={{ marginBottom: 14, fontSize: 13, color: "#64748b" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
+              <p style={{ marginBottom: 14, fontSize: 13, color: "var(--sidebar-text)" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
               <div style={{ background: "linear-gradient(135deg, #f5f3ee, #ecfdf5)", borderRadius: 14, padding: 20, fontSize: 14, border: "1px solid #d1fae5" }}>
-                <span style={{ fontSize: 12, color: "#64748b" }}>Correo al que se enviará: </span>
-                <strong style={{ color: "#0f172a" }}>{firstEmail || "—"}</strong>
+                <span style={{ fontSize: 12, color: "var(--sidebar-text)" }}>Correo al que se enviará: </span>
+                <strong style={{ color: "var(--sidebar-text-active)" }}>{firstEmail || "—"}</strong>
               </div>
               {(!firstEmail || !String(firstEmail).includes("@")) && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 8 }}>Este cliente no tiene correo. Agrega uno en Editar cliente.</p>}
             </>
@@ -2561,15 +2563,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período en resumen (mes) *</label>
-          <input type="month" value={(gaf.periodoResumen && String(gaf.periodoResumen).length >= 7) ? String(gaf.periodoResumen).slice(0, 7) : tm()} onChange={(e) => { const v = e.target.value || tm(); setGaf({ ...gaf, periodoResumen: v }); setGafFilterPeriodo(normalizePeriod(v)); }} style={{ width: "100%", maxWidth: 200, boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} title="Mes en que esta garantía cuenta en el resumen (Crédito / Mi cuenta)" />
-          <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Debe coincidir con el mes que ves en el resumen (ej. marzo). No es lo mismo que la fecha del depósito.</div>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Período en resumen (mes) *</label>
+          <input type="month" value={(gaf.periodoResumen && String(gaf.periodoResumen).length >= 7) ? String(gaf.periodoResumen).slice(0, 7) : tm()} onChange={(e) => { const v = e.target.value || tm(); setGaf({ ...gaf, periodoResumen: v }); setGafFilterPeriodo(normalizePeriod(v)); }} style={{ width: "100%", maxWidth: 200, boxSizing: "border-box", padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} title="Mes en que esta garantía cuenta en el resumen (Crédito / Mi cuenta)" />
+          <div style={{ fontSize: 11, color: "var(--sidebar-text)", marginTop: 4 }}>Debe coincidir con el mes que ves en el resumen (ej. marzo). No es lo mismo que la fecha del depósito.</div>
         </div>
         {gaf.clientId && (
         <div style={{ marginBottom: 14 }}>
-          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "#334155", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
-          <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
-          <div style={{ fontSize: 11, color: "#64748b", marginTop: 4 }}>Se rellena solo con el mes del resumen (arriba). Borrá el campo si querés ver gastos de todos los meses.</div>
+          <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Período (filtrar gasto asociado)</label>
+          <input type="text" placeholder="MM/AAAA — opcional" value={gafFilterPeriodo} onChange={(e) => setGafFilterPeriodo(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGafFilterPeriodo(p); }} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
+          <div style={{ fontSize: 11, color: "var(--sidebar-text)", marginTop: 4 }}>Se rellena solo con el mes del resumen (arriba). Borrá el campo si querés ver gastos de todos los meses.</div>
         </div>
         )}
         <Inp label="Gasto asociado (opcional)" type="select" value={gaf.gastoId || ""} onChange={(e) => setGaf({ ...gaf, gastoId: e.target.value === "" ? "" : e.target.value })}><option value="">Ninguno</option>{gaf.clientId && sGastos.filter((g) => g.clientId === gaf.clientId).filter((g) => !gafFilterPeriodo || g.mes === gafFilterPeriodo).map((g) => <option key={g.id} value={g.id}>{g.codigo || "—"} — {fmtM(g.mes)} {g.camp ? "· " + g.camp + " " : ""}· ${fmt(g.gasto)}</option>)}</Inp>
@@ -2580,12 +2582,12 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <Inp label="Descripción" type="textarea" value={gaf.desc} onChange={(e) => setGaf({ ...gaf, desc: e.target.value })} placeholder="Detalle..." />
         <Inp label="Fecha de colocación (opcional)" type="date" value={gaf.fechaColocacion || ""} onChange={(e) => setGaf({ ...gaf, fechaColocacion: e.target.value })} hint="Cuándo el cliente te depositó la garantía" />
         <Inp label="Estado" type="select" value={gaf.estado} onChange={(e) => setGaf({ ...gaf, estado: e.target.value })}><option>Vigente</option><option>Devuelta</option><option>Ejecutada</option></Inp>
-        <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", borderRadius: 14, padding: "14px 16px", marginBottom: 16, fontSize: 13, color: "#0f172a", border: "1px solid #bfdbfe", boxShadow: "0 1px 4px rgba(37,99,235,.06)" }}>
+        <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", borderRadius: 14, padding: "14px 16px", marginBottom: 16, fontSize: 13, color: "var(--sidebar-text-active)", border: "1px solid #bfdbfe", boxShadow: "0 1px 4px rgba(37,99,235,.06)" }}>
           <strong>Se verá reflejada en:</strong> Reportes (columna Garantía y Pend. neto) y en Gastos (columna A cobrar). Al guardar, te llevamos a Reportes para que lo veas al instante.
         </div>
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#0f172a", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
-          <p style={{ fontSize: 12, color: "#64748b", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--sidebar-text-active)", marginBottom: 6 }}>Imágenes correspondientes (opcional)</label>
+          <p style={{ fontSize: 12, color: "var(--sidebar-text)", marginBottom: 8 }}>Podés subir las imágenes o comprobantes asociados a la garantía (imagen o PDF, máx. 10 MB cada uno).</p>
           {editId && garantiaEditComprobantePaths.length > 0 && (
             <ul style={{ marginBottom: 10, paddingLeft: 0, listStyle: "none", display: "flex", flexWrap: "wrap", gap: 12 }}>
               {garantiaEditComprobantePaths.map((path, i) => {
@@ -2594,24 +2596,24 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
                 const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && e.preventDefault() && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "var(--sidebar-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
-                        <FileText size={28} style={{ color: "#64748b" }} />
+                        <FileText size={28} style={{ color: "var(--sidebar-text)" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
+                        <span style={{ fontSize: 10, color: "var(--sidebar-text-muted)" }}>Cargando…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "var(--sidebar-text-active)", minWidth: 0 }} title={name}>{name}</span>
                     <button type="button" onClick={(e) => { e.stopPropagation(); setGarantiaEditComprobantePaths((p) => p.filter((_, j) => j !== i)); }} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
@@ -2631,24 +2633,24 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 const isPdf = f.type === "application/pdf";
                 const canPreview = !!url;
                 return (
-                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                  <li key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf, name: f.name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf, name: f.name }))}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "var(--sidebar-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #8b5cf6" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} />
                       ) : url && isPdf ? (
-                        <FileText size={28} style={{ color: "#64748b" }} />
+                        <FileText size={28} style={{ color: "var(--sidebar-text)" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>…</span>
+                        <span style={{ fontSize: 10, color: "var(--sidebar-text-muted)" }}>…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={f.name}>{f.name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "var(--sidebar-text-active)", minWidth: 0 }} title={f.name}>{f.name}</span>
                     <button type="button" onClick={() => setGarantiaImagenNewFiles((p) => p.filter((_, j) => j !== i))} style={{ padding: "6px 10px", border: "none", background: "#fee2e2", color: "#dc2626", borderRadius: 6, fontSize: 11, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>Quitar</button>
                   </li>
                 );
@@ -2668,26 +2670,26 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 const isImage = /\.(jpe?g|png|gif|webp)$/i.test(name);
                 const canPreview = !!url;
                 return (
-                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#f5f3ee", border: "1px solid #e5e7eb", borderRadius: 10, minWidth: 0 }}>
+                  <li key={path} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 10, minWidth: 0 }}>
                     <div
                       role="button"
                       tabIndex={0}
                       onClick={() => canPreview && setCobroPreviewViewer({ url, isPdf: !isImage, name })}
                       onKeyDown={(e) => canPreview && (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setCobroPreviewViewer({ url, isPdf: !isImage, name }))}
-                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "#e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid #2563eb" : "none" }}
+                      style={{ width: 56, height: 56, borderRadius: 8, overflow: "hidden", background: "var(--sidebar-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", cursor: canPreview ? "pointer" : "default", border: canPreview ? "2px solid var(--color-blue)" : "none" }}
                       title={canPreview ? "Clic para ver en grande" : ""}
                     >
                       {url && isImage ? (
                         <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }} referrerPolicy="no-referrer" />
                       ) : url && !isImage ? (
-                        <FileText size={28} style={{ color: "#64748b" }} />
+                        <FileText size={28} style={{ color: "var(--sidebar-text)" }} />
                       ) : (
-                        <span style={{ fontSize: 10, color: "#94a3b8" }}>Cargando…</span>
+                        <span style={{ fontSize: 10, color: "var(--sidebar-text-muted)" }}>Cargando…</span>
                       )}
                     </div>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "#0f172a", minWidth: 0 }} title={name}>{name}</span>
+                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", fontSize: 12, color: "var(--sidebar-text-active)", minWidth: 0 }} title={name}>{name}</span>
                     {url && !isImage && (
-                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", background: "#2563eb", color: "#fff", borderRadius: 6, fontSize: 11, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={12} /> Abrir</a>
+                      <a href={url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, padding: "6px 10px", background: "var(--color-blue)", color: "var(--color-text-inverse)", borderRadius: 6, fontSize: 11, fontWeight: 600, textDecoration: "none" }}><ExternalLink size={12} /> Abrir</a>
                     )}
                   </li>
                 );
