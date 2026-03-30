@@ -682,6 +682,23 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     });
   }, [repPeriodoMes, repPerInicio, repPerFin, repCl, sGastos, cobros, gastos]);
 
+  const repWeeklySummary = useMemo(() => {
+    if (!repWeeklySeries.length) return { invTotal: 0, cobTotal: 0, weeksWithInv: 0, weeksWithCob: 0 };
+    return repWeeklySeries.reduce(
+      (acc, w) => {
+        const inv = (w.ads || 0) + (w.fee || 0);
+        const cob = w.cobrado || 0;
+        return {
+          invTotal: acc.invTotal + inv,
+          cobTotal: acc.cobTotal + cob,
+          weeksWithInv: acc.weeksWithInv + (inv > 0 ? 1 : 0),
+          weeksWithCob: acc.weeksWithCob + (cob > 0 ? 1 : 0),
+        };
+      },
+      { invTotal: 0, cobTotal: 0, weeksWithInv: 0, weeksWithCob: 0 },
+    );
+  }, [repWeeklySeries]);
+
   /* Dashboard charts */
   const dCharts = useMemo(() => ({
     monthly: months.map((m) => {
@@ -1785,49 +1802,95 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Ya descontadas garantías` : ""} />
             </div>
             {repPeriodoMes ? (
-              <div className="hm-chart-card" style={{ marginBottom: 28, background: "linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-2) 100%)", border: "1px solid var(--sidebar-border)", boxShadow: "0 2px 14px rgba(15,23,42,.05)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: -0.3, fontFamily: "var(--font-display)", color: "var(--sidebar-text-active)" }}>Desglose semanal</h4>
-                    <p style={{ fontSize: 12.5, color: "var(--sidebar-text-muted)", margin: 0, lineHeight: 1.55, maxWidth: 680 }}>
-                      <strong style={{ color: "var(--sidebar-text)" }}>{fmtM(repPeriodoMes)}</strong>
-                      {" · "}Bloques de 7 días (1–7, 8–14, …). Barras: ads y fee por <strong>fecha de movimiento</strong>. Línea: cobros con <strong>fecha de pago</strong> en el mes y período contable aquí (puede diferir levemente del total superior).
+              <div className="hm-chart-card hm-weekly-chart-card" style={{ marginBottom: 28, background: "linear-gradient(180deg, #fffdfb 0%, var(--color-surface-2) 100%)", border: "1px solid var(--sidebar-border)", borderTop: "3px solid #fb923c", boxShadow: "0 2px 20px rgba(15,23,42,.06)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+                  <div style={{ minWidth: 0, flex: "1 1 280px" }}>
+                    <h4 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.35, fontFamily: "var(--font-display)", color: "var(--sidebar-text-active)" }}>Desglose semanal del mes</h4>
+                    <p style={{ fontSize: 12.5, color: "var(--sidebar-text)", margin: "0 0 10px", lineHeight: 1.5, maxWidth: 720 }}>
+                      <strong>{fmtM(repPeriodoMes)}</strong>
+                      {" — "}cada barra agrupa <strong>7 días</strong> del calendario (1–7, 8–14, …). Las <strong>dos escalas</strong> son independientes: a la izquierda solo inversión (Ads+Fee); a la derecha solo cobrado, para que se vean bien aunque los montos sean muy distintos.
                     </p>
+                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "var(--sidebar-text-muted)", lineHeight: 1.55, maxWidth: 720 }}>
+                      <li><span style={{ color: "#6366f1", fontWeight: 600 }}>Barras (eje izquierdo):</span> suma de Ads y Fee según la <strong>fecha de movimiento</strong> del gasto en esa semana.</li>
+                      <li><span style={{ color: "#059669", fontWeight: 600 }}>Línea (eje derecho):</span> cobros cuya <strong>fecha de pago</strong> cae en esa semana y el cobro cuenta en este mes contable. No tiene por qué coincidir con la tarjeta “Cobrado” de arriba si hay pagos registrados con otra fecha.</li>
+                    </ul>
                   </div>
+                  {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, minWidth: 220, flexShrink: 0 }}>
+                      <div style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%)", border: "1px solid #c7d2fe", borderRadius: 12, padding: "12px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#4f46e5", textTransform: "uppercase", letterSpacing: 0.6 }}>En gráfico · Inversión</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: "#312e81", fontVariantNumeric: "tabular-nums", marginTop: 4 }}>${fmt(repWeeklySummary.invTotal)}</div>
+                        <div style={{ fontSize: 11, color: "#6366f1", marginTop: 4 }}>Ads + Fee (suma semanas)</div>
+                      </div>
+                      <div style={{ background: "linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)", border: "1px solid #a7f3d0", borderRadius: 12, padding: "12px 14px" }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, color: "#047857", textTransform: "uppercase", letterSpacing: 0.6 }}>En gráfico · Cobrado</div>
+                        <div style={{ fontSize: 18, fontWeight: 700, color: "#065f46", fontVariantNumeric: "tabular-nums", marginTop: 4 }}>${fmt(repWeeklySummary.cobTotal)}</div>
+                        <div style={{ fontSize: 11, color: "#059669", marginTop: 4 }}>Por fecha de pago</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) ? (
-                  <ResponsiveContainer width="100%" height={286}>
-                    <ComposedChart data={repWeeklySeries} margin={{ top: 12, right: 12, left: 4, bottom: 4 }}>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <ComposedChart data={repWeeklySeries} margin={{ top: 8, right: 18, left: 8, bottom: 8 }} barCategoryGap="18%">
                       <CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)", fontWeight: 600 }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)", fontWeight: 600 }} axisLine={false} tickLine={false} label={{ value: "Semanas del mes (días)", position: "insideBottom", offset: -4, fontSize: 11, fill: "var(--sidebar-text-muted)" }} />
+                      <YAxis
+                        yAxisId="inv"
+                        orientation="left"
+                        tick={{ fontSize: 11, fill: "#4f46e8" }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => "$" + fmt(v)}
+                        width={56}
+                        label={{ value: "Inversión (Ads+Fee)", angle: -90, position: "insideLeft", offset: 10, style: { fill: "#4f46e8", fontSize: 11, fontWeight: 600 } }}
+                      />
+                      <YAxis
+                        yAxisId="cob"
+                        orientation="right"
+                        tick={{ fontSize: 11, fill: "#059669" }}
+                        axisLine={false}
+                        tickLine={false}
+                        tickFormatter={(v) => "$" + fmt(v)}
+                        width={56}
+                        label={{ value: "Cobrado", angle: 90, position: "insideRight", offset: 10, style: { fill: "#059669", fontSize: 11, fontWeight: 600 } }}
+                      />
                       <Tooltip
                         content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           const row = payload[0]?.payload;
+                          const inv = (row?.ads || 0) + (row?.fee || 0);
                           return (
-                            <div style={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.14)", padding: "12px 16px", background: "var(--color-surface)", minWidth: 200 }}>
-                              <div style={{ fontWeight: 700, color: "var(--sidebar-text-active)", marginBottom: 4 }}>Semana {row?.name}</div>
-                              <div style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)", marginBottom: 10 }}>{row?.rangeLabel}</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontVariantNumeric: "tabular-nums" }}>
+                            <div style={{ borderRadius: 12, fontSize: 13, border: "1px solid var(--sidebar-border)", boxShadow: "0 8px 30px rgba(15,23,42,.14)", padding: "12px 16px", background: "var(--color-surface)", minWidth: 216 }}>
+                              <div style={{ fontWeight: 700, color: "var(--sidebar-text-active)", marginBottom: 2 }}>Semana del {row?.name}</div>
+                              <div style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)", marginBottom: 12 }}>{row?.rangeLabel}</div>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#4f46e8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Eje inversión</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 5, fontVariantNumeric: "tabular-nums", marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid var(--sidebar-hover)" }}>
                                 <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#6366f1" }}>Ads</span><strong>${fmt(row?.ads || 0)}</strong></div>
                                 <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#7c3aed" }}>Fee</span><strong>${fmt(row?.fee || 0)}</strong></div>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16, paddingTop: 6, marginTop: 2, borderTop: "1px solid var(--sidebar-hover)" }}><span style={{ color: "#10b981" }}>Cobrado</span><strong>${fmt(row?.cobrado || 0)}</strong></div>
+                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#4338ca", fontWeight: 600 }}>Subtotal</span><strong>${fmt(inv)}</strong></div>
                               </div>
+                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Eje cobrado</div>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, fontVariantNumeric: "tabular-nums" }}><span style={{ color: "#10b981" }}>Cobrado</span><strong>${fmt(row?.cobrado || 0)}</strong></div>
                             </div>
                           );
                         }}
                       />
-                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
-                      <Bar dataKey="ads" name="Ads" stackId="inv" fill="#6366f1" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="fee" name="Fee" stackId="inv" fill="#7c3aed" radius={[8, 8, 0, 0]} />
-                      <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2 }} activeDot={{ r: 6, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2 }} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 14 }} formatter={(value) => (value === "Cobrado" ? "Cobrado (eje derecho)" : value === "Ads" ? "Ads (eje izquierdo)" : value === "Fee" ? "Fee (eje izquierdo)" : value)} />
+                      <Bar yAxisId="inv" dataKey="ads" name="Ads" stackId="inv" fill="#6366f1" maxBarSize={52} radius={[0, 0, 0, 0]} />
+                      <Bar yAxisId="inv" dataKey="fee" name="Fee" stackId="inv" fill="#7c3aed" maxBarSize={52} radius={[6, 6, 0, 0]} />
+                      <Line yAxisId="cob" type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={2.75} dot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 7, fill: "#059669", stroke: "#fff", strokeWidth: 2 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
                 ) : (
                   <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: "24px 16px", borderRadius: 14, background: "var(--color-bg)", border: "1px dashed var(--sidebar-border)" }}>
                     Sin movimientos con fechas dentro de las semanas de este mes (o todo cae fuera del rango mostrado).
                   </div>
+                )}
+                {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) && (repWeeklySummary.weeksWithInv < repWeeklySeries.length || repWeeklySummary.weeksWithCob < repWeeklySeries.length) && (
+                  <p style={{ margin: "12px 0 0", fontSize: 11.5, color: "var(--sidebar-text-muted)", lineHeight: 1.45, fontStyle: "italic" }}>
+                    Semanas en $0: es normal si no hubo gastos con fecha de movimiento o cobros con fecha de pago en esos días.
+                  </p>
                 )}
               </div>
             ) : null}
