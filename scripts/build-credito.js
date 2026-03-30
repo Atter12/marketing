@@ -27,6 +27,14 @@ if (fs.existsSync(jsFile)) {
   fs.copyFileSync(jsFile, path.join(outDir, 'credito-app.js'));
   console.log('Copied credito-app/credito-app.js');
 }
+// CSS del design system (variables, Inter en body, Recharts, tablas) — sin esto el navegador usa Times
+const cssFile = path.join(dist, 'credito-app.css');
+if (fs.existsSync(cssFile)) {
+  fs.copyFileSync(cssFile, path.join(outDir, 'credito-app.css'));
+  console.log('Copied credito-app/credito-app.css');
+} else {
+  console.warn('WARNING: dist/credito-app.css not found — credito.html will 404 styles');
+}
 // auth-config.js (para protección de /creativos y /tareas)
 const authConfigSrc = path.join(dist, 'credito-app', 'auth-config.js');
 if (fs.existsSync(authConfigSrc)) {
