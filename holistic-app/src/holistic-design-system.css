@@ -168,10 +168,38 @@
 }
 
 /* Tipografía / render (referencia visual: Tareas → Crédito + Creativos) */
+html,
+body,
+#root {
+  font-family: var(--font-body);
+}
+
+/* Evita que h1–h6 hereden “serif” del user-agent si algo corta la cadena de herencia */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+/* Recharts: los <text> SVG usan serif por defecto si no se fuerza la familia */
+.recharts-wrapper,
+.recharts-wrapper svg {
+  font-family: var(--font-body);
+}
+
 body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+table {
+  font-family: inherit;
 }
 
 @media (prefers-color-scheme: dark) {

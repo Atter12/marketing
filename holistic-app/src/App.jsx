@@ -298,7 +298,8 @@ const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" &&
 /* Cabeceras / celdas alineadas a tablas Tareas (clients-thead / filas) */
 const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)" };
 const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle" };
-const MN = { fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
+/* Mismos números que Tareas: Inter + tabular-nums (no monospace en tablas) */
+const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
 
 /* ═══════ MAIN APP ═══════ */
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
@@ -1309,7 +1310,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const cLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
     if (percent < 0.03) return null;
     const R = Math.PI / 180, r = innerRadius + (outerRadius - innerRadius) * 1.5;
-    return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="var(--color-text-muted)" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>{(percent * 100).toFixed(1)}%</text>;
+    return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="var(--color-text-muted)" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)" }}>{(percent * 100).toFixed(1)}%</text>;
   };
 
   /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
@@ -1601,7 +1602,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <div className="hm-credito-hero" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)", color: "var(--color-text-inverse)", padding: "64px 48px 72px", textAlign: "center", position: "relative", overflow: "hidden" }}>
               <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 600, borderRadius: "50%", background: "radial-gradient(circle, rgba(37,99,235,.08) 0%, transparent 70%)", pointerEvents: "none" }} />
               <div style={{ maxWidth: 680, margin: "0 auto", position: "relative" }}>
-                <h1 style={{ fontSize: "clamp(30px, 4vw, 42px)", fontWeight: 800, letterSpacing: -0.8, marginBottom: 14, lineHeight: 1.1 }}>Crédito</h1>
+                <h1 style={{ fontSize: "clamp(30px, 4vw, 42px)", fontWeight: 800, letterSpacing: -0.8, marginBottom: 14, lineHeight: 1.1, fontFamily: "var(--font-display)" }}>Crédito</h1>
                 <p style={{ fontSize: 17, opacity: 0.85, lineHeight: 1.7 }}>Soluciones de crédito para impulsar tu negocio con Holistic Marketing.</p>
                 <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginTop: 28, padding: "14px 28px", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", borderRadius: 12, fontWeight: 700, fontSize: 15, textDecoration: "none", transition: "transform .2s" }}>Volver al inicio</a>
               </div>
@@ -1619,7 +1620,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         {page === "dashboard" && isCliente && (<div>
           <div className="hm-page-header" style={{ background: "var(--color-surface)", borderBottom: "1px solid var(--color-divider)", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 14, position: "sticky", top: 0, zIndex: 50, boxShadow: "var(--shadow-sm)" }}>
             <div>
-              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)" }} />Resumen general</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--font-display)" }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)" }} />Resumen general</h2>
               <p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", margin: "4px 0 0", maxWidth: 480 }}>{dashboardPeriodo ? <>Período: <strong style={{ color: "var(--sidebar-text-active)" }}>{fmtM(dashboardPeriodo)}</strong></> : <>Últimos 6 meses: {months[0]?.label} — {months[months.length - 1]?.label}</>}. Para análisis detallado usa <button type="button" onClick={() => goTo("reportes")} style={{ background: "none", border: "none", color: "var(--color-blue)", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reportes</button>.</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
@@ -1689,7 +1690,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,.08)", pointerEvents: "none" }} />
             <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", maxWidth: "none", margin: "0 auto", position: "relative" }}>
               <div style={{ width: 52, height: 52, background: "rgba(255,255,255,.08)", backdropFilter: "blur(8px)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, border: "1px solid rgba(255,255,255,.1)" }}>H</div>
-              <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6 }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400 }}>Análisis detallado por período y cliente</p></div>
+              <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6, fontFamily: "var(--font-display)" }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400, fontFamily: "var(--font-body)" }}>Análisis detallado por período y cliente</p></div>
             </div>
           </div>
           <div className="hm-page-header" style={{ background: "var(--color-surface-2)", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
@@ -1728,7 +1729,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
               <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
                 <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--sidebar-hover)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2, margin: 0 }}>Desglose por Usuario</h3></div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2, margin: 0, fontFamily: "var(--font-display)" }}>Desglose por Usuario</h3></div>
                   {repData.rows.length > 0 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                       <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>

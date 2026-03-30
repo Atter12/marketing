@@ -849,6 +849,7 @@ export default function CobranzaView({
             display: "flex",
             alignItems: "center",
             gap: 10,
+            fontFamily: "var(--font-display)",
           }}
         >
           <span
@@ -1347,7 +1348,7 @@ export default function CobranzaView({
               }}
             >
               <div>
-                <h3 style={{ margin: 0, fontSize: 17 }}>Revisar correo</h3>
+                <h3 style={{ margin: 0, fontSize: 17, fontFamily: "var(--font-display)" }}>Revisar correo</h3>
                 <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "#64748b" }}>
                   Estado: <strong>{ESTADO_LABEL[detail.estado] || detail.estado}</strong>
                   {detail.aprobado_por ? ` · Aprobado por ${detail.aprobado_por}` : ""}
