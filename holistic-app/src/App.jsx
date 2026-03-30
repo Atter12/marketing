@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import CobranzaView from "./CobranzaView";
