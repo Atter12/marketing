@@ -10,13 +10,13 @@ export default function TableScrollWrap({ className = "", style, children, ...re
     const el = ref.current;
     if (!el) return;
     if (el.scrollWidth <= el.clientWidth + 1) return;
-    const step = 160;
+    const step = 220;
     if (e.key === "ArrowLeft") {
       e.preventDefault();
-      el.scrollBy({ left: -step, behavior: "smooth" });
+      el.scrollBy({ left: -step, behavior: "auto" });
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      el.scrollBy({ left: step, behavior: "smooth" });
+      el.scrollBy({ left: step, behavior: "auto" });
     }
   };
   return (
