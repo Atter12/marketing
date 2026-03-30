@@ -1563,73 +1563,46 @@ button{transition:all .15s ease}
 .hm-mobile-header{display:none;position:fixed;top:0;left:0;right:0;height:60px;background:color-mix(in srgb,var(--color-surface-2) 92%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--color-divider);align-items:center;padding:0 20px;z-index:101;gap:14px}
 
 /* === TABLE WRAPS === Mismo criterio que COBROS (se ve bien): card overflow hidden + wrap overflow-x auto + tabla con min-width para que quepan todas las columnas === */
-.hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px;position:relative}
+.hm-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -12px;padding:0 12px;position:relative;scrollbar-color:var(--color-surface-dynamic) transparent;scrollbar-width:thin}
 .hm-table-wrap:focus{outline:none}
 .hm-table-wrap:focus-visible{box-shadow:inset 0 0 0 2px var(--color-primary);border-radius:12px}
-.hm-table-wrap table{border-collapse:collapse;width:100%;min-width:0;table-layout:auto}
-/* Tablas anchas (como antes de compactar): min-width fuerza scroll dentro del wrap si no cabe — igual lógica que cobros pero con px según columnas */
-.hm-table-wrap.hm-table-clientes table{min-width:980px}
-.hm-table-wrap.hm-table-gastos table{min-width:1180px}
-.hm-table-wrap.hm-table-garantias table{min-width:1080px}
-.hm-table-wrap.hm-table-cobros table{min-width:1100px}
-/* Reportes desglose: sin min-width forzado */
-.hm-table-wrap.hm-table-reportes table{width:100%;min-width:0}
-/* Padding tipo cobros: un poco más aire que el compacto para consistencia */
+.hm-table-wrap table{border-collapse:collapse;table-layout:auto}
+/* Listados anchos: ancho según contenido + mínimo; scroll solo dentro del wrap (sin aplastar texto) */
+.hm-table-wrap.hm-table-clientes table,
+.hm-table-wrap.hm-table-gastos table,
+.hm-table-wrap.hm-table-cobros table,
+.hm-table-wrap.hm-table-garantias table{width:max-content;max-width:none}
+.hm-table-wrap.hm-table-clientes table{min-width:1120px}
+.hm-table-wrap.hm-table-gastos table{min-width:1420px}
+.hm-table-wrap.hm-table-garantias table{min-width:1240px}
+.hm-table-wrap.hm-table-cobros table{min-width:1260px}
+/* Reportes / dashboard / manual: tabla fluida al contenedor */
+.hm-table-wrap.hm-table-reportes table,.hm-table-wrap.hm-table-dashboard table,.hm-table-wrap.hm-table-manual table{width:100%;min-width:0}
+/* Padding listados: lectura clara; sin word-break agresivo */
 .hm-table-wrap.hm-table-clientes table th,.hm-table-wrap.hm-table-clientes table td,
 .hm-table-wrap.hm-table-gastos table th,.hm-table-wrap.hm-table-gastos table td,
 .hm-table-wrap.hm-table-garantias table th,.hm-table-wrap.hm-table-garantias table td,
-.hm-table-wrap.hm-table-cobros table th,.hm-table-wrap.hm-table-cobros table td{padding:12px 14px!important;font-size:13px!important;vertical-align:middle}
+.hm-table-wrap.hm-table-cobros table th,.hm-table-wrap.hm-table-cobros table td{padding:12px 14px!important;font-size:13px!important;vertical-align:middle;word-break:normal;overflow-wrap:normal}
 .hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions,
-.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:var(--color-surface-2);min-width:130px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1}
+.hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{position:sticky;right:0;background:var(--color-surface-2);min-width:148px;box-shadow:-8px 0 16px rgba(0,0,0,.04);z-index:1;white-space:nowrap}
 .hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions,.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:var(--color-bg)}
 .hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions,.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:var(--sidebar-hover)}
 .hm-table-wrap.hm-table-clientes th{font-size:11.5px}
+/* Estado: badge en una línea (clientes = penúltima col.; gastos según vista) */
+.hm-table-wrap.hm-table-clientes th:nth-last-child(2),.hm-table-wrap.hm-table-clientes td:nth-last-child(2){white-space:nowrap}
+.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) th:nth-child(15),.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) td:nth-child(15){white-space:nowrap}
+.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente th:nth-child(14),.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente td:nth-child(14){white-space:nowrap}
+/* Cliente + fechas legibles */
+.hm-table-wrap.hm-table-clientes th:first-child,.hm-table-wrap.hm-table-clientes td:first-child{min-width:220px;max-width:340px;word-break:normal}
+.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) th:nth-child(2),.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) td:nth-child(2){min-width:200px;max-width:260px}
+.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) th:nth-child(3),.hm-table-wrap.hm-table-gastos:not(.hm-table-gastos--solo-cliente) td:nth-child(3){min-width:118px;white-space:nowrap}
+.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente th:nth-child(1),.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente td:nth-child(1){min-width:200px;max-width:280px}
+.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente th:nth-child(2),.hm-table-wrap.hm-table-gastos.hm-table-gastos--solo-cliente td:nth-child(2){min-width:118px;white-space:nowrap}
 /* Cabeceras de listados: que envuelvan y no fuercen ancho de página */
 .hm-page-header--listing{flex-wrap:wrap!important;row-gap:10px!important;column-gap:12px!important;align-items:center!important}
 .hm-page-header--listing > .hm-page-header-title{min-width:0;flex:0 1 auto}
 .hm-page-header--listing > .hm-page-header-tools{min-width:0;flex:1 1 280px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:flex-end}
-/* Laptop + sidebar: quepan todas las columnas sin scroll horizontal (texto hace wrap) */
-@media (max-width:1640px){
-  .hm-table-wrap.hm-table-clientes table,
-  .hm-table-wrap.hm-table-gastos table,
-  .hm-table-wrap.hm-table-cobros table,
-  .hm-table-wrap.hm-table-garantias table{
-    min-width:0!important;
-    width:100%!important;
-    table-layout:fixed!important;
-  }
-  .hm-table-wrap.hm-table-clientes th,.hm-table-wrap.hm-table-clientes td,
-  .hm-table-wrap.hm-table-gastos th,.hm-table-wrap.hm-table-gastos td,
-  .hm-table-wrap.hm-table-cobros th,.hm-table-wrap.hm-table-cobros td,
-  .hm-table-wrap.hm-table-garantias th,.hm-table-wrap.hm-table-garantias td{
-    padding:7px 5px!important;
-    font-size:11px!important;
-    word-break:break-word;
-    overflow-wrap:anywhere;
-    vertical-align:top;
-  }
-  .hm-table-wrap.hm-table-clientes th,.hm-table-wrap.hm-table-gastos th,.hm-table-wrap.hm-table-cobros th,.hm-table-wrap.hm-table-garantias th{
-    font-size:9px!important;
-    letter-spacing:.02em;
-    line-height:1.2;
-    hyphens:auto;
-  }
-  .hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions,
-  .hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{
-    min-width:84px!important;
-    width:84px!important;
-    max-width:96px!important;
-    padding-left:3px!important;
-    padding-right:3px!important;
-    overflow-wrap:normal;
-    word-break:normal;
-  }
-  .hm-table-wrap .hm-col-actions button{width:30px!important;height:30px!important;min-width:30px!important;border-radius:8px!important;padding:0!important}
-  .hm-table-wrap.hm-table-clientes tbody td > div,
-  .hm-table-wrap.hm-table-gastos tbody td > div,
-  .hm-table-wrap.hm-table-cobros tbody td > div,
-  .hm-table-wrap.hm-table-garantias tbody td > div{min-width:0}
-}
+.hm-table-wrap::-webkit-scrollbar{height:10px}
 /* Flechitas de scroll horizontal quitadas: supervisores prefieren ver todo con zoom/scroll nativo */
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
 
@@ -2376,7 +2349,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                       <Btn variant="outline" size="sm" onClick={() => openBulkFeeModal("selected")}><Percent size={14} /> Editar Fee ({selectedIds.gastos.length})</Btn>
                     </div>
                   )}
-                  <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-gastos"><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined} title={h === "A cobrar" ? "Deuda neta del cliente: total pendiente menos garantías vigentes. Es el mismo monto en todas las filas de ese cliente (lo que falta cobrarle)." : undefined}>{h}</th>)}</tr></thead>
+                  <TableScrollWrap className={"hm-table-wrap hm-table-sticky-actions hm-table-gastos" + (isCliente ? " hm-table-gastos--solo-cliente" : "")}><table><thead><tr>{!isCliente && <th style={{ ...TH, width: 42 }}><input type="checkbox" checked={allOnPageSelected} onChange={() => selectAllOnPage("gastos", idsOnPage)} title="Seleccionar página" style={{ cursor: "pointer", width: 16, height: 16 }} /></th>}{["Cliente", "Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Código", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "A cobrar", "Estado", "Prepago", ...(isCliente ? [] : ["Registrado por"]), ""].map((h) => <th key={h || "actions"} style={TH} className={h === "" ? "hm-col-actions" : undefined} title={h === "A cobrar" ? "Deuda neta del cliente: total pendiente menos garantías vigentes. Es el mismo monto en todas las filas de ese cliente (lo que falta cobrarle)." : undefined}>{h}</th>)}</tr></thead>
                     <tbody>{gastosPaginated.map((g) => { const c = clients.find((x) => x.id === g.clientId); const garVal = garantias.filter((gr) => gr.clientId === g.clientId && gr.estado === "Vigente").reduce((a, gr) => a + parseFloat(gr.valor || 0), 0); const netCobrar = cData(g.clientId).net; return <tr key={g.id}>{!isCliente && <td style={TD}><input type="checkbox" checked={sel.includes(g.id)} onChange={() => toggleSelect("gastos", g.id)} style={{ cursor: "pointer", width: 16, height: 16 }} /></td>}<td style={TD}><div style={{ display: "flex", alignItems: "center", gap: 10 }}>{c && <Av name={c.name} size={30} avatarUrl={c.avatar_url} />}<span style={{ fontWeight: 600, fontSize: 13 }}>{c?.name || "—"}</span></div></td><td style={{ ...TD, fontWeight: 600 }}>{fmtDD(g.fechaMovimiento)}</td><td style={TD}>{fmtM(g.mes)}</td><td style={TD}>{g.camp || "—"}</td><td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, fontWeight: 600, color: "var(--sidebar-text-active)" }}>{g.codigo || "—"}</td><td style={{ ...TD, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(g.gasto)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{g.fee}%</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>${fmt(g._f)}</td><td style={TD}><span style={{ background: "var(--color-bg)", padding: "5px 10px", borderRadius: 8, border: "1px solid var(--sidebar-border)", fontWeight: 700, color: "var(--sidebar-text-active)" }}>${fmt(g._t)}</span></td><td style={{ ...TD, ...MN, color: "#059669" }}>${fmt(g._p)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{garVal > 0 ? "$" + fmt(garVal) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48" }}>${fmt(g._pend)}</td><td style={TD}><span style={{ fontWeight: 700, color: netCobrar > 0 ? "#e11d48" : "#059669" }} title={garVal > 0 ? "Pendiente menos garantía del cliente" : "Igual al pendiente (sin garantía)"}>${fmt(netCobrar)}</span></td><td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td><td style={TD}>{g.prepago ? <Bdg type="ok">Prepago</Bdg> : "—"}</td>{!isCliente && <td style={{ ...TD, fontSize: 12, color: "var(--sidebar-text)" }} title={g.created_by || ""}>{g.created_by ? (g.created_by.length > 20 ? g.created_by.slice(0, 18) + "…" : g.created_by) : "—"}</td>}<td className="hm-col-actions" style={TD}>{!isCliente && <div style={{ display: "flex", gap: 4 }}><IBtn onClick={() => openMdl("gasto", g.id)} icon={<Edit3 size={13} />} title="Editar" />{g._st !== "Pagado" && <IBtn onClick={() => openCobroForGastoId(g.id)} icon={<CreditCard size={13} />} title="Añadir cobro" style={{ color: "#059669" }} />}<IBtn onClick={() => openGarantiaForClientId(g.clientId)} icon={<Shield size={13} />} title="Añadir garantía" style={{ color: "#7c3aed" }} /><IBtn onClick={() => delGasto(g.id)} icon={<Trash2 size={13} />} danger title="Eliminar" /></div>}</td></tr>; })}{!gastosPaginated.length && <Empty cols={colsCount} msg={filterCliente.gastos ? "Sin gastos para este cliente" : expRango.gastos.ini || expRango.gastos.fin ? "Sin gastos en el rango de fechas" : "Sin gastos registrados"} />}</tbody></table></TableScrollWrap>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
