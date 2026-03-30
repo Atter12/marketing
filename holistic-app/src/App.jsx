@@ -298,6 +298,23 @@ const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" &&
 /* ═══════ TABLE STYLES ═══════ */
 /* Cabeceras / celdas alineadas a tablas Tareas (clients-thead / filas) */
 const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)", fontFamily: "var(--font-body)" };
+
+/** Recharts en Resumen pro: leen variables de `.hm-resumen-pro` (claro / oscuro) */
+const REP_CHART_GRID = "var(--hm-pro-chart-grid, #eef2f7)";
+const REP_CHART_GRID_SOFT = "var(--hm-pro-chart-grid-soft, #f1f5f9)";
+const REP_CHART_TICK = { fontSize: 11, fill: "var(--hm-pro-chart-tick, #64748b)" };
+const REP_CHART_TICK_AXIS = { fontSize: 11.5, fill: "var(--hm-pro-chart-tick-strong, #475569)", fontWeight: 500 };
+const REP_CHART_TOOLTIP = {
+  borderRadius: 14,
+  fontSize: 13,
+  border: "1px solid var(--hm-pro-tooltip-border, #e2e8f0)",
+  boxShadow: "var(--hm-pro-tooltip-shadow, 0 12px 40px rgba(15,23,42,.12))",
+  padding: "10px 14px",
+  background: "var(--hm-pro-tooltip-bg, #ffffff)",
+  color: "var(--color-text, #0f172a)",
+};
+const REP_CHART_LEGEND = { fontSize: 12, color: "var(--color-text-muted, #64748b)" };
+const REP_CHART_DOT_RING = "var(--hm-pro-chart-dot-ring, #ffffff)";
 const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle", fontFamily: "var(--font-body)" };
 /* Mismos números que Tareas: Inter + tabular-nums (no monospace en tablas) */
 const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
@@ -1844,7 +1861,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             <div className="hm-resumen-pro-alert">
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
-                <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
+                <div className="hm-resumen-pro-alert-title">¿Dónde se ven las garantías?</div>
                 <p className="hm-resumen-pro-alert-p">Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
               </div>
             </div>
@@ -1869,14 +1886,14 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                       <stop offset="100%" stopColor="#ff5c39" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="6 6" stroke="#eef2f7" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
-                  <Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID} vertical={false} />
+                  <XAxis dataKey="name" tick={REP_CHART_TICK} axisLine={false} tickLine={false} />
+                  <YAxis tick={REP_CHART_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
+                  <Tooltip contentStyle={REP_CHART_TOOLTIP} />
+                  <Legend wrapperStyle={REP_CHART_LEGEND} />
                   <Area type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmResumenTrendCobArea)" isAnimationActive={false} dot={false} />
-                  <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#ff5c39" strokeWidth={3} dot={{ r: 4, fill: "#ff5c39", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="gasto" name="Gasto Ads" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#ff5c39" strokeWidth={3} dot={{ r: 4, fill: "#ff5c39", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="gasto" name="Gasto Ads" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -1957,8 +1974,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                                 <stop offset="100%" stopColor="#059669" stopOpacity={0} />
                               </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="6 6" stroke="#e2e8f0" vertical={false} />
-                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 600 }} tickMargin={10} axisLine={false} tickLine={false} />
+                            <CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID} vertical={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: "var(--hm-pro-chart-tick, #64748b)", fontWeight: 600 }} tickMargin={10} axisLine={false} tickLine={false} />
                             <YAxis
                               yAxisId="inv"
                               orientation="left"
@@ -2003,7 +2020,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                             <Area yAxisId="cob" type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmWeeklyCobArea)" isAnimationActive={false} dot={false} />
                             <Bar yAxisId="inv" dataKey="ads" name="Ads" stackId="inv" fill="url(#hmWeeklyAdsGrad)" maxBarSize={56} radius={[0, 0, 0, 0]} />
                             <Bar yAxisId="inv" dataKey="fee" name="Fee" stackId="inv" fill="url(#hmWeeklyFeeGrad)" maxBarSize={56} radius={[12, 12, 0, 0]} />
-                            <Line yAxisId="cob" type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={3} dot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#047857", stroke: "#fff", strokeWidth: 2 }} />
+                            <Line yAxisId="cob" type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={3} dot={{ r: 5, fill: "#059669", stroke: REP_CHART_DOT_RING, strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#047857", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} />
                           </ComposedChart>
                         </ResponsiveContainer>
                       </div>
@@ -2027,7 +2044,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 {repData.rows.length > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
-                    <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 10, fontSize: 13, fontFamily: "'Inter'", background: "#fff", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
+                    <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 10, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
                       <option value="nombre">Nombre (A-Z)</option>
                       <option value="deuda">Quien más debe (Pend. neto ↓)</option>
                       <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
@@ -2042,7 +2059,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }}><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                 <tbody>
                   {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
-                  <tr style={{ background: "linear-gradient(90deg, #f8fafc, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+                  <tr className="hm-resumen-pro-table-total-row"><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
                   {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
                 </tbody></table></TableScrollWrap>
             </div>
@@ -2057,7 +2074,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <div style={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
                   {repData.pie.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={268}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={64} outerRadius={100} paddingAngle={5} cornerRadius={6} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height={268}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={64} outerRadius={100} paddingAngle={5} cornerRadius={6} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={REP_CHART_TOOLTIP} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={REP_CHART_LEGEND} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
                   ) : (
                     <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: 24 }}>Sin movimiento en este período.<br /><span style={{ fontSize: 12.5, marginTop: 8, display: "block" }}>Si cargaste garantías para este mes, revisá en Garantías que <strong>Período en resumen</strong> sea exactamente este mes.</span></div>
                   )}
@@ -2073,7 +2090,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                   <span className="hm-pro-card-pill">Riesgo</span>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical" margin={{ top: 4, right: 12, bottom: 4, left: 4 }}><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fecaca" /><stop offset="100%" stopColor="#ff5c39" /></linearGradient></defs><CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} /><XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "#475569", fontWeight: 500 }} axisLine={false} tickLine={false} width={88} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 10, 10, 0]} maxBarSize={22} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={300}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical" margin={{ top: 4, right: 12, bottom: 4, left: 4 }}><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fecaca" /><stop offset="100%" stopColor="#ff5c39" /></linearGradient></defs><CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID_SOFT} vertical={false} /><XAxis type="number" tick={REP_CHART_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><YAxis dataKey="name" type="category" tick={REP_CHART_TICK_AXIS} axisLine={false} tickLine={false} width={88} /><Tooltip contentStyle={REP_CHART_TOOLTIP} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 10, 10, 0]} maxBarSize={22} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
               </div>
             </div>
             <div className="hm-resumen-pro-grid2">
@@ -2085,7 +2102,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                   <span className="hm-pro-card-pill">Barras</span>
                 </div>
-                <ResponsiveContainer width="100%" height={252}><BarChart data={repCharts.monthly} barCategoryGap="16%"><CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" stackId="a" fill="#93c5fd" radius={[0, 0, 0, 0]} /><Bar dataKey="fee" name="Fee" stackId="a" fill="#ff5c39" radius={[10, 10, 0, 0]} /></BarChart></ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={252}><BarChart data={repCharts.monthly} barCategoryGap="16%"><CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID_SOFT} vertical={false} /><XAxis dataKey="name" tick={REP_CHART_TICK} axisLine={false} tickLine={false} /><YAxis tick={REP_CHART_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><Tooltip contentStyle={REP_CHART_TOOLTIP} /><Legend wrapperStyle={REP_CHART_LEGEND} /><Bar dataKey="gasto" name="Gasto Ads" stackId="a" fill="#93c5fd" radius={[0, 0, 0, 0]} /><Bar dataKey="fee" name="Fee" stackId="a" fill="#ff5c39" radius={[10, 10, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
               <div className="hm-pro-card">
                 <div className="hm-pro-card-head">
@@ -2095,7 +2112,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                   <span className="hm-pro-card-pill">Donut</span>
                 </div>
-                <ResponsiveContainer width="100%" height={252}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={56} outerRadius={88} paddingAngle={4} cornerRadius={6} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
+                <ResponsiveContainer width="100%" height={252}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={56} outerRadius={88} paddingAngle={4} cornerRadius={6} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={REP_CHART_LEGEND} /><Tooltip contentStyle={REP_CHART_TOOLTIP} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
               </div>
             </div>
               </main>
@@ -2121,8 +2138,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 )}
                 <div className="hm-resumen-pro-aside-card">
                   <div className="hm-resumen-pro-aside-h">Resumen rápido</div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#475569" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>Clientes en tabla</span><strong style={{ color: "#0f172a" }}>{repData.rows.length}</strong></div>
+                  <div className="hm-resumen-pro-aside-stats">
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>Clientes en tabla</span><strong>{repData.rows.length}</strong></div>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>Cobrado (contable)</span><strong style={{ color: "#059669" }}>${fmt(repData.t.paid)}</strong></div>
                   </div>
                 </div>
