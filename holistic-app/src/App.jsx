@@ -704,6 +704,17 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return { ...reduced, maxInvWeek, maxCobWeek };
   }, [repWeeklySeries]);
 
+  const resumenHeroDateLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("es-PE", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    [],
+  );
+
   /* Dashboard charts */
   const dCharts = useMemo(() => ({
     monthly: months.map((m) => {
@@ -1765,46 +1776,109 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         </div>)}
 
         {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
-        {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (<div>
-          <div style={{ background: "linear-gradient(135deg, #8c837f 0%, #f8ac78 42%, #dc7223 100%)", padding: "36px 48px 32px", color: "var(--color-text-inverse)", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,.18)", pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(255,255,255,.08)", pointerEvents: "none" }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap", maxWidth: "none", margin: "0 auto", position: "relative" }}>
-              <div style={{ width: 52, height: 52, background: "rgba(255,255,255,.08)", backdropFilter: "blur(8px)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, fontWeight: 800, border: "1px solid rgba(255,255,255,.1)" }}>H</div>
-              <div><h2 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.6, fontFamily: "var(--font-display)" }}>Relación de Cuentas</h2><p style={{ fontSize: 15, opacity: 0.75, marginTop: 6, fontWeight: 400, fontFamily: "var(--font-body)" }}>Análisis detallado por período y cliente</p></div>
-            </div>
-          </div>
-          <div className="hm-page-header" style={{ background: "var(--color-surface-2)", borderBottom: "1px solid #e5e7eb", padding: "18px 48px", display: "flex", gap: 28, alignItems: "flex-end", flexWrap: "wrap" }}>
-            {!isCliente && <div style={{ minWidth: 200 }}><SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-            <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-text)" }}>Período:</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                  {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+        {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (
+        <div className="hm-resumen-pro">
+          <section className="hm-resumen-pro-hero" aria-label="Resumen">
+            <div className="hm-resumen-pro-hero-pattern" />
+            <div className="hm-resumen-pro-hero-inner">
+              <div className="hm-resumen-pro-greet">
+                <span className="hm-resumen-pro-eyebrow">Holistic · Relación de cuentas</span>
+                <h1 className="hm-resumen-pro-h1">
+                  Hola, {(displayName || "").trim().split(/\s+/).filter(Boolean)[0] || displayName}{" "}
+                  <span className="hm-resumen-pro-wave" aria-hidden>👋</span>
+                </h1>
+                <p className="hm-resumen-pro-date">{resumenHeroDateLabel}</p>
+                <p className="hm-resumen-pro-tagline">Panel financiero del período: inversión, cobros y saldo neto. Ajustá usuario y mes abajo.</p>
+              </div>
+              <div className="hm-resumen-pro-hero-kpis">
+                <div className="hm-resumen-pro-hero-kpi">
+                  <div className="hm-resumen-pro-hero-kpi-icon hm-resumen-pro-hero-kpi-icon--blue"><DollarSign size={20} strokeWidth={2.2} /></div>
+                  <div className="hm-resumen-pro-hero-kpi-meta">
+                    <span className="hm-resumen-pro-hero-kpi-label">Inversión (Ads + Fee)</span>
+                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.ads + repData.t.fee)}</span>
+                  </div>
                 </div>
-                {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                <div className="hm-resumen-pro-hero-kpi">
+                  <div className="hm-resumen-pro-hero-kpi-icon hm-resumen-pro-hero-kpi-icon--coral"><TrendingUp size={20} strokeWidth={2.2} /></div>
+                  <div className="hm-resumen-pro-hero-kpi-meta">
+                    <span className="hm-resumen-pro-hero-kpi-label">Cobrado</span>
+                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.paid)}</span>
+                  </div>
+                </div>
+                <div className="hm-resumen-pro-hero-kpi">
+                  <div className="hm-resumen-pro-hero-kpi-icon hm-resumen-pro-hero-kpi-icon--green"><AlertCircle size={20} strokeWidth={2.2} /></div>
+                  <div className="hm-resumen-pro-hero-kpi-meta">
+                    <span className="hm-resumen-pro-hero-kpi-label">Pendiente neto</span>
+                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.netPending)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <div className="hm-resumen-pro-toolbar">
+            <div className="hm-resumen-pro-toolbar-row">
+              {!isCliente && (
+                <div className="hm-resumen-pro-ss">
+                  <SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" />
+                </div>
+              )}
+              <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "16px 24px", display: "flex", alignItems: "center", gap: 20, flexWrap: "wrap" }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={20} strokeWidth={2.2} /></div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sidebar-text)" }}>Período:</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                    <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                    <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                    <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                    {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                  </div>
+                  {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                </div>
               </div>
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px 48px", maxWidth: "none", margin: "0 auto" }}>
-            <div style={{ background: "linear-gradient(135deg, #f5f3ff 0%, #eff6ff 50%, #f0fdf4 100%)", border: "1px solid #c4b5fd", borderRadius: 16, padding: "18px 24px", marginBottom: 28, display: "flex", alignItems: "flex-start", gap: 14, boxShadow: "0 2px 12px rgba(124,58,237,.06)" }}>
+          <div className="hm-resumen-pro-body hm-page-content">
+            <div className="hm-resumen-pro-layout">
+              <main className="hm-resumen-pro-main">
+            <div className="hm-resumen-pro-alert">
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: 13, color: "#5b21b6", marginBottom: 4 }}>¿Dónde se ven las garantías?</div>
-                <p style={{ margin: 0, fontSize: 12.5, color: "#6b21a8", lineHeight: 1.5 }}>Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
+                <p className="hm-resumen-pro-alert-p">Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
               </div>
             </div>
-            <div className="hm-stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 20, marginBottom: 32 }}>
-              <Stat icon={<DollarSign size={22} />} value={`$${fmt(repData.t.ads)}`} label="Total Ads USD" color="#6366f1" />
-              <Stat icon={<Percent size={22} />} value={`$${fmt(repData.t.fee)}`} label="Total Fee" color="#2563eb" />
-              <Stat icon={<Check size={22} />} value={`$${fmt(repData.t.paid)}`} label="Cobrado" color="#059669" />
-              <Stat icon={<Shield size={22} />} value={repData.t.gar > 0 ? `$${fmt(repData.t.gar)}` : "$0"} label="Garantías (período)" color="#7c3aed" sub="Vigentes con mes en resumen aquí" />
-              <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Ya descontadas garantías` : ""} />
+            <div className="hm-resumen-pro-substats">
+              <span className="hm-resumen-pro-chipstat"><Percent size={16} /> Ads USD <strong>${fmt(repData.t.ads)}</strong></span>
+              <span className="hm-resumen-pro-chipstat"><Percent size={16} /> Fee <strong>${fmt(repData.t.fee)}</strong></span>
+              <span className="hm-resumen-pro-chipstat"><Shield size={16} style={{ color: "#7c3aed" }} /> Garantías <strong>{repData.t.gar > 0 ? `$${fmt(repData.t.gar)}` : "$0"}</strong></span>
+            </div>
+            <div className="hm-pro-card">
+              <div className="hm-pro-card-head">
+                <div>
+                  <h4 className="hm-pro-card-title">Tendencia del período</h4>
+                  <p className="hm-pro-card-sub">Cobrado (área coral) e inversión en Ads por mes en el rango seleccionado</p>
+                </div>
+                <span className="hm-pro-card-pill">Evolución</span>
+              </div>
+              <ResponsiveContainer width="100%" height={268}>
+                <ComposedChart data={repCharts.monthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="hmResumenTrendCobArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#ff5c39" stopOpacity={0.28} />
+                      <stop offset="100%" stopColor="#ff5c39" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="6 6" stroke="#eef2f7" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
+                  <Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Area type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmResumenTrendCobArea)" isAnimationActive={false} dot={false} />
+                  <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#ff5c39" strokeWidth={3} dot={{ r: 4, fill: "#ff5c39", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="gasto" name="Gasto Ads" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
             {repPeriodoMes ? (
               <div className="hm-weekly-dash-wrap">
@@ -1947,69 +2021,116 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
               </div>
             ) : null}
-            <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
-              <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
-                <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--sidebar-hover)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ width: 8, height: 8, borderRadius: "50%", background: "linear-gradient(135deg, #2563eb, #7c3aed)", flexShrink: 0 }} /><h3 style={{ fontSize: 16, fontWeight: 700, letterSpacing: -0.2, margin: 0, fontFamily: "var(--font-display)" }}>Desglose por Usuario</h3></div>
-                  {repData.rows.length > 0 && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
-                      <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
-                        <option value="nombre">Nombre (A-Z)</option>
-                        <option value="deuda">Quien más debe (Pend. neto ↓)</option>
-                        <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
-                        <option value="total">Mayor total (Ads+Fee)</option>
-                        <option value="pagado">Más cobrado</option>
-                        <option value="ads">Mayor gasto Ads</option>
-                        <option value="garantia">Mayor garantía</option>
-                      </select>
-                    </div>
-                  )}
-                </div>
-                <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }}><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                  <tbody>
-                    {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
-                    <tr style={{ background: "linear-gradient(90deg, #f5f3ee, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
-                    {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
-                  </tbody></table></TableScrollWrap>
+            <div className="hm-resumen-pro-table-card">
+              <div className="hm-resumen-pro-table-head">
+                <h3><span className="hm-dot" aria-hidden />Desglose por usuario</h3>
+                {repData.rows.length > 0 && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
+                    <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 10, fontSize: 13, fontFamily: "'Inter'", background: "#fff", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
+                      <option value="nombre">Nombre (A-Z)</option>
+                      <option value="deuda">Quien más debe (Pend. neto ↓)</option>
+                      <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
+                      <option value="total">Mayor total (Ads+Fee)</option>
+                      <option value="pagado">Más cobrado</option>
+                      <option value="ads">Mayor gasto Ads</option>
+                      <option value="garantia">Mayor garantía</option>
+                    </select>
+                  </div>
+                )}
               </div>
-              {/* Composición de Cuentas: abajo, ancho completo */}
-              <div className="hm-chart-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, letterSpacing: -0.2, alignSelf: "flex-start", width: "100%" }}>Composición de Cuentas</h4>
-                <div style={{ width: "100%", maxWidth: 420, margin: "0 auto" }}>
+              <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }}><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
+                  <tr style={{ background: "linear-gradient(90deg, #f8fafc, #eff6ff)" }}><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+                  {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
+                </tbody></table></TableScrollWrap>
+            </div>
+            <div className="hm-resumen-pro-split">
+              <div className="hm-pro-card" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div className="hm-pro-card-head" style={{ alignSelf: "stretch", width: "100%" }}>
+                  <div>
+                    <h4 className="hm-pro-card-title">Composición de cuentas</h4>
+                    <p className="hm-pro-card-sub">ADS vs Fee (o garantías del mes)</p>
+                  </div>
+                  <span className="hm-pro-card-pill">Distribución</span>
+                </div>
+                <div style={{ width: "100%", maxWidth: 400, margin: "0 auto" }}>
                   {repData.pie.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={260}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={62} outerRadius={98} paddingAngle={5} cornerRadius={4} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
+                    <ResponsiveContainer width="100%" height={268}><PieChart><Pie data={repData.pie} cx="50%" cy="50%" innerRadius={64} outerRadius={100} paddingAngle={5} cornerRadius={6} dataKey="value" label={cLabel}>{repData.pie.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Legend wrapperStyle={{ fontSize: 12 }} formatter={(v, e) => `${v}: $${fmt(e.payload.value)}`} /></PieChart></ResponsiveContainer>
                   ) : (
                     <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: 24 }}>Sin movimiento en este período.<br /><span style={{ fontSize: 12.5, marginTop: 8, display: "block" }}>Si cargaste garantías para este mes, revisá en Garantías que <strong>Período en resumen</strong> sea exactamente este mes.</span></div>
                   )}
                 </div>
-                <div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 36, fontWeight: 700, marginTop: 10, letterSpacing: -1.5, background: repData.t.total > 0 ? "linear-gradient(135deg, #c2410c, #f97316)" : repData.t.gar > 0 ? "linear-gradient(135deg, #5b21b6, #7c3aed)" : "linear-gradient(135deg, #c2410c, #f97316)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{fmtK(repData.t.total > 0 ? repData.t.total : repData.t.gar > 0 ? repData.t.gar : 0)}</div>
-                <div style={{ fontSize: 13, color: "var(--sidebar-text-muted)", fontWeight: 500, letterSpacing: 0.5, textTransform: "uppercase" }}>{repData.t.total > 0 ? "Total General (Ads+Fee)" : repData.t.gar > 0 ? "Solo garantías este mes" : "Total General"}</div>
+                <div style={{ fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 34, fontWeight: 700, marginTop: 8, letterSpacing: -1.5, background: repData.t.total > 0 ? "linear-gradient(135deg, #ff5c39, #f97316)" : repData.t.gar > 0 ? "linear-gradient(135deg, #5b21b6, #7c3aed)" : "linear-gradient(135deg, #ff5c39, #ea580c)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{fmtK(repData.t.total > 0 ? repData.t.total : repData.t.gar > 0 ? repData.t.gar : 0)}</div>
+                <div style={{ fontSize: 12, color: "var(--sidebar-text-muted)", fontWeight: 600, letterSpacing: 0.06, textTransform: "uppercase" }}>{repData.t.total > 0 ? "Total general (Ads+Fee)" : repData.t.gar > 0 ? "Solo garantías este mes" : "Total general"}</div>
+              </div>
+              <div className="hm-pro-card">
+                <div className="hm-pro-card-head">
+                  <div>
+                    <h4 className="hm-pro-card-title">Deuda neta por cliente</h4>
+                    <p className="hm-pro-card-sub">Top con saldo; garantías descontadas</p>
+                  </div>
+                  <span className="hm-pro-card-pill">Riesgo</span>
+                </div>
+                <ResponsiveContainer width="100%" height={300}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical" margin={{ top: 4, right: 12, bottom: 4, left: 4 }}><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fecaca" /><stop offset="100%" stopColor="#ff5c39" /></linearGradient></defs><CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} /><XAxis type="number" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "#475569", fontWeight: 500 }} axisLine={false} tickLine={false} width={88} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 10, 10, 0]} maxBarSize={22} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
               </div>
             </div>
-            <div className="hm-charts-grid-2" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 28, marginBottom: 28 }}>
-              <div className="hm-chart-card">
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Gasto Mensual en Ads</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Inversión + fees por mes</p>
-                <ResponsiveContainer width="100%" height={240}><BarChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" fill="var(--color-blue)" radius={[8, 8, 0, 0]} /><Bar dataKey="fee" name="Fee" fill="#7c3aed" radius={[8, 8, 0, 0]} /></BarChart></ResponsiveContainer>
+            <div className="hm-resumen-pro-grid2">
+              <div className="hm-pro-card">
+                <div className="hm-pro-card-head">
+                  <div>
+                    <h4 className="hm-pro-card-title">Inversión por mes</h4>
+                    <p className="hm-pro-card-sub">Gasto Ads y fees apilados</p>
+                  </div>
+                  <span className="hm-pro-card-pill">Barras</span>
+                </div>
+                <ResponsiveContainer width="100%" height={252}><BarChart data={repCharts.monthly} barCategoryGap="16%"><CartesianGrid strokeDasharray="6 6" stroke="#f1f5f9" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Bar dataKey="gasto" name="Gasto Ads" stackId="a" fill="#93c5fd" radius={[0, 0, 0, 0]} /><Bar dataKey="fee" name="Fee" stackId="a" fill="#ff5c39" radius={[10, 10, 0, 0]} /></BarChart></ResponsiveContainer>
               </div>
-              <div className="hm-chart-card">
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Métodos de Cobro</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Distribución por medio de pago</p>
-                <ResponsiveContainer width="100%" height={240}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={58} outerRadius={92} paddingAngle={4} cornerRadius={4} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
+              <div className="hm-pro-card">
+                <div className="hm-pro-card-head">
+                  <div>
+                    <h4 className="hm-pro-card-title">Métodos de cobro</h4>
+                    <p className="hm-pro-card-sub">Por medio de pago en el período</p>
+                  </div>
+                  <span className="hm-pro-card-pill">Donut</span>
+                </div>
+                <ResponsiveContainer width="100%" height={252}>{repCharts.methods.length > 0 ? <PieChart><Pie data={repCharts.methods} cx="50%" cy="50%" innerRadius={56} outerRadius={88} paddingAngle={4} cornerRadius={6} dataKey="value" label={cLabel}>{repCharts.methods.map((e, i) => <Cell key={i} fill={e.color} />)}</Pie><Legend wrapperStyle={{ fontSize: 12 }} /><Tooltip contentStyle={{ borderRadius: 14, fontSize: 13, border: "1px solid #e2e8f0", boxShadow: "0 12px 40px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /></PieChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin cobros en el período</div>}</ResponsiveContainer>
               </div>
             </div>
-            <div className="hm-charts-grid-2-1" style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 20, marginBottom: 32 }}>
-              <div className="hm-chart-card">
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Cobrado vs Gasto</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Evolución mensual</p>
-                <ResponsiveContainer width="100%" height={240}><LineChart data={repCharts.monthly}><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} /><Legend wrapperStyle={{ fontSize: 12 }} /><Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 5, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /><Line type="monotone" dataKey="gasto" name="Gasto" stroke="var(--color-blue)" strokeWidth={3} dot={{ r: 5, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "var(--color-blue)", stroke: "var(--color-surface-2)", strokeWidth: 3 }} /></LineChart></ResponsiveContainer>
-              </div>
-              <div className="hm-chart-card">
-                <h4 style={{ fontSize: 15, fontWeight: 700, marginBottom: 4, letterSpacing: -0.2 }}>Deuda Neta por Cliente</h4><p style={{ fontSize: 13, color: "var(--sidebar-text-muted)", marginBottom: 20 }}>Incluye descuento de garantías</p>
-                <ResponsiveContainer width="100%" height={240}>{repCharts.debt.length > 0 ? <BarChart data={repCharts.debt} layout="vertical"><defs><linearGradient id="debtGradientRep" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor="#fca5a5" /><stop offset="100%" stopColor="#f87171" /></linearGradient></defs><CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} /><XAxis type="number" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} /><YAxis dataKey="name" type="category" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} width={80} /><Tooltip contentStyle={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.12)", padding: "10px 14px" }} formatter={(v) => `$${fmt(v)}`} /><Bar dataKey="debt" fill="url(#debtGradientRep)" radius={[0, 8, 8, 0]} /></BarChart> : <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--sidebar-text-muted)", fontSize: 13 }}>Sin deuda en el período</div>}</ResponsiveContainer>
-              </div>
+              </main>
+              <aside className="hm-resumen-pro-aside">
+                <div className="hm-resumen-pro-aside-card hm-resumen-pro-aside-card--accent">
+                  <strong>Gestioná cuentas</strong>
+                  <p>Revisá clientes, gastos y cobros desde un solo lugar.</p>
+                  {!isCliente && (
+                    <button type="button" className="hm-resumen-pro-aside-btn" onClick={() => goTo("clientes")}>Ir a Clientes</button>
+                  )}
+                </div>
+                <div className="hm-resumen-pro-aside-card">
+                  <div className="hm-resumen-pro-aside-h">Período seleccionado</div>
+                  <div className="hm-resumen-pro-aside-big">{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                  {repPeriodoMes ? <div className="hm-resumen-pro-aside-range">{fmtD(repPerInicio)} — {fmtD(repPerFin)}</div> : <div className="hm-resumen-pro-aside-range">Histórico completo en KPIs</div>}
+                </div>
+                {!isCliente && repCl !== "all" && (
+                  <div className="hm-resumen-pro-aside-card">
+                    <div className="hm-resumen-pro-aside-h">Vista filtrada</div>
+                    <div className="hm-resumen-pro-aside-big" style={{ fontSize: "1.05rem" }}>{clientsSorted.find((c) => c.id === repCl)?.name || "Cliente"}</div>
+                    <div className="hm-resumen-pro-aside-range">Solo datos de este usuario</div>
+                  </div>
+                )}
+                <div className="hm-resumen-pro-aside-card">
+                  <div className="hm-resumen-pro-aside-h">Resumen rápido</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13, color: "#475569" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>Clientes en tabla</span><strong style={{ color: "#0f172a" }}>{repData.rows.length}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}><span>Cobrado (contable)</span><strong style={{ color: "#059669" }}>${fmt(repData.t.paid)}</strong></div>
+                  </div>
+                </div>
+              </aside>
             </div>
           </div>
-        </div>)}
+        </div>
+        )}
 
         {/* ══ CLIENTES (solo gerente) ══ */}
         {page === "clientes" && !isCliente && (<div>
