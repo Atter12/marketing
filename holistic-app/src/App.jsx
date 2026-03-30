@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import CobranzaView from "./CobranzaView";
@@ -634,6 +634,53 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const debt = repData.rows.map((r) => ({ name: r.name, debt: r.netPending })).filter((d) => d.debt > 0).sort((a, b) => b.debt - a.debt).slice(0, 10);
     return { monthly, methods, debt };
   }, [sGastos, cobros, gastos, repCl, repPerInicio, repPerFin, reportMonths, repData.rows]);
+
+  /* Resumen / reportes: semanas del mes (1–7, 8–14, …) — ads+fee por fecha de movimiento; cobrado por fecha de pago y período contable del cobro en el mes */
+  const repWeeklySeries = useMemo(() => {
+    if (!repPeriodoMes || !repPerInicio || !repPerFin) return [];
+    const ym = normalizePeriod(repPeriodoMes);
+    if (!ym) return [];
+    const [y, mo] = ym.split("-").map(Number);
+    if (!y || !mo) return [];
+    const lastD = new Date(y, mo, 0).getDate();
+    const mesIni = (repPerInicio || "").slice(0, 7);
+    const mesFin = (repPerFin || "").slice(0, 7);
+    const pad = (day) => `${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const weeks = [];
+    for (let start = 1; start <= lastD; start += 7) {
+      const end = Math.min(start + 6, lastD);
+      weeks.push({ ini: pad(start), fin: pad(end), label: `${start}–${end}` });
+    }
+    return weeks.map((w) => {
+      let ads = 0;
+      let fee = 0;
+      let cobrado = 0;
+      sGastos.forEach((g) => {
+        if (repCl !== "all" && g.clientId !== repCl) return;
+        const d = (g.fechaMovimiento || "").slice(0, 10);
+        if (!d || d < w.ini || d > w.fin) return;
+        ads += parseFloat(g.gasto || 0);
+        fee += g._f;
+      });
+      cobros.forEach((c) => {
+        const cid = c.gastoId ? gastos.find((x) => x.id === c.gastoId)?.clientId : c.clientId;
+        if (!cid) return;
+        if (repCl !== "all" && String(cid) !== String(repCl)) return;
+        const mesC = mesCobro(c, gastos);
+        if (!mesC || mesC < mesIni || mesC > mesFin) return;
+        const f = (c.fecha || "").slice(0, 10);
+        if (!f || f < w.ini || f > w.fin) return;
+        cobrado += parseFloat(c.monto || 0);
+      });
+      return {
+        name: w.label,
+        rangeLabel: `${fmtD(w.ini)} – ${fmtD(w.fin)}`,
+        ads,
+        fee,
+        cobrado,
+      };
+    });
+  }, [repPeriodoMes, repPerInicio, repPerFin, repCl, sGastos, cobros, gastos]);
 
   /* Dashboard charts */
   const dCharts = useMemo(() => ({
@@ -1737,6 +1784,53 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Stat icon={<Shield size={22} />} value={repData.t.gar > 0 ? `$${fmt(repData.t.gar)}` : "$0"} label="Garantías (período)" color="#7c3aed" sub="Vigentes con mes en resumen aquí" />
               <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Ya descontadas garantías` : ""} />
             </div>
+            {repPeriodoMes ? (
+              <div className="hm-chart-card" style={{ marginBottom: 28, background: "linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-2) 100%)", border: "1px solid var(--sidebar-border)", boxShadow: "0 2px 14px rgba(15,23,42,.05)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <h4 style={{ fontSize: 16, fontWeight: 700, margin: "0 0 6px", letterSpacing: -0.3, fontFamily: "var(--font-display)", color: "var(--sidebar-text-active)" }}>Desglose semanal</h4>
+                    <p style={{ fontSize: 12.5, color: "var(--sidebar-text-muted)", margin: 0, lineHeight: 1.55, maxWidth: 680 }}>
+                      <strong style={{ color: "var(--sidebar-text)" }}>{fmtM(repPeriodoMes)}</strong>
+                      {" · "}Bloques de 7 días (1–7, 8–14, …). Barras: ads y fee por <strong>fecha de movimiento</strong>. Línea: cobros con <strong>fecha de pago</strong> en el mes y período contable aquí (puede diferir levemente del total superior).
+                    </p>
+                  </div>
+                </div>
+                {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) ? (
+                  <ResponsiveContainer width="100%" height={286}>
+                    <ComposedChart data={repWeeklySeries} margin={{ top: 12, right: 12, left: 4, bottom: 4 }}>
+                      <CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)", fontWeight: 600 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)" }} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const row = payload[0]?.payload;
+                          return (
+                            <div style={{ borderRadius: 12, fontSize: 13, border: "none", boxShadow: "0 8px 30px rgba(15,23,42,.14)", padding: "12px 16px", background: "var(--color-surface)", minWidth: 200 }}>
+                              <div style={{ fontWeight: 700, color: "var(--sidebar-text-active)", marginBottom: 4 }}>Semana {row?.name}</div>
+                              <div style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)", marginBottom: 10 }}>{row?.rangeLabel}</div>
+                              <div style={{ display: "flex", flexDirection: "column", gap: 6, fontVariantNumeric: "tabular-nums" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#6366f1" }}>Ads</span><strong>${fmt(row?.ads || 0)}</strong></div>
+                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#7c3aed" }}>Fee</span><strong>${fmt(row?.fee || 0)}</strong></div>
+                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16, paddingTop: 6, marginTop: 2, borderTop: "1px solid var(--sidebar-hover)" }}><span style={{ color: "#10b981" }}>Cobrado</span><strong>${fmt(row?.cobrado || 0)}</strong></div>
+                              </div>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                      <Bar dataKey="ads" name="Ads" stackId="inv" fill="#6366f1" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="fee" name="Fee" stackId="inv" fill="#7c3aed" radius={[8, 8, 0, 0]} />
+                      <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#10b981" strokeWidth={3} dot={{ r: 4, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2 }} activeDot={{ r: 6, fill: "#10b981", stroke: "var(--color-surface-2)", strokeWidth: 2 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: "24px 16px", borderRadius: 14, background: "var(--color-bg)", border: "1px dashed var(--sidebar-border)" }}>
+                    Sin movimientos con fechas dentro de las semanas de este mes (o todo cae fuera del rango mostrado).
+                  </div>
+                )}
+              </div>
+            ) : null}
             <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {/* Desglose por Usuario: ancho completo (sin flechitas; zoom o scroll nativo si hiciera falta) */}
               <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)", width: "100%" }}>
