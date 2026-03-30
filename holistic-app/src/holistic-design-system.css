@@ -174,15 +174,8 @@ body,
   font-family: var(--font-body);
 }
 
-/* Evita que h1–h6 hereden “serif” del user-agent si algo corta la cadena de herencia */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-}
-
-/* Recharts: los <text> SVG usan serif por defecto si no se fuerza la familia */
-.recharts-wrapper,
-.recharts-wrapper svg {
-  font-family: var(--font-body);
 }
 
 body {
@@ -200,6 +193,39 @@ textarea {
 
 table {
   font-family: inherit;
+}
+
+/* ─── Crédito: anclar Inter en el shell (gana a estilos sueltos del UA / SVG) ─── */
+#root .hm-app {
+  font-family: var(--font-body) !important;
+}
+
+#root .hm-app h1,
+#root .hm-app h2,
+#root .hm-app h3,
+#root .hm-app h4,
+#root .hm-app h5,
+#root .hm-app h6 {
+  font-family: var(--font-display) !important;
+}
+
+/* Tablas: el UA a veces usa fuente distinta en td/th */
+#root .hm-app table th,
+#root .hm-app table td {
+  font-family: var(--font-body) !important;
+}
+
+/* Recharts: <text> en SVG ignora con frecuencia la herencia del div padre → serif */
+.recharts-wrapper,
+.recharts-wrapper svg {
+  font-family: var(--font-body) !important;
+}
+
+.recharts-wrapper text,
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text,
+.recharts-label {
+  font-family: var(--font-body) !important;
 }
 
 @media (prefers-color-scheme: dark) {

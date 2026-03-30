@@ -178,11 +178,6 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
 }
 
-.recharts-wrapper,
-.recharts-wrapper svg {
-  font-family: var(--font-body);
-}
-
 body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
@@ -198,6 +193,36 @@ textarea {
 
 table {
   font-family: inherit;
+}
+
+#root .hm-app {
+  font-family: var(--font-body) !important;
+}
+
+#root .hm-app h1,
+#root .hm-app h2,
+#root .hm-app h3,
+#root .hm-app h4,
+#root .hm-app h5,
+#root .hm-app h6 {
+  font-family: var(--font-display) !important;
+}
+
+#root .hm-app table th,
+#root .hm-app table td {
+  font-family: var(--font-body) !important;
+}
+
+.recharts-wrapper,
+.recharts-wrapper svg {
+  font-family: var(--font-body) !important;
+}
+
+.recharts-wrapper text,
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text,
+.recharts-label {
+  font-family: var(--font-body) !important;
 }
 
 @media (prefers-color-scheme: dark) {

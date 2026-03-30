@@ -3,6 +3,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, Cart
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import CobranzaView from "./CobranzaView";
+import { logHolisticFontDiagnostics } from "./holisticFontDiag.js";
 import TableScrollWrap from "./TableScrollWrap";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
@@ -163,7 +164,7 @@ const Bdg = ({ type = "n", children, style: customStyle }) => {
 const PayB = ({ method }) => <span style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600, background: (PC[method] || "#94a3b8") + "14", color: PC[method] || "#64748b", letterSpacing: -0.1 }}>{PI[method] || "💰"} {method}</span>;
 
 const Stat = ({ icon, value, label, color, sub }) => (
-  <div className="stat-card" style={{ background: "var(--color-surface)", border: "1px solid var(--color-divider)", borderRadius: "var(--radius-xl)", padding: "var(--sp-5)", position: "relative", overflow: "hidden" }}>
+  <div className="stat-card" style={{ fontFamily: "var(--font-body)", background: "var(--color-surface)", border: "1px solid var(--color-divider)", borderRadius: "var(--radius-xl)", padding: "var(--sp-5)", position: "relative", overflow: "hidden" }}>
     <div style={{ position: "absolute", top: -30, right: -30, width: 100, height: 100, borderRadius: "50%", background: color + "08", pointerEvents: "none" }} />
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
       <div style={{ width: 46, height: 46, borderRadius: "var(--radius-lg)", background: `linear-gradient(135deg, ${color}18, ${color}08)`, color, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${color}20` }}>{icon}</div>
@@ -296,8 +297,8 @@ const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" &&
 
 /* ═══════ TABLE STYLES ═══════ */
 /* Cabeceras / celdas alineadas a tablas Tareas (clients-thead / filas) */
-const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)" };
-const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle" };
+const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)", fontFamily: "var(--font-body)" };
+const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle", fontFamily: "var(--font-body)" };
 /* Mismos números que Tareas: Inter + tabular-nums (no monospace en tablas) */
 const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 13.5, fontWeight: 600, letterSpacing: -0.3 };
 
@@ -322,6 +323,18 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     getGerenteProfile(userEmail).then((p) => { if (!cancelled) setGerenteAvatarUrl(p.avatar_url || ""); });
     return () => { cancelled = true; };
   }, [role, userEmail]);
+
+  /** Consola: diagnóstico tipografía (también `window.__HM_LOG_FONTS__()` manual) */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    logHolisticFontDiagnostics("mount+0");
+    const t1 = setTimeout(() => logHolisticFontDiagnostics("t+1.5s"), 1500);
+    const t2 = setTimeout(() => logHolisticFontDiagnostics("t+4s"), 4000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
 
   const handleGerenteAvatarUpload = async (file) => {
     if (!userEmail || !file) return;
