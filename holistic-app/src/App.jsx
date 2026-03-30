@@ -1498,6 +1498,20 @@ button{transition:all .15s ease}
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .hm-page-content{animation:fadeSlideIn .3s ease-out}
 
+/* Main: evita que el flex empuje scroll horizontal a toda la ventana (tablas anchas quedan en su wrap) */
+.hm-main{min-width:0;max-width:100%}
+.hm-app{min-width:0}
+
+/* Padding lateral responsive por debajo del escritorio ancho (inline 48px queda ancho en 100% zoom) */
+@media (max-width:1280px){
+  .hm-page-header{padding-left:clamp(14px,2.8vw,36px)!important;padding-right:clamp(14px,2.8vw,36px)!important}
+  .hm-page-content{padding-top:clamp(18px,2.4vw,32px)!important;padding-bottom:clamp(22px,2.8vw,40px)!important;padding-left:clamp(14px,2.8vw,36px)!important;padding-right:clamp(14px,2.8vw,36px)!important}
+}
+@media (max-width:1024px){
+  .hm-page-header{padding-left:clamp(12px,2.2vw,28px)!important;padding-right:clamp(12px,2.2vw,28px)!important}
+  .hm-page-content{padding-top:clamp(16px,2vw,28px)!important;padding-bottom:clamp(20px,2.4vw,36px)!important;padding-left:clamp(12px,2.2vw,28px)!important;padding-right:clamp(12px,2.2vw,28px)!important}
+}
+
 /* === CHART CONTAINERS (superficie / radio como .card en Tareas) === */
 .hm-chart-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);padding:26px 28px;transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
 .hm-chart-card:hover{box-shadow:var(--shadow-md);border-color:var(--color-primary);transform:translateY(-1px)}
@@ -1553,10 +1567,10 @@ button{transition:all .15s ease}
 .hm-table-wrap:focus-visible{box-shadow:inset 0 0 0 2px var(--color-primary);border-radius:12px}
 .hm-table-wrap table{border-collapse:collapse;width:100%;min-width:0;table-layout:auto}
 /* Tablas anchas (como antes de compactar): min-width fuerza scroll dentro del wrap si no cabe — igual lógica que cobros pero con px según columnas */
-.hm-table-wrap.hm-table-clientes table{min-width:1100px}
-.hm-table-wrap.hm-table-gastos table{min-width:1450px}
-.hm-table-wrap.hm-table-garantias table{min-width:1300px}
-.hm-table-wrap.hm-table-cobros table{min-width:1320px}
+.hm-table-wrap.hm-table-clientes table{min-width:1020px}
+.hm-table-wrap.hm-table-gastos table{min-width:1280px}
+.hm-table-wrap.hm-table-garantias table{min-width:1180px}
+.hm-table-wrap.hm-table-cobros table{min-width:1200px}
 /* Reportes desglose: sin min-width forzado */
 .hm-table-wrap.hm-table-reportes table{width:100%;min-width:0}
 /* Padding tipo cobros: un poco más aire que el compacto para consistencia */
@@ -1703,7 +1717,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
       </aside>
 
       {/* ═══ MAIN ═══ */}
-      <main className="hm-main" style={{ flex: 1, marginLeft: 260, minHeight: "100vh" }}>
+      <main className="hm-main" style={{ flex: 1, marginLeft: 260, minHeight: "100vh", minWidth: 0, maxWidth: "100%" }}>
 
         {/* ══ CRÉDITO ══ */}
         {page === "credito" && (
@@ -2166,7 +2180,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <option value="cobrado">Más cobrado</option>
                 </select>
               </div>
-              <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: 220, background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }} /></div>
+              <div style={{ position: "relative", minWidth: 0, flex: "1 1 200px", maxWidth: "100%" }}><Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nombre..." style={{ padding: "8px 12px 8px 34px", width: "100%", maxWidth: 280, minWidth: 0, boxSizing: "border-box", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }} /></div>
               <Btn variant="outline" size="sm" onClick={expClientes}><Download size={14} /> Descargar Excel</Btn>
               <Btn onClick={() => openMdl("client")}><Plus size={16} /> Nuevo</Btn>
             </div>
@@ -2282,14 +2296,14 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             </div>
             {/* Fila 2: filtros (buscar cliente, búsqueda, fechas, reportes) */}
             <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 14 }}>
-              {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
-              <div style={{ position: "relative" }}>
+              {!isCliente && <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
+              <div style={{ position: "relative", minWidth: 0, flex: "1 1 240px", maxWidth: "100%" }}>
                 <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} />
                 <input
                   value={gastosSearch}
                   onChange={(e) => setGastosSearch(e.target.value)}
                   placeholder="Buscar por cliente, campaña o código..."
-                  style={{ padding: "8px 12px 8px 34px", width: 260, background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }}
+                  style={{ padding: "8px 12px 8px 34px", width: "100%", maxWidth: 320, minWidth: 0, boxSizing: "border-box", background: "var(--color-bg)", border: "1.5px solid var(--sidebar-border)", borderRadius: 12, fontSize: 14, fontFamily: "'Inter'", outline: "none" }}
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha desde" /><span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha hasta" /></div>
@@ -2336,7 +2350,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Filtrado por cliente y/o rango de fechas">
                 {(filterCliente.cobros || expRango.cobros.ini || expRango.cobros.fin) ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
-              <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
+              <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.cobros} onChange={(id) => setFilterCliente((p) => ({ ...p, cobros: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }} title="Filtrar por fecha de pago (también filtra la tabla)">
                 <input type="date" value={expRango.cobros.ini} onChange={(e) => setExpRango((p) => ({ ...p, cobros: { ...p.cobros, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} />
                 <span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span>
@@ -2418,7 +2432,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Total de filas">
                 {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
-              {!isCliente && <div style={{ minWidth: 200, display: "inline-block" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
+              {!isCliente && <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.garantias} onChange={(id) => setFilterCliente((p) => ({ ...p, garantias: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               {!isCliente && <input type="text" placeholder="Período MM/AAAA" value={filterPeriodoGarantias} onChange={(e) => setFilterPeriodoGarantias(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setFilterPeriodoGarantias(p); }} style={{ width: 120, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Filtrar por período (fecha colocación o gasto asociado)" />}
               <Btn variant="outline" size="sm" onClick={expGarantias}><Download size={14} /> Descargar Excel</Btn>
               {!isCliente && <Btn onClick={() => openMdl("garantia")}><Plus size={16} /> Nueva Garantía</Btn>}

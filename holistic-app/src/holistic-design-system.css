@@ -665,16 +665,25 @@ table {
 .hm-resumen-pro-hero {
   position: relative;
   padding: clamp(1.25rem, 2vw, 2rem) clamp(1.25rem, 3vw, 3rem) clamp(1.5rem, 2.5vw, 2.25rem);
-  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 38%, #eff6ff 72%, #f0f9ff 100%);
+  /* Misma familia cromática que la tarjeta “Gestioná cuentas”, muy suave para texto oscuro */
+  background: linear-gradient(
+    155deg,
+    #fffdfb 0%,
+    #fff5f2 22%,
+    #ffefe8 48%,
+    #fff8f5 78%,
+    #fefcfb 100%
+  );
+  border-bottom: 1px solid rgba(255, 92, 57, 0.1);
   overflow: hidden;
 }
 
 .hm-resumen-pro-hero-pattern {
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at 18% 22%, rgba(255, 92, 57, 0.07) 0%, transparent 42%),
-    radial-gradient(circle at 88% 8%, rgba(37, 99, 235, 0.08) 0%, transparent 38%),
-    radial-gradient(circle at 70% 100%, rgba(255, 255, 255, 0.5) 0%, transparent 45%);
+  background-image: radial-gradient(circle at 14% 20%, rgba(255, 92, 57, 0.14) 0%, transparent 44%),
+    radial-gradient(circle at 88% 10%, rgba(255, 138, 101, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 72% 100%, rgba(255, 255, 255, 0.75) 0%, transparent 46%);
   pointer-events: none;
 }
 
@@ -701,7 +710,7 @@ table {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--hm-pro-blue);
+  color: #e8462e;
   margin-bottom: 0.35rem;
 }
 
@@ -1175,15 +1184,19 @@ table {
 }
 
 [data-theme="dark"] .hm-resumen-pro-hero {
-  background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+  background: linear-gradient(150deg, #2a2220 0%, #1e293b 42%, #1a2330 100%);
+  border-bottom-color: rgba(255, 92, 57, 0.2);
 }
 
 [data-theme="dark"] .hm-resumen-pro-hero-pattern {
-  opacity: 0.5;
+  opacity: 0.55;
+  background-image: radial-gradient(circle at 14% 20%, rgba(255, 92, 57, 0.2) 0%, transparent 44%),
+    radial-gradient(circle at 88% 12%, rgba(255, 122, 85, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(30, 41, 59, 0.5) 0%, transparent 50%);
 }
 
 [data-theme="dark"] .hm-resumen-pro-eyebrow {
-  color: #93c5fd;
+  color: #fb923c;
 }
 
 [data-theme="dark"] .hm-resumen-pro-h1,
@@ -1313,15 +1326,19 @@ table {
   }
 
   :root:not([data-theme]) .hm-resumen-pro-hero {
-    background: linear-gradient(135deg, #1e293b 0%, #1e3a5f 100%);
+    background: linear-gradient(150deg, #2a2220 0%, #1e293b 42%, #1a2330 100%);
+    border-bottom-color: rgba(255, 92, 57, 0.2);
   }
 
   :root:not([data-theme]) .hm-resumen-pro-hero-pattern {
-    opacity: 0.5;
+    opacity: 0.55;
+    background-image: radial-gradient(circle at 14% 20%, rgba(255, 92, 57, 0.2) 0%, transparent 44%),
+      radial-gradient(circle at 88% 12%, rgba(255, 122, 85, 0.12) 0%, transparent 40%),
+      radial-gradient(circle at 50% 100%, rgba(30, 41, 59, 0.5) 0%, transparent 50%);
   }
 
   :root:not([data-theme]) .hm-resumen-pro-eyebrow {
-    color: #93c5fd;
+    color: #fb923c;
   }
 
   :root:not([data-theme]) .hm-resumen-pro-h1,
