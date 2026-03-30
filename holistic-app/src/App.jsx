@@ -1496,7 +1496,8 @@ button{transition:all .15s ease}
 
 /* === PAGE TRANSITIONS === */
 @keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.hm-page-content{animation:fadeSlideIn .3s ease-out}
+.hm-page-content{animation:fadeSlideIn .3s ease-out;min-width:0;max-width:100%;box-sizing:border-box}
+.hm-page-content > div{min-width:0;max-width:100%;box-sizing:border-box}
 
 /* Main: evita que el flex empuje scroll horizontal a toda la ventana (tablas anchas quedan en su wrap) */
 .hm-main{min-width:0;max-width:100%}
@@ -1567,10 +1568,10 @@ button{transition:all .15s ease}
 .hm-table-wrap:focus-visible{box-shadow:inset 0 0 0 2px var(--color-primary);border-radius:12px}
 .hm-table-wrap table{border-collapse:collapse;width:100%;min-width:0;table-layout:auto}
 /* Tablas anchas (como antes de compactar): min-width fuerza scroll dentro del wrap si no cabe — igual lógica que cobros pero con px según columnas */
-.hm-table-wrap.hm-table-clientes table{min-width:1020px}
-.hm-table-wrap.hm-table-gastos table{min-width:1280px}
-.hm-table-wrap.hm-table-garantias table{min-width:1180px}
-.hm-table-wrap.hm-table-cobros table{min-width:1200px}
+.hm-table-wrap.hm-table-clientes table{min-width:980px}
+.hm-table-wrap.hm-table-gastos table{min-width:1180px}
+.hm-table-wrap.hm-table-garantias table{min-width:1080px}
+.hm-table-wrap.hm-table-cobros table{min-width:1100px}
 /* Reportes desglose: sin min-width forzado */
 .hm-table-wrap.hm-table-reportes table{width:100%;min-width:0}
 /* Padding tipo cobros: un poco más aire que el compacto para consistencia */
@@ -1583,6 +1584,52 @@ button{transition:all .15s ease}
 .hm-table-wrap.hm-table-sticky-actions thead th.hm-col-actions,.hm-table-wrap.hm-table-clientes thead th.hm-col-actions{background:var(--color-bg)}
 .hm-table-wrap.hm-table-sticky-actions tr:hover td.hm-col-actions,.hm-table-wrap.hm-table-clientes tr:hover td.hm-col-actions{background:var(--sidebar-hover)}
 .hm-table-wrap.hm-table-clientes th{font-size:11.5px}
+/* Cabeceras de listados: que envuelvan y no fuercen ancho de página */
+.hm-page-header--listing{flex-wrap:wrap!important;row-gap:10px!important;column-gap:12px!important;align-items:center!important}
+.hm-page-header--listing > .hm-page-header-title{min-width:0;flex:0 1 auto}
+.hm-page-header--listing > .hm-page-header-tools{min-width:0;flex:1 1 280px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:flex-end}
+/* Laptop + sidebar: quepan todas las columnas sin scroll horizontal (texto hace wrap) */
+@media (max-width:1640px){
+  .hm-table-wrap.hm-table-clientes table,
+  .hm-table-wrap.hm-table-gastos table,
+  .hm-table-wrap.hm-table-cobros table,
+  .hm-table-wrap.hm-table-garantias table{
+    min-width:0!important;
+    width:100%!important;
+    table-layout:fixed!important;
+  }
+  .hm-table-wrap.hm-table-clientes th,.hm-table-wrap.hm-table-clientes td,
+  .hm-table-wrap.hm-table-gastos th,.hm-table-wrap.hm-table-gastos td,
+  .hm-table-wrap.hm-table-cobros th,.hm-table-wrap.hm-table-cobros td,
+  .hm-table-wrap.hm-table-garantias th,.hm-table-wrap.hm-table-garantias td{
+    padding:7px 5px!important;
+    font-size:11px!important;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+    vertical-align:top;
+  }
+  .hm-table-wrap.hm-table-clientes th,.hm-table-wrap.hm-table-gastos th,.hm-table-wrap.hm-table-cobros th,.hm-table-wrap.hm-table-garantias th{
+    font-size:9px!important;
+    letter-spacing:.02em;
+    line-height:1.2;
+    hyphens:auto;
+  }
+  .hm-table-wrap.hm-table-sticky-actions th.hm-col-actions,.hm-table-wrap.hm-table-sticky-actions td.hm-col-actions,
+  .hm-table-wrap.hm-table-clientes th.hm-col-actions,.hm-table-wrap.hm-table-clientes td.hm-col-actions{
+    min-width:84px!important;
+    width:84px!important;
+    max-width:96px!important;
+    padding-left:3px!important;
+    padding-right:3px!important;
+    overflow-wrap:normal;
+    word-break:normal;
+  }
+  .hm-table-wrap .hm-col-actions button{width:30px!important;height:30px!important;min-width:30px!important;border-radius:8px!important;padding:0!important}
+  .hm-table-wrap.hm-table-clientes tbody td > div,
+  .hm-table-wrap.hm-table-gastos tbody td > div,
+  .hm-table-wrap.hm-table-cobros tbody td > div,
+  .hm-table-wrap.hm-table-garantias tbody td > div{min-width:0}
+}
 /* Flechitas de scroll horizontal quitadas: supervisores prefieren ver todo con zoom/scroll nativo */
 @media (max-width:768px){.hm-table-wrap{margin:0 -12px}}
 
@@ -2165,9 +2212,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ CLIENTES (solo gerente) ══ */}
         {page === "clientes" && !isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #ecfeff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #0891b2, #06b6d4)" }} />Clientes</h2>
-            <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <div className="hm-page-header hm-page-header--listing" style={{ background: "linear-gradient(90deg, #fff 0%, #ecfeff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div className="hm-page-header-title">
+              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #0891b2, #06b6d4)" }} />Clientes</h2>
+            </div>
+            <div className="hm-page-header-tools">
               <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Total de clientes">
                 {search.trim() ? `${clientsFilteredAndSorted.length} de ${clientsSorted.length} clientes` : `${clientsSorted.length} clientes en total`}
               </div>
@@ -2275,10 +2324,10 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ GASTOS ══ */}
         {page === "gastos" && (<div>
-          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #fffbeb 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #fffbeb 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, minWidth: 0, width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
             {/* Fila 1: título + acciones principales (siempre visibles, no tapan la tabla) */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, paddingTop: 14, paddingBottom: 2 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, paddingTop: 14, paddingBottom: 2, width: "100%", minWidth: 0, boxSizing: "border-box" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", minWidth: 0, flex: "1 1 200px" }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #d97706, #f59e0b)" }} />Gastos Ads · Mensuales</h2>
                 {!isCliente && (
                   <>
@@ -2287,7 +2336,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </>
                 )}
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", minWidth: 0, flex: "1 1 220px", justifyContent: "flex-end" }}>
                 <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Total de filas">
                   {filterCliente.gastos ? `${gastosFiltrados.length} de ${sGastos.length} gastos` : `${sGastos.length} gastos en total`}
                 </div>
@@ -2295,7 +2344,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               </div>
             </div>
             {/* Fila 2: filtros (buscar cliente, búsqueda, fechas, reportes) */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", paddingBottom: 14, width: "100%", minWidth: 0, boxSizing: "border-box" }}>
               {!isCliente && <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}><SearchSelect compact options={clientFilterOptions} value={filterCliente.gastos} onChange={(id) => setFilterCliente((p) => ({ ...p, gastos: id || "" }))} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" /></div>}
               <div style={{ position: "relative", minWidth: 0, flex: "1 1 240px", maxWidth: "100%" }}>
                 <Search size={15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--sidebar-text-muted)" }} />
@@ -2344,9 +2393,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ COBROS (solo gerente; cliente no ve ni registra cobros) ══ */}
         {page === "cobros" && !isCliente && (<div>
-          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #ecfdf5 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #059669, #10b981)" }} />Cobros</h2>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div className="hm-page-header hm-page-header--listing" style={{ background: "linear-gradient(90deg, #fff 0%, #ecfdf5 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div className="hm-page-header-title">
+              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #059669, #10b981)" }} />Cobros</h2>
+            </div>
+            <div className="hm-page-header-tools">
               <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Filtrado por cliente y/o rango de fechas">
                 {(filterCliente.cobros || expRango.cobros.ini || expRango.cobros.fin) ? `${cobrosFiltrados.length} de ${cobros.length} cobros` : `${cobros.length} cobros en total`}
               </div>
@@ -2426,9 +2477,11 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
         {/* ══ GARANTÍAS ══ */}
         {page === "garantias" && (<div>
-          <div className="hm-page-header" style={{ background: "linear-gradient(90deg, #fff 0%, #f5f3ff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", height: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #6d28d9, #7c3aed)" }} />Garantías</h2>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <div className="hm-page-header hm-page-header--listing" style={{ background: "linear-gradient(90deg, #fff 0%, #f5f3ff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
+            <div className="hm-page-header-title">
+              <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0, display: "flex", alignItems: "center", gap: 10 }}><span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #6d28d9, #7c3aed)" }} />Garantías</h2>
+            </div>
+            <div className="hm-page-header-tools">
               <div style={{ background: "linear-gradient(135deg, #eff6ff, #f5f3ff)", color: "#1d4ed8", padding: "7px 16px", borderRadius: 20, fontSize: 13, fontWeight: 700, fontFamily: "'Inter'", border: "1px solid #bfdbfe" }} title="Total de filas">
                 {filterCliente.garantias || filterPeriodoGarantias ? `${garantiasFiltradas.length} de ${garantias.length} garantías` : `${garantias.length} garantías en total`}
               </div>
