@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import CobranzaView from "./CobranzaView";
@@ -683,8 +683,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [repPeriodoMes, repPerInicio, repPerFin, repCl, sGastos, cobros, gastos]);
 
   const repWeeklySummary = useMemo(() => {
-    if (!repWeeklySeries.length) return { invTotal: 0, cobTotal: 0, weeksWithInv: 0, weeksWithCob: 0 };
-    return repWeeklySeries.reduce(
+    if (!repWeeklySeries.length) {
+      return { invTotal: 0, cobTotal: 0, weeksWithInv: 0, weeksWithCob: 0, maxInvWeek: 0, maxCobWeek: 0 };
+    }
+    const reduced = repWeeklySeries.reduce(
       (acc, w) => {
         const inv = (w.ads || 0) + (w.fee || 0);
         const cob = w.cobrado || 0;
@@ -697,6 +699,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       },
       { invTotal: 0, cobTotal: 0, weeksWithInv: 0, weeksWithCob: 0 },
     );
+    const maxInvWeek = Math.max(0, ...repWeeklySeries.map((w) => (w.ads || 0) + (w.fee || 0)));
+    const maxCobWeek = Math.max(0, ...repWeeklySeries.map((w) => w.cobrado || 0));
+    return { ...reduced, maxInvWeek, maxCobWeek };
   }, [repWeeklySeries]);
 
   /* Dashboard charts */
@@ -1802,96 +1807,144 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <Stat icon={<AlertCircle size={22} />} value={`$${fmt(repData.t.netPending)}`} label="Pendiente Neto" color="#e11d48" sub={repData.t.gar > 0 ? `Ya descontadas garantías` : ""} />
             </div>
             {repPeriodoMes ? (
-              <div className="hm-chart-card hm-weekly-chart-card" style={{ marginBottom: 28, background: "linear-gradient(180deg, #fffdfb 0%, var(--color-surface-2) 100%)", border: "1px solid var(--sidebar-border)", borderTop: "3px solid #fb923c", boxShadow: "0 2px 20px rgba(15,23,42,.06)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
-                  <div style={{ minWidth: 0, flex: "1 1 280px" }}>
-                    <h4 style={{ fontSize: 17, fontWeight: 700, margin: "0 0 8px", letterSpacing: -0.35, fontFamily: "var(--font-display)", color: "var(--sidebar-text-active)" }}>Desglose semanal del mes</h4>
-                    <p style={{ fontSize: 12.5, color: "var(--sidebar-text)", margin: "0 0 10px", lineHeight: 1.5, maxWidth: 720 }}>
-                      <strong>{fmtM(repPeriodoMes)}</strong>
-                      {" — "}cada barra agrupa <strong>7 días</strong> del calendario (1–7, 8–14, …). Las <strong>dos escalas</strong> son independientes: a la izquierda solo inversión (Ads+Fee); a la derecha solo cobrado, para que se vean bien aunque los montos sean muy distintos.
-                    </p>
-                    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: "var(--sidebar-text-muted)", lineHeight: 1.55, maxWidth: 720 }}>
-                      <li><span style={{ color: "#6366f1", fontWeight: 600 }}>Barras (eje izquierdo):</span> suma de Ads y Fee según la <strong>fecha de movimiento</strong> del gasto en esa semana.</li>
-                      <li><span style={{ color: "#059669", fontWeight: 600 }}>Línea (eje derecho):</span> cobros cuya <strong>fecha de pago</strong> cae en esa semana y el cobro cuenta en este mes contable. No tiene por qué coincidir con la tarjeta “Cobrado” de arriba si hay pagos registrados con otra fecha.</li>
-                    </ul>
-                  </div>
+              <div className="hm-weekly-dash-wrap">
+                <div className="hm-weekly-dash-card">
+                  <header className="hm-weekly-dash-header">
+                    <div className="hm-weekly-dash-header-text">
+                      <h3 className="hm-weekly-dash-title">Actividad por semana</h3>
+                      <p className="hm-weekly-dash-desc">
+                        Bloques de 7 días del mes. <strong>Barras</strong> (eje izq.): Ads + Fee por fecha de movimiento.
+                        <strong> Línea y área</strong> (eje der.): cobros por fecha de pago en el mes contable.
+                      </p>
+                    </div>
+                    <div className="hm-weekly-dash-toolbar">
+                      <span className="hm-weekly-dash-chip hm-weekly-dash-chip--primary">{fmtM(repPeriodoMes)}</span>
+                      <span className="hm-weekly-dash-chip">Vista semanal</span>
+                    </div>
+                  </header>
                   {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) && (
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, minWidth: 220, flexShrink: 0 }}>
-                      <div style={{ background: "linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%)", border: "1px solid #c7d2fe", borderRadius: 12, padding: "12px 14px" }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#4f46e5", textTransform: "uppercase", letterSpacing: 0.6 }}>En gráfico · Inversión</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: "#312e81", fontVariantNumeric: "tabular-nums", marginTop: 4 }}>${fmt(repWeeklySummary.invTotal)}</div>
-                        <div style={{ fontSize: 11, color: "#6366f1", marginTop: 4 }}>Ads + Fee (suma semanas)</div>
+                    <div className="hm-weekly-dash-kpis">
+                      <div className="hm-weekly-dash-kpi">
+                        <div className="hm-weekly-dash-kpi-top">
+                          <span className="hm-weekly-dash-kpi-label">Inversión en gráfico</span>
+                          <span className="hm-weekly-dash-kpi-icon hm-weekly-dash-kpi-icon--blue"><BarChart3 size={16} strokeWidth={2.2} /></span>
+                        </div>
+                        <div className="hm-weekly-dash-kpi-value">${fmt(repWeeklySummary.invTotal)}</div>
+                        <div className="hm-weekly-dash-kpi-hint">Ads + Fee · suma semanas</div>
                       </div>
-                      <div style={{ background: "linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%)", border: "1px solid #a7f3d0", borderRadius: 12, padding: "12px 14px" }}>
-                        <div style={{ fontSize: 10, fontWeight: 700, color: "#047857", textTransform: "uppercase", letterSpacing: 0.6 }}>En gráfico · Cobrado</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: "#065f46", fontVariantNumeric: "tabular-nums", marginTop: 4 }}>${fmt(repWeeklySummary.cobTotal)}</div>
-                        <div style={{ fontSize: 11, color: "#059669", marginTop: 4 }}>Por fecha de pago</div>
+                      <div className="hm-weekly-dash-kpi">
+                        <div className="hm-weekly-dash-kpi-top">
+                          <span className="hm-weekly-dash-kpi-label">Cobrado en gráfico</span>
+                          <span className="hm-weekly-dash-kpi-icon hm-weekly-dash-kpi-icon--green"><TrendingUp size={16} strokeWidth={2.2} /></span>
+                        </div>
+                        <div className="hm-weekly-dash-kpi-value hm-weekly-dash-kpi-value--green">${fmt(repWeeklySummary.cobTotal)}</div>
+                        <div className="hm-weekly-dash-kpi-hint">Por fecha de pago</div>
+                      </div>
+                      <div className="hm-weekly-dash-kpi">
+                        <div className="hm-weekly-dash-kpi-top">
+                          <span className="hm-weekly-dash-kpi-label">Pico inversión</span>
+                          <span className="hm-weekly-dash-kpi-icon hm-weekly-dash-kpi-icon--amber"><ArrowUpRight size={16} strokeWidth={2.2} /></span>
+                        </div>
+                        <div className="hm-weekly-dash-kpi-value">${fmt(repWeeklySummary.maxInvWeek)}</div>
+                        <div className="hm-weekly-dash-kpi-hint">Mejor semana (Ads+Fee)</div>
+                      </div>
+                      <div className="hm-weekly-dash-kpi">
+                        <div className="hm-weekly-dash-kpi-top">
+                          <span className="hm-weekly-dash-kpi-label">Pico cobros</span>
+                          <span className="hm-weekly-dash-kpi-icon hm-weekly-dash-kpi-icon--teal"><ArrowUpRight size={16} strokeWidth={2.2} /></span>
+                        </div>
+                        <div className="hm-weekly-dash-kpi-value hm-weekly-dash-kpi-value--green">${fmt(repWeeklySummary.maxCobWeek)}</div>
+                        <div className="hm-weekly-dash-kpi-hint">Mejor semana</div>
                       </div>
                     </div>
                   )}
+                  {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) ? (
+                    <>
+                      <div className="hm-weekly-dash-legend">
+                        <span className="hm-weekly-dash-legend-item"><i className="hm-weekly-dash-dot hm-weekly-dash-dot--ads" /> Ads</span>
+                        <span className="hm-weekly-dash-legend-item"><i className="hm-weekly-dash-dot hm-weekly-dash-dot--fee" /> Fee</span>
+                        <span className="hm-weekly-dash-legend-item"><i className="hm-weekly-dash-dot hm-weekly-dash-dot--cob" /> Cobrado</span>
+                        <span className="hm-weekly-dash-legend-note">Dos escalas · barras vs. línea</span>
+                      </div>
+                      <div className="hm-weekly-dash-chart">
+                        <ResponsiveContainer width="100%" height={328}>
+                          <ComposedChart data={repWeeklySeries} margin={{ top: 16, right: 20, left: 4, bottom: 12 }} barCategoryGap="22%">
+                            <defs>
+                              <linearGradient id="hmWeeklyAdsGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#2563eb" stopOpacity={1} />
+                                <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.92} />
+                              </linearGradient>
+                              <linearGradient id="hmWeeklyFeeGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#f59e0b" stopOpacity={1} />
+                                <stop offset="100%" stopColor="#fbbf24" stopOpacity={0.95} />
+                              </linearGradient>
+                              <linearGradient id="hmWeeklyCobArea" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#059669" stopOpacity={0.28} />
+                                <stop offset="100%" stopColor="#059669" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="6 6" stroke="#e2e8f0" vertical={false} />
+                            <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748b", fontWeight: 600 }} tickMargin={10} axisLine={false} tickLine={false} />
+                            <YAxis
+                              yAxisId="inv"
+                              orientation="left"
+                              tick={{ fontSize: 11, fill: "#3b82f6", fontWeight: 500 }}
+                              axisLine={false}
+                              tickLine={false}
+                              tickFormatter={(v) => "$" + fmt(v)}
+                              width={52}
+                            />
+                            <YAxis
+                              yAxisId="cob"
+                              orientation="right"
+                              tick={{ fontSize: 11, fill: "#059669", fontWeight: 500 }}
+                              axisLine={false}
+                              tickLine={false}
+                              tickFormatter={(v) => "$" + fmt(v)}
+                              width={52}
+                            />
+                            <Tooltip
+                              content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                const row = payload[0]?.payload;
+                                const inv = (row?.ads || 0) + (row?.fee || 0);
+                                return (
+                                  <div className="hm-weekly-dash-tooltip">
+                                    <div className="hm-weekly-dash-tooltip-title">Semana {row?.name}</div>
+                                    <div className="hm-weekly-dash-tooltip-sub">{row?.rangeLabel}</div>
+                                    <div className="hm-weekly-dash-tooltip-section">
+                                      <div className="hm-weekly-dash-tooltip-h">Inversión</div>
+                                      <div className="hm-weekly-dash-tooltip-row"><span>Ads</span><strong>${fmt(row?.ads || 0)}</strong></div>
+                                      <div className="hm-weekly-dash-tooltip-row"><span>Fee</span><strong>${fmt(row?.fee || 0)}</strong></div>
+                                      <div className="hm-weekly-dash-tooltip-row hm-weekly-dash-tooltip-row--total"><span>Subtotal</span><strong>${fmt(inv)}</strong></div>
+                                    </div>
+                                    <div className="hm-weekly-dash-tooltip-section hm-weekly-dash-tooltip-section--last">
+                                      <div className="hm-weekly-dash-tooltip-h hm-weekly-dash-tooltip-h--green">Cobrado</div>
+                                      <div className="hm-weekly-dash-tooltip-row"><span>En la semana</span><strong>${fmt(row?.cobrado || 0)}</strong></div>
+                                    </div>
+                                  </div>
+                                );
+                              }}
+                            />
+                            <Area yAxisId="cob" type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmWeeklyCobArea)" isAnimationActive={false} dot={false} />
+                            <Bar yAxisId="inv" dataKey="ads" name="Ads" stackId="inv" fill="url(#hmWeeklyAdsGrad)" maxBarSize={56} radius={[0, 0, 0, 0]} />
+                            <Bar yAxisId="inv" dataKey="fee" name="Fee" stackId="inv" fill="url(#hmWeeklyFeeGrad)" maxBarSize={56} radius={[12, 12, 0, 0]} />
+                            <Line yAxisId="cob" type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={3} dot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2.5 }} activeDot={{ r: 7, fill: "#047857", stroke: "#fff", strokeWidth: 2 }} />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="hm-weekly-dash-empty">
+                      Sin movimientos con fechas dentro de las semanas de este mes.
+                    </div>
+                  )}
+                  {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) && (repWeeklySummary.weeksWithInv < repWeeklySeries.length || repWeeklySummary.weeksWithCob < repWeeklySeries.length) && (
+                    <footer className="hm-weekly-dash-foot">
+                      Semanas en $0 son normales si no hubo movimientos con fecha en ese rango.
+                    </footer>
+                  )}
                 </div>
-                {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <ComposedChart data={repWeeklySeries} margin={{ top: 8, right: 18, left: 8, bottom: 8 }} barCategoryGap="18%">
-                      <CartesianGrid strokeDasharray="4 4" stroke="var(--sidebar-hover)" vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 11.5, fill: "var(--sidebar-text-muted)", fontWeight: 600 }} axisLine={false} tickLine={false} label={{ value: "Semanas del mes (días)", position: "insideBottom", offset: -4, fontSize: 11, fill: "var(--sidebar-text-muted)" }} />
-                      <YAxis
-                        yAxisId="inv"
-                        orientation="left"
-                        tick={{ fontSize: 11, fill: "#4f46e8" }}
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(v) => "$" + fmt(v)}
-                        width={56}
-                        label={{ value: "Inversión (Ads+Fee)", angle: -90, position: "insideLeft", offset: 10, style: { fill: "#4f46e8", fontSize: 11, fontWeight: 600 } }}
-                      />
-                      <YAxis
-                        yAxisId="cob"
-                        orientation="right"
-                        tick={{ fontSize: 11, fill: "#059669" }}
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(v) => "$" + fmt(v)}
-                        width={56}
-                        label={{ value: "Cobrado", angle: 90, position: "insideRight", offset: 10, style: { fill: "#059669", fontSize: 11, fontWeight: 600 } }}
-                      />
-                      <Tooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          const row = payload[0]?.payload;
-                          const inv = (row?.ads || 0) + (row?.fee || 0);
-                          return (
-                            <div style={{ borderRadius: 12, fontSize: 13, border: "1px solid var(--sidebar-border)", boxShadow: "0 8px 30px rgba(15,23,42,.14)", padding: "12px 16px", background: "var(--color-surface)", minWidth: 216 }}>
-                              <div style={{ fontWeight: 700, color: "var(--sidebar-text-active)", marginBottom: 2 }}>Semana del {row?.name}</div>
-                              <div style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)", marginBottom: 12 }}>{row?.rangeLabel}</div>
-                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#4f46e8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Eje inversión</div>
-                              <div style={{ display: "flex", flexDirection: "column", gap: 5, fontVariantNumeric: "tabular-nums", marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid var(--sidebar-hover)" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#6366f1" }}>Ads</span><strong>${fmt(row?.ads || 0)}</strong></div>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#7c3aed" }}>Fee</span><strong>${fmt(row?.fee || 0)}</strong></div>
-                                <div style={{ display: "flex", justifyContent: "space-between", gap: 16 }}><span style={{ color: "#4338ca", fontWeight: 600 }}>Subtotal</span><strong>${fmt(inv)}</strong></div>
-                              </div>
-                              <div style={{ fontSize: 10.5, fontWeight: 700, color: "#059669", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Eje cobrado</div>
-                              <div style={{ display: "flex", justifyContent: "space-between", gap: 16, fontVariantNumeric: "tabular-nums" }}><span style={{ color: "#10b981" }}>Cobrado</span><strong>${fmt(row?.cobrado || 0)}</strong></div>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 14 }} formatter={(value) => (value === "Cobrado" ? "Cobrado (eje derecho)" : value === "Ads" ? "Ads (eje izquierdo)" : value === "Fee" ? "Fee (eje izquierdo)" : value)} />
-                      <Bar yAxisId="inv" dataKey="ads" name="Ads" stackId="inv" fill="#6366f1" maxBarSize={52} radius={[0, 0, 0, 0]} />
-                      <Bar yAxisId="inv" dataKey="fee" name="Fee" stackId="inv" fill="#7c3aed" maxBarSize={52} radius={[6, 6, 0, 0]} />
-                      <Line yAxisId="cob" type="monotone" dataKey="cobrado" name="Cobrado" stroke="#059669" strokeWidth={2.75} dot={{ r: 5, fill: "#059669", stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 7, fill: "#059669", stroke: "#fff", strokeWidth: 2 }} />
-                    </ComposedChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--sidebar-text-muted)", fontSize: 14, textAlign: "center", padding: "24px 16px", borderRadius: 14, background: "var(--color-bg)", border: "1px dashed var(--sidebar-border)" }}>
-                    Sin movimientos con fechas dentro de las semanas de este mes (o todo cae fuera del rango mostrado).
-                  </div>
-                )}
-                {repWeeklySeries.some((w) => (w.ads || 0) + (w.fee || 0) + (w.cobrado || 0) > 0) && (repWeeklySummary.weeksWithInv < repWeeklySeries.length || repWeeklySummary.weeksWithCob < repWeeklySeries.length) && (
-                  <p style={{ margin: "12px 0 0", fontSize: 11.5, color: "var(--sidebar-text-muted)", lineHeight: 1.45, fontStyle: "italic" }}>
-                    Semanas en $0: es normal si no hubo gastos con fecha de movimiento o cobros con fecha de pago en esos días.
-                  </p>
-                )}
               </div>
             ) : null}
             <div className="hm-report-grid" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
