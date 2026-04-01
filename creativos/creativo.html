@@ -160,6 +160,31 @@ h1,h2,h3,h4,h5,h6 { text-wrap: balance; line-height: 1.2; font-family: var(--fon
 .sidebar-user-name { font-size: var(--text-sm); font-weight: 600; color: var(--sidebar-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sidebar-name-btn { background: none; border: none; padding: 0; font-size: inherit; color: var(--color-primary); cursor: pointer; text-decoration: underline; margin: 0; }
 .sidebar-name-btn:hover { color: var(--color-primary-hover); }
+.holistic-name-gate {
+  position: fixed; inset: 0; z-index: 10050;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-5);
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(6px);
+}
+.holistic-name-gate.hidden { display: none !important; }
+body.holistic-name-gate-open { overflow: hidden; }
+.holistic-name-gate-box {
+  width: 100%; max-width: 420px;
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+}
+.holistic-name-gate-box h2 {
+  margin: 0 0 var(--space-3); font-size: var(--text-lg); font-weight: 700;
+  color: var(--sidebar-text);
+}
+.holistic-name-gate-hint { margin: 0 0 var(--space-2); font-size: var(--text-sm); color: var(--color-text-secondary); line-height: 1.5; }
+.holistic-name-gate-email { margin: 0 0 var(--space-4); font-size: var(--text-xs); color: var(--color-text-muted); word-break: break-all; }
+.holistic-name-gate-input { width: 100%; margin-bottom: var(--space-4); box-sizing: border-box; }
+.holistic-name-gate-btn { width: 100%; }
 .sidebar-user-role { font-size: var(--text-xs); color: var(--sidebar-text-muted); }
 .theme-toggle-btn {
   width: 34px; height: 34px; border-radius: var(--radius-md);
@@ -1414,6 +1439,17 @@ body.kanban-pipeline-dragging {
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
+<div id="holisticNameGateOverlay" class="holistic-name-gate hidden" role="dialog" aria-modal="true" aria-labelledby="holisticNameGateTitle">
+  <div class="holistic-name-gate-box">
+    <h2 id="holisticNameGateTitle">¿Cómo te llamamos?</h2>
+    <p class="holistic-name-gate-hint">Tu nombre se muestra a tu equipo en Creativos y Pendientes. Completalo para no quedar como «Usuario» o solo con el correo.</p>
+    <p class="holistic-name-gate-email" id="holisticNameGateEmail" aria-live="polite"></p>
+    <label for="holisticNameGateInput" class="sr-only">Nombre y apellido</label>
+    <input type="text" id="holisticNameGateInput" class="form-input holistic-name-gate-input" placeholder="Nombre y apellido" autocomplete="name" maxlength="120" />
+    <button type="button" class="btn btn-primary holistic-name-gate-btn" id="holisticNameGateSave">Guardar y continuar</button>
+  </div>
+</div>
+
 <!-- MOBILE HAMBURGER -->
 <button class="mobile-hamburger" id="mobileHamburger" aria-label="Abrir menú">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
@@ -1474,13 +1510,13 @@ body.kanban-pipeline-dragging {
       <div class="sidebar-footer-user" title="Clic para cambiar foto" style="display:flex;align-items:center;gap:var(--space-3);flex:1;min-width:0;cursor:pointer">
         <div class="sidebar-avatar sidebar-avatar-clickable" id="creativosUserAvatar" style="position:relative;overflow:hidden">
           <img id="creativosUserAvatarImg" src="" alt="" style="display:none;position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover" />
-          <span id="creativosUserAvatarIniciales">VF</span>
+          <span id="creativosUserAvatarIniciales">·</span>
           <span class="sidebar-avatar-camera" aria-hidden="true" title="Clic para poner tu foto">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
           </span>
         </div>
         <div class="sidebar-user-info">
-          <div class="sidebar-user-name" id="creativosUserName" title="Clic para cambiar tu nombre (aparece en Revisado por y notas)" style="cursor:pointer">Equipo VideoForge</div>
+          <div class="sidebar-user-name" id="creativosUserName" title="Clic para cambiar tu nombre (aparece en Revisado por y notas)" style="cursor:pointer">…</div>
           <div class="sidebar-user-role">Administrador</div>
           <div class="sidebar-user-role sidebar-user-role-hint"><button type="button" class="sidebar-name-btn" onclick="event.stopPropagation();promptUserNameCreativos()">Cambiar nombre</button> · Clic en la foto para cambiarla</div>
         </div>
@@ -3263,7 +3299,10 @@ function openProjectDrawer(id) {
 }
 
 function getCurrentUserName() {
-  try { return localStorage.getItem('creativos_user_name') || 'Usuario'; } catch (e) { return 'Usuario'; }
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) return String(getStoredHolisticUserName()).trim();
+  var title = getResolvedHolisticDisplayTitleNameCreativos();
+  if (title) return title;
+  return getHolisticProvisionalSidebarLabelCreativos();
 }
 function renderStageNotes(p, stage) {
   const s = p.stages[stage];
@@ -4548,12 +4587,137 @@ function initApp() {
   handleHash();
   navigateTo('dashboard');
 }
+
+window.__creativosGerenteSelfRow = null;
+window.__creativosSessionEmail = '';
+var __holisticNameGateShownCreativos = false;
+function getStoredHolisticUserName() {
+  try { return localStorage.getItem('creativos_user_name'); } catch (e) { return null; }
+}
+function isBadHolisticDisplayName(s) {
+  var t = (s == null ? '' : String(s)).trim();
+  if (!t || t.length < 2) return true;
+  var low = t.toLowerCase();
+  if (low === 'usuario' || low === 'usuário') return true;
+  if (low === 'equipo videoforge' || low.indexOf('videoforge') >= 0) return true;
+  return false;
+}
+function tryApplyHolisticUserNameFromGerenteRow(row) {
+  if (!row) return;
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) return;
+  var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+  if (fn && !isBadHolisticDisplayName(fn)) {
+    try { localStorage.setItem('creativos_user_name', fn); } catch (e) {}
+  }
+}
+function getHolisticProvisionalSidebarLabelCreativos() {
+  var em = (window.__creativosSessionEmail || '').trim();
+  if (em && em.indexOf('@') > 0) {
+    var p = em.split('@')[0].replace(/\./g, ' ');
+    if (p.length) return p.charAt(0).toUpperCase() + p.slice(1);
+  }
+  return 'Tu nombre';
+}
+function getResolvedHolisticDisplayTitleNameCreativos() {
+  var raw = getStoredHolisticUserName();
+  if (!isBadHolisticDisplayName(raw)) return String(raw).trim();
+  var row = window.__creativosGerenteSelfRow;
+  if (row) {
+    var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+    if (fn && !isBadHolisticDisplayName(fn)) return fn;
+  }
+  return '';
+}
+function closeHolisticNameGateCreativos() {
+  var ov = document.getElementById('holisticNameGateOverlay');
+  if (ov) ov.classList.add('hidden');
+  document.body.classList.remove('holistic-name-gate-open');
+  __holisticNameGateShownCreativos = false;
+  updateCreativosUserNameDisplay();
+}
+function openHolisticNameGateModalCreativos() {
+  var ov = document.getElementById('holisticNameGateOverlay');
+  if (!ov) return;
+  var emEl = document.getElementById('holisticNameGateEmail');
+  var inp = document.getElementById('holisticNameGateInput');
+  if (emEl) emEl.textContent = window.__creativosSessionEmail ? ('Sesión: ' + window.__creativosSessionEmail) : '';
+  if (inp) { inp.value = ''; if (typeof inp.focus === 'function') inp.focus(); }
+  ov.classList.remove('hidden');
+  document.body.classList.add('holistic-name-gate-open');
+}
+function maybeShowHolisticNameGateCreativos() {
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) {
+    updateCreativosUserNameDisplay();
+    return;
+  }
+  if (__holisticNameGateShownCreativos) return;
+  __holisticNameGateShownCreativos = true;
+  openHolisticNameGateModalCreativos();
+}
+function saveHolisticUserDisplayNameCreativos(fullName, done) {
+  var v = String(fullName || '').trim();
+  if (!v || isBadHolisticDisplayName(v)) { if (done) done(false); return; }
+  try { localStorage.setItem('creativos_user_name', v); } catch (e) {}
+  var parts = v.split(/\s+/);
+  var nombre = parts[0];
+  var apellido = parts.slice(1).join(' ');
+  if (window.__creativosGerenteSelfRow) {
+    try { window.__creativosGerenteSelfRow.nombre = nombre; window.__creativosGerenteSelfRow.apellido = apellido; } catch (e) {}
+  }
+  if (!supabase) { if (done) done(true); return; }
+  var em = (window.__creativosSessionEmail || '').trim();
+  if (!em) { if (done) done(true); return; }
+  supabase.from('gerentes').update({ nombre: nombre, apellido: apellido }).eq('email', em).then(function(r) {
+    if (r.error) console.warn('[Creativos] actualizar nombre en gerentes:', r.error);
+    if (done) done(!r.error);
+  }).catch(function(err) {
+    console.warn('[Creativos] actualizar nombre:', err);
+    if (done) done(false);
+  });
+}
+function submitHolisticNameGateCreativos() {
+  var inp = document.getElementById('holisticNameGateInput');
+  var v = inp && inp.value.trim();
+  if (!v || isBadHolisticDisplayName(v)) {
+    alert('Indicá tu nombre (mínimo 2 caracteres; no uses «Usuario»).');
+    return;
+  }
+  saveHolisticUserDisplayNameCreativos(v, function() {
+    closeHolisticNameGateCreativos();
+    showToast('success', 'Nombre guardado');
+  });
+}
 function doCreativosInitialLoad() {
   if (!supabase) return;
   reloadCreativosData(function() {
     console.log('[Creativos] Clientes cargados:', (D.clients || []).length);
-    initApp();
-  }).catch(function(e) { console.warn('[Creativos] loadCreativosData:', e); initApp(); });
+    supabase.auth.getUser().then(function(ar) {
+      var u = ar.data && ar.data.user;
+      var em = u && u.email ? String(u.email).trim().toLowerCase() : '';
+      window.__creativosSessionEmail = em;
+      if (!em) {
+        initApp();
+        updateCreativosUserNameDisplay();
+        maybeShowHolisticNameGateCreativos();
+        return;
+      }
+      supabase.from('gerentes').select('nombre, apellido, email').eq('email', em).maybeSingle().then(function(gr) {
+        window.__creativosGerenteSelfRow = gr.data || null;
+        if (gr.data) tryApplyHolisticUserNameFromGerenteRow(gr.data);
+        initApp();
+        updateCreativosUserNameDisplay();
+        maybeShowHolisticNameGateCreativos();
+      }).catch(function() {
+        initApp();
+        updateCreativosUserNameDisplay();
+        maybeShowHolisticNameGateCreativos();
+      });
+    }).catch(function() {
+      initApp();
+      updateCreativosUserNameDisplay();
+      maybeShowHolisticNameGateCreativos();
+    });
+  }).catch(function(e) { console.warn('[Creativos] loadCreativosData:', e); initApp(); updateCreativosUserNameDisplay(); maybeShowHolisticNameGateCreativos(); });
 }
 function initCreativosAvatar() {
   var key = 'creativos_avatar_url';
@@ -4582,6 +4746,13 @@ function initCreativosAvatar() {
   if (block) block.addEventListener('click', function(e) { if (!e.target.closest('.theme-toggle-btn')) inp.click(); });
 }
 
+(function wireHolisticNameGateCreativos() {
+  var gBtn = document.getElementById('holisticNameGateSave');
+  var gInp = document.getElementById('holisticNameGateInput');
+  if (gBtn) gBtn.addEventListener('click', submitHolisticNameGateCreativos);
+  if (gInp) gInp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); submitHolisticNameGateCreativos(); } });
+})();
+
 window.__creativosTriggerLoad = doCreativosInitialLoad;
 if (supabase) {
   doCreativosInitialLoad();
@@ -4592,22 +4763,39 @@ if (supabase) {
 }
 initCreativosAvatar();
 function promptUserNameCreativos() {
-  var n = prompt('Tu nombre (aparece en "Revisado por" y en las notas):', getCurrentUserName());
-  if (n != null && n.trim()) {
-    try { localStorage.setItem('creativos_user_name', n.trim()); } catch(e) {}
+  var cur = getStoredHolisticUserName() || '';
+  var hint = isBadHolisticDisplayName(cur) ? '' : cur;
+  var n = prompt('Tu nombre (aparece en "Revisado por" y en las notas):', hint);
+  if (n == null) return;
+  var t = n.trim();
+  if (!t || isBadHolisticDisplayName(t)) {
+    alert('Indicá un nombre válido (mínimo 2 caracteres; no «Usuario»).');
+    return;
+  }
+  saveHolisticUserDisplayNameCreativos(t, function() {
     updateCreativosUserNameDisplay();
     showToast('success', 'Nombre actualizado');
-  }
+  });
 }
 function updateCreativosUserNameDisplay() {
   var el = document.getElementById('creativosUserName');
   var name = getCurrentUserName();
+  var titleName = getResolvedHolisticDisplayTitleNameCreativos();
   if (el) {
     el.textContent = name;
     el.onclick = function() { promptUserNameCreativos(); };
+    el.title = isBadHolisticDisplayName(getStoredHolisticUserName()) && !titleName
+      ? 'Completá tu nombre (te lo pedimos al entrar)'
+      : 'Clic para cambiar tu nombre (Revisado por y notas)';
   }
   var titleEl = document.getElementById('pageTitle');
-  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Creativos · ' + name : 'Creativos Holistic';
+  if (titleEl) titleEl.textContent = titleName ? ('Creativos · ' + titleName) : 'Creativos Holistic';
+  var iniEl = document.getElementById('creativosUserAvatarIniciales');
+  var imgEl = document.getElementById('creativosUserAvatarImg');
+  if (iniEl && imgEl && imgEl.style.display !== 'block') {
+    var L = (titleName || name || '').trim();
+    iniEl.textContent = L.length ? L.charAt(0).toUpperCase() : '·';
+  }
 }
 updateCreativosUserNameDisplay();
 

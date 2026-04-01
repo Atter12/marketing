@@ -45,6 +45,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 /* ══════════════════════════════════════════════
    DASHBOARD SHELL
@@ -1670,6 +1671,54 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .modal.modal-compact .ticket-assign-wrap { max-height: 84px; }
 .modal-overlay.show .modal { transform: scale(1) translateY(0); }
 
+/* Aviso obligatorio: nombre para sidebar / equipo */
+.holistic-name-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+  background: rgba(28,25,23,0.75);
+  backdrop-filter: blur(6px);
+}
+.holistic-name-gate.hidden { display: none !important; }
+body.holistic-name-gate-open { overflow: hidden; }
+.holistic-name-gate-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-surface);
+  border-radius: var(--r-xl);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-divider);
+}
+.holistic-name-gate-box h2 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--sidebar-text-active);
+}
+.holistic-name-gate-hint {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+.holistic-name-gate-email {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  word-break: break-all;
+}
+.holistic-name-gate-input {
+  width: 100%;
+  margin-bottom: var(--sp-4);
+  box-sizing: border-box;
+}
+.holistic-name-gate-btn { width: 100%; }
+
 /* Loading overlay (carga desde Supabase) */
 #tareas-loading-overlay {
   position: fixed;
@@ -2247,7 +2296,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         </span>
       </div>
       <div>
-        <div class="user-name" id="tareasUserName" title="Clic para cambiar tu nombre" style="cursor:pointer">Usuario</div>
+        <div class="user-name" id="tareasUserName" title="Clic para cambiar tu nombre" style="cursor:pointer">…</div>
         <div class="user-role">Director de Agencia</div>
         <div class="user-role user-role-hint"><button type="button" class="sidebar-name-btn" onclick="event.stopPropagation();promptUserNameTareas()">Cambiar nombre</button> · Clic en la foto para cambiarla</div>
       </div>
@@ -2684,6 +2733,17 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   </div>
 </div>
 
+<div id="holisticNameGateOverlay" class="holistic-name-gate hidden" role="dialog" aria-modal="true" aria-labelledby="holisticNameGateTitle">
+  <div class="holistic-name-gate-box">
+    <h2 id="holisticNameGateTitle">¿Cómo te llamamos?</h2>
+    <p class="holistic-name-gate-hint">Tu nombre se muestra a tu equipo en Pendientes y Creativos. Completalo para salir de «Usuario» o del correo como etiqueta.</p>
+    <p class="holistic-name-gate-email" id="holisticNameGateEmail" aria-live="polite"></p>
+    <label for="holisticNameGateInput" class="sr-only">Nombre y apellido</label>
+    <input type="text" id="holisticNameGateInput" class="form-input holistic-name-gate-input" placeholder="Nombre y apellido" autocomplete="name" maxlength="120" />
+    <button type="button" class="btn-primary holistic-name-gate-btn" id="holisticNameGateSave">Guardar y continuar</button>
+  </div>
+</div>
+
 <!-- Vista ampliada de adjuntos (clic en miniatura) -->
 <div id="ticketImageLightbox" class="ticket-img-lightbox hidden" onclick="closeTicketImageLightbox(event)" role="dialog" aria-modal="true" aria-label="Imagen ampliada">
   <button type="button" class="ticket-img-lightbox-close" onclick="event.stopPropagation(); closeTicketImageLightbox();" aria-label="Cerrar">✕</button>
@@ -2719,14 +2779,18 @@ function tryRunTareasAppBootstrap() {
       initTareasAvatar();
       initTareasRealtimeSync();
       attAutoStartHeartbeat();
-      refreshTareasSessionPerms();
+      refreshTareasSessionPerms(function() {
+        maybeShowHolisticNameGatePendientes();
+      });
     });
   }).catch(function(err) {
     console.error('[Pendientes] Error cargando datos:', err);
     showTareasLoading(false);
     initViews();
     initTareasAvatar();
-    refreshTareasSessionPerms();
+    refreshTareasSessionPerms(function() {
+      maybeShowHolisticNameGatePendientes();
+    });
   });
 }
 function tryInitSupabase(retryCount) {
@@ -2899,6 +2963,112 @@ function tareasPermsEffective(row) {
 function tareasEffectivePerms() {
   return tareasPermsEffective(window.__tareasGerentePerms);
 }
+
+var __holisticNameGateShownPendientes = false;
+function getStoredHolisticUserName() {
+  try { return localStorage.getItem('creativos_user_name'); } catch (e) { return null; }
+}
+function isBadHolisticDisplayName(s) {
+  var t = (s == null ? '' : String(s)).trim();
+  if (!t || t.length < 2) return true;
+  var low = t.toLowerCase();
+  if (low === 'usuario' || low === 'usuário') return true;
+  if (low === 'equipo videoforge' || low.indexOf('videoforge') >= 0) return true;
+  return false;
+}
+function tryApplyHolisticUserNameFromGerenteRow(row) {
+  if (!row) return;
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) return;
+  var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+  if (fn && !isBadHolisticDisplayName(fn)) {
+    try { localStorage.setItem('creativos_user_name', fn); } catch (e) {}
+  }
+}
+function getHolisticProvisionalSidebarLabel() {
+  var em = (window.__tareasSessionEmail || '').trim();
+  if (em && em.indexOf('@') > 0) {
+    var p = em.split('@')[0].replace(/\./g, ' ');
+    if (p.length) return p.charAt(0).toUpperCase() + p.slice(1);
+  }
+  return 'Tu nombre';
+}
+function getResolvedHolisticDisplayTitleNamePendientes() {
+  var raw = getStoredHolisticUserName();
+  if (!isBadHolisticDisplayName(raw)) return String(raw).trim();
+  var row = window.__tareasGerentePerms;
+  if (row) {
+    var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+    if (fn && !isBadHolisticDisplayName(fn)) return fn;
+  }
+  return '';
+}
+function getCurrentUserNameTareas() {
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) return String(getStoredHolisticUserName()).trim();
+  var title = getResolvedHolisticDisplayTitleNamePendientes();
+  if (title) return title;
+  return getHolisticProvisionalSidebarLabel();
+}
+function closeHolisticNameGatePendientes() {
+  var ov = document.getElementById('holisticNameGateOverlay');
+  if (ov) ov.classList.add('hidden');
+  document.body.classList.remove('holistic-name-gate-open');
+  __holisticNameGateShownPendientes = false;
+  updateTareasUserNameDisplay();
+}
+function openHolisticNameGateModalPendientes() {
+  var ov = document.getElementById('holisticNameGateOverlay');
+  if (!ov) return;
+  var emEl = document.getElementById('holisticNameGateEmail');
+  var inp = document.getElementById('holisticNameGateInput');
+  if (emEl) emEl.textContent = window.__tareasSessionEmail ? ('Sesión: ' + window.__tareasSessionEmail) : '';
+  if (inp) { inp.value = ''; if (typeof inp.focus === 'function') inp.focus(); }
+  ov.classList.remove('hidden');
+  document.body.classList.add('holistic-name-gate-open');
+}
+function maybeShowHolisticNameGatePendientes() {
+  if (!isBadHolisticDisplayName(getStoredHolisticUserName())) {
+    updateTareasUserNameDisplay();
+    return;
+  }
+  if (__holisticNameGateShownPendientes) return;
+  __holisticNameGateShownPendientes = true;
+  openHolisticNameGateModalPendientes();
+}
+function saveHolisticUserDisplayNamePendientes(fullName, done) {
+  var v = String(fullName || '').trim();
+  if (!v || isBadHolisticDisplayName(v)) { if (done) done(false); return; }
+  try { localStorage.setItem('creativos_user_name', v); } catch (e) {}
+  var parts = v.split(/\s+/);
+  var nombre = parts[0];
+  var apellido = parts.slice(1).join(' ');
+  if (window.__tareasGerentePerms) {
+    try { window.__tareasGerentePerms.nombre = nombre; window.__tareasGerentePerms.apellido = apellido; } catch (e) {}
+  }
+  if (!supabase) { if (done) done(true); return; }
+  var em = (window.__tareasSessionEmail || '').trim();
+  if (!em) { if (done) done(true); return; }
+  supabase.from('gerentes').update({ nombre: nombre, apellido: apellido }).eq('email', em).then(function(r) {
+    if (r.error) console.warn('[Pendientes] actualizar nombre en gerentes:', r.error);
+    if (done) done(!r.error);
+  }).catch(function(err) {
+    console.warn('[Pendientes] actualizar nombre:', err);
+    if (done) done(false);
+  });
+}
+function submitHolisticNameGatePendientes() {
+  var inp = document.getElementById('holisticNameGateInput');
+  var v = inp && inp.value.trim();
+  if (!v || isBadHolisticDisplayName(v)) {
+    alert('Indicá tu nombre (mínimo 2 caracteres; no uses «Usuario»).');
+    return;
+  }
+  saveHolisticUserDisplayNamePendientes(v, function() {
+    closeHolisticNameGatePendientes();
+    if (typeof attShowMessage === 'function') attShowMessage('Nombre guardado');
+    try { if (typeof renderers !== 'undefined' && renderers.dashboard) renderers.dashboard(); } catch (e) {}
+  });
+}
+
 function refreshTareasSessionPerms(callback) {
   if (!supabase) {
     window.__tareasGerentePerms = null;
@@ -2920,6 +3090,7 @@ function refreshTareasSessionPerms(callback) {
     window.__tareasSessionEmail = em;
     supabase.from('gerentes').select('*').eq('email', em).maybeSingle().then(function(gr) {
       window.__tareasGerentePerms = gr.data || null;
+      if (gr.data) tryApplyHolisticUserNameFromGerenteRow(gr.data);
       tareasApplyPermissionUi();
       if (callback) callback();
     });
@@ -5167,8 +5338,8 @@ function updateDashboardStats() {
   }
   var greet = document.getElementById('dashboard-greeting');
   if (greet) {
-    var uname = typeof getCurrentUserNameTareas === 'function' ? getCurrentUserNameTareas() : '';
-    greet.textContent = (uname && uname !== 'Usuario') ? ('Hola, ' + uname) : 'Hola';
+    var gname = typeof getResolvedHolisticDisplayTitleNamePendientes === 'function' ? getResolvedHolisticDisplayTitleNamePendientes() : '';
+    greet.textContent = gname ? ('Hola, ' + gname) : 'Hola';
   }
 }
 
@@ -6490,33 +6661,48 @@ function initTareasAvatar() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+  var gBtn = document.getElementById('holisticNameGateSave');
+  var gInp = document.getElementById('holisticNameGateInput');
+  if (gBtn) gBtn.addEventListener('click', submitHolisticNameGatePendientes);
+  if (gInp) gInp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); submitHolisticNameGatePendientes(); } });
   tryRunTareasAppBootstrap();
   if (!__tareasDataBootstrapDone && !supabase) {
     initViews();
     initTareasAvatar();
-    refreshTareasSessionPerms();
+    refreshTareasSessionPerms(function() { maybeShowHolisticNameGatePendientes(); });
   }
   updateTareasUserNameDisplay();
   renderRecordatoriosTareas();
 });
-
-function getCurrentUserNameTareas() {
-  try { return localStorage.getItem('creativos_user_name') || 'Usuario'; } catch (e) { return 'Usuario'; }
-}
 function promptUserNameTareas() {
-  var n = prompt('Tu nombre (aparece en revisiones y notas):', getCurrentUserNameTareas());
-  if (n != null && n.trim()) {
-    try { localStorage.setItem('creativos_user_name', n.trim()); } catch (e) {}
-    updateTareasUserNameDisplay();
-    if (typeof attShowMessage === 'function') attShowMessage('Nombre actualizado'); else alert('Nombre actualizado');
+  var cur = getStoredHolisticUserName() || '';
+  var hint = isBadHolisticDisplayName(cur) ? '' : cur;
+  var n = prompt('Tu nombre (aparece en revisiones y notas):', hint);
+  if (n == null) return;
+  var t = n.trim();
+  if (!t || isBadHolisticDisplayName(t)) {
+    alert('Indicá un nombre válido (mínimo 2 caracteres; no «Usuario»).');
+    return;
   }
+  saveHolisticUserDisplayNamePendientes(t, function() {
+    updateTareasUserNameDisplay();
+    try { if (typeof renderers !== 'undefined' && renderers.dashboard) renderers.dashboard(); } catch (e) {}
+    if (typeof attShowMessage === 'function') attShowMessage('Nombre actualizado'); else alert('Nombre actualizado');
+  });
 }
 function updateTareasUserNameDisplay() {
   var el = document.getElementById('tareasUserName');
   var name = getCurrentUserNameTareas();
-  if (el) { el.textContent = name; el.onclick = function() { promptUserNameTareas(); }; }
+  var titleName = getResolvedHolisticDisplayTitleNamePendientes();
+  if (el) {
+    el.textContent = name;
+    el.onclick = function() { promptUserNameTareas(); };
+    el.title = isBadHolisticDisplayName(getStoredHolisticUserName()) && !titleName
+      ? 'Completá tu nombre (también te lo pedimos en el aviso al entrar)'
+      : 'Clic para cambiar tu nombre';
+  }
   var titleEl = document.getElementById('docTitlePendientes');
-  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Pendientes · ' + name : 'Pendientes Holistic';
+  if (titleEl) titleEl.textContent = titleName ? ('Pendientes · ' + titleName) : 'Pendientes Holistic';
 }
 
 var RECORDATORIOS_KEY_PENDIENTES = 'pendientes_recordatorios';
