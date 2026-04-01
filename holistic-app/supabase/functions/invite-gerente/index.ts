@@ -33,12 +33,12 @@ async function sendInviteEmailResend(
   if (!apiKey) return { ok: false, error: "RESEND_API_KEY no configurado" };
   const from = Deno.env.get("RESEND_FROM") || "Holistic Marketing <onboarding@resend.dev>";
   const subject = opts.alreadyHadAccount
-    ? "Acceso a Tareas — Holistic Marketing"
-    : "Invitación a Tareas — Holistic Marketing";
+    ? "Acceso a Pendientes — Holistic Marketing"
+    : "Invitación a Pendientes — Holistic Marketing";
   const bodyIntro = opts.alreadyHadAccount
-    ? "<p>Hola,</p><p>Tu correo ya tiene cuenta en el sistema. Podés usar este enlace para entrar a <strong>Tareas</strong> (caduca en 1 hora):</p>"
-    : "<p>Hola,</p><p>Te invitaron a unirte al equipo en <strong>Tareas</strong> (Holistic Marketing). Hacé clic en el botón para crear tu acceso y definir tu contraseña:</p>";
-  const cta = opts.alreadyHadAccount ? "Entrar a Tareas" : "Aceptar invitación";
+    ? "<p>Hola,</p><p>Tu correo ya tiene cuenta en el sistema. Podés usar este enlace para entrar a <strong>Pendientes</strong> (caduca en 1 hora):</p>"
+    : "<p>Hola,</p><p>Te invitaron a unirte al equipo en <strong>Pendientes</strong> (Holistic Marketing). Hacé clic en el botón para crear tu acceso y definir tu contraseña:</p>";
+  const cta = opts.alreadyHadAccount ? "Entrar a Pendientes" : "Aceptar invitación";
   const safeHref = escapeHtmlAttr(actionLink);
   const html = `
     ${bodyIntro}
@@ -121,14 +121,14 @@ Deno.serve(async (req) => {
 
     const { data: target } = await adminClient.from("gerentes").select("email").eq("email", inviteEmail).maybeSingle();
     if (!target) {
-      return new Response(JSON.stringify({ error: "Ese correo no está en gerentes. Regístralo primero desde Tareas." }), {
+      return new Response(JSON.stringify({ error: "Ese correo no está en gerentes. Regístralo primero desde Pendientes." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const redirectRaw = typeof body.redirect_to === "string" ? body.redirect_to.trim() : "";
-    const fallback = Deno.env.get("INVITE_REDIRECT_URL") || "https://www.marketingconholistic.com/tareas/tarea.html";
+    const fallback = Deno.env.get("INVITE_REDIRECT_URL") || "https://www.marketingconholistic.com/pendientes/tarea.html";
     const redirectTo = redirectRaw.startsWith("http") ? redirectRaw : fallback;
 
     const useResend = !!Deno.env.get("RESEND_API_KEY");
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
           JSON.stringify({
             ok: true,
             message: alreadyHadAccount
-              ? "Ese correo ya tenía cuenta: se envió un enlace para entrar a Tareas."
+              ? "Ese correo ya tenía cuenta: se envió un enlace para entrar a Pendientes."
               : "Invitación enviada al correo (mensaje en español).",
             alreadyHadAccount,
           }),

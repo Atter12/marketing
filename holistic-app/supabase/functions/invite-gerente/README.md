@@ -15,7 +15,7 @@ Mismos secretos que otras funciones: `RESEND_FROM` recomendado en producción (d
 
 1. Desplegar la función: `supabase functions deploy invite-gerente --no-verify-jwt` (o con JWT verificado si tu proyecto lo exige; el código valida sesión con `getUser`).
 2. Secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-3. Opcional: `INVITE_REDIRECT_URL` — URL tras aceptar invitación (p. ej. `https://www.marketingconholistic.com/tareas/tarea.html`). Debe estar en **Authentication → URL Configuration → Redirect URLs** de Supabase.
+3. Opcional: `INVITE_REDIRECT_URL` — URL tras aceptar invitación (p. ej. `https://www.marketingconholistic.com/pendientes/tarea.html`). Debe estar en **Authentication → URL Configuration → Redirect URLs** de Supabase.
 4. Sin Resend: en **Authentication → Email** habilitá plantillas / SMTP. Revisá también **Site URL** en el dashboard: si sigue apuntando a un dominio viejo (p. ej. Vercel), el texto del mail de Supabase puede mostrar esa URL hasta que la corrijas o uses Resend + `redirect_to` / `INVITE_REDIRECT_URL`.
 
 ## Cuerpo POST

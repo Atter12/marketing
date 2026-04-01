@@ -1,5 +1,5 @@
 -- ═══════════════════════════════════════════════════════════════
--- Alta manual de gerente (equipo: Tareas, Crédito, Creativos)
+-- Alta manual de gerente (equipo: Pendientes, Crédito, Creativos)
 -- ═══════════════════════════════════════════════════════════════
 --
 -- 1) En Supabase Dashboard → Authentication → Users → "Add user"
@@ -30,7 +30,7 @@ on conflict (email) do update set
   perm_admin = excluded.perm_admin,
   perm_estandar = excluded.perm_estandar;
 
--- Opcional: si también querés que aparezca en Tareas · Equipo de trabajo,
+-- Opcional: si también querés que aparezca en Pendientes · Equipo de trabajo,
 -- agregá una fila en tareas_equipo (id suele ser un string estable, p. ej. slug del nombre).
 -- Descomentá y adaptá:
 --

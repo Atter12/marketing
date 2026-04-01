@@ -135,7 +135,7 @@ export default function ClientDetailView(props) {
         isLikelyBlockedAvatarHotlinkUrl(String(curC.avatar_url || "").replace(/&amp;/gi, "&")) && (
           <div role="alert" style={{ marginBottom: 22, padding: "14px 16px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 13, lineHeight: 1.5, maxWidth: 720 }}>
             <strong style={{ display: "block", marginBottom: 6 }}>Foto del cliente inestable (WhatsApp / Meta)</strong>
-            Esta URL no se puede mostrar bien en Crédito ni en Tareas (error 403). <strong>En Crédito es donde se define la foto que sincroniza el resto:</strong> subí la imagen como archivo para guardarla en Supabase.
+            Esta URL no se puede mostrar bien en Crédito ni en Pendientes (error 403). <strong>En Crédito es donde se define la foto que sincroniza el resto:</strong> subí la imagen como archivo para guardarla en Supabase.
             {!isCliente && (
               <span style={{ display: "block", marginTop: 10 }}>
                 <button type="button" onClick={() => openMdl("client", curCl)} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: "#c2410c", color: "#fff", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Abrir Editar cliente → Subir foto</button>

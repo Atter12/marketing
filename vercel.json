@@ -1,5 +1,11 @@
 {
   "version": 2,
+  "redirects": [
+    { "source": "/tareas", "destination": "/pendientes", "permanent": true },
+    { "source": "/tareas/", "destination": "/pendientes", "permanent": true },
+    { "source": "/tareas/tarea.html", "destination": "/pendientes", "permanent": true },
+    { "source": "/acceso-tareas", "destination": "/acceso-pendientes", "permanent": true }
+  ],
   "buildCommand": "npm run build",
   "outputDirectory": ".",
   "installCommand": "npm install && cd holistic-app && npm install",
@@ -135,8 +141,8 @@
       "dest": "/acceso-creativos.html"
     },
     {
-      "src": "/acceso-tareas",
-      "dest": "/acceso-tareas.html"
+      "src": "/acceso-pendientes",
+      "dest": "/acceso-pendientes.html"
     },
     {
       "src": "/creativos",
@@ -151,16 +157,16 @@
       "dest": "/creativos/creativo.html"
     },
     {
-      "src": "/tareas",
-      "dest": "/tareas/tarea.html"
+      "src": "/pendientes",
+      "dest": "/pendientes/tarea.html"
     },
     {
-      "src": "/tareas/",
-      "dest": "/tareas/tarea.html"
+      "src": "/pendientes/",
+      "dest": "/pendientes/tarea.html"
     },
     {
-      "src": "/tareas/tarea.html",
-      "dest": "/tareas/tarea.html"
+      "src": "/pendientes/tarea.html",
+      "dest": "/pendientes/tarea.html"
     },
     {
       "src": "/video",

@@ -209,7 +209,7 @@ export default function Login({ onSuccess, supabase, redirectTo: redirectToProp,
           <h1 style={styles.formHeading}>Iniciar sesión</h1>
           <p style={styles.formSubtitle}>
             {variant === "plataforma"
-              ? "Ingresa tu correo para acceder a Creativos y Tareas."
+              ? "Ingresa tu correo para acceder a Creativos y Pendientes."
               : <>Ingresa tus credenciales para acceder como <span style={styles.subtitleHighlight}>gerente</span> o <span style={styles.subtitleHighlight}>cliente</span>.</>}
           </p>
 

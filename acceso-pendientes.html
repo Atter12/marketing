@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acceso Tareas | Holistic Marketing</title>
+  <title>Acceso Pendientes | Holistic Marketing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -32,7 +32,7 @@
 </head>
 <body>
   <header class="header">
-    <a href="/tareas" class="header-logo">
+    <a href="/pendientes" class="header-logo">
       <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden><rect width="28" height="28" rx="6" fill="#3B82F6"/><path d="M9 8v12M19 8v12M9 14h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
       <span class="header-logo-text">Holistic Marketing</span>
     </a>
@@ -40,9 +40,9 @@
   <main class="main">
     <div class="form-wrapper">
       <h1 class="form-heading">Iniciar sesión</h1>
-      <p class="form-subtitle">Ingresa tu correo para acceder a Tareas.</p>
+      <p class="form-subtitle">Ingresa tu correo para acceder a Pendientes.</p>
       <div id="successBox" class="success-box" style="display:none;">
-        <span>Revisá tu correo. Abrí el enlace para entrar a Tareas.</span>
+        <span>Revisá tu correo. Abrí el enlace para entrar a Pendientes.</span>
       </div>
       <form id="form">
         <div id="errorBox" class="error-box" style="display:none;"></div>
@@ -69,7 +69,7 @@
       var supabase = window.supabase.createClient(url, key);
       var hash = window.location.hash || '';
       if (hash.indexOf('access_token') !== -1) {
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Tareas…</div>';
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Pendientes…</div>';
         var params = {};
         hash.slice(1).split('&').forEach(function(p) {
           var kv = p.split('=');
@@ -77,14 +77,14 @@
         });
         if (params.access_token && params.refresh_token) {
           supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
-            .then(function() { window.location.replace('/tareas'); })
-            .catch(function() { window.location.replace('/acceso-tareas'); });
+            .then(function() { window.location.replace('/pendientes'); })
+            .catch(function() { window.location.replace('/acceso-pendientes'); });
         } else {
-          window.location.replace('/tareas');
+          window.location.replace('/pendientes');
         }
         return;
       }
-      var redirectTo = window.location.origin + '/tareas';
+      var redirectTo = window.location.origin + '/pendientes';
       var successBox = document.getElementById('successBox');
       var btnEl = document.getElementById('btn');
 

@@ -1,6 +1,6 @@
--- Sincronización clientes Crédito → Creativos y Tareas (Opción A).
+-- Sincronización clientes Crédito → Creativos y Pendientes (Opción A).
 -- Fuente de verdad: public.clientes.
--- Si las tablas creativos/tareas están en el mismo proyecto, ejecutar esta migración allí
+-- Si las tablas creativos/pendientes están en el mismo proyecto, ejecutar esta migración allí
 -- o aplicar el contenido de supabase/migrations/016_credito_client_id_sync.sql en el proyecto compartido.
 
 alter table public.creativos_clientes

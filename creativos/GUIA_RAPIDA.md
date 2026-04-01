@@ -53,7 +53,7 @@ Vista general: proyectos activos, por etapa y métricas. Sirve para ver el estad
 ## Editores
 - Equipo de editores asignables a proyectos.
 - **Nuevo**: Nombre obligatorio; correo y especialidad opcionales.
-- "Importar desde Carga de Trabajo" trae miembros del equipo de Tareas como editores.
+- "Importar desde Carga de Trabajo" trae miembros del equipo de Pendientes como editores.
 
 ---
 
@@ -70,5 +70,5 @@ Métricas y gráficos de proyectos (completados, por etapa, etc.).
 | **Proyectos** | Lista de todo; crear proyecto (producto + editor obligatorios). |
 | **Clientes** | Mantener datos de clientes para asignar a proyectos. |
 | **Productos** | Catálogo de productos. |
-| **Editores** | Quién edita; se puede importar desde Tareas. |
+| **Editores** | Quién edita; se puede importar desde Pendientes. |
 | **Analíticas** | Números y gráficos de rendimiento. |

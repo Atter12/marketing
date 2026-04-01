@@ -1,4 +1,4 @@
-# Hoja de ruta — Tareas (AgencyFlow) — Hacerlo realidad
+# Hoja de ruta — Pendientes (AgencyFlow) — Hacerlo realidad
 
 Objetivo: pasar de **datos hardcodeados en JS** a **datos reales en Supabase**, manteniendo el mismo diseño y flujo. Misma base de datos y auth que Crédito y Creativos.
 
@@ -25,7 +25,7 @@ Entidades actuales (resumido):
 | Variable   | Uso |
 |------------|-----|
 | TEAM       | Equipo: id, nombre, rol, color, presencia, asistencia, servicio, etc. |
-| MT         | Tareas por miembro (workload): mapa id_miembro → lista de tareas con título y días. |
+| MT         | Pendientes por miembro (workload): mapa id_miembro → lista de ítems con título y días. |
 | clients    | Clientes: nombre, tipo, fases, equipo asignado, entregables, tickets, reuniones, satisfacción, presupuesto, contacto, health, status, etc. |
 | KT         | Kanban: columnas todo / progress / review / done; cada tarjeta: título, descripción, servicio, prioridad, fecha, progreso, equipo, cliente, subtareas. |
 | tickets    | Mesa de ayuda: id, título, cliente, estado, prioridad, SLA, asignado, timeline de comentarios. |
@@ -71,7 +71,7 @@ Prefijo sugerido: `tareas_` para no mezclar con Crédito/Creativos.
 
 ### Fase 2 — Auth e identidad
 
-- [ ] **2.1** Usar el mismo login que ya redirige a /tareas; al cargar la app, verificar sesión (ya está con el script actual) y opcionalmente que el usuario sea gerente.
+- [ ] **2.1** Usar el mismo login que ya redirige a /pendientes; al cargar la app, verificar sesión (ya está con el script actual) y opcionalmente que el usuario sea gerente.
 
 - [ ] **2.2** En mutaciones, guardar `created_by` / `updated_by` (email del gerente) si se quiere trazabilidad.
 
@@ -108,9 +108,9 @@ Sustituir las constantes por datos cargados desde la API.
 
 ### Fase 4 — Integración con Crédito (opcional)
 
-- [ ] **4.1** Si los “clientes” de Tareas deben ser los mismos que en Crédito: usar tabla `clientes` (Crédito) y tal vez una vista o tabla intermedia que una con entregables/tickets. O mantener `tareas_clientes` con un `credito_client_id` (FK) opcional para sincronizar nombre y contacto.
+- [ ] **4.1** Si los “clientes” de Pendientes deben ser los mismos que en Crédito: usar tabla `clientes` (Crédito) y tal vez una vista o tabla intermedia que una con entregables/tickets. O mantener `tareas_clientes` con un `credito_client_id` (FK) opcional para sincronizar nombre y contacto.
 
-- [ ] **4.2** Selector de cliente al crear entregable o ticket: opción de elegir cliente de Crédito o de Tareas según el modelo que se adopte.
+- [ ] **4.2** Selector de cliente al crear entregable o ticket: opción de elegir cliente de Crédito o de Pendientes según el modelo que se adopte.
 
 ---
 

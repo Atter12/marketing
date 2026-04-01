@@ -35,7 +35,7 @@ if (fs.existsSync(cssFile)) {
 } else {
   console.warn('WARNING: dist/credito-app.css not found — credito.html will 404 styles');
 }
-// auth-config.js (para protección de /creativos y /tareas)
+// auth-config.js (para protección de /creativos y /pendientes)
 const authConfigSrc = path.join(dist, 'credito-app', 'auth-config.js');
 if (fs.existsSync(authConfigSrc)) {
   fs.copyFileSync(authConfigSrc, path.join(outDir, 'auth-config.js'));

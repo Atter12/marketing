@@ -1,5 +1,5 @@
 /**
- * Holistic Marketing — sistema de diseño unificado (Crédito · Tareas · Creativos)
+ * Holistic Marketing — sistema de diseño unificado (Crédito · Pendientes · Creativos)
  * Tipografía: Inter. Marca: naranja cálido #F97316. Fondos: crema / piedra cálida.
  */
 :root {
@@ -167,7 +167,7 @@
   --sidebar-border: #e5e7eb;
 }
 
-/* Tipografía / render (referencia visual: Tareas → Crédito + Creativos) */
+/* Tipografía / render (referencia visual: Pendientes → Crédito + Creativos) */
 html,
 body,
 #root {

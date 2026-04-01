@@ -1,6 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════
--- Sincronización clientes Crédito → Creativos y Tareas (Opción A)
--- Fuente de verdad: public.clientes. Referencia en creativos/tareas.
+-- Sincronización clientes Crédito → Creativos y Pendientes (Opción A)
+-- Fuente de verdad: public.clientes. Referencia en creativos/pendientes.
 -- ═══════════════════════════════════════════════════════════════
 
 -- ═══ 1. creativos_clientes: FK opcional a clientes (Crédito) ═══

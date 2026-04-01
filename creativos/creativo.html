@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/creativos/holistic-design-system.css">
 <style>
-/* Tokens: holistic-design-system.css — UI alineada a Tareas (tipografía, selección, scrollbars) */
+/* Tokens: holistic-design-system.css — UI alineada a Pendientes (tipografía, selección, scrollbars) */
 /* ============================================
-   BASE RESET (misma base que tareas/tarea.html)
+   BASE RESET (misma base que pendientes/tarea.html)
    ============================================ */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html {
@@ -1803,7 +1803,7 @@ function purgeExpiredEntregaProjects() {
 }
 
 /**
- * Editores en Creativos = gerentes (Tareas · Asistencia), enlazados por gerente_id (si existe en BD) y por email.
+ * Editores en Creativos = gerentes (Pendientes · Asistencia), enlazados por gerente_id (si existe en BD) y por email.
  * Incluye asignaciones históricas sin gerente coincidente si aún tienen proyectos.
  */
 function mergeCreativosEditorsWithGerentes(gerentesList, creativosEditoresRows, proyectoRows) {
@@ -2692,7 +2692,7 @@ function renderEditors() {
       <div class="empty-state">
         <div class="empty-state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <h3>No hay miembros visibles</h3>
-        <p style="max-width:26rem;margin-left:auto;margin-right:auto;line-height:1.55">El equipo sale de la tabla <strong>gerentes</strong> (Tareas · Asistencia). Los administradores ven a todos; el resto solo su propio correo. Alta y permisos se gestionan en Tareas.</p>
+        <p style="max-width:26rem;margin-left:auto;margin-right:auto;line-height:1.55">El equipo sale de la tabla <strong>gerentes</strong> (Pendientes · Asistencia). Los administradores ven a todos; el resto solo su propio correo. Alta y permisos se gestionan en Pendientes.</p>
         <button type="button" class="btn btn-primary" onclick="openEditorModal()">Cómo funciona</button>
       </div>
     </div>`;
@@ -2701,7 +2701,7 @@ function renderEditors() {
     <div class="section-header">
       <div>
         <h2>Equipo (${D.editors.length})</h2>
-        <p style="margin:4px 0 0;font-size:var(--text-xs);color:var(--color-text-muted);font-weight:500">Mismas personas y correos que en <strong>Tareas · Asistencia</strong> (gerentes).</p>
+        <p style="margin:4px 0 0;font-size:var(--text-xs);color:var(--color-text-muted);font-weight:500">Mismas personas y correos que en <strong>Pendientes · Asistencia</strong> (gerentes).</p>
       </div>
       <button type="button" class="btn btn-secondary" onclick="openEditorModal()">Información</button>
     </div>
@@ -3623,7 +3623,7 @@ function openNewProjectModal() {
     </div>
       <div class="form-group">
         <label class="form-label">Responsable (equipo / asistencia)</label>
-        <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted)">Son las mismas personas que en <strong>Tareas · Asistencia</strong> (tabla gerentes), con su <strong>correo</strong>. La primera vez que asignas a alguien se crea su fila en Creativos enlazada por email.</p>
+        <p class="form-hint" style="margin:0 0 var(--space-2) 0;font-size:var(--text-xs);color:var(--color-text-muted)">Son las mismas personas que en <strong>Pendientes · Asistencia</strong> (tabla gerentes), con su <strong>correo</strong>. La primera vez que asignas a alguien se crea su fila en Creativos enlazada por email.</p>
         <select class="form-select" id="projEditor">${renderProjectEditorSelectHTML('')}</select>
       </div>
     <div class="form-group"><label class="form-label">Guión e instrucciones</label><textarea class="form-textarea" id="projBrief" rows="8" placeholder="Pega o escribe el guión aquí; se conservan los saltos de línea y párrafos."></textarea></div>
@@ -4118,10 +4118,10 @@ function openEditorModal(id) {
   if (!id) {
     openModal('Equipo y asistencia', `
       <p style="font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.6;margin:0 0 var(--space-3) 0">
-        En Creativos, <strong>las personas que asignas a proyectos</strong> son las mismas filas de la tabla <strong>gerentes</strong> que usas en <strong>Tareas · Asistencia</strong>: nombre, apellido y <strong>correo</strong> (el mismo con el que inician sesión).
+        En Creativos, <strong>las personas que asignas a proyectos</strong> son las mismas filas de la tabla <strong>gerentes</strong> que usas en <strong>Pendientes · Asistencia</strong>: nombre, apellido y <strong>correo</strong> (el mismo con el que inician sesión).
       </p>
       <p style="font-size:var(--text-sm);color:var(--color-text-muted);line-height:1.6;margin:0">
-        Para dar de alta miembros, permisos o correos, usa la app de Tareas con una cuenta <strong>administradora</strong>. Al asignar un proyecto se usa <code style="font-size:0.85em">creativos_editores</code> con correo y, si aplica la migración 034, <strong>gerente_id</strong> hacia la tabla gerentes.
+        Para dar de alta miembros, permisos o correos, usa la app de Pendientes con una cuenta <strong>administradora</strong>. Al asignar un proyecto se usa <code style="font-size:0.85em">creativos_editores</code> con correo y, si aplica la migración 034, <strong>gerente_id</strong> hacia la tabla gerentes.
       </p>
     `, '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>');
     return;
@@ -4133,7 +4133,7 @@ function openEditorModal(id) {
       <div style="font-size:var(--text-sm);line-height:1.55">
         <p style="margin:0 0 var(--space-2) 0"><strong>${esc(e.name)}</strong></p>
         ${e.email ? '<p style="margin:0 0 var(--space-3) 0;word-break:break-all"><span style="color:var(--color-text-muted)">Correo</span><br><strong>' + esc(e.email) + '</strong></p>' : ''}
-        <p class="form-hint" style="margin:0">Perfil y asistencia se administran en Tareas.</p>
+        <p class="form-hint" style="margin:0">Perfil y asistencia se administran en Pendientes.</p>
         ${e.legacyEditor ? '<p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:var(--space-3)">Editor histórico sin coincidencia actual con un gerente (solo lectura en Creativos).</p>' : ''}
       </div>
     `, '<button type="button" class="btn btn-secondary" onclick="closeModal()">Cerrar</button>');
@@ -4300,11 +4300,11 @@ function deleteProduct(id) {
 function deleteEditor(id) {
   var ed = D.editors.find(function(x) { return x.id === id; });
   if (ed && ed.fromGerente && !ed.legacyEditor) {
-    showToast('info', 'Los miembros del equipo se gestionan en Tareas · Asistencia (tabla gerentes).');
+    showToast('info', 'Los miembros del equipo se gestionan en Pendientes · Asistencia (tabla gerentes).');
     return;
   }
   if (String(id).indexOf('gerente:') === 0) {
-    showToast('info', 'Los miembros del equipo se gestionan en Tareas · Asistencia.');
+    showToast('info', 'Los miembros del equipo se gestionan en Pendientes · Asistencia.');
     return;
   }
   if (D.projects.some(p => p.editorId === id)) {

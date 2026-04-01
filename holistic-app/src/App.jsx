@@ -296,7 +296,7 @@ const IBtn = ({ onClick, icon, danger, title: btnTitle, style: s, ...p }) => <bu
 const Empty = ({ cols, msg }) => { const displayMsg = typeof msg === "string" && !msg.includes("🎉") && !msg.includes("📋") ? "📋 " + msg : msg; return <tr><td colSpan={cols} style={{ textAlign: "center", padding: "56px 20px", color: "var(--sidebar-text-muted)", fontSize: 14, background: "linear-gradient(180deg, var(--color-surface-2), var(--color-bg))" }}><div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}><div style={{ width: 48, height: 48, borderRadius: 14, background: "var(--sidebar-hover)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 4 }}><FileText size={22} style={{ color: "var(--color-text-faint)" }} /></div><span>{displayMsg}</span></div></td></tr>; };
 
 /* ═══════ TABLE STYLES ═══════ */
-/* Cabeceras / celdas alineadas a tablas Tareas (clients-thead / filas) */
+/* Cabeceras / celdas alineadas a tablas Pendientes (clients-thead / filas) */
 const TH = { textAlign: "left", padding: "12px 18px", fontSize: 10.5, fontWeight: 700, color: "var(--color-text-muted)", textTransform: "uppercase", letterSpacing: 0.8, background: "var(--color-surface-2)", borderBottom: "1px solid var(--color-divider)", fontFamily: "var(--font-body)" };
 
 /** Recharts en Resumen pro: leen variables de `.hm-resumen-pro` (claro / oscuro) */
@@ -316,7 +316,7 @@ const REP_CHART_TOOLTIP = {
 const REP_CHART_LEGEND = { fontSize: 11, color: "var(--color-text-muted, #64748b)" };
 const REP_CHART_DOT_RING = "var(--hm-pro-chart-dot-ring, #ffffff)";
 const TD = { padding: "12px 18px", fontSize: 14, borderBottom: "1px solid var(--color-divider)", verticalAlign: "middle", fontFamily: "var(--font-body)" };
-/* Mismos números que Tareas: Inter + tabular-nums (no monospace en tablas) */
+/* Mismos números que Pendientes: Inter + tabular-nums (no monospace en tablas) */
 const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums", fontSize: 12.5, fontWeight: 600, letterSpacing: -0.2 };
 
 /* ═══════ MAIN APP ═══════ */
@@ -1466,7 +1466,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       <style>{`*{box-sizing:border-box}
 ::selection{background:var(--color-primary-highlight);color:var(--color-text)}
 
-/* === STAT CARDS (mismo hover que tareas/tarea.html .stat-card) === */
+/* === STAT CARDS (mismo hover que pendientes/tarea.html .stat-card) === */
 .stat-card{transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
 .stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);border-color:var(--color-primary)!important}
 
@@ -1482,7 +1482,7 @@ thead th{position:relative}
 .hm-modal-box,.hm-modal-box input,.hm-modal-box select,.hm-modal-box textarea{box-sizing:border-box}
 .hm-modal-box .hm-form-grid>div{min-width:0}
 
-/* === FOCUS STATES (misma marca que Tareas) === */
+/* === FOCUS STATES (misma marca que Pendientes) === */
 input:focus,select:focus,textarea:focus{border-color:var(--color-primary)!important;box-shadow:0 0 0 3px var(--color-primary-soft)!important;outline:none!important}
 
 /* === SIDEBAR NAV === */
@@ -1513,7 +1513,7 @@ button{transition:all .15s ease}
   .hm-page-content{padding-top:clamp(16px,2vw,28px)!important;padding-bottom:clamp(20px,2.4vw,36px)!important;padding-left:clamp(12px,2.2vw,28px)!important;padding-right:clamp(12px,2.2vw,28px)!important}
 }
 
-/* === CHART CONTAINERS (superficie / radio como .card en Tareas) === */
+/* === CHART CONTAINERS (superficie / radio como .card en Pendientes) === */
 .hm-chart-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);padding:26px 28px;transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
 .hm-chart-card:hover{box-shadow:var(--shadow-md);border-color:var(--color-primary);transform:translateY(-1px)}
 @keyframes debtCardEnter{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -2528,7 +2528,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
         {isLikelyBlockedAvatarHotlinkUrl(String(cf.avatar_url || "").replace(/&amp;/gi, "&")) && (
           <div role="alert" style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 12.5, lineHeight: 1.5 }}>
-            <strong style={{ display: "block", marginBottom: 4 }}>Foto que no se verá en Crédito ni en Tareas</strong>
+            <strong style={{ display: "block", marginBottom: 4 }}>Foto que no se verá en Crédito ni en Pendientes</strong>
             Los enlaces de WhatsApp / Meta suelen dar <strong>403</strong> al mostrarse aquí. En Crédito la foto del cliente es la que se sincroniza con el resto del sistema: <strong>subí un archivo</strong> con «{editId ? "Cambiar foto" : "Subir foto"}» (se guarda en Supabase).
           </div>
         )}

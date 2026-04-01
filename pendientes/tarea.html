@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="docTitleTareas">Tareas Holistic</title>
-<link rel="icon" type="image/png" href="/tareas/favicon/favicon.png" /><link rel="shortcut icon" type="image/png" href="/tareas/favicon/favicon.png" />
+<title id="docTitlePendientes">Pendientes Holistic</title>
+<link rel="icon" type="image/png" href="/pendientes/favicon/favicon.png" /><link rel="shortcut icon" type="image/png" href="/pendientes/favicon/favicon.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/tareas/holistic-design-system.css">
+<link rel="stylesheet" href="/pendientes/holistic-design-system.css">
 <style>
 /* Tokens: holistic-design-system.css — referencia visual de esta app para Crédito y Creativos */
 /* ══════════════════════════════════════════════
@@ -2110,21 +2110,21 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <script>
 (function(){
   var url=window.__SUPABASE_URL__;var key=window.__SUPABASE_ANON_KEY__;
-  if(!url||!key){ console.warn('[Tareas] auth: faltan URL o KEY de Supabase (auth-config.js)'); return; }
+  if(!url||!key){ console.warn('[Pendientes] auth: faltan URL o KEY de Supabase (auth-config.js)'); return; }
   var lib=window.supabase;
   var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
-  if(!lib||typeof createClientFn!=='function'){ console.warn('[Tareas] auth: createClient no encontrado en window.supabase'); return; }
+  if(!lib||typeof createClientFn!=='function'){ console.warn('[Pendientes] auth: createClient no encontrado en window.supabase'); return; }
   var supabase=createClientFn(url,key);
   var hash=window.location.hash||'';
   if(hash.indexOf('access_token')!==-1){
     var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
     if(params.access_token&&params.refresh_token){
-      supabase.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token}).then(function(){ window.history.replaceState(null,'','/tareas'); });
+      supabase.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token}).then(function(){ window.history.replaceState(null,'','/pendientes'); });
     }
     return;
   }
   supabase.auth.getSession().then(function(r){
-    if(!r.data.session) window.location.replace('/acceso-tareas');
+    if(!r.data.session) window.location.replace('/acceso-pendientes');
   });
 })();
 </script>
@@ -2141,9 +2141,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 <!-- ══════ SIDEBAR ══════ -->
 <aside class="sidebar" id="sidebar" role="navigation" aria-label="Navegación principal">
   <div class="sidebar-brand">
-    <img class="sidebar-logo" src="/tareas/logo/logoh.png" alt="Holistic Marketing" style="height: 48px; width: 200px; max-width: 100%; object-fit: contain; display: block;">
+    <img class="sidebar-logo" src="/pendientes/logo/logoh.png" alt="Holistic Marketing" style="height: 48px; width: 200px; max-width: 100%; object-fit: contain; display: block;">
     <div class="sidebar-wordmark">
-      <h1>Tareas <span class="sidebar-wordmark-accent">Holistic</span></h1>
+      <h1>Pendientes <span class="sidebar-wordmark-accent">Holistic</span></h1>
     </div>
   </div>
 
@@ -2253,7 +2253,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       </button>
       <h2 class="topbar-title" id="pageTitle">Dashboard</h2>
       <div class="breadcrumb" aria-label="Navegación de ruta">
-        Tareas Holistic <span>›</span> <span id="pageCrumb">Dashboard</span>
+        Pendientes Holistic <span>›</span> <span id="pageCrumb">Dashboard</span>
       </div>
     </div>
     <div class="topbar-right">
@@ -2496,7 +2496,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
         <button class="tab active">Vista Barras</button>
         <button class="tab">Vista Gantt</button>
       </div>
-      <button type="button" class="btn-primary btn-sm" data-tareas-action="invitar-miembro" onclick="openModal('equipo')">+ Nuevo miembro</button>
+      <button type="button" class="btn-primary btn-sm" data-pendientes-action="invitar-miembro" onclick="openModal('equipo')">+ Nuevo miembro</button>
     </div>
   </div>
   <div class="workload-table" id="workloadTable" role="table" aria-label="Equipo de trabajo"></div>
@@ -2627,7 +2627,7 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
       </div>
       <div class="cmd-item" onclick="navigate('workload');closeCmdPalette()" data-cmd="Equipo de trabajo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Equipo de trabajo</div><div class="cmd-item-desc">Distribución de tareas del equipo</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Equipo de trabajo</div><div class="cmd-item-desc">Distribución de pendientes del equipo</div></div>
       </div>
       <div class="cmd-item" onclick="navigate('attendance');closeCmdPalette()" data-cmd="Asistencia Control">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
@@ -2707,7 +2707,7 @@ function tryRunTareasAppBootstrap() {
       refreshTareasSessionPerms();
     });
   }).catch(function(err) {
-    console.error('[Tareas] Error cargando datos:', err);
+    console.error('[Pendientes] Error cargando datos:', err);
     showTareasLoading(false);
     initViews();
     initTareasAvatar();
@@ -2719,7 +2719,7 @@ function tryInitSupabase(retryCount) {
   var url = window.__SUPABASE_URL__;
   var key = window.__SUPABASE_ANON_KEY__;
   var scripts = [].map.call(document.querySelectorAll('script[src]'), function(s) { return s.src; }).filter(function(s) { return s.indexOf('supabase') !== -1; });
-  console.log('[Tareas] tryInitSupabase (intento ' + (retryCount + 1) + ')', {
+  console.log('[Pendientes] tryInitSupabase (intento ' + (retryCount + 1) + ')', {
     readyState: document.readyState,
     hasUrl: !!url,
     hasKey: !!key,
@@ -2730,40 +2730,40 @@ function tryInitSupabase(retryCount) {
     scriptTagsWithSupabase: scripts
   });
   if (!url || !key) {
-    console.warn('[Tareas] Supabase: faltan __SUPABASE_URL__ o __SUPABASE_ANON_KEY__. ¿Está cargado /credito-app/auth-config.js?');
+    console.warn('[Pendientes] Supabase: faltan __SUPABASE_URL__ o __SUPABASE_ANON_KEY__. ¿Está cargado /credito-app/auth-config.js?');
     return;
   }
   var lib = window.supabase;
   if (lib == null || typeof lib !== 'object') {
     if (retryCount === 0 && document.querySelector('script[src*="supabase-js"]')) {
-      console.warn('[Tareas] Supabase: window.supabase es null (el script del head puede no haber cargado). Cargando script dinámicamente...');
+      console.warn('[Pendientes] Supabase: window.supabase es null (el script del head puede no haber cargado). Cargando script dinámicamente...');
       var s = document.createElement('script');
       s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
-      s.onload = function() { console.log('[Tareas] Script Supabase cargado por fallback.'); tryInitSupabase(1); };
-      s.onerror = function() { console.error('[Tareas] Error cargando script Supabase desde CDN.'); };
+      s.onload = function() { console.log('[Pendientes] Script Supabase cargado por fallback.'); tryInitSupabase(1); };
+      s.onerror = function() { console.error('[Pendientes] Error cargando script Supabase desde CDN.'); };
       document.head.appendChild(s);
       return;
     }
     if (retryCount < 4) {
-      console.warn('[Tareas] Supabase: window.supabase aún null (intento ' + (retryCount + 1) + '). Reintento en 500ms.');
+      console.warn('[Pendientes] Supabase: window.supabase aún null (intento ' + (retryCount + 1) + '). Reintento en 500ms.');
       setTimeout(function() { tryInitSupabase(retryCount + 1); }, 500);
     } else {
-      console.error('[Tareas] Supabase: no disponible tras reintentos. Comprueba pestaña Network: ¿el script supabase.js devuelve 200?');
+      console.error('[Pendientes] Supabase: no disponible tras reintentos. Comprueba pestaña Network: ¿el script supabase.js devuelve 200?');
     }
     return;
   }
   var createClientFn = lib.createClient || (lib.default && (lib.default.createClient || lib.default));
   if (typeof createClientFn !== 'function') {
-    console.warn('[Tareas] Supabase: createClient no encontrado. Keys:', Object.keys(lib));
+    console.warn('[Pendientes] Supabase: createClient no encontrado. Keys:', Object.keys(lib));
     if (retryCount < 3) setTimeout(function() { tryInitSupabase(retryCount + 1); }, 400);
     return;
   }
   try {
     supabase = createClientFn(url, key);
-    console.log('[Tareas] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
+    console.log('[Pendientes] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
     tryRunTareasAppBootstrap();
   } catch (e) {
-    console.warn('[Tareas] Supabase createClient error:', e);
+    console.warn('[Pendientes] Supabase createClient error:', e);
   }
 }
 if (typeof window !== 'undefined') {
@@ -2912,7 +2912,7 @@ function refreshTareasSessionPerms(callback) {
 }
 function tareasApplyPermissionUi() {
   var p = tareasEffectivePerms();
-  document.querySelectorAll('[data-tareas-action="invitar-miembro"]').forEach(function(el) {
+  document.querySelectorAll('[data-pendientes-action="invitar-miembro"]').forEach(function(el) {
     el.style.display = p.invite ? '' : 'none';
   });
   document.querySelectorAll('[data-attendance-admin-only]').forEach(function(el) {
@@ -2938,7 +2938,7 @@ function invokeInviteGerenteEmail(email, done) {
     var redirect = '';
     try {
       if (window.location && window.location.origin) {
-        redirect = window.location.origin + '/tareas';
+        redirect = window.location.origin + '/pendientes';
       } else if (window.location && window.location.href) {
         redirect = window.location.href.split('#')[0];
       }
@@ -3007,7 +3007,7 @@ function uploadGerenteAvatarForEmail(email, file, done) {
   var path = gerenteEmailSlug(email) + '/avatar.' + ext;
   if (marketingStorageActive()) {
     marketingStorageUpload('avatars', path, file, function(err) {
-      if (err) { console.warn('[Tareas] avatar marketing-storage', err); if (done) done(null); return; }
+      if (err) { console.warn('[Pendientes] avatar marketing-storage', err); if (done) done(null); return; }
       var base = marketingStorageBase();
       var pub = base + '/v1/public/avatars/' + path.split('/').map(encodeURIComponent).join('/');
       var url = pub + (pub.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
@@ -3016,7 +3016,7 @@ function uploadGerenteAvatarForEmail(email, file, done) {
     return;
   }
   supabase.storage.from('avatars').upload(path, file, { upsert: true }).then(function(up) {
-    if (up.error) { console.warn('[Tareas] avatar storage', up.error); if (done) done(null); return; }
+    if (up.error) { console.warn('[Pendientes] avatar storage', up.error); if (done) done(null); return; }
     var pub = supabase.storage.from('avatars').getPublicUrl(path);
     if (!pub || !pub.data || !pub.data.publicUrl) { if (done) done(null); return; }
     var url = pub.data.publicUrl + (pub.data.publicUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
@@ -3289,7 +3289,7 @@ function resolveEquipoIdForAssigneeEmail(email, done) {
     asistencia: null
   }).select('id').single().then(function(ins) {
     if (ins.error) {
-      console.warn('[Tareas] No se pudo crear fila de equipo para asistencia:', ins.error);
+      console.warn('[Pendientes] No se pudo crear fila de equipo para asistencia:', ins.error);
       if (done) done(null);
       return;
     }
@@ -3310,13 +3310,13 @@ function initTareasRealtimeSync() {
       })
       .subscribe();
   } catch (e) {
-    console.warn('[Tareas] Realtime clientes:', e);
+    console.warn('[Pendientes] Realtime clientes:', e);
   }
 }
 
 async function loadTareasData() {
   if (!supabase) {
-    console.warn('[Tareas] loadTareasData: supabase es null, no se puede cargar. Revisa los logs de tryInitSupabase.');
+    console.warn('[Pendientes] loadTareasData: supabase es null, no se puede cargar. Revisa los logs de tryInitSupabase.');
     return null;
   }
   var now = new Date();
@@ -3332,8 +3332,8 @@ async function loadTareasData() {
       supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia'),
       supabase.from('gerentes').select('*').order('email')
     ]);
-    if (creditoRes.error) console.warn('[Tareas] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
-    if (gerentesRes.error) console.warn('[Tareas] No se pudo cargar gerentes (asistencia):', gerentesRes.error.message);
+    if (creditoRes.error) console.warn('[Pendientes] No se pudo cargar clientes de Crédito (sync):', creditoRes.error.message);
+    if (gerentesRes.error) console.warn('[Pendientes] No se pudo cargar gerentes (asistencia):', gerentesRes.error.message);
     if (eqRes.error) throw eqRes.error;
     if (clRes.error) throw clRes.error;
     if (kbRes.error) throw kbRes.error;
@@ -3472,7 +3472,7 @@ async function loadTareasData() {
     });
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
   } catch (err) {
-    console.error('[Tareas] loadTareasData:', err);
+    console.error('[Pendientes] loadTareasData:', err);
     return null;
   }
 }
@@ -4300,43 +4300,43 @@ function collectTicketStoragePaths(tk) {
 function deleteTicketByIdx(idx) {
   var tk = tickets[idx];
   if (!tk) {
-    console.error('[Tareas] deleteTicketByIdx: sin ticket en índice', idx);
+    console.error('[Pendientes] deleteTicketByIdx: sin ticket en índice', idx);
     return;
   }
   if (!confirm('¿Eliminar el ticket ' + (tk.id || '') + '? Se borrarán los comentarios y, si hay, las imágenes en almacenamiento.')) {
-    console.log('[Tareas] deleteTicketByIdx: cancelado por el usuario');
+    console.log('[Pendientes] deleteTicketByIdx: cancelado por el usuario');
     return;
   }
-  console.log('[Tareas] deleteTicketByIdx: inicio', { idx: idx, codigo: tk.id, dbId: tk.dbId, supabase: !!supabase });
+  console.log('[Pendientes] deleteTicketByIdx: inicio', { idx: idx, codigo: tk.id, dbId: tk.dbId, supabase: !!supabase });
   if (supabase && tk.dbId) {
     var paths = collectTicketStoragePaths(tk);
     function doRowDelete() {
-      console.log('[Tareas] deleteTicketByIdx: DELETE tareas_tickets', tk.dbId);
+      console.log('[Pendientes] deleteTicketByIdx: DELETE tareas_tickets', tk.dbId);
       supabase.from('tareas_tickets').delete().eq('id', tk.dbId).select('id').then(function(r) {
-        console.log('[Tareas] deleteTicketByIdx: respuesta', r);
+        console.log('[Pendientes] deleteTicketByIdx: respuesta', r);
         if (r.error) {
-          console.error('[Tareas] deleteTicketByIdx error PostgREST', r.error);
+          console.error('[Pendientes] deleteTicketByIdx error PostgREST', r.error);
           alert(r.error.message || 'No se pudo eliminar');
           return;
         }
         if (!r.data || !r.data.length) {
-          console.error('[Tareas] deleteTicketByIdx: 0 filas borradas (RLS o id). Ejecuta en Supabase la migración 026 (políticas anon en tickets).', { dbId: tk.dbId });
+          console.error('[Pendientes] deleteTicketByIdx: 0 filas borradas (RLS o id). Ejecuta en Supabase la migración 026 (políticas anon en tickets).', { dbId: tk.dbId });
           alert('No se eliminó el ticket: la base no devolvió filas (suele ser RLS). En el proyecto SQL, aplica supabase/migrations/026_tareas_tickets_anon_policy.sql');
           return;
         }
         reloadTareasData(function() { closeModal(); });
       }).catch(function(err) {
-        console.error('[Tareas] deleteTicketByIdx: excepción/red', err);
+        console.error('[Pendientes] deleteTicketByIdx: excepción/red', err);
         alert('Error al eliminar ticket: ' + (err && err.message ? err.message : String(err)));
       });
     }
     if (paths.length) {
-      console.log('[Tareas] deleteTicketByIdx: quitando', paths.length, 'archivos de storage');
+      console.log('[Pendientes] deleteTicketByIdx: quitando', paths.length, 'archivos de storage');
       if (marketingStorageActive()) {
         marketingStorageDeleteObjects('tareas_adjuntos', paths, function() { doRowDelete(); });
       } else {
         supabase.storage.from('tareas_adjuntos').remove(paths).then(function() { doRowDelete(); }).catch(function(e) {
-          console.warn('[Tareas] deleteTicketByIdx: storage.remove falló, igual se intenta borrar fila', e);
+          console.warn('[Pendientes] deleteTicketByIdx: storage.remove falló, igual se intenta borrar fila', e);
           doRowDelete();
         });
       }
@@ -4344,7 +4344,7 @@ function deleteTicketByIdx(idx) {
       doRowDelete();
     }
   } else {
-    console.warn('[Tareas] deleteTicketByIdx: modo local (sin supabase o sin dbId)', { hasSupabase: !!supabase, dbId: tk.dbId });
+    console.warn('[Pendientes] deleteTicketByIdx: modo local (sin supabase o sin dbId)', { hasSupabase: !!supabase, dbId: tk.dbId });
     tickets.splice(idx, 1);
     renderers.tickets();
     updateBadges();
@@ -4354,26 +4354,26 @@ function deleteTicketByIdx(idx) {
 
 function deleteEntregable(kanbanId) {
   if (!confirm('¿Eliminar este entregable del tablero?')) {
-    console.log('[Tareas] deleteEntregable: cancelado por el usuario');
+    console.log('[Pendientes] deleteEntregable: cancelado por el usuario');
     return;
   }
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
   if (!k) {
-    console.error('[Tareas] deleteEntregable: no hay tarjeta en KT con id', kanbanId, 'len(KT)=', KT.length);
+    console.error('[Pendientes] deleteEntregable: no hay tarjeta en KT con id', kanbanId, 'len(KT)=', KT.length);
     closeModal();
     return;
   }
-  console.log('[Tareas] deleteEntregable: inicio', { kanbanId: kanbanId, ticketDbId: k.ticketDbId, supabase: !!supabase });
+  console.log('[Pendientes] deleteEntregable: inicio', { kanbanId: kanbanId, ticketDbId: k.ticketDbId, supabase: !!supabase });
   if (supabase) {
     supabase.from('tareas_kanban').delete().eq('id', kanbanId).select('id').then(function(r) {
-      console.log('[Tareas] deleteEntregable: respuesta DELETE', r);
+      console.log('[Pendientes] deleteEntregable: respuesta DELETE', r);
       if (r.error) {
-        console.error('[Tareas] deleteEntregable error PostgREST', r.error);
+        console.error('[Pendientes] deleteEntregable error PostgREST', r.error);
         alert(r.error.message || 'No se pudo eliminar');
         return;
       }
       if (!r.data || !r.data.length) {
-        console.error('[Tareas] deleteEntregable: 0 filas (RLS o id). Revisa migraciones 017 (kanban anon) y 026 (tickets).', { kanbanId: kanbanId });
+        console.error('[Pendientes] deleteEntregable: 0 filas (RLS o id). Revisa migraciones 017 (kanban anon) y 026 (tickets).', { kanbanId: kanbanId });
         alert('No se eliminó el entregable: 0 filas en BD (RLS o id). Aplica 017 + 026 en Supabase o comprueba que el id sea el de la fila en tareas_kanban.');
         return;
       }
@@ -4382,21 +4382,21 @@ function deleteEntregable(kanbanId) {
       }
       if (k.ticketDbId) {
         supabase.from('tareas_tickets').update({ entregable_vinculado: null }).eq('id', k.ticketDbId).select('id').then(function(ur) {
-          if (ur.error) console.warn('[Tareas] deleteEntregable: no se pudo limpiar entregable_vinculado en ticket (sigue el borrado en kanban)', ur.error);
+          if (ur.error) console.warn('[Pendientes] deleteEntregable: no se pudo limpiar entregable_vinculado en ticket (sigue el borrado en kanban)', ur.error);
           afterUnlink();
         }).catch(function(err) {
-          console.error('[Tareas] deleteEntregable: error al actualizar ticket', err);
+          console.error('[Pendientes] deleteEntregable: error al actualizar ticket', err);
           afterUnlink();
         });
       } else {
         afterUnlink();
       }
     }).catch(function(err) {
-      console.error('[Tareas] deleteEntregable: excepción/red', err);
+      console.error('[Pendientes] deleteEntregable: excepción/red', err);
       alert('Error al eliminar entregable: ' + (err && err.message ? err.message : String(err)));
     });
   } else {
-    console.warn('[Tareas] deleteEntregable: sin supabase, solo memoria local');
+    console.warn('[Pendientes] deleteEntregable: sin supabase, solo memoria local');
     KT = KT.filter(function(x) { return String(x.id) !== String(kanbanId); });
     renderers.kanban();
     updateBadges();
@@ -4592,7 +4592,7 @@ renderers.calendar = function() {
 function workloadNormName(s) {
   return String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
-/** Tareas de tareas_workload están ligadas a tareas_equipo.id; intentamos cruzar por nombre / parte del correo. */
+/** Filas de tareas_workload están ligadas a tareas_equipo.id; intentamos cruzar por nombre / parte del correo. */
 function workloadTasksForMember(m) {
   if (!m || !MT) return [];
   if (MT[m.id] && MT[m.id].length) return MT[m.id];
@@ -4628,7 +4628,7 @@ renderers.workload = function() {
   table.innerHTML = `
     <div class="workload-header" role="row">
       <div role="columnheader">Miembro</div>
-      <div role="columnheader">Distribución de Tareas</div>
+      <div role="columnheader">Distribución de pendientes</div>
       <div style="text-align:center" role="columnheader">Total</div>
       <div style="text-align:center" role="columnheader">Hechas</div>
       <div style="text-align:center" role="columnheader">Carga</div>
@@ -5322,7 +5322,7 @@ function openModal(type) {
         <p class="eq-invite-hint" style="margin-top:0">Marca los permisos que tendrá este miembro en el centro de negocios.</p>
         <div class="eq-perm-list">
           <label class="eq-perm-card"><input type="checkbox" id="eq-perm-admin" onchange="equipoInvitarSyncAdmin()"><div><h4>Administrador</h4><p>Los administradores tienen acceso completo a todas las funciones del Centro de negocios e invitan a nuevos miembros.</p></div></label>
-          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-estandar" checked onchange="equipoInvitarClearAdmin()"><div><h4>Asistente</h4><p>Los asistentes trabajan en lo asignado; no pueden cambiar roles ni asignar tareas a otras personas (solo a sí mismos).</p></div></label>
+          <label class="eq-perm-card"><input type="checkbox" id="eq-perm-estandar" checked onchange="equipoInvitarClearAdmin()"><div><h4>Asistente</h4><p>Los asistentes trabajan en lo asignado; no pueden cambiar roles ni asignar pendientes a otras personas (solo a sí mismos).</p></div></label>
           <label class="eq-perm-card"><input type="checkbox" id="eq-perm-gestor-fin" onchange="equipoInvitarClearAdmin()"><div><h4>Gestor financiero</h4><p>Control total de funciones relacionadas con finanzas y pagos en clientes (editar fees y datos financieros).</p></div></label>
           <label class="eq-perm-card"><input type="checkbox" id="eq-perm-analista-fin" onchange="equipoInvitarClearAdmin()"><div><h4>Analista financiero</h4><p>Puede ver y consultar datos financieros de clientes (solo lectura).</p></div></label>
         </div>
@@ -5664,7 +5664,7 @@ function addTask() {
               return;
             }
             supabase.from('tareas_kanban').update({ adjuntos_referencia: adjuntos }).eq('id', row.id).then(function(ur) {
-              if (ur.error) console.warn('[Tareas] No se guardaron adjuntos del entregable:', ur.error);
+              if (ur.error) console.warn('[Pendientes] No se guardaron adjuntos del entregable:', ur.error);
               pushKtAndClose(adjuntos);
             });
           });
@@ -5942,12 +5942,12 @@ function safeRefreshAfterInvite(done) {
       updateBadges();
       updateDashboardStats();
     } catch (e2) {
-      console.error('[Tareas] post-invite render fallback:', e2);
+      console.error('[Pendientes] post-invite render fallback:', e2);
       try { initViews(); } catch (e3) {}
     }
     if (done) done();
   }).catch(function(err) {
-    console.error('[Tareas] reload after invite failed:', err);
+    console.error('[Pendientes] reload after invite failed:', err);
     try { initViews(); } catch (e4) {}
     if (done) done();
   });
@@ -5978,7 +5978,7 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
         color: color,
         activo: true
       }).eq('id', ex.data.id).then(function(up) {
-        if (up.error) console.warn('[Tareas] tareas_equipo update existente:', up.error.message);
+        if (up.error) console.warn('[Pendientes] tareas_equipo update existente:', up.error.message);
         finalizeInvite();
       });
       return;
@@ -5986,16 +5986,16 @@ function insertEquipoAndFinish(nombre, apellido, email, color) {
     var id = makeUniqueEquipoId(email);
     var rowEq = { id: id, nombre: displayName, rol: 'Miembro', servicio: '', color: color, activo: false, gerente_email: email };
     supabase.from('tareas_equipo').insert(rowEq).then(function(re) {
-      if (re.error) console.warn('[Tareas] tareas_equipo insert:', re.error.message);
+      if (re.error) console.warn('[Pendientes] tareas_equipo insert:', re.error.message);
       finalizeInvite();
     });
   }).catch(function(err) {
-    console.warn('[Tareas] tareas_equipo lookup:', err);
+    console.warn('[Pendientes] tareas_equipo lookup:', err);
     finalizeInvite();
   });
 }
 function deleteWorkloadMember(memberId, memberEmail, memberName) {
-  console.log('[Tareas] deleteWorkloadMember:start', { memberId: memberId, memberEmail: memberEmail, memberName: memberName, hasSupabase: !!supabase });
+  console.log('[Pendientes] deleteWorkloadMember:start', { memberId: memberId, memberEmail: memberEmail, memberName: memberName, hasSupabase: !!supabase });
   if (!tareasEffectivePerms().admin) { alert('Solo administradores pueden eliminar miembros.'); return; }
   var name = memberName || memberEmail || memberId || 'miembro';
   if (!confirm('¿Eliminar miembro "' + name + '" del equipo?\n\nSe desactivará (no se borra definitivamente).')) return;
@@ -6016,11 +6016,11 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
   var myEmail = String(window.__tareasSessionEmail || '').trim().toLowerCase();
   if (em && myEmail && em === myEmail) {
     alert('No puedes eliminar tu propio usuario desde esta pantalla.');
-    console.warn('[Tareas] deleteWorkloadMember: blocked self-delete', { em: em });
+    console.warn('[Pendientes] deleteWorkloadMember: blocked self-delete', { em: em });
     return;
   }
   function finishReload() {
-    console.log('[Tareas] deleteWorkloadMember: finishReload');
+    console.log('[Pendientes] deleteWorkloadMember: finishReload');
     function autoRecoverIfBlank(stage) {
       setTimeout(function() {
         var main = document.getElementById('main-content');
@@ -6029,18 +6029,18 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
         var txt = main ? String(main.textContent || '').replace(/\s+/g, ' ').trim() : '';
         var looksBlank = !main || !hasViews || !activeView || txt.length < 12;
         if (!looksBlank) return;
-        console.warn('[Tareas] deleteWorkloadMember: blank-like UI detected at', stage, { hasMain: !!main, hasViews: hasViews, hasActiveView: !!activeView, textLen: txt.length });
+        console.warn('[Pendientes] deleteWorkloadMember: blank-like UI detected at', stage, { hasMain: !!main, hasViews: hasViews, hasActiveView: !!activeView, textLen: txt.length });
         try {
           initViews();
         } catch (e) {
-          console.error('[Tareas] deleteWorkloadMember: initViews auto-recover failed', e);
+          console.error('[Pendientes] deleteWorkloadMember: initViews auto-recover failed', e);
         }
         setTimeout(function() {
           var main2 = document.getElementById('main-content');
           var txt2 = main2 ? String(main2.textContent || '').replace(/\s+/g, ' ').trim() : '';
           var stillBlank = !main2 || !document.querySelector('.view.active') || txt2.length < 12;
           if (stillBlank) {
-            console.warn('[Tareas] deleteWorkloadMember: forcing hard reload after failed auto-recover');
+            console.warn('[Pendientes] deleteWorkloadMember: forcing hard reload after failed auto-recover');
             window.location.reload();
           }
         }, 240);
@@ -6054,13 +6054,13 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
         updateDashboardStats();
         autoRecoverIfBlank('post-reload-render');
       } catch (e) {
-        console.error('[Tareas] deleteWorkloadMember: render after reload failed', e);
-        try { initViews(); } catch (e2) { console.error('[Tareas] initViews fallback failed', e2); }
+        console.error('[Pendientes] deleteWorkloadMember: render after reload failed', e);
+        try { initViews(); } catch (e2) { console.error('[Pendientes] initViews fallback failed', e2); }
         autoRecoverIfBlank('render-catch');
       }
     }).catch(function(err) {
-      console.error('[Tareas] deleteWorkloadMember: reload failed', err);
-      try { initViews(); } catch (e3) { console.error('[Tareas] initViews fallback failed', e3); }
+      console.error('[Pendientes] deleteWorkloadMember: reload failed', err);
+      try { initViews(); } catch (e3) { console.error('[Pendientes] initViews fallback failed', e3); }
       autoRecoverIfBlank('reload-catch');
     });
   }
@@ -6081,12 +6081,12 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
       activo: false,
       gerente_email: emailLower
     };
-    console.log('[Tareas] deleteWorkloadMember: creating fallback deactivated row', rowEq);
+    console.log('[Pendientes] deleteWorkloadMember: creating fallback deactivated row', rowEq);
     supabase.from('tareas_equipo').insert(rowEq).then(function(ins) {
-      if (ins.error) console.warn('[Tareas] fallback deactivated row insert failed:', ins.error.message);
+      if (ins.error) console.warn('[Pendientes] fallback deactivated row insert failed:', ins.error.message);
       if (done) done();
     }).catch(function(err) {
-      console.warn('[Tareas] fallback deactivated row exception:', err);
+      console.warn('[Pendientes] fallback deactivated row exception:', err);
       if (done) done();
     });
   }
@@ -6111,10 +6111,10 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
       updateBadges();
       updateDashboardStats();
     } catch (e) {
-      console.error('[Tareas] applyLocalHide render failed:', e);
+      console.error('[Pendientes] applyLocalHide render failed:', e);
     }
   }
-  console.log('[Tareas] deleteWorkloadMember: deactivating in tareas_equipo', { em: em, memberId: memberId });
+  console.log('[Pendientes] deleteWorkloadMember: deactivating in tareas_equipo', { em: em, memberId: memberId });
   function deactivateByIdFallback() {
     if (!memberId) return Promise.resolve({ data: [] });
     return supabase.from('tareas_equipo').update({ activo: false }).eq('id', memberId).select('id,gerente_email,activo');
@@ -6123,17 +6123,17 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
     ? supabase.from('tareas_equipo').update({ activo: false }).ilike('gerente_email', em).select('id,gerente_email,activo')
     : deactivateByIdFallback();
   Promise.resolve(firstQ).then(function(resp) {
-    console.log('[Tareas] deleteWorkloadMember: deactivate response', resp);
+    console.log('[Pendientes] deleteWorkloadMember: deactivate response', resp);
     if (resp && resp.error) throw resp.error;
     if (!resp || !resp.data || !resp.data.length) {
-      console.warn('[Tareas] deactivate member: 0 rows on first query, trying id fallback');
+      console.warn('[Pendientes] deactivate member: 0 rows on first query, trying id fallback');
       return deactivateByIdFallback();
     }
     return resp;
   }).then(function(resp2) {
     if (resp2 && resp2.error) throw resp2.error;
     if (!resp2 || !resp2.data || !resp2.data.length) {
-      console.warn('[Tareas] deactivate member: still 0 rows, hiding locally only');
+      console.warn('[Pendientes] deactivate member: still 0 rows, hiding locally only');
       applyLocalHide();
       ensureDeactivatedRowByEmail(em, function() { finishReload(); });
       return;
@@ -6141,7 +6141,7 @@ function deleteWorkloadMember(memberId, memberEmail, memberName) {
     applyLocalHide();
     finishReload();
   }).catch(function(err) {
-    console.error('[Tareas] deactivate member exception:', err);
+    console.error('[Pendientes] deactivate member exception:', err);
     alert('Error al desactivar miembro.');
     applyLocalHide();
     finishReload();
@@ -6184,7 +6184,7 @@ function submitEquipoInvite() {
     if (avatarUrl) payload.avatar_url = avatarUrl;
     if (existingId) {
       supabase.from('gerentes').update(payload).eq('id', existingId).then(function(up) {
-        if (up.error) console.warn('[Tareas] gerentes update existente:', up.error.message);
+        if (up.error) console.warn('[Pendientes] gerentes update existente:', up.error.message);
         insertEquipoAndFinish(nombre, apellido, email, color);
       });
       return;
@@ -6213,7 +6213,7 @@ function submitEquipoInvite() {
     }
     withAvatarThen(null);
   }).catch(function(err) {
-    console.warn('[Tareas] gerentes lookup antes de invitar:', err);
+    console.warn('[Pendientes] gerentes lookup antes de invitar:', err);
     withAvatarThen(null);
   });
 }
@@ -6500,16 +6500,26 @@ function updateTareasUserNameDisplay() {
   var el = document.getElementById('tareasUserName');
   var name = getCurrentUserNameTareas();
   if (el) { el.textContent = name; el.onclick = function() { promptUserNameTareas(); }; }
-  var titleEl = document.getElementById('docTitleTareas');
-  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Tareas · ' + name : 'Tareas Holistic';
+  var titleEl = document.getElementById('docTitlePendientes');
+  if (titleEl) titleEl.textContent = name !== 'Usuario' ? 'Pendientes · ' + name : 'Pendientes Holistic';
 }
 
-var RECORDATORIOS_KEY_TAREAS = 'tareas_recordatorios';
+var RECORDATORIOS_KEY_PENDIENTES = 'pendientes_recordatorios';
+var RECORDATORIOS_KEY_LEGACY_TAREAS = 'tareas_recordatorios';
 function getRecordatoriosTareas() {
-  try { var r = localStorage.getItem(RECORDATORIOS_KEY_TAREAS); return r ? JSON.parse(r) : []; } catch (e) { return []; }
+  try {
+    var r = localStorage.getItem(RECORDATORIOS_KEY_PENDIENTES);
+    if (r) return JSON.parse(r);
+    var leg = localStorage.getItem(RECORDATORIOS_KEY_LEGACY_TAREAS);
+    if (leg) {
+      try { localStorage.setItem(RECORDATORIOS_KEY_PENDIENTES, leg); } catch (e2) {}
+      return JSON.parse(leg);
+    }
+    return [];
+  } catch (e) { return []; }
 }
 function saveRecordatoriosTareas(arr) {
-  try { localStorage.setItem(RECORDATORIOS_KEY_TAREAS, JSON.stringify(arr)); } catch (e) {}
+  try { localStorage.setItem(RECORDATORIOS_KEY_PENDIENTES, JSON.stringify(arr)); } catch (e) {}
   renderRecordatoriosTareas();
   var badge = document.getElementById('recordatoriosBadgeTareas');
   if (badge) { var n = arr.filter(function(x) { return !x.done; }).length; badge.textContent = n > 0 ? n : ''; badge.dataset.count = n; }
@@ -6550,7 +6560,7 @@ function renderRecordatoriosTareas() {
 }
 </script>
 
-<!-- Recordatorios flotante Tareas -->
+<!-- Recordatorios flotante Pendientes -->
 <div class="recordatorios-wrap" style="position:fixed;bottom:var(--sp-5);right:var(--sp-5);z-index:40">
   <button type="button" class="recordatorios-fab" id="recordatoriosFabTareas" onclick="toggleRecordatoriosPanelTareas()" aria-label="Recordatorios" title="Recordatorios">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2"/><path d="M12 14v4M10 18h4"/></svg>

@@ -12,7 +12,7 @@ const faviconPath = isDev ? '/favicon/favicon.png' : (import.meta.env.BASE_URL |
 const favicon = document.querySelector('link[rel="icon"]');
 if (favicon) favicon.href = faviconPath;
 
-// Si la ruta es /login, mostramos solo el login (para proteger /creativos, /tareas, etc.)
+// Si la ruta es /login, mostramos solo el login (para proteger /creativos, /pendientes, etc.)
 const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
 const isLoginOnly = pathname === '/login';
 
