@@ -84,7 +84,33 @@ Deno.serve(async (req) => {
 
     // method === "link": generar magic link y enviar por Resend
     const row = gerenteRow || accesoRow!;
-    const appUrl = body.redirect_to || getAppUrl();
+    const rawRedirect = body.redirect_to ?? body.redirectTo;
+    const trimmedRedirect = typeof rawRedirect === "string" ? rawRedirect.trim() : "";
+    let appUrl = trimmedRedirect || getAppUrl();
+    try {
+      const u = new URL(appUrl.startsWith("http") ? appUrl : `https://${appUrl}`);
+      const h = u.hostname.toLowerCase();
+      const looksLikeForeignVercel = h.endsWith(".vercel.app") && h.indexOf("marketingconholistic") < 0 && h.indexOf("holistic") < 0;
+      if (h.includes("cmr-chatbot") || looksLikeForeignVercel) {
+        if (trimmedRedirect) {
+          try {
+            const tr = new URL(trimmedRedirect.startsWith("http") ? trimmedRedirect : `https://${trimmedRedirect}`);
+            const th = tr.hostname.toLowerCase();
+            if (th === "www.marketingconholistic.com" || th === "marketingconholistic.com") {
+              appUrl = trimmedRedirect;
+            } else {
+              appUrl = "https://www.marketingconholistic.com/credito";
+            }
+          } catch {
+            appUrl = "https://www.marketingconholistic.com/credito";
+          }
+        } else {
+          appUrl = "https://www.marketingconholistic.com/credito";
+        }
+      }
+    } catch {
+      /* seguir con appUrl */
+    }
     const redirectTo = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "magiclink",

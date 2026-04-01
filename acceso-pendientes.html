@@ -59,6 +59,24 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function() {
+      function holisticWebBase() {
+        var b = (typeof window.__HOLISTIC_WEB_ORIGIN__ === 'string' && window.__HOLISTIC_WEB_ORIGIN__.trim())
+          ? String(window.__HOLISTIC_WEB_ORIGIN__).replace(/\/$/, '')
+          : '';
+        if (b) return b;
+        var h = window.location.hostname;
+        if (h === 'localhost' || h === '127.0.0.1') return window.location.origin;
+        return 'https://www.marketingconholistic.com';
+      }
+      function pendientesAppUrl() { return holisticWebBase() + '/pendientes'; }
+      var hashEarly = window.location.hash || '';
+      var hostEarly = window.location.hostname;
+      var isLocalEarly = hostEarly === 'localhost' || hostEarly === '127.0.0.1';
+      var isHolisticHost = hostEarly === 'www.marketingconholistic.com' || hostEarly === 'marketingconholistic.com';
+      if (hashEarly.indexOf('access_token') !== -1 && !isLocalEarly && !isHolisticHost) {
+        window.location.replace(pendientesAppUrl() + hashEarly);
+        return;
+      }
       var url = window.__SUPABASE_URL__;
       var key = window.__SUPABASE_ANON_KEY__;
       if (!url || !key) {
@@ -77,14 +95,14 @@
         });
         if (params.access_token && params.refresh_token) {
           supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
-            .then(function() { window.location.replace('/pendientes'); })
-            .catch(function() { window.location.replace('/acceso-pendientes'); });
+            .then(function() { window.location.replace(pendientesAppUrl()); })
+            .catch(function() { window.location.replace(holisticWebBase() + '/acceso-pendientes'); });
         } else {
-          window.location.replace('/pendientes');
+          window.location.replace(pendientesAppUrl());
         }
         return;
       }
-      var redirectTo = window.location.origin + '/pendientes';
+      var redirectTo = pendientesAppUrl();
       var successBox = document.getElementById('successBox');
       var btnEl = document.getElementById('btn');
 
