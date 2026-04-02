@@ -324,7 +324,78 @@ export default function ClientDetailView(props) {
             </TableScrollWrap>
           </div>
         ),
-        effectiveTab === "garantias" && <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}><p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>Mismo período que Cobros y Gastos (filtro de arriba). La columna <strong>Mes en resumen</strong> es el mes que usa el sistema para el resumen.</p><TableScrollWrap className="hm-table-wrap hm-table-detail"><table><thead><tr>{["Tipo", "Descripción", "Valor", "Estado", "Mes en resumen", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead><tbody>{curGars.map((g) => { const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null; const mesRes = (g.periodoResumen && String(g.periodoResumen).trim()) ? String(g.periodoResumen).slice(0, 7) : (gastoAsoc?.mes || (g.fechaColocacion ? String(g.fechaColocacion).slice(0, 7) : (g.created_at ? String(g.created_at).slice(0, 7) : ""))); const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—"; return <tr key={g.id}><td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td><td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td><td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td><td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td><td style={{ ...TD, fontWeight: 600 }}>{mesRes && fmtM ? fmtM(mesRes) : "—"}</td><td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td><td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td><td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td><td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#c2410c" }}>{g.codigoVerificacion || "—"}</td><td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td><td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td></tr>; })}{!curGars.length && <Empty cols={11} msg="Sin garantías" />}</tbody></table></TableScrollWrap></div>,
+        effectiveTab === "garantias" && (
+          <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+            <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
+              Mismo período que Cobros y Gastos (filtro de arriba). La columna <strong>Mes en resumen</strong> es el mes que usa el sistema para el resumen. En <strong>Comprobantes</strong> podés abrir vouchers o capturas subidos (igual que en la pestaña Cobros).
+            </p>
+            <TableScrollWrap className="hm-table-wrap hm-table-detail">
+              <table>
+                <thead>
+                  <tr>
+                    {["Tipo", "Descripción", "Valor", "Estado", "Comprobantes", "Mes en resumen", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => (
+                      <th key={h} style={TH}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {curGars.map((g) => {
+                    const gastoAsoc = g.gastoId ? gastos.find((x) => x.id === g.gastoId) : null;
+                    const mesRes = (g.periodoResumen && String(g.periodoResumen).trim())
+                      ? String(g.periodoResumen).slice(0, 7)
+                      : (gastoAsoc?.mes || (g.fechaColocacion ? String(g.fechaColocacion).slice(0, 7) : (g.created_at ? String(g.created_at).slice(0, 7) : "")));
+                    const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—";
+                    const paths = g.imagen_urls || [];
+                    const nPaths = paths.length;
+                    const mesResStr = mesRes && fmtM ? fmtM(mesRes) : "—";
+                    return (
+                      <tr key={g.id}>
+                        <td style={TD}><Bdg type="gar">{g.tipo}</Bdg></td>
+                        <td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td>
+                        <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
+                        <td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td>
+                        <td style={TD}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
+                            <div style={{ fontSize: 11, color: "#5f6577", lineHeight: 1.3 }}>
+                              <span style={{ fontWeight: 600, color: "#1a1d26" }}>Garantía:</span> {g.tipo || "—"}
+                              {mesResStr && mesResStr !== "—" && (
+                                <>
+                                  <span style={{ margin: "0 4px" }}>·</span>
+                                  <span style={{ fontWeight: 600, color: "#1a1d26" }}>Mes resumen:</span> {mesResStr}
+                                </>
+                              )}
+                            </div>
+                            {nPaths > 0 && setComprobanteViewer ? (
+                              <button
+                                type="button"
+                                onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })}
+                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #ddd6fe", borderRadius: 8, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                                title={`Ver ${nPaths} comprobante(s) · ${g.tipo || "Garantía"} · $${fmt(g.valor)}`}
+                              >
+                                <Paperclip size={14} />
+                                Ver {nPaths} comprobante{nPaths !== 1 ? "s" : ""}
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: 11.5, color: "#9498a8" }}>— Sin voucher</span>
+                            )}
+                          </div>
+                        </td>
+                        <td style={{ ...TD, fontWeight: 600 }}>{mesResStr}</td>
+                        <td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td>
+                        <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td>
+                        <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td>
+                        <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#c2410c" }}>{g.codigoVerificacion || "—"}</td>
+                        <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
+                        <td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                  {!curGars.length && <Empty cols={12} msg="Sin garantías" />}
+                </tbody>
+              </table>
+            </TableScrollWrap>
+          </div>
+        ),
         <Slot content={manualTabContent} />,
         <div style={{ marginTop: 28, marginBottom: 24 }}>
           {cCharts.m?.length > 0 && (
