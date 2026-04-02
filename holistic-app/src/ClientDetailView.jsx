@@ -201,7 +201,7 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "linear-gradient(135deg, #ea580c, #c2410c)", color: "#fff", fontWeight: 700, borderTop: "2px solid #9a3412", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
-              <TableScrollWrap className="hm-table-wrap hm-table-detail">
+              <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "gastos"}>
                 <table>
                   <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
@@ -269,7 +269,7 @@ export default function ClientDetailView(props) {
             <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
               Cada fila es un pago: <strong>Fecha de pago</strong> (día en que se realizó), <strong>Período que cubre</strong> (mes al que se aplica) y <strong>Comprobantes</strong> (vouchers o capturas subidos). Podés abrir los archivos desde el botón en la columna Comprobantes.
             </p>
-            <TableScrollWrap className="hm-table-wrap hm-table-detail">
+            <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "cobros"}>
               <table>
                 <thead>
                   <tr>
@@ -329,7 +329,7 @@ export default function ClientDetailView(props) {
             <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
               Mismo período que Cobros y Gastos (filtro de arriba). La columna <strong>Mes en resumen</strong> es el mes que usa el sistema para el resumen. En <strong>Comprobantes</strong> podés abrir vouchers o capturas subidos (igual que en la pestaña Cobros).
             </p>
-            <TableScrollWrap className="hm-table-wrap hm-table-detail">
+            <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "garantias"}>
               <table>
                 <thead>
                   <tr>

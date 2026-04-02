@@ -19,8 +19,10 @@ function shouldDeferHorizontalArrowsToBrowser(active) {
  * Contenedor con scroll horizontal enfocable con Tab;
  * flechas ← → desplazan (paso ~mitad del ancho visible); Shift + rueda también.
  * Las flechas siguen funcionando con foco en checkboxes, botones o celdas: listener en captura + clic en celdas vacías enfoca el contenedor.
+ *
+ * autoFocusScroll: al entrar a la sección (o pestaña) el contenedor recibe foco para usar ← → sin clic previo en la tabla.
  */
-export default function TableScrollWrap({ className = "", style, children, ...rest }) {
+export default function TableScrollWrap({ className = "", style, children, autoFocusScroll = false, ...rest }) {
   const ref = useRef(null);
   const { onKeyDown: onKeyDownProp, onMouseDown: onMouseDownProp, ...restProps } = rest;
 
@@ -69,6 +71,23 @@ export default function TableScrollWrap({ className = "", style, children, ...re
     document.addEventListener("keydown", onDocKeyDown, true);
     return () => document.removeEventListener("keydown", onDocKeyDown, true);
   }, [applyArrowScroll]);
+
+  useEffect(() => {
+    if (!autoFocusScroll) return;
+    let cancelled = false;
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      if (cancelled) return;
+      raf2 = requestAnimationFrame(() => {
+        if (!cancelled) ref.current?.focus({ preventScroll: true });
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
+  }, [autoFocusScroll]);
 
   const handleMouseDown = (e) => {
     onMouseDownProp?.(e);

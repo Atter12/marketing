@@ -1089,7 +1089,7 @@ export default function CobranzaView({
                 boxShadow: "0 1px 4px rgba(15,23,42,.04)",
               }}
             >
-              <TableScrollWrap className="hm-table-wrap">
+              <TableScrollWrap className="hm-table-wrap" autoFocusScroll={mainTab === "bandeja"}>
                 <table>
                   <thead>
                     <tr>
@@ -1249,7 +1249,7 @@ export default function CobranzaView({
               boxShadow: "0 1px 4px rgba(15,23,42,.04)",
             }}
           >
-            <TableScrollWrap className="hm-table-wrap">
+            <TableScrollWrap className="hm-table-wrap" autoFocusScroll={mainTab === "historial"}>
               <table>
                 <thead>
                   <tr>
