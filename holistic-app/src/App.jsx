@@ -953,7 +953,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   useEffect(() => {
     if (page !== "metricas" || isCliente) return;
     setRepCl("all");
-    setRepPeriodoMes(tm());
+    setRepPeriodoMes("");
     setSortReportDesgloseBy("nombre");
   }, [page, isCliente]);
 
