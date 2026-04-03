@@ -56,6 +56,13 @@ export default function ClientDetailView(props) {
 
   const effectiveTab = isCliente && detailTab === "cobros" ? "gastos" : detailTab;
 
+  /** Clave para ordenar movimientos del libro (cronológico ascendente). */
+  const ledgerSortKey = (dateYmd, timeHms, seq, id) => {
+    const d = (dateYmd || "1970-01-01").slice(0, 10);
+    const t = (timeHms || "00:00:00").toString().slice(0, 8);
+    return `${d}T${t}#${String(seq).padStart(2, "0")}#${id || ""}`;
+  };
+
   const handleSavePhoto = async () => {
     if (!updateClientAvatar) return;
     const t = (photoUrl || "").trim().replace(/&amp;/gi, "&");
@@ -166,7 +173,7 @@ export default function ClientDetailView(props) {
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Deuda Neta</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: curD.net > 0 ? "#dc2640" : "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(curD.net)}</div></div>
         </div>,
         <div className="hm-detail-tabs" style={{ display: "flex", gap: 2, background: "#f4f5f7", borderRadius: 9, padding: 3, width: "fit-content", marginBottom: 8 }}>
-          {([["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'Inter'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
+          {([["todos", "Todos"], ["gastos", "Gastos Ads"], ["cobros", "Cobros"], ["garantias", "Garantías"]].filter(([k]) => isCliente ? k !== "cobros" : true)).map(([k, l]) => <button key={k} onClick={() => setDetailTab(k)} style={{ padding: "7px 18px", border: "none", background: effectiveTab === k ? "#fff" : "transparent", color: effectiveTab === k ? "#1a1d26" : "#9498a8", fontFamily: "'Inter'", fontSize: 12.5, fontWeight: 600, borderRadius: 7, cursor: "pointer", boxShadow: effectiveTab === k ? "0 1px 2px rgba(0,0,0,.04)" : "none" }}>{l}</button>)}
         </div>,
         onExportClientPorPeriodo && (
         <div style={{ marginBottom: 20, padding: "14px 18px", background: "linear-gradient(135deg, #f8f9fb 0%, #fef2f2 100%)", border: "1px solid #fecaca", borderRadius: 12 }}>
@@ -176,6 +183,129 @@ export default function ClientDetailView(props) {
           </div>
         </div>
         ),
+        effectiveTab === "todos" && (() => {
+          const cellAds = { background: "#fce7f3" };
+          const cellFee = { background: "#e0f2fe" };
+          const cellGar = { background: "#dcfce7" };
+          const cellCobro = { background: "#f8fafc" };
+          const raw = [];
+          (curGastos || []).forEach((g) => {
+            const ymd = (g.fechaMovimiento && String(g.fechaMovimiento).slice(0, 10)) || (g.mes ? `${g.mes}-15` : "1970-01-01");
+            const gastoNum = parseFloat(g.gasto || 0);
+            const feeNum = g._f || 0;
+            const camp = (g.camp || "").trim();
+            const obsAds = [camp, gastoNum ? `${fmt(gastoNum)} USD` : "", g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General";
+            if (gastoNum !== 0) {
+              raw.push({
+                sortKey: ledgerSortKey(ymd, "00:00:00", 0, `${g.id}-ads`),
+                fechaYmd: ymd,
+                desc: "ADS",
+                descStyle: cellAds,
+                obs: obsAds,
+                moneda: "USD",
+                delta: gastoNum,
+              });
+            }
+            if (feeNum !== 0) {
+              raw.push({
+                sortKey: ledgerSortKey(ymd, "00:00:01", 1, `${g.id}-fee`),
+                fechaYmd: ymd,
+                desc: "FEE",
+                descStyle: cellFee,
+                obs: [camp, `${fmt(feeNum)} USD`, g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General",
+                moneda: "USD",
+                delta: feeNum,
+              });
+            }
+          });
+          (curCobros || []).forEach((co) => {
+            const ymd = (co.fecha && String(co.fecha).slice(0, 10)) || "1970-01-01";
+            const monto = parseFloat(co.monto || 0);
+            const gAsoc = gastos.find((x) => x.id === co.gastoId);
+            const periodoStr = mesCobro && fmtM && gastos ? fmtM(mesCobro(co, gastos)) : (gAsoc ? fmtM(gAsoc.mes) : "—");
+            raw.push({
+              sortKey: ledgerSortKey(ymd, co.hora || "12:00:00", 2, co.id),
+              fechaYmd: ymd,
+              desc: "COBRO",
+              descStyle: cellCobro,
+              obs: ["Pago", periodoStr !== "—" ? `Período ${periodoStr}` : "", co.metodo || "", co.codigo ? `Cód. ${co.codigo}` : ""].filter(Boolean).join(" · ") || "General",
+              moneda: "USD",
+              delta: -monto,
+            });
+          });
+          (curGars || []).forEach((gr) => {
+            const gastoAsoc = gr.gastoId ? gastos.find((x) => x.id === gr.gastoId) : null;
+            const ymd = (gr.fechaColocacion && String(gr.fechaColocacion).slice(0, 10))
+              || (gr.created_at && String(gr.created_at).slice(0, 10))
+              || "1970-01-01";
+            const valor = parseFloat(gr.valor || 0);
+            const vigente = gr.estado === "Vigente";
+            const mesRes = (gr.periodoResumen && String(gr.periodoResumen).trim())
+              ? String(gr.periodoResumen).slice(0, 7)
+              : (gastoAsoc?.mes || "");
+            const mesStr = mesRes && fmtM ? fmtM(mesRes) : "—";
+            raw.push({
+              sortKey: ledgerSortKey(ymd, "00:00:02", 3, gr.id),
+              fechaYmd: ymd,
+              desc: "GARANTÍA",
+              descStyle: cellGar,
+              obs: [gr.tipo || "", gr.desc || "", mesStr !== "—" ? `Mes resumen ${mesStr}` : "", gr.estado || ""].filter(Boolean).join(" · ") || "General",
+              moneda: "USD",
+              delta: vigente ? -valor : 0,
+              garantiaSinEfecto: !vigente && valor > 0,
+              garantiaValorRef: valor,
+            });
+          });
+          raw.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+          let run = 0;
+          const rows = raw.map((r, i) => {
+            run += r.delta;
+            return { ...r, n: i + 1, saldo: run };
+          });
+          return (
+            <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
+                Movimientos del período seleccionado (o todos), en orden cronológico. <strong>Importe</strong>: gastos y fee suman al saldo; <strong>cobros</strong> y <strong>garantías vigentes</strong> restan. La columna <strong>Saldo</strong> es el acumulado fila a fila.
+              </p>
+              <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "todos"}>
+                <table>
+                  <thead>
+                    <tr>
+                      {["N°", "Fecha", "Descripción", "Obs.", "Moneda", "Importe", "Saldo"].map((h) => (
+                        <th key={h} style={TH}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {!rows.length && <Empty cols={7} msg="Sin movimientos en este período" />}
+                    {rows.map((r) => (
+                      <tr key={r.sortKey}>
+                        <td style={{ ...TD, ...MN }}>{r.n}</td>
+                        <td style={{ ...TD, fontWeight: 600 }}>{fmtDD ? fmtDD(r.fechaYmd) : r.fechaYmd}</td>
+                        <td style={{ ...TD, fontWeight: 700, ...r.descStyle }}>{r.desc}</td>
+                        <td style={{ ...TD, fontSize: 12.5, color: "#5f6577", maxWidth: 280 }}>{r.obs}</td>
+                        <td style={{ ...TD, ...MN }}>{r.moneda}</td>
+                        <td style={{ ...TD, ...MN, fontWeight: 700, verticalAlign: "top" }}>
+                          {r.garantiaSinEfecto ? (
+                            <>
+                              <span style={{ color: "#5f6577" }}>${fmt(r.garantiaValorRef)}</span>
+                              <span style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", display: "block", marginTop: 2 }}>Sin efecto en saldo (no vigente)</span>
+                            </>
+                          ) : (
+                            <span style={{ color: r.delta > 0 ? "#1a1d26" : r.delta < 0 ? "#059669" : "#9498a8" }}>
+                              {r.delta === 0 ? "$0" : r.delta < 0 ? `-$${fmt(Math.abs(r.delta))}` : `$${fmt(r.delta)}`}
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ ...TD, ...MN, fontWeight: 700, color: r.saldo > 0 ? "#c2410c" : r.saldo < 0 ? "#059669" : "#1a1d26" }}>${fmt(r.saldo)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableScrollWrap>
+            </div>
+          );
+        })(),
         effectiveTab === "gastos" && (() => {
           const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", "Prepago"];
           const byMes = {};
