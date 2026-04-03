@@ -622,6 +622,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     }
   }, [repData.rows, sortReportDesgloseBy]);
 
+  /** % cobrado sobre total (Ads+Fee) para tarjetas KPI de Resumen métricas — mismo criterio que Crédito / detalle cliente. */
+  const metricasKpiPct = useMemo(() => {
+    const inv = parseFloat(repData.t.total) || 0;
+    if (inv <= 0) return 0;
+    return Math.min(100, ((parseFloat(repData.t.paid) || 0) / inv) * 100);
+  }, [repData.t.total, repData.t.paid]);
+
   /* Reportes: meses en el rango desde–hasta para gráficas */
   const reportMonths = useMemo(() => {
     if (repPerInicio && repPerFin) {
@@ -2438,26 +2445,31 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               </div>
             </div>
             <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
-              <div className="hm-resumen-pro-toolbar" style={{ marginBottom: 20 }}>
+              <div className="hm-resumen-pro-toolbar" style={{ marginBottom: 18 }}>
                 <div className="hm-resumen-pro-toolbar-row">
                   <div className="hm-resumen-pro-ss">
                     <SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" />
                   </div>
-                  <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 11, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={18} strokeWidth={2.2} /></div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)" }}>Período:</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                        <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                        <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                        <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                        {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
-                      </div>
-                      {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
-                    </div>
-                  </div>
                 </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#c2410c", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#c2410c" : "#9498a8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#c2410c", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                  {repPeriodoMes ? <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button> : null}
+                </div>
+                <span style={{ fontSize: 11, color: "#9498a8", maxWidth: 520, lineHeight: 1.45 }}>Todo el resumen (tarjetas y tabla) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.{repPeriodoMes ? <> · <span style={{ fontWeight: 600, color: "#5f6577" }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span></> : null}</span>
+              </div>
+              <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 22 }}>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Gasto Ads</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em" }}>${fmt(repData.t.ads)}</div></div>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Fees</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#2563eb", letterSpacing: "-0.02em" }}>${fmt(repData.t.fee)}</div></div>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Total</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#d97706", letterSpacing: "-0.02em" }}>${fmt(repData.t.total)}</div></div>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Cobrado</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.paid)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: metricasKpiPct + "%", transition: "width 0.15s ease-out" }} /></div></div>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Garantías</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.02em" }}>{repData.t.gar > 0 ? "-$" + fmt(repData.t.gar) : "$0"}</div></div>
+                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Deuda Neta</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: repData.t.netPending > 0 ? "#dc2640" : "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.netPending)}</div></div>
               </div>
               <div className="hm-resumen-pro-alert" style={{ marginBottom: 20 }}>
                 <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
