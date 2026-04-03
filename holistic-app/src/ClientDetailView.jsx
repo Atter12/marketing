@@ -307,7 +307,18 @@ export default function ClientDetailView(props) {
           );
         })(),
         effectiveTab === "gastos" && (() => {
-          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Pendiente", "Estado", "Prepago"];
+          const headers = ["Fecha (dd/mm/aaaa)", "Período (mm/aaaa)", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Vouchers"];
+          const voucherPathsForGasto = (gastoId) => {
+            const paths = [];
+            let cobroId = null;
+            (curCobros || []).forEach((co) => {
+              if (co.gastoId !== gastoId) return;
+              const ps = co.comprobante_urls || [];
+              if (ps.length && cobroId == null) cobroId = co.id;
+              ps.forEach((p) => paths.push(p));
+            });
+            return { paths, cobroId };
+          };
           const byMes = {};
           (curGastos || []).forEach((g) => {
             const m = g.mes || "";
@@ -315,15 +326,13 @@ export default function ClientDetailView(props) {
             byMes[m].push(g);
           });
           const periods = Object.keys(byMes).filter(Boolean).sort().reverse();
-          const totalAll = { gasto: 0, fee: 0, total: 0, pagado: 0, pendiente: 0 };
+          const totalAll = { gasto: 0, fee: 0, total: 0 };
           const rowTotal = (list) => {
-            const t = { gasto: 0, fee: 0, total: 0, pagado: 0, pendiente: 0 };
+            const t = { gasto: 0, fee: 0, total: 0 };
             list.forEach((g) => {
               t.gasto += parseFloat(g.gasto || 0);
               t.fee += g._f || 0;
               t.total += g._t || 0;
-              t.pagado += g._p || 0;
-              t.pendiente += g._pend || 0;
             });
             return t;
           };
@@ -331,36 +340,52 @@ export default function ClientDetailView(props) {
           const totalRowStyle = { ...TD, background: "linear-gradient(135deg, #ea580c, #c2410c)", color: "#fff", fontWeight: 700, borderTop: "2px solid #9a3412", padding: "12px 18px" };
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
+              <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
+                Los <strong>vouchers</strong> son los comprobantes subidos en los <strong>cobros</strong> asociados a cada gasto (misma fila / mismo código de gasto).
+              </p>
               <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "gastos"}>
                 <table>
                   <thead><tr>{headers.map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                   <tbody>
-                    {!curGastos.length && <Empty cols={11} msg="Sin gastos" />}
+                    {!curGastos.length && <Empty cols={8} msg="Sin gastos" />}
                     {curGastos.length > 0 && periods.map((mes) => {
                       const list = byMes[mes];
                       const t = rowTotal(list);
                       totalAll.gasto += t.gasto;
                       totalAll.fee += t.fee;
                       totalAll.total += t.total;
-                      totalAll.pagado += t.pagado;
-                      totalAll.pendiente += t.pendiente;
                       return (
                         <React.Fragment key={mes}>
-                          {list.map((g) => (
-                            <tr key={g.id}>
-                              <td style={{ ...TD, fontWeight: 600 }}>{fmtDD ? fmtDD(g.fechaMovimiento) : (g.fechaMovimiento || "—")}</td>
-                              <td style={TD}>{fmtM(g.mes)}</td>
-                              <td style={TD}>{g.camp || "—"}</td>
-                              <td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td>
-                              <td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td>
-                              <td style={{ ...TD, ...MN, color: "#2563eb" }}>${fmt(g._f)}</td>
-                              <td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td>
-                              <td style={{ ...TD, ...MN, color: "#0d9f6e" }}>${fmt(g._p)}</td>
-                              <td style={{ ...TD, ...MN, color: "#dc2640" }}>${fmt(g._pend)}</td>
-                              <td style={TD}><Bdg type={g._st === "Pagado" ? "ok" : g._st === "Parcial" ? "warn" : "acc"}>{g._st}</Bdg></td>
-                              <td style={TD}>{g.prepago ? "S" : "N"}</td>
-                            </tr>
-                          ))}
+                          {list.map((g) => {
+                            const { paths, cobroId } = voucherPathsForGasto(g.id);
+                            const nPaths = paths.length;
+                            return (
+                              <tr key={g.id}>
+                                <td style={{ ...TD, fontWeight: 600 }}>{fmtDD ? fmtDD(g.fechaMovimiento) : (g.fechaMovimiento || "—")}</td>
+                                <td style={TD}>{fmtM(g.mes)}</td>
+                                <td style={TD}>{g.camp || "—"}</td>
+                                <td style={{ ...TD, ...MN }}>${fmt(g.gasto)}</td>
+                                <td style={{ ...TD, ...MN, color: "#2563eb" }}>{g.fee}%</td>
+                                <td style={{ ...TD, ...MN, color: "#2563eb" }}>${fmt(g._f)}</td>
+                                <td style={{ ...TD, ...MN, fontWeight: 700 }}>${fmt(g._t)}</td>
+                                <td style={TD}>
+                                  {nPaths > 0 && setComprobanteViewer && cobroId ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => setComprobanteViewer({ type: "cobro", id: cobroId, paths })}
+                                      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#eff6ff", color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                                      title={`Ver ${nPaths} voucher(s) de cobros de este gasto`}
+                                    >
+                                      <Paperclip size={14} />
+                                      Ver {nPaths}
+                                    </button>
+                                  ) : (
+                                    <span style={{ fontSize: 11.5, color: "#9498a8" }}>—</span>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })}
                           <tr>
                             <td style={{ ...subRowStyle, color: "#5f6577", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.5 }} colSpan={2}>Total {fmtM(mes)}</td>
                             <td style={subRowStyle}>—</td>
@@ -368,9 +393,7 @@ export default function ClientDetailView(props) {
                             <td style={subRowStyle}>—</td>
                             <td style={{ ...subRowStyle, ...MN, color: "#2563eb" }}>${fmt(t.fee)}</td>
                             <td style={{ ...subRowStyle, ...MN }}>${fmt(t.total)}</td>
-                            <td style={{ ...subRowStyle, ...MN, color: "#0d9f6e" }}>${fmt(t.pagado)}</td>
-                            <td style={{ ...subRowStyle, ...MN, color: "#dc2640" }}>${fmt(t.pendiente)}</td>
-                            <td style={subRowStyle} colSpan={2}>—</td>
+                            <td style={subRowStyle}>—</td>
                           </tr>
                         </React.Fragment>
                       );
@@ -383,9 +406,7 @@ export default function ClientDetailView(props) {
                         <td style={totalRowStyle}>—</td>
                         <td style={{ ...totalRowStyle, opacity: 0.95 }}>${fmt(totalAll.fee)}</td>
                         <td style={totalRowStyle}>${fmt(totalAll.total)}</td>
-                        <td style={{ ...totalRowStyle, color: "#86efac" }}>${fmt(totalAll.pagado)}</td>
-                        <td style={{ ...totalRowStyle, color: "#fca5a5" }} title={curD.tGar > 0 ? `Pendiente bruto: $${fmt(totalAll.pendiente)} − Garantías: $${fmt(curD.tGar)} = Pend. neto` : ""}>${fmt(Math.max(0, totalAll.pendiente - (curD.tGar || 0)))}</td>
-                        <td style={totalRowStyle} colSpan={2}>—</td>
+                        <td style={totalRowStyle}>—</td>
                       </tr>
                     )}
                   </tbody>
@@ -457,13 +478,13 @@ export default function ClientDetailView(props) {
         effectiveTab === "garantias" && (
           <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
             <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
-              Mismo período que Cobros y Gastos (filtro de arriba). La columna <strong>Mes en resumen</strong> es el mes que usa el sistema para el resumen. En <strong>Comprobantes</strong> podés abrir vouchers o capturas subidos (igual que en la pestaña Cobros).
+              Mismo período que Cobros y Gastos (filtro de arriba). La columna <strong>Mes en resumen</strong> es el mes que usa el sistema para el resumen. En <strong>Vouchers</strong> podés abrir las imágenes o PDFs subidos.
             </p>
             <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "garantias"}>
               <table>
                 <thead>
                   <tr>
-                    {["Tipo", "Descripción", "Valor", "Estado", "Comprobantes", "Mes en resumen", "Fecha colocación", "Registrado por", "Registrado", "Cód. verificación", "Cód. gasto", "Gasto ($)"].map((h) => (
+                    {["Tipo", "Descripción", "Valor", "Estado", "Mes en resumen", "Vouchers"].map((h) => (
                       <th key={h} style={TH}>{h}</th>
                     ))}
                   </tr>
@@ -474,7 +495,6 @@ export default function ClientDetailView(props) {
                     const mesRes = (g.periodoResumen && String(g.periodoResumen).trim())
                       ? String(g.periodoResumen).slice(0, 7)
                       : (gastoAsoc?.mes || (g.fechaColocacion ? String(g.fechaColocacion).slice(0, 7) : (g.created_at ? String(g.created_at).slice(0, 7) : "")));
-                    const createdByStr = g.created_by ? (g.created_by.length > 18 ? g.created_by.slice(0, 16) + "…" : g.created_by) : "—";
                     const paths = g.imagen_urls || [];
                     const nPaths = paths.length;
                     const mesResStr = mesRes && fmtM ? fmtM(mesRes) : "—";
@@ -484,43 +504,26 @@ export default function ClientDetailView(props) {
                         <td style={{ ...TD, color: "#5f6577" }}>{g.desc || "—"}</td>
                         <td style={{ ...TD, ...MN }}>${fmt(g.valor)}</td>
                         <td style={TD}><Bdg type={g.estado === "Vigente" ? "ok" : g.estado === "Ejecutada" ? "err" : "n"}>{g.estado}</Bdg></td>
-                        <td style={TD}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start" }}>
-                            <div style={{ fontSize: 11, color: "#5f6577", lineHeight: 1.3 }}>
-                              <span style={{ fontWeight: 600, color: "#1a1d26" }}>Garantía:</span> {g.tipo || "—"}
-                              {mesResStr && mesResStr !== "—" && (
-                                <>
-                                  <span style={{ margin: "0 4px" }}>·</span>
-                                  <span style={{ fontWeight: 600, color: "#1a1d26" }}>Mes resumen:</span> {mesResStr}
-                                </>
-                              )}
-                            </div>
-                            {nPaths > 0 && setComprobanteViewer ? (
-                              <button
-                                type="button"
-                                onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })}
-                                style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #ddd6fe", borderRadius: 8, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-                                title={`Ver ${nPaths} comprobante(s) · ${g.tipo || "Garantía"} · $${fmt(g.valor)}`}
-                              >
-                                <Paperclip size={14} />
-                                Ver {nPaths} comprobante{nPaths !== 1 ? "s" : ""}
-                              </button>
-                            ) : (
-                              <span style={{ fontSize: 11.5, color: "#9498a8" }}>— Sin voucher</span>
-                            )}
-                          </div>
-                        </td>
                         <td style={{ ...TD, fontWeight: 600 }}>{mesResStr}</td>
-                        <td style={TD}>{g.fechaColocacion && fmtD ? fmtD(g.fechaColocacion) : "—"}</td>
-                        <td style={{ ...TD, fontSize: 12, color: "#5f6577" }} title={g.created_by || ""}>{createdByStr}</td>
-                        <td style={{ ...TD, fontSize: 11.5, color: "#9498a8" }}>{g.created_at && fmtDt ? fmtDt(g.created_at) : "—"}</td>
-                        <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#c2410c" }}>{g.codigoVerificacion || "—"}</td>
-                        <td style={{ ...TD, fontFamily: "var(--font-mono)", fontSize: 11, color: "#5f6577" }}>{gastoAsoc?.codigo || "—"}</td>
-                        <td style={{ ...TD, ...MN }}>{gastoAsoc != null ? "$" + fmt(gastoAsoc.gasto) : "—"}</td>
+                        <td style={TD}>
+                          {nPaths > 0 && setComprobanteViewer ? (
+                            <button
+                              type="button"
+                              onClick={() => setComprobanteViewer({ type: "garantia", id: g.id, paths })}
+                              style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", border: "1px solid #ddd6fe", borderRadius: 8, background: "linear-gradient(135deg, #f5f3ff, #ede9fe)", color: "#6d28d9", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                              title={`Ver ${nPaths} voucher(s) · ${g.tipo || "Garantía"} · $${fmt(g.valor)}`}
+                            >
+                              <Paperclip size={14} />
+                              Ver {nPaths}
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: 11.5, color: "#9498a8" }}>—</span>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
-                  {!curGars.length && <Empty cols={12} msg="Sin garantías" />}
+                  {!curGars.length && <Empty cols={6} msg="Sin garantías" />}
                 </tbody>
               </table>
             </TableScrollWrap>
