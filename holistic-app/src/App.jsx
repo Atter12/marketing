@@ -949,6 +949,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
   useEffect(() => { if (!isCliente && page === "reportes") setPage("dashboard"); }, [isCliente, page]);
+  /** Resumen métricas: siempre vista neutra al entrar (mismos filtros que Resumen compartían estado y mostraban un cliente suelto). */
+  useEffect(() => {
+    if (page !== "metricas" || isCliente) return;
+    setRepCl("all");
+    setRepPeriodoMes(tm());
+    setSortReportDesgloseBy("nombre");
+  }, [page, isCliente]);
 
   useEffect(() => {
     if (!comprobanteViewer?.paths?.length) { setViewerSignedUrls([]); return; }
