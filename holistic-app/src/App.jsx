@@ -1607,6 +1607,26 @@ button{transition:all .15s ease}
 .hm-debt-chart-card{animation:debtCardEnter .5s cubic-bezier(0.34,1.56,0.64,1) both}
 .hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:var(--red)!important}
 
+/* Resumen métricas: tarjetas al costado + tabla de ancho acotado */
+.hm-metricas-page{max-width:1180px;margin-left:auto;margin-right:auto}
+.hm-metricas-split{display:grid;grid-template-columns:1fr;gap:22px;align-items:start}
+.hm-metricas-kpi-grid{grid-template-columns:repeat(2,1fr)!important;gap:10px!important}
+.hm-metricas-kpi-grid > div{padding:11px 12px!important;border-radius:9px!important}
+.hm-metricas-kpi-grid > div > div:first-of-type{font-size:9px!important;margin-bottom:5px!important;letter-spacing:.08em!important}
+.hm-metricas-kpi-grid > div > div:nth-of-type(2){font-size:15px!important}
+.hm-metricas-kpi-grid .hm-metricas-kpi-bar-wrap{margin-top:7px!important}
+.hm-metricas-table-wrap{width:100%;max-width:100%;min-width:0}
+.hm-metricas-table-wrap .hm-table-wrap table{min-width:0;width:100%}
+.hm-metricas-table-wrap .hm-table-reportes th,.hm-metricas-table-wrap .hm-table-reportes td{padding:9px 10px!important;font-size:12.5px!important}
+.hm-metricas-table-wrap .hm-resumen-pro-table-head h3{font-size:15px}
+@media (min-width:1024px){
+  .hm-metricas-split{grid-template-columns:minmax(252px,288px) minmax(0,1fr);gap:26px}
+  .hm-metricas-table-wrap{max-width:min(680px,100%);justify-self:start}
+}
+@media (min-width:1280px){
+  .hm-metricas-table-wrap{max-width:min(720px,100%)}
+}
+
 /* === RESPONSIVE === */
 @media (max-width:768px){
   .hm-sidebar{transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);z-index:200;box-shadow:8px 0 30px rgba(0,0,0,.15)}
@@ -1617,6 +1637,7 @@ button{transition:all .15s ease}
   .hm-mobile-header{display:flex!important}
   .hm-page-header{top:60px!important;padding:0 20px!important;flex-wrap:wrap;gap:10px!important;min-height:auto!important;height:auto!important;padding:14px 20px!important}
   .hm-page-content{padding:20px 16px!important}
+  .hm-metricas-table-wrap{max-width:100%!important;justify-self:stretch!important}
   .hm-stats-grid{grid-template-columns:repeat(2,1fr)!important;gap:14px!important}
   .hm-charts-grid-2{grid-template-columns:1fr!important}
   .hm-charts-grid-2-1{grid-template-columns:1fr!important}
@@ -2444,7 +2465,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Desglose por cliente (mismas reglas que el reporte de Resumen). Filtrá por usuario y período abajo.</p>
               </div>
             </div>
-            <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
+            <div className="hm-page-content hm-metricas-page" style={{ padding: "32px 48px", margin: "0 auto" }}>
               <div className="hm-resumen-pro-toolbar" style={{ marginBottom: 18 }}>
                 <div className="hm-resumen-pro-toolbar-row">
                   <div className="hm-resumen-pro-ss">
@@ -2452,7 +2473,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                   <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#c2410c", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
@@ -2463,22 +2484,28 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <span style={{ fontSize: 11, color: "#9498a8", maxWidth: 520, lineHeight: 1.45 }}>Todo el resumen (tarjetas y tabla) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.{repPeriodoMes ? <> · <span style={{ fontWeight: 600, color: "#5f6577" }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span></> : null}</span>
               </div>
-              <div className="hm-detail-stats" style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 12, marginBottom: 22 }}>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Gasto Ads</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em" }}>${fmt(repData.t.ads)}</div></div>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Fees</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#2563eb", letterSpacing: "-0.02em" }}>${fmt(repData.t.fee)}</div></div>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Total</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#d97706", letterSpacing: "-0.02em" }}>${fmt(repData.t.total)}</div></div>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Cobrado</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.paid)}</div><div style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: metricasKpiPct + "%", transition: "width 0.15s ease-out" }} /></div></div>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Garantías</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.02em" }}>{repData.t.gar > 0 ? "-$" + fmt(repData.t.gar) : "$0"}</div></div>
-                <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Deuda Neta</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: repData.t.netPending > 0 ? "#dc2640" : "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.netPending)}</div></div>
-              </div>
-              <div className="hm-resumen-pro-alert" style={{ marginBottom: 20 }}>
-                <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
-                <div>
-                  <div className="hm-resumen-pro-alert-title">¿Dónde se ven las garantías?</div>
-                  <p className="hm-resumen-pro-alert-p">Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
+              <div className="hm-metricas-split">
+                <aside className="hm-metricas-kpi-aside" style={{ minWidth: 0 }}>
+                  <div className="hm-detail-stats hm-metricas-kpi-grid" style={{ display: "grid", marginBottom: 0 }}>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Gasto Ads</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em" }}>${fmt(repData.t.ads)}</div></div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Fees</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#2563eb", letterSpacing: "-0.02em" }}>${fmt(repData.t.fee)}</div></div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Total</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#d97706", letterSpacing: "-0.02em" }}>${fmt(repData.t.total)}</div></div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Cobrado</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.paid)}</div><div className="hm-metricas-kpi-bar-wrap" style={{ height: 5, background: "#eff0f3", borderRadius: 3, marginTop: 10, overflow: "hidden" }}><div style={{ height: "100%", borderRadius: 3, background: "#0d9f6e", width: metricasKpiPct + "%", transition: "width 0.15s ease-out" }} /></div></div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Garantías</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: "#7c3aed", letterSpacing: "-0.02em" }}>{repData.t.gar > 0 ? "-$" + fmt(repData.t.gar) : "$0"}</div></div>
+                    <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px" }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Deuda Neta</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, color: repData.t.netPending > 0 ? "#dc2640" : "#0d9f6e", letterSpacing: "-0.02em" }}>${fmt(repData.t.netPending)}</div></div>
+                  </div>
+                </aside>
+                <div className="hm-metricas-table-wrap">
+                  <div className="hm-resumen-pro-alert" style={{ marginBottom: 16 }}>
+                    <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
+                    <div>
+                      <div className="hm-resumen-pro-alert-title">¿Dónde se ven las garantías?</div>
+                      <p className="hm-resumen-pro-alert-p" style={{ fontSize: 12.5 }}>Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
+                    </div>
+                  </div>
+                  {desglosePorUsuarioTablaEl}
                 </div>
               </div>
-              {desglosePorUsuarioTablaEl}
             </div>
           </div>
         )}
