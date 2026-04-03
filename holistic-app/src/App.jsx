@@ -52,6 +52,49 @@ const mesGarantiaResumen = (g, gastosList) => {
   if (g.created_at) return normalizePeriod(String(g.created_at).slice(0, 7));
   return "";
 };
+/** Pendiente neto de un cliente en un mes (YYYY-MM): mismas reglas que el desglose del Resumen (fecha de movimiento, cobros por período contable, garantías con mes en resumen). */
+function netPendingClienteEnPeriodo(cid, periodoMes, sGastos, cobros, gastosList, garantias) {
+  const mesIni = normalizePeriod(periodoMes);
+  if (!mesIni) return 0;
+  const repPerInicio = mesIni + "-01";
+  const repPerFin = lastDayOfMonth(mesIni);
+  const fOp = (g) => (g.fechaMovimiento || "").slice(0, 10);
+  let gs = sGastos.filter((g) => String(g.clientId) === String(cid));
+  gs = gs.filter((g) => {
+    const d = fOp(g);
+    if (!d) return false;
+    return d >= repPerInicio && d <= repPerFin;
+  });
+  const garantiasParaReporte = garantias.filter((g) => {
+    if (g.estado !== "Vigente" || String(g.clientId) !== String(cid)) return false;
+    const mesG = mesGarantiaResumen(g, gastosList);
+    if (!mesG) return false;
+    return mesG >= mesIni && mesG <= mesIni;
+  });
+  const bc = {};
+  gs.forEach((g) => {
+    if (!bc[g.clientId]) bc[g.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
+    bc[g.clientId].ads += parseFloat(g.gasto || 0);
+    bc[g.clientId].fee += g._f;
+    bc[g.clientId].total += g._t;
+  });
+  cobros.forEach((c) => {
+    const cidc = c.gastoId ? (gastosList.find((x) => x.id === c.gastoId)?.clientId) : (c.clientId || null);
+    if (!cidc || String(cidc) !== String(cid)) return;
+    const mes = normalizePeriod(mesCobro(c, gastosList));
+    if (!mes || mes < mesIni || mes > mesIni) return;
+    if (!bc[cidc]) bc[cidc] = { ads: 0, fee: 0, total: 0, paid: 0 };
+    bc[cidc].paid += parseFloat(c.monto || 0);
+  });
+  garantiasParaReporte.forEach((g) => {
+    if (!bc[g.clientId]) bc[g.clientId] = { ads: 0, fee: 0, total: 0, paid: 0 };
+  });
+  const d = bc[cid];
+  if (!d) return 0;
+  const gar = garantiasParaReporte.reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+  const pend = Math.max(0, d.total - d.paid);
+  return Math.max(0, pend - gar);
+}
 const addOneMonthYm = (ym) => { if (!ym || typeof ym !== "string") return tm(); const [y, m] = ym.split("-").map(Number); if (!y || !m) return tm(); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
@@ -2506,7 +2549,13 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           <CobranzaView
             supabase={supabase}
             clients={clients}
-            getClienteDeudaNeta={(id) => cData(id).net}
+            getClienteDeudaNeta={(id, periodoYM) => {
+              const p = periodoYM && String(periodoYM).trim() ? normalizePeriod(periodoYM) : "";
+              if (!p) return cData(id).net;
+              return netPendingClienteEnPeriodo(id, p, sGastos, cobros, gastos, garantias);
+            }}
+            fmtM={fmtM}
+            parsePeriodoInput={parsePeriodoInput}
             userEmail={userEmail}
             onRefetchClients={refetchData}
           />

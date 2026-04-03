@@ -5,13 +5,15 @@ import {
   X,
   Eye,
   Send,
-  AlertCircle,
   PlusCircle,
   History,
   CheckSquare,
   Square,
   Heart,
   ListChecks,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import TableScrollWrap from "./TableScrollWrap";
 
@@ -68,7 +70,8 @@ const EVENTO_LABEL = {
 const SUBJECT_TMPL = "Recordatorio de saldo — {{cliente_nombre}}";
 
 const BODY_HTML_TMPL = `<p>Hola <strong>{{cliente_nombre}}</strong>,</p>
-<p>Te escribimos desde <strong>Holistic Marketing</strong> para recordarte un saldo pendiente de <strong>{{moneda}} {{monto_pendiente}}</strong> a la fecha.</p>
+<p>Te escribimos desde <strong>Holistic Marketing</strong> para recordarte un saldo pendiente de <strong>{{moneda}} {{monto_pendiente}}</strong>.</p>
+<p style="color:#475569;font-size:14px;line-height:1.55">{{periodo_etiqueta}}</p>
 <p>Si ya realizaste el pago, por favor ignora este mensaje o responde con el comprobante para actualizar nuestros registros.</p>
 <p>Gracias por tu confianza.</p>
 <p style="color:#64748b;font-size:13px">— Equipo Holistic</p>`;
@@ -76,7 +79,7 @@ const BODY_HTML_TMPL = `<p>Hola <strong>{{cliente_nombre}}</strong>,</p>
 const THANKS_SUBJECT_TMPL = "Gracias por estar al día — {{cliente_nombre}}";
 
 const THANKS_BODY_HTML_TMPL = `<p>Hola <strong>{{cliente_nombre}}</strong>,</p>
-<p>Te escribimos desde <strong>Holistic Marketing</strong> para agradecerte: según nuestros registros <strong>no tenés saldo pendiente</strong> en este momento.</p>
+<p>Te escribimos desde <strong>Holistic Marketing</strong> para agradecerte: según nuestros registros <strong>no tenés saldo pendiente</strong> {{periodo_etiqueta}}</p>
 <p>Valoramos mucho la confianza y el cumplimiento. Cualquier consulta, estamos a disposición.</p>
 <p style="color:#64748b;font-size:13px">— Equipo Holistic</p>`;
 
@@ -181,7 +184,7 @@ const Btn = ({ variant = "primary", size, children, ...p }) => {
 
 function FlowSteps() {
   const steps = [
-    { n: 1, t: "Generar borradores", d: "Con deuda o al día (agradecimiento)" },
+    { n: 1, t: "Generar borradores", d: "Según el período de referencia (o cuenta completa)" },
     { n: 2, t: "Revisar y editar", d: "Asunto y cuerpo antes de aprobar" },
     { n: 3, t: "Aprobar o rechazar", d: "Control humano obligatorio" },
     { n: 4, t: "Enviar", d: "Resend o marcar enviado manual" },
@@ -226,10 +229,18 @@ function FlowSteps() {
   );
 }
 
+function defaultFmtM(m) {
+  if (!m) return "—";
+  const d = new Date(m + "-15T12:00:00");
+  return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" });
+}
+
 export default function CobranzaView({
   supabase,
   clients = [],
   getClienteDeudaNeta,
+  fmtM = defaultFmtM,
+  parsePeriodoInput = null,
   userEmail = "",
   onRefetchClients,
 }) {
@@ -257,6 +268,34 @@ export default function CobranzaView({
 
   const [selected, setSelected] = useState(() => new Set());
   const [sendProgress, setSendProgress] = useState(null);
+
+  /** Mes de referencia para montos al generar borradores (vacío = deuda neta total actual, igual que «A cobrar» en Gastos). */
+  const [periodoCobranza, setPeriodoCobranza] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+
+  const deudaReferencia = useCallback(
+    (clientId) => {
+      if (typeof getClienteDeudaNeta !== "function") return 0;
+      return getClienteDeudaNeta(clientId, periodoCobranza || "");
+    },
+    [getClienteDeudaNeta, periodoCobranza],
+  );
+
+  const etiquetaPeriodoCorreo = useMemo(() => {
+    if (periodoCobranza && String(periodoCobranza).trim()) {
+      return `Este monto corresponde al mes ${fmtM(periodoCobranza)} (gastos con fecha de movimiento en ese mes, cobros contabilizados en ese período y garantías vigentes con mes en resumen en ese mes — igual que el Resumen).`;
+    }
+    return "Este monto es la deuda neta actual total del cliente en el panel (todos los períodos), igual que la columna «A cobrar» en Gastos Ads.";
+  }, [periodoCobranza, fmtM]);
+
+  const etiquetaPeriodoThanks = useMemo(() => {
+    if (periodoCobranza && String(periodoCobranza).trim()) {
+      return `respecto al mes ${fmtM(periodoCobranza)} (mismo criterio que el Resumen: fecha de movimiento, cobros de ese período, garantías con mes en resumen).`;
+    }
+    return "en el conjunto de tu cuenta (deuda neta actual total en el panel, como «A cobrar» en Gastos).";
+  }, [periodoCobranza, fmtM]);
 
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
   const supabaseAnon = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
@@ -640,7 +679,7 @@ export default function CobranzaView({
     let n = 0;
     try {
       for (const c of clients) {
-        const net = getClienteDeudaNeta(c.id);
+        const net = deudaReferencia(c.id);
         if (net <= 0) continue;
         if (activeClientIds.has(c.id)) continue;
         const email = firstClientEmail(c);
@@ -655,6 +694,8 @@ export default function CobranzaView({
           ultimo_pago_fecha: "",
           link_pago: "",
           resumen_servicios: "",
+          periodo_etiqueta: etiquetaPeriodoCorreo,
+          periodo_ym: periodoCobranza.trim() || null,
         };
         const ok = await insertBorrador(
           c,
@@ -668,7 +709,7 @@ export default function CobranzaView({
       }
       if (n === 0) {
         alert(
-          "No hay borradores nuevos de cobro (sin deuda, sin email, o ya hay pendiente/aprobado para ese cliente).",
+          "No hay borradores nuevos de cobro (sin deuda según el período elegido, sin email, o ya hay pendiente/aprobado para ese cliente).",
         );
       } else {
         alert(`Listo: ${n} borrador(es) de cobro para revisar.`);
@@ -686,7 +727,7 @@ export default function CobranzaView({
     let n = 0;
     try {
       for (const c of clients) {
-        const net = getClienteDeudaNeta(c.id);
+        const net = deudaReferencia(c.id);
         if (net > 0) continue;
         if (activeClientIds.has(c.id)) continue;
         const email = firstClientEmail(c);
@@ -701,6 +742,8 @@ export default function CobranzaView({
           ultimo_pago_fecha: "",
           link_pago: "",
           resumen_servicios: "",
+          periodo_etiqueta: etiquetaPeriodoThanks,
+          periodo_ym: periodoCobranza.trim() || null,
         };
         const ok = await insertBorrador(
           c,
@@ -714,7 +757,7 @@ export default function CobranzaView({
       }
       if (n === 0) {
         alert(
-          "No hay agradecimientos nuevos (solo clientes al día, con email y sin borrador activo ya creado).",
+          "No hay agradecimientos nuevos (al día según el período elegido, con email y sin borrador activo ya creado).",
         );
       } else {
         alert(`Listo: ${n} borrador(es) de agradecimiento para revisar.`);
@@ -840,29 +883,34 @@ export default function CobranzaView({
           boxShadow: "0 1px 3px rgba(15,23,42,.04)",
         }}
       >
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            margin: 0,
-            letterSpacing: -0.3,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            fontFamily: "var(--font-display)",
-          }}
-        >
-          <span
+        <div style={{ minWidth: 0 }}>
+          <h2
             style={{
-              display: "inline-flex",
-              width: 10,
-              height: 10,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #e11d48, #f97316)",
+              fontSize: 20,
+              fontWeight: 700,
+              margin: 0,
+              letterSpacing: -0.3,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              fontFamily: "var(--font-display)",
             }}
-          />
-          Cobranza
-        </h2>
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                width: 10,
+                height: 10,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #e11d48, #f97316)",
+              }}
+            />
+            Cobranza
+          </h2>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 640, lineHeight: 1.45 }}>
+            El monto de los <strong>correos nuevos</strong> depende del <strong>período de referencia</strong> (abajo). Las filas ya guardadas conservan el monto del momento en que se generaron.
+          </p>
+        </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ display: "inline-flex", background: "#f1f5f9", borderRadius: 10, padding: 4, gap: 4 }}>
             <button
@@ -1011,6 +1059,170 @@ export default function CobranzaView({
       <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none" }}>
         {mainTab === "bandeja" && (
           <>
+            <div
+              style={{
+                marginBottom: 18,
+                padding: "16px 18px",
+                background: "linear-gradient(135deg, #fff1f2 0%, #fff 100%)",
+                border: "1px solid #fecdd3",
+                borderRadius: 14,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, flexWrap: "wrap" }}>
+                <Calendar size={20} style={{ color: "#e11d48", flexShrink: 0 }} />
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a" }}>Período de referencia para la deuda</div>
+              </div>
+              <p style={{ margin: "0 0 14px", fontSize: 13, color: "#57534e", lineHeight: 1.55, maxWidth: 900 }}>
+                {periodoCobranza.trim() ? (
+                  <>
+                    Con <strong>un mes</strong>, el monto al pulsar «Borradores cobro» / «Agradecimiento» es el <strong>pendiente neto de ese mes</strong>, igual que en <strong>Resumen</strong>: gastos con <strong>fecha de movimiento</strong> en el mes, cobros cuyo <strong>período contable</strong> cae en ese mes y <strong>garantías vigentes</strong> con <strong>mes en resumen</strong> en ese mes.
+                  </>
+                ) : (
+                  <>
+                    Con <strong>Cuenta completa</strong>, el monto es la <strong>deuda neta actual total</strong> del cliente (todos los períodos), igual que la columna <strong>«A cobrar»</strong> en Gastos Ads.
+                  </>
+                )}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "12px 14px",
+                  background: "#fff",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 12,
+                }}
+              >
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#334155" }}>Período:</span>
+                <button
+                  type="button"
+                  title="Mes anterior"
+                  onClick={() => {
+                    const base = periodoCobranza.trim() || (() => {
+                      const d = new Date();
+                      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                    })();
+                    const [y, m] = base.split("-").map(Number);
+                    const d = new Date(y, m - 2, 1);
+                    setPeriodoCobranza(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+                  }}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    background: "#f8fafc",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div
+                  style={{
+                    minWidth: 100,
+                    textAlign: "center",
+                    padding: "6px 12px",
+                    background: "#f1f5f9",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: periodoCobranza.trim() ? "#0f172a" : "#64748b",
+                  }}
+                >
+                  {periodoCobranza.trim() ? fmtM(periodoCobranza) : "Cuenta completa"}
+                </div>
+                <button
+                  type="button"
+                  title="Mes siguiente"
+                  onClick={() => {
+                    const base = periodoCobranza.trim() || (() => {
+                      const d = new Date();
+                      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                    })();
+                    const [y, m] = base.split("-").map(Number);
+                    const d = new Date(y, m, 1);
+                    setPeriodoCobranza(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+                  }}
+                  style={{
+                    width: 34,
+                    height: 34,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    background: "#f8fafc",
+                    cursor: "pointer",
+                  }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+                <input
+                  type="month"
+                  value={periodoCobranza.trim()}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v) setPeriodoCobranza(v);
+                  }}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontFamily: "inherit",
+                  }}
+                  title="Elegir mes"
+                />
+                <input
+                  type="text"
+                  placeholder="MM/AAAA"
+                  value={periodoCobranza}
+                  onChange={(e) => setPeriodoCobranza(e.target.value)}
+                  onBlur={(e) => {
+                    if (typeof parsePeriodoInput === "function") {
+                      const p = parsePeriodoInput(e.target.value);
+                      if (p) setPeriodoCobranza(p);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && typeof parsePeriodoInput === "function") {
+                      e.preventDefault();
+                      const p = parsePeriodoInput(e.currentTarget.value);
+                      if (p) setPeriodoCobranza(p);
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  style={{
+                    width: 96,
+                    padding: "6px 10px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    fontSize: 13,
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setPeriodoCobranza("")}
+                  style={{
+                    padding: "7px 12px",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                    background: "#fff",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#64748b",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cuenta completa
+                </button>
+              </div>
+            </div>
             <FlowSteps />
             <div
               style={{
@@ -1110,8 +1322,20 @@ export default function CobranzaView({
                           <CheckSquare size={18} />
                         </button>
                       </th>
-                      {["Cliente", "Email", "Deuda", "Tipo", "Asunto", "Vista previa", "Estado", "Acciones"].map((h) => (
-                        <th key={h} style={TH}>
+                      {[
+                        "Cliente",
+                        "Email",
+                        <span key="per" title="Mes usado al generar el borrador (Total cuenta = deuda acumulada; — sin dato en borradores viejos)">
+                          Período ref.
+                        </span>,
+                        "Deuda (USD)",
+                        "Tipo",
+                        "Asunto",
+                        "Vista previa",
+                        "Estado",
+                        "Acciones",
+                      ].map((h, i) => (
+                        <th key={typeof h === "string" ? h : `h-${i}`} style={TH}>
                           {h}
                         </th>
                       ))}
@@ -1120,7 +1344,7 @@ export default function CobranzaView({
                   <tbody>
                     {loading && (
                       <tr>
-                        <td colSpan={9} style={{ ...TD, textAlign: "center", color: "#94a3b8" }}>
+                        <td colSpan={10} style={{ ...TD, textAlign: "center", color: "#94a3b8" }}>
                           Cargando…
                         </td>
                       </tr>
@@ -1129,6 +1353,9 @@ export default function CobranzaView({
                       filtered.map((r) => {
                         const tipo = correoTipo(r) === "agradecimiento" ? "Agradecimiento" : "Cobro";
                         const canSel = r.estado === "pending_approval";
+                        const v = r.variables && typeof r.variables === "object" ? r.variables : {};
+                        const refPer = v.periodo_ym ? fmtM(v.periodo_ym) : "Total cuenta";
+                        const refTitle = v.periodo_etiqueta ? String(v.periodo_etiqueta) : v.periodo_ym ? fmtM(v.periodo_ym) : "Deuda acumulada total al generar (borradores anteriores a período explícito)";
                         return (
                           <tr key={r.id}>
                             <td style={TD}>
@@ -1153,6 +1380,9 @@ export default function CobranzaView({
                             </td>
                             <td style={{ ...TD, fontWeight: 600 }}>{r.cliente_nombre || "—"}</td>
                             <td style={{ ...TD, fontSize: 12.5, color: "#64748b" }}>{r.email_destino}</td>
+                            <td style={{ ...TD, fontSize: 12.5, color: "#475569", maxWidth: 120 }} title={refTitle}>
+                              {refPer}
+                            </td>
                             <td style={{ ...TD, fontVariantNumeric: "tabular-nums" }}>
                               {r.moneda || "USD"} {fmtMoney(r.monto_pendiente)}
                             </td>
@@ -1227,7 +1457,7 @@ export default function CobranzaView({
                       })}
                     {!loading && !filtered.length && (
                       <tr>
-                        <td colSpan={9} style={{ ...TD, textAlign: "center", color: "#94a3b8", padding: 40 }}>
+                        <td colSpan={10} style={{ ...TD, textAlign: "center", color: "#94a3b8", padding: 40 }}>
                           No hay registros. Usá «Borradores cobro» o «Agradecimiento» o revisá el filtro.
                         </td>
                       </tr>
@@ -1398,6 +1628,15 @@ export default function CobranzaView({
               <p style={{ fontSize: 13, color: "#334155", marginBottom: 14 }}>
                 <strong>{detail.cliente_nombre}</strong> · {detail.email_destino} · Monto en registro:{" "}
                 {detail.moneda} {fmtMoney(detail.monto_pendiente)}
+                {variablesObj.periodo_ym ? (
+                  <span style={{ display: "block", marginTop: 6, fontSize: 12.5, color: "#64748b" }}>
+                    Período de referencia al generar: <strong>{fmtM(variablesObj.periodo_ym)}</strong>
+                  </span>
+                ) : (
+                  <span style={{ display: "block", marginTop: 6, fontSize: 12.5, color: "#64748b" }}>
+                    Criterio al generar: <strong>Total cuenta</strong> (deuda acumulada) o borrador sin período guardado.
+                  </span>
+                )}
                 {detail.ultimo_error ? (
                   <span style={{ display: "block", marginTop: 8, color: "#dc2626", fontSize: 12.5 }}>
                     Último error: {detail.ultimo_error}
