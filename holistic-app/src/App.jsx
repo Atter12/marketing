@@ -579,81 +579,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     }
   }, [repData.rows, sortReportDesgloseBy]);
 
-  /** Métricas agregadas por correo del gerente que registró (created_by en gastos / cobros / garantías). Mismos filtros de período y cliente que el reporte principal. */
-  const repStaffMetrics = useMemo(() => {
-    let gs = sGastos;
-    if (repPerInicio && repPerFin) {
-      gs = gs.filter((g) => {
-        const d = (g.fechaMovimiento || "").slice(0, 10);
-        return d && d >= repPerInicio && d <= repPerFin;
-      });
-    }
-    if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
-
-    const garantiasParaReporte = garantias.filter((g) => {
-      if (g.estado !== "Vigente") return false;
-      if (repPerInicio && repPerFin) {
-        const mesG = mesGarantiaResumen(g, gastos);
-        const mesIni = (repPerInicio || "").slice(0, 7);
-        const mesFin = (repPerFin || "").slice(0, 7);
-        if (!mesG) return false;
-        return mesG >= mesIni && mesG <= mesFin;
-      }
-      return true;
-    });
-
-    const mesIni = (repPerInicio || "").slice(0, 7);
-    const mesFin = (repPerFin || "").slice(0, 7);
-    const staffKey = (e) => (e != null && String(e).trim() !== "") ? String(e).trim() : "— Sin registrar";
-
-    const agg = {};
-    const bump = (k) => {
-      if (!agg[k]) agg[k] = { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, nGastos: 0, nCobros: 0, nGar: 0 };
-      return agg[k];
-    };
-
-    gs.forEach((g) => {
-      const o = bump(staffKey(g.created_by));
-      o.ads += parseFloat(g.gasto || 0);
-      o.fee += g._f;
-      o.total += g._t;
-      o.nGastos += 1;
-    });
-
-    cobros.forEach((c) => {
-      const cid = c.gastoId ? (gastos.find((x) => x.id === c.gastoId)?.clientId) : (c.clientId || null);
-      if (!cid) return;
-      if (repCl !== "all" && cid !== repCl) return;
-      const mes = mesCobro(c, gastos);
-      if (repPerInicio && repPerFin && mesIni && mesFin && (mes < mesIni || mes > mesFin)) return;
-      const o = bump(staffKey(c.created_by));
-      o.paid += parseFloat(c.monto || 0);
-      o.nCobros += 1;
-    });
-
-    garantiasParaReporte.forEach((g) => {
-      if (repCl !== "all" && String(g.clientId) !== String(repCl)) return;
-      const o = bump(staffKey(g.created_by));
-      o.gar += parseFloat(g.valor || 0);
-      o.nGar += 1;
-    });
-
-    const rows = Object.entries(agg).map(([email, d]) => ({ email, ...d }));
-    rows.sort((a, b) => (b.total + b.paid + b.gar) - (a.total + a.paid + a.gar));
-    const t = rows.reduce((acc, r) => ({
-      ads: acc.ads + r.ads,
-      fee: acc.fee + r.fee,
-      total: acc.total + r.total,
-      paid: acc.paid + r.paid,
-      gar: acc.gar + r.gar,
-      nGastos: acc.nGastos + r.nGastos,
-      nCobros: acc.nCobros + r.nCobros,
-      nGar: acc.nGar + r.nGar,
-    }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, nGastos: 0, nCobros: 0, nGar: 0 });
-
-    return { rows, t };
-  }, [sGastos, cobros, gastos, garantias, repCl, repPerInicio, repPerFin]);
-
   /* Reportes: meses en el rango desde–hasta para gráficas */
   const reportMonths = useMemo(() => {
     if (repPerInicio && repPerFin) {
@@ -1508,9 +1433,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       ]
     : [
         { id: "dashboard", icon: <BarChart3 size={18} />, label: "Resumen", accent: "#2563eb" },
+        { id: "metricas", icon: <Activity size={18} />, label: "Resumen métricas", accent: "#6366f1" },
         { id: "clientes", icon: <Users size={18} />, label: "Clientes", accent: "#0891b2" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN, accent: "#d97706" },
-        { id: "metricas", icon: <Activity size={18} />, label: "Resumen métricas", accent: "#6366f1" },
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros", accent: "#059669" },
         { id: "cobranza", icon: <Mail size={18} />, label: "Cobranza", accent: "#e11d48" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías", accent: "#7c3aed" },
@@ -1537,84 +1462,34 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (expRango.cobros.ini || expRango.cobros.fin) && !cobrosFiltrados.length ? "Sin cobros en el rango de fechas" : filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros";
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
-  const ResumenMetricasStaffBlock = () => {
-    const { rows, t } = repStaffMetrics;
-    return (
-      <div className="hm-resumen-pro-table-card" style={{ marginBottom: 0 }}>
-        <div className="hm-resumen-pro-table-head">
-          <div>
-            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}>
-              <span className="hm-dot" aria-hidden style={{ background: "linear-gradient(135deg, #0f172a, #475569)" }} />
-              Desglose por usuario del panel
-            </h3>
-            <p style={{ margin: "8px 0 0", fontSize: 12.5, color: "var(--sidebar-text-muted)", maxWidth: 720, lineHeight: 1.5 }}>
-              Por <strong>correo en «Registrado por»</strong>: gastos cargados, cobros y garantías del período elegido (mismas reglas que el reporte en Resumen).
-            </p>
+  /** Tabla «Desglose por usuario» (por cliente) del reporte; se muestra en la página Resumen métricas. */
+  const desglosePorUsuarioTablaEl = (
+    <div className="hm-resumen-pro-table-card">
+      <div className="hm-resumen-pro-table-head">
+        <h3><span className="hm-dot" aria-hidden />Desglose por usuario</h3>
+        {repData.rows.length > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
+            <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 10, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
+              <option value="nombre">Nombre (A-Z)</option>
+              <option value="deuda">Quien más debe (Pend. neto ↓)</option>
+              <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
+              <option value="total">Mayor total (Ads+Fee)</option>
+              <option value="pagado">Más cobrado</option>
+              <option value="ads">Mayor gasto Ads</option>
+              <option value="garantia">Mayor garantía</option>
+            </select>
           </div>
-        </div>
-        <div style={{ padding: "0 16px 16px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14 }}>
-          <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}>
-            <SearchSelect compact label="Cliente (opcional)" options={[{ value: "all", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" />
-          </div>
-          <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)" }}>Período:</span>
-            <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", cursor: "pointer" }} title="Mes anterior"><ChevronLeft size={15} /></button>
-            <div style={{ minWidth: 86, textAlign: "center", padding: "4px 10px", fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-            <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", cursor: "pointer" }} title="Mes siguiente"><ChevronRight size={15} /></button>
-            <input type="text" placeholder="MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} style={{ width: 88, boxSizing: "border-box", padding: "6px 8px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, outline: "none" }} />
-            {repPeriodoMes ? <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button> : null}
-            {repPeriodoMes ? <span style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)" }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span> : null}
-          </div>
-        </div>
-        <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll={false}>
-          <table style={{ width: "100%" }}>
-            <thead>
-              <tr>
-                {["Usuario (panel)", "Gastos", "ADS", "FEE", "FEE %", "TOTAL", "Cobros", "PAGADO", "GARANTÍA"].map((h) => (
-                  <th key={h} style={TH} title={h === "Gastos" ? "Cantidad de gastos Ads registrados por este usuario" : h === "Cobros" ? "Cantidad de cobros registrados" : undefined}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length > 0 ? (
-                <>
-                  {rows.map((r) => {
-                    const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—";
-                    return (
-                      <tr key={r.email}>
-                        <td style={{ ...TD, fontWeight: 600, maxWidth: 220 }} title={`${r.nGastos} gasto(s), ${r.nCobros} cobro(s), ${r.nGar} garantía(s)`}>{r.email}</td>
-                        <td style={{ ...TD, ...MN }}>{r.nGastos}</td>
-                        <td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td>
-                        <td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td>
-                        <td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td>
-                        <td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td>
-                        <td style={{ ...TD, ...MN }}>{r.nCobros}</td>
-                        <td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td>
-                        <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td>
-                      </tr>
-                    );
-                  })}
-                  <tr className="hm-resumen-pro-table-total-row">
-                    <td style={{ ...TD, fontWeight: 800 }}>TOTAL</td>
-                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{t.nGastos}</td>
-                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(t.ads)}</td>
-                    <td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(t.fee)}</td>
-                    <td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{t.ads > 0 ? (t.fee / t.ads * 100).toFixed(1) + "%" : "—"}</td>
-                    <td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(t.total)}</td>
-                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{t.nCobros}</td>
-                    <td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(t.paid)}</td>
-                    <td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{t.gar > 0 ? "-" + fmt(t.gar) : "—"}</td>
-                  </tr>
-                </>
-              ) : (
-                <Empty cols={9} msg="Sin movimientos atribuibles a usuario en este período" />
-              )}
-            </tbody>
-          </table>
-        </TableScrollWrap>
+        )}
       </div>
-    );
-  };
+      <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+        <tbody>
+          {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
+          <tr className="hm-resumen-pro-table-total-row"><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
+          {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
+        </tbody></table></TableScrollWrap>
+    </div>
+  );
 
   return (
     <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "var(--font-body)", background: "var(--color-bg)", color: "var(--color-text)", lineHeight: 1.55, WebkitFontSmoothing: "antialiased" }}>
@@ -2231,31 +2106,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
               </div>
             ) : null}
-            <div className="hm-resumen-pro-table-card">
-              <div className="hm-resumen-pro-table-head">
-                <h3><span className="hm-dot" aria-hidden />Desglose por usuario</h3>
-                {repData.rows.length > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
-                    <select value={sortReportDesgloseBy} onChange={(e) => setSortReportDesgloseBy(e.target.value)} style={{ padding: "8px 12px", border: "1px solid var(--sidebar-border)", borderRadius: 10, fontSize: 13, fontFamily: "'Inter'", background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", outline: "none", cursor: "pointer", minWidth: 200 }}>
-                      <option value="nombre">Nombre (A-Z)</option>
-                      <option value="deuda">Quien más debe (Pend. neto ↓)</option>
-                      <option value="deuda_menos">Quien menos debe (Pend. neto ↑)</option>
-                      <option value="total">Mayor total (Ads+Fee)</option>
-                      <option value="pagado">Más cobrado</option>
-                      <option value="ads">Mayor gasto Ads</option>
-                      <option value="garantia">Mayor garantía</option>
-                    </select>
-                  </div>
-                )}
-              </div>
-              <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
-                <tbody>
-                  {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
-                  <tr className="hm-resumen-pro-table-total-row"><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
-                  {!repData.rows.length && <Empty cols={8} msg="Sin gastos, cobros ni garantías con mes en resumen en este período" />}
-                </tbody></table></TableScrollWrap>
-            </div>
             <div className="hm-resumen-pro-split">
               <div className="hm-pro-card" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                 <div className="hm-pro-card-head" style={{ alignSelf: "stretch", width: "100%" }}>
@@ -2525,7 +2375,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           </div>
         </div>)}
 
-        {/* ══ RESUMEN MÉTRICAS: desglose por correo del panel (solo gerente) ══ */}
+        {/* ══ RESUMEN MÉTRICAS: misma tabla «Desglose por usuario» que en Resumen (solo gerente) ══ */}
         {page === "metricas" && !isCliente && (
           <div>
             <div className="hm-page-header hm-page-header--listing" style={{ background: "linear-gradient(90deg, #fff 0%, #eef2ff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
@@ -2534,11 +2384,39 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }} />
                   Resumen métricas
                 </h2>
-                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Métricas por usuario que registró movimientos (correo en «Registrado por»). Elegí período y cliente abajo.</p>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Desglose por cliente (mismas reglas que el reporte de Resumen). Filtrá por usuario y período abajo.</p>
               </div>
             </div>
             <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
-              <ResumenMetricasStaffBlock />
+              <div className="hm-resumen-pro-toolbar" style={{ marginBottom: 20 }}>
+                <div className="hm-resumen-pro-toolbar-row">
+                  <div className="hm-resumen-pro-ss">
+                    <SearchSelect compact label="Usuario" options={[{ value: "all", label: "Todos" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" />
+                  </div>
+                  <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 11, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={18} strokeWidth={2.2} /></div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)" }}>Período:</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
+                        <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+                        <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
+                        <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
+                        {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                      </div>
+                      {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="hm-resumen-pro-alert" style={{ marginBottom: 20 }}>
+                <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <div className="hm-resumen-pro-alert-title">¿Dónde se ven las garantías?</div>
+                  <p className="hm-resumen-pro-alert-p">Las garantías vigentes con <strong>mes en resumen</strong> = este período aparecen en la tabla aunque no haya gastos con fecha en el mes ni cobros contabilizados aquí. Se descuentan en <strong>GARANTÍA</strong> y en <strong>PEND. NETO</strong>. Los gastos del reporte siguen siendo por <strong>fecha de movimiento</strong> en el rango.</p>
+                </div>
+              </div>
+              {desglosePorUsuarioTablaEl}
             </div>
           </div>
         )}
