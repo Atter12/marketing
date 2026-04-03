@@ -579,6 +579,81 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     }
   }, [repData.rows, sortReportDesgloseBy]);
 
+  /** Métricas agregadas por correo del gerente que registró (created_by en gastos / cobros / garantías). Mismos filtros de período y cliente que el reporte principal. */
+  const repStaffMetrics = useMemo(() => {
+    let gs = sGastos;
+    if (repPerInicio && repPerFin) {
+      gs = gs.filter((g) => {
+        const d = (g.fechaMovimiento || "").slice(0, 10);
+        return d && d >= repPerInicio && d <= repPerFin;
+      });
+    }
+    if (repCl !== "all") gs = gs.filter((g) => g.clientId === repCl);
+
+    const garantiasParaReporte = garantias.filter((g) => {
+      if (g.estado !== "Vigente") return false;
+      if (repPerInicio && repPerFin) {
+        const mesG = mesGarantiaResumen(g, gastos);
+        const mesIni = (repPerInicio || "").slice(0, 7);
+        const mesFin = (repPerFin || "").slice(0, 7);
+        if (!mesG) return false;
+        return mesG >= mesIni && mesG <= mesFin;
+      }
+      return true;
+    });
+
+    const mesIni = (repPerInicio || "").slice(0, 7);
+    const mesFin = (repPerFin || "").slice(0, 7);
+    const staffKey = (e) => (e != null && String(e).trim() !== "") ? String(e).trim() : "— Sin registrar";
+
+    const agg = {};
+    const bump = (k) => {
+      if (!agg[k]) agg[k] = { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, nGastos: 0, nCobros: 0, nGar: 0 };
+      return agg[k];
+    };
+
+    gs.forEach((g) => {
+      const o = bump(staffKey(g.created_by));
+      o.ads += parseFloat(g.gasto || 0);
+      o.fee += g._f;
+      o.total += g._t;
+      o.nGastos += 1;
+    });
+
+    cobros.forEach((c) => {
+      const cid = c.gastoId ? (gastos.find((x) => x.id === c.gastoId)?.clientId) : (c.clientId || null);
+      if (!cid) return;
+      if (repCl !== "all" && cid !== repCl) return;
+      const mes = mesCobro(c, gastos);
+      if (repPerInicio && repPerFin && mesIni && mesFin && (mes < mesIni || mes > mesFin)) return;
+      const o = bump(staffKey(c.created_by));
+      o.paid += parseFloat(c.monto || 0);
+      o.nCobros += 1;
+    });
+
+    garantiasParaReporte.forEach((g) => {
+      if (repCl !== "all" && String(g.clientId) !== String(repCl)) return;
+      const o = bump(staffKey(g.created_by));
+      o.gar += parseFloat(g.valor || 0);
+      o.nGar += 1;
+    });
+
+    const rows = Object.entries(agg).map(([email, d]) => ({ email, ...d }));
+    rows.sort((a, b) => (b.total + b.paid + b.gar) - (a.total + a.paid + a.gar));
+    const t = rows.reduce((acc, r) => ({
+      ads: acc.ads + r.ads,
+      fee: acc.fee + r.fee,
+      total: acc.total + r.total,
+      paid: acc.paid + r.paid,
+      gar: acc.gar + r.gar,
+      nGastos: acc.nGastos + r.nGastos,
+      nCobros: acc.nCobros + r.nCobros,
+      nGar: acc.nGar + r.nGar,
+    }), { ads: 0, fee: 0, total: 0, paid: 0, gar: 0, nGastos: 0, nCobros: 0, nGar: 0 });
+
+    return { rows, t };
+  }, [sGastos, cobros, gastos, garantias, repCl, repPerInicio, repPerFin]);
+
   /* Reportes: meses en el rango desde–hasta para gráficas */
   const reportMonths = useMemo(() => {
     if (repPerInicio && repPerFin) {
@@ -1461,6 +1536,87 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (expRango.cobros.ini || expRango.cobros.fin) && !cobrosFiltrados.length ? "Sin cobros en el rango de fechas" : filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros";
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
+  const ResumenMetricasStaffBlock = ({ showPeriodFilters }) => {
+    const { rows, t } = repStaffMetrics;
+    return (
+      <div className="hm-resumen-pro-table-card" style={{ marginBottom: showPeriodFilters ? 24 : 28 }}>
+        <div className="hm-resumen-pro-table-head">
+          <div>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 700, letterSpacing: -0.3, display: "flex", alignItems: "center", gap: 10 }}>
+              <span className="hm-dot" aria-hidden style={{ background: "linear-gradient(135deg, #0f172a, #475569)" }} />
+              Resumen métricas
+            </h3>
+            <p style={{ margin: "8px 0 0", fontSize: 12.5, color: "var(--sidebar-text-muted)", maxWidth: 720, lineHeight: 1.5 }}>
+              Desglose por <strong>usuario del panel</strong> (correo que figura en «Registrado por»): gastos cargados, cobros registrados y garantías del período. Misma ventana de fechas y filtro de cliente que el reporte principal.
+            </p>
+          </div>
+        </div>
+        {showPeriodFilters && (
+          <div style={{ padding: "0 16px 16px", display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14 }}>
+            <div style={{ minWidth: 0, flex: "1 1 220px", maxWidth: "100%" }}>
+              <SearchSelect compact label="Cliente (opcional)" options={[{ value: "all", label: "Todos los clientes" }, ...clientsSorted.map((c) => ({ value: c.id, label: c.name }))]} value={repCl} onChange={(id) => setRepCl(id || "all")} placeholder="Buscar cliente..." emptyMessage="Ningún cliente coincide" />
+            </div>
+            <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)" }}>Período:</span>
+              <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", cursor: "pointer" }} title="Mes anterior"><ChevronLeft size={15} /></button>
+              <div style={{ minWidth: 86, textAlign: "center", padding: "4px 10px", fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
+              <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", cursor: "pointer" }} title="Mes siguiente"><ChevronRight size={15} /></button>
+              <input type="text" placeholder="MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} style={{ width: 88, boxSizing: "border-box", padding: "6px 8px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, outline: "none" }} />
+              {repPeriodoMes ? <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button> : null}
+              {repPeriodoMes ? <span style={{ fontSize: 11.5, color: "var(--sidebar-text-muted)" }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span> : null}
+            </div>
+          </div>
+        )}
+        <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll={false}>
+          <table style={{ width: "100%" }}>
+            <thead>
+              <tr>
+                {["Usuario (panel)", "Gastos", "ADS", "FEE", "FEE %", "TOTAL", "Cobros", "PAGADO", "GARANTÍA"].map((h) => (
+                  <th key={h} style={TH} title={h === "Gastos" ? "Cantidad de gastos Ads registrados por este usuario" : h === "Cobros" ? "Cantidad de cobros registrados" : undefined}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.length > 0 ? (
+                <>
+                  {rows.map((r) => {
+                    const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—";
+                    return (
+                      <tr key={r.email}>
+                        <td style={{ ...TD, fontWeight: 600, maxWidth: 220 }} title={`${r.nGastos} gasto(s), ${r.nCobros} cobro(s), ${r.nGar} garantía(s)`}>{r.email}</td>
+                        <td style={{ ...TD, ...MN }}>{r.nGastos}</td>
+                        <td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td>
+                        <td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td>
+                        <td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td>
+                        <td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td>
+                        <td style={{ ...TD, ...MN }}>{r.nCobros}</td>
+                        <td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td>
+                        <td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td>
+                      </tr>
+                    );
+                  })}
+                  <tr className="hm-resumen-pro-table-total-row">
+                    <td style={{ ...TD, fontWeight: 800 }}>TOTAL</td>
+                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{t.nGastos}</td>
+                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(t.ads)}</td>
+                    <td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(t.fee)}</td>
+                    <td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{t.ads > 0 ? (t.fee / t.ads * 100).toFixed(1) + "%" : "—"}</td>
+                    <td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(t.total)}</td>
+                    <td style={{ ...TD, ...MN, fontWeight: 700 }}>{t.nCobros}</td>
+                    <td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(t.paid)}</td>
+                    <td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{t.gar > 0 ? "-" + fmt(t.gar) : "—"}</td>
+                  </tr>
+                </>
+              ) : (
+                <Empty cols={9} msg="Sin movimientos atribuibles a usuario en este período" />
+              )}
+            </tbody>
+          </table>
+        </TableScrollWrap>
+      </div>
+    );
+  };
+
   return (
     <div className={"hm-app" + (menuOpen ? " menu-open" : "")} style={{ display: "flex", minHeight: "100vh", fontFamily: "var(--font-body)", background: "var(--color-bg)", color: "var(--color-text)", lineHeight: 1.55, WebkitFontSmoothing: "antialiased" }}>
       <style>{`*{box-sizing:border-box}
@@ -1843,7 +1999,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <span className="hm-resumen-pro-wave" aria-hidden>👋</span>
                 </h1>
                 <p className="hm-resumen-pro-date">{resumenHeroDateLabel}</p>
-                <p className="hm-resumen-pro-tagline">Panel financiero del período: inversión, cobros y saldo neto. Ajustá usuario y mes abajo.</p>
+                <p className="hm-resumen-pro-tagline">Panel financiero del período: inversión, cobros y saldo neto. Ajustá cliente y mes abajo. El desglose por correo del panel está en <strong>Resumen métricas</strong>.</p>
               </div>
               <div className="hm-resumen-pro-hero-kpis">
                 <div className="hm-resumen-pro-hero-kpi">
@@ -1896,6 +2052,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           <div className="hm-resumen-pro-body hm-page-content">
             <div className="hm-resumen-pro-layout">
               <main className="hm-resumen-pro-main">
+            {!isCliente && <ResumenMetricasStaffBlock showPeriodFilters={false} />}
             <div className="hm-resumen-pro-alert">
               <Shield size={22} style={{ color: "#7c3aed", flexShrink: 0, marginTop: 2 }} />
               <div>
@@ -2078,7 +2235,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             ) : null}
             <div className="hm-resumen-pro-table-card">
               <div className="hm-resumen-pro-table-head">
-                <h3><span className="hm-dot" aria-hidden />Desglose por usuario</h3>
+                <h3><span className="hm-dot" aria-hidden />Desglose por cliente</h3>
                 {repData.rows.length > 0 && (
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                     <label style={{ fontSize: 12, fontWeight: 600, color: "var(--sidebar-text)", whiteSpace: "nowrap" }}>Ordenar:</label>
@@ -2094,7 +2251,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                 )}
               </div>
-              <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll><table style={{ width: "100%" }}><thead><tr>{["Usuario", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
+              <TableScrollWrap className="hm-table-wrap hm-table-reportes" style={{ margin: 0, padding: "0 12px 16px", overflowX: "auto" }} autoFocusScroll><table style={{ width: "100%" }}><thead><tr>{["Cliente", "ADS", "FEE", "FEE %", "TOTAL", "PAGADO", "GARANTÍA", "PEND. NETO"].map((h) => <th key={h} style={TH}>{h}</th>)}</tr></thead>
                 <tbody>
                   {repDataRowsSorted.map((r) => { const feePct = r.ads > 0 ? (r.fee / r.ads * 100).toFixed(1) + "%" : "—"; return <tr key={r.cid} onClick={() => goTo("client-detail", r.cid)} style={{ cursor: "pointer" }}><td style={{ ...TD, fontWeight: 600 }}>{r.name}</td><td style={{ ...TD, ...MN }}>{fmt(r.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)" }}>{fmt(r.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)" }}>{feePct}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(r.total)}</td><td style={{ ...TD, ...MN, color: "#059669" }}>{fmt(r.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed" }}>{r.gar > 0 ? "-" + fmt(r.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(r.netPending)}</td></tr>; })}
                   <tr className="hm-resumen-pro-table-total-row"><td style={{ ...TD, fontWeight: 800 }}>TOTAL</td><td style={{ ...TD, ...MN, fontWeight: 700 }}>{fmt(repData.t.ads)}</td><td style={{ ...TD, ...MN, color: "var(--color-blue)", fontWeight: 700 }}>{fmt(repData.t.fee)}</td><td style={{ ...TD, fontSize: 12.5, color: "var(--color-blue)", fontWeight: 700 }}>{repData.t.ads > 0 ? (repData.t.fee / repData.t.ads * 100).toFixed(1) + "%" : "—"}</td><td style={{ ...TD, ...MN, color: "#d97706", fontWeight: 700 }}>{fmt(repData.t.total)}</td><td style={{ ...TD, ...MN, color: "#059669", fontWeight: 700 }}>{fmt(repData.t.paid)}</td><td style={{ ...TD, ...MN, color: "#7c3aed", fontWeight: 700 }}>{repData.t.gar > 0 ? "-" + fmt(repData.t.gar) : "—"}</td><td style={{ ...TD, ...MN, color: "#e11d48", fontWeight: 700 }}>{fmt(repData.t.netPending)}</td></tr>
@@ -2232,6 +2389,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
               ) : null;
             })()}
+            {!isCliente && <ResumenMetricasStaffBlock showPeriodFilters />}
             <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(clientsFilteredAndSorted.length / PER_PAGE) || 1;
@@ -2336,7 +2494,9 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
-          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}><div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
+          <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
+            {!isCliente && <ResumenMetricasStaffBlock showPeriodFilters />}
+            <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
             {(() => {
               const totalPages = Math.ceil(gastosFiltrados.length / PER_PAGE) || 1;
               const currentPage = Math.min(pageNum.gastos, totalPages);
@@ -2365,7 +2525,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </>
               );
             })()}
-          </div></div>
+          </div>
+          </div>
         </div>)}
 
         {/* ══ COBROS (solo gerente; cliente no ve ni registra cobros) ══ */}
