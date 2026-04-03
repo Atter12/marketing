@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // method === "link": generar magic link y enviar por Resend
+    // method === "link": generasds magic link y enviar por Resend
     const row = gerenteRow || accesoRow!;
     const rawRedirect = body.redirect_to ?? body.redirectTo;
     const trimmedRedirect = typeof rawRedirect === "string" ? rawRedirect.trim() : "";
