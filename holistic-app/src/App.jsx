@@ -622,7 +622,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     }
   }, [repData.rows, sortReportDesgloseBy]);
 
-  /** % cobrado sobre total (Ads+Fee) para tarjetas KPI de Resumen métricas — mismo criterio que Crédito / detalle cliente. */
+  /** % cobrado sobre total (Ads+Fee) para tarjetas KPI de la página Resumen (tabla) — mismo criterio que Crédito / detalle cliente. */
   const metricasKpiPct = useMemo(() => {
     const inv = parseFloat(repData.t.total) || 0;
     if (inv <= 0) return 0;
@@ -999,11 +999,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   useEffect(() => { if (isCliente && page === "cobros") setPage("dashboard"); }, [isCliente, page]);
   useEffect(() => { if (!isCliente && page === "reportes") setPage("dashboard"); }, [isCliente, page]);
-  /** Resumen métricas: siempre vista neutra al entrar (mismos filtros que Resumen compartían estado y mostraban un cliente suelto). */
+  /** Página Resumen (tabla): al entrar, todos los clientes + período = mes calendario anterior al actual. */
   useEffect(() => {
     if (page !== "metricas" || isCliente) return;
     setRepCl("all");
-    setRepPeriodoMes("");
+    const base = tm();
+    const [y, m] = base.split("-").map(Number);
+    const d = new Date(y, m - 2, 1);
+    setRepPeriodoMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     setSortReportDesgloseBy("nombre");
   }, [page, isCliente]);
 
@@ -1479,7 +1482,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="var(--color-text-muted)" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)" }}>{(percent * 100).toFixed(1)}%</text>;
   };
 
-  /* NAV: gerente = todo (sin Crédito); cliente = Mi cuenta, Resumen, Gastos, Reportes, Garantías */
+  /* NAV: gerente = Métricas (gráficos/KPIs) + Resumen (tabla desglose); cliente = Mi cuenta, Resumen, … */
   const nav = isCliente
     ? [
         { id: "client-detail", icon: <Users size={18} />, label: "Mi cuenta", accent: "#0891b2" },
@@ -1489,8 +1492,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías", accent: "#7c3aed" },
       ]
     : [
-        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Resumen", accent: "#2563eb" },
-        { id: "metricas", icon: <Activity size={18} />, label: "Resumen métricas", accent: "#6366f1" },
+        { id: "dashboard", icon: <BarChart3 size={18} />, label: "Métricas", accent: "#2563eb" },
+        { id: "metricas", icon: <Activity size={18} />, label: "Resumen", accent: "#6366f1" },
         { id: "clientes", icon: <Users size={18} />, label: "Clientes", accent: "#0891b2" },
         { id: "gastos", icon: <DollarSign size={18} />, label: "Gastos Ads", badge: pendN, accent: "#d97706" },
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros", accent: "#059669" },
@@ -1501,7 +1504,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   const pct = curDDisplay && (curDDisplay.tG + curDDisplay.tF) > 0 ? (curDDisplay.tP / (curDDisplay.tG + curDDisplay.tF)) * 100 : 0;
 
-  const pageTitles = { dashboard: "Resumen", clientes: "Clientes", gastos: "Gastos Ads", metricas: "Resumen métricas", cobros: "Cobros", cobranza: "Cobranza", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
+  const pageTitles = { dashboard: isCliente ? "Resumen" : "Métricas", clientes: "Clientes", gastos: "Gastos Ads", metricas: "Resumen", cobros: "Cobros", cobranza: "Cobranza", reportes: "Reportes", garantias: "Garantías", "client-detail": curC?.name || "Cliente" };
 
   const manualTabContent = detailTab === "manual" ? (
     <div style={{ background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 18, overflow: "hidden", boxShadow: "0 1px 4px rgba(15,23,42,.04)" }}>
@@ -1519,7 +1522,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const emptyCobrosMsg = !cobros.length ? "Sin cobros" : (expRango.cobros.ini || expRango.cobros.fin) && !cobrosFiltrados.length ? "Sin cobros en el rango de fechas" : filterCliente.cobros ? "Sin cobros para este cliente" : "Sin cobros";
   const emptyGarantiasMsg = !garantias.length ? "Sin garantías" : (filterCliente.garantias ? "Sin garantías para este cliente" : "Sin garantías");
 
-  /** Tabla «Desglose por usuario» (por cliente) del reporte; se muestra en la página Resumen métricas. */
+  /** Tabla «Desglose por usuario» (por cliente); se muestra en la página Resumen (ruta metricas). */
   const desglosePorUsuarioTablaEl = (
     <div className="hm-resumen-pro-table-card">
       <div className="hm-resumen-pro-table-head">
@@ -1607,7 +1610,7 @@ button{transition:all .15s ease}
 .hm-debt-chart-card{animation:debtCardEnter .5s cubic-bezier(0.34,1.56,0.64,1) both}
 .hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:var(--red)!important}
 
-/* Resumen métricas: tarjetas arriba (fila) + tabla acotada centrada */
+/* Página Resumen (tabla): tarjetas arriba + tabla acotada centrada */
 .hm-metricas-page{max-width:1180px;margin-left:auto;margin-right:auto}
 .hm-metricas-kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px}
 @media (max-width:1100px){
@@ -1935,10 +1938,10 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           </div>
         </div>)}
 
-        {/* ══ REPORTES: gerente solo lo ve en Resumen (dashboard); cliente en página Reportes ══ */}
+        {/* ══ REPORTES: gerente en Métricas (dashboard); cliente en página Reportes ══ */}
         {((page === "dashboard" && !isCliente) || (page === "reportes" && isCliente)) && (
         <div className="hm-resumen-pro">
-          <section className="hm-resumen-pro-hero" aria-label="Resumen">
+          <section className="hm-resumen-pro-hero" aria-label={page === "dashboard" && !isCliente ? "Métricas" : "Resumen"}>
             <div className="hm-resumen-pro-hero-pattern" />
             <div className="hm-resumen-pro-hero-inner">
               <div className="hm-resumen-pro-greet">
@@ -2450,16 +2453,16 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           </div>
         </div>)}
 
-        {/* ══ RESUMEN MÉTRICAS: misma tabla «Desglose por usuario» que en Resumen (solo gerente) ══ */}
+        {/* ══ RESUMEN (tabla desglose): gerente — KPIs + «Desglose por usuario» (mismas reglas que Métricas / reporte) ══ */}
         {page === "metricas" && !isCliente && (
           <div>
             <div className="hm-page-header hm-page-header--listing" style={{ background: "linear-gradient(90deg, #fff 0%, #eef2ff 100%)", borderBottom: "1px solid #e5e7eb", padding: "0 48px", minHeight: 72, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, position: "sticky", top: 0, zIndex: 50, boxShadow: "0 1px 3px rgba(15,23,42,.04)" }}>
               <div className="hm-page-header-title">
                 <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: -0.3, margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }} />
-                  Resumen métricas
+                  Resumen
                 </h2>
-                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Desglose por cliente (mismas reglas que el reporte de Resumen). Filtrá por usuario y período abajo.</p>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Tabla por cliente y totales del período (mismas reglas que en <strong>Métricas</strong>). Filtrá usuario y mes abajo.</p>
               </div>
             </div>
             <div className="hm-page-content hm-metricas-page" style={{ padding: "32px 48px", margin: "0 auto" }}>
