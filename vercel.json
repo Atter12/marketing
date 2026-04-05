@@ -17,6 +17,10 @@
     },
     "api/performance-analyzer/analyze.js": {
       "maxDuration": 60
+    },
+    "api/cobranza-claude/suggest.js": {
+      "maxDuration": 60,
+      "memory": 512
     }
   },
   "routes": [

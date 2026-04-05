@@ -14,6 +14,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import TableScrollWrap from "./TableScrollWrap";
 import {
@@ -318,6 +319,8 @@ export default function CobranzaView({
   const [modalTab, setModalTab] = useState("editar");
   const [saveHint, setSaveHint] = useState("");
   const [rejectMotivo, setRejectMotivo] = useState("");
+  const [aiSuggesting, setAiSuggesting] = useState(false);
+  const [aiDetailHint, setAiDetailHint] = useState("");
 
   const [mainTab, setMainTab] = useState("bandeja");
   const [histRows, setHistRows] = useState([]);
@@ -515,6 +518,7 @@ export default function CobranzaView({
     setEditorMode("texto");
     setModalTab("editar");
     setSaveHint("");
+    setAiDetailHint("");
     setRejectMotivo("");
     loadEventsForCorreo(r.id);
   };
@@ -924,6 +928,61 @@ export default function CobranzaView({
   };
 
   const variablesObj = detail?.variables && typeof detail.variables === "object" ? detail.variables : {};
+
+  const cobranzaAiUrl = useMemo(() => {
+    const u = (import.meta.env.VITE_COBRANZA_AI_URL || "").trim();
+    if (u) return u.replace(/\/$/, "");
+    if (typeof window !== "undefined" && window.location?.origin) {
+      return `${window.location.origin}/api/cobranza-claude/suggest`;
+    }
+    return "/api/cobranza-claude/suggest";
+  }, []);
+
+  const suggestClaudePersonalized = useCallback(async () => {
+    if (!detail || !supabase) return;
+    setAiSuggesting(true);
+    setAiDetailHint("");
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
+      const tipo = correoTipo(detail) === "agradecimiento" ? "agradecimiento" : "cobro";
+      const v = detail.variables && typeof detail.variables === "object" ? detail.variables : {};
+      const res = await fetch(cobranzaAiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          tipo,
+          cliente_nombre: detail.cliente_nombre || v.cliente_nombre || "Cliente",
+          empresa: v.empresa || "",
+          monto_pendiente: v.monto_pendiente != null ? String(v.monto_pendiente) : String(detail.monto_pendiente ?? ""),
+          moneda: detail.moneda || v.moneda || "USD",
+          periodo_etiqueta: v.periodo_etiqueta || "",
+        }),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok || !out.success) {
+        alert(out.error || "No se pudo generar con IA. Revisá ANTHROPIC_API_KEY en Vercel y que estés logueado.");
+        return;
+      }
+      const { subject, bodyHtml } = out.data || {};
+      if (!subject || !bodyHtml) {
+        alert("Respuesta incompleta de la IA.");
+        return;
+      }
+      setEditAsunto(subject);
+      setEditCuerpo(bodyHtml);
+      setEditTexto(htmlToPlainText(bodyHtml));
+      setEditorMode("html");
+      setAiDetailHint("Sugerencia de Claude: revisá y editá antes de guardar o aprobar.");
+    } catch (e) {
+      alert(e?.message || "Error de red al llamar a la IA.");
+    } finally {
+      setAiSuggesting(false);
+    }
+  }, [detail, supabase, cobranzaAiUrl]);
 
   if (!supabase) {
     return (
@@ -1749,7 +1808,16 @@ export default function CobranzaView({
                       fontSize: 14,
                     }}
                   />
-                  <div style={{ display: "flex", gap: 8, marginBottom: 8, marginTop: 2 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      marginBottom: 8,
+                      marginTop: 2,
+                      flexWrap: "wrap",
+                      alignItems: "center",
+                    }}
+                  >
                     <button
                       type="button"
                       onClick={() => setEditorMode("texto")}
@@ -1782,7 +1850,33 @@ export default function CobranzaView({
                     >
                       Avanzado (HTML)
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => suggestClaudePersonalized()}
+                      disabled={aiSuggesting || busy}
+                      style={{
+                        marginLeft: "auto",
+                        border: "1px solid #c4b5fd",
+                        borderRadius: 8,
+                        padding: "6px 12px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        background: aiSuggesting ? "#f5f3ff" : "linear-gradient(135deg, #ede9fe, #f5f3ff)",
+                        color: "#5b21b6",
+                        cursor: aiSuggesting || busy ? "not-allowed" : "pointer",
+                        opacity: aiSuggesting || busy ? 0.7 : 1,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <Sparkles size={14} aria-hidden />
+                      {aiSuggesting ? "Generando…" : "Personalizar con IA"}
+                    </button>
                   </div>
+                  {aiDetailHint && modalTab === "editar" ? (
+                    <p style={{ margin: "0 0 10px", fontSize: 12, color: "#7c3aed", fontWeight: 600 }}>{aiDetailHint}</p>
+                  ) : null}
                   {editorMode === "texto" ? (
                     <>
                       <label style={{ fontSize: 12, fontWeight: 600, color: "#334155" }}>
