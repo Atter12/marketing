@@ -1285,6 +1285,45 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .tk-file-preview .tk-preview-thumb img { display: block; width: 120px; height: 120px; object-fit: cover; pointer-events: none; }
 .entregable-detail-block { margin-bottom: var(--sp-4); }
 .entregable-detail-block h4 { font-size: var(--text-sm); margin-bottom: var(--sp-2); }
+.ent-notes-history {
+  max-height: 220px;
+  overflow-y: auto;
+  margin-bottom: var(--sp-3);
+  padding: 2px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+.ent-notes-history:empty { display: none; }
+.ent-note-entry {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: var(--r-md);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-divider);
+}
+.ent-note-entry:last-child { margin-bottom: 0; }
+.ent-note-meta {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.ent-note-body {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+}
+.ent-notes-empty-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  margin-bottom: var(--sp-2);
+}
+#ent-notes-new { min-height: 72px; }
+#ent-notes-save-hint { font-size: var(--text-xs); margin-top: 6px; min-height: 1.2em; }
 
 /* ══════════════════════════════════════════════
    CALENDAR VIEW
@@ -3158,6 +3197,8 @@ function refreshTareasSessionPerms(callback) {
   if (!supabase) {
     window.__tareasGerentePerms = null;
     window.__tareasSessionEmail = '';
+    __tareasOwnDisplaySyncRan = false;
+    __tareasDisplaySyncSessionEmail = '';
     tareasApplyPermissionUi();
     if (callback) callback();
     return;
@@ -3167,17 +3208,39 @@ function refreshTareasSessionPerms(callback) {
     if (!u || !u.email) {
       window.__tareasGerentePerms = null;
       window.__tareasSessionEmail = '';
+      __tareasOwnDisplaySyncRan = false;
+      __tareasDisplaySyncSessionEmail = '';
       tareasApplyPermissionUi();
       if (callback) callback();
       return;
     }
     var em = u.email.trim().toLowerCase();
+    if (__tareasDisplaySyncSessionEmail !== em) {
+      __tareasOwnDisplaySyncRan = false;
+      __tareasDisplaySyncSessionEmail = em;
+    }
     window.__tareasSessionEmail = em;
     supabase.from('gerentes').select('*').eq('email', em).maybeSingle().then(function(gr) {
       window.__tareasGerentePerms = gr.data || null;
-      if (gr.data) tryApplyHolisticUserNameFromGerenteRow(gr.data);
-      tareasApplyPermissionUi();
-      if (callback) callback();
+      var uref = u;
+      var gdata = gr.data;
+      tareasEnsureOwnGerenteDisplayNamePersisted(uref, gdata).then(function(did) {
+        function finishRefresh() {
+          if (window.__tareasGerentePerms) tryApplyHolisticUserNameFromGerenteRow(window.__tareasGerentePerms);
+          tareasApplyPermissionUi();
+          if (callback) callback();
+        }
+        if (did && typeof reloadTareasData === 'function') {
+          reloadTareasData(function() {
+            supabase.from('gerentes').select('*').eq('email', em).maybeSingle().then(function(gr2) {
+              if (gr2.data) window.__tareasGerentePerms = gr2.data;
+              finishRefresh();
+            }).catch(function() { finishRefresh(); });
+          });
+          return;
+        }
+        finishRefresh();
+      });
     });
   });
 }
@@ -3420,6 +3483,101 @@ function gerenteNombrePreferidoFromRow(g) {
   if (dn) return dn;
   return gerenteNombreCompletoFromRow(g);
 }
+
+var __tareasOwnDisplaySyncRan = false;
+var __tareasDisplaySyncSessionEmail = '';
+
+function tareasAuthMetadataDisplayName(user) {
+  if (!user || !user.user_metadata) return '';
+  var m = user.user_metadata;
+  return String(m.full_name || m.name || m.preferred_username || '').trim();
+}
+
+/** True si el texto guardado en gerentes parece solo el trozo del correo (sin nombre real). */
+function tareasNameLooksLikeEmailLocalOnly(displayStr, email) {
+  var em = String(email || '').toLowerCase().trim();
+  var at = em.indexOf('@');
+  if (at <= 0) return false;
+  var localRaw = em.slice(0, at);
+  var localSpaced = localRaw.replace(/[._-]+/g, ' ').trim().toLowerCase();
+  var localCompact = localRaw.replace(/[._-]/g, '').toLowerCase();
+  var n = String(displayStr || '').trim().toLowerCase();
+  if (!n) return true;
+  var nCompact = n.replace(/[\s._-]+/g, '');
+  return nCompact === localCompact || n.replace(/\s+/g, ' ') === localSpaced;
+}
+
+/** Nombre típico de registro/OAuth: una sola palabra larga en mayúsculas, etc. */
+function tareasDbNameProbablyAutoGarbage(dbShown, email) {
+  var s = String(dbShown || '').trim();
+  if (!s) return true;
+  if (tareasNameLooksLikeEmailLocalOnly(s, email)) return true;
+  if (s.length >= 12 && !/\s/.test(s) && s === s.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(s)) return true;
+  return false;
+}
+
+/**
+ * Sin tener que volver a abrir «Cambiar nombre»:
+ * 1) Si en este navegador hay nombre bueno en localStorage (aviso al entrar), lo sube a gerentes.display_name.
+ * 2) Si no hay localStorage pero el proveedor (p. ej. Google) trae full_name y la BD parece basura o vacía, usa eso.
+ */
+function tareasEnsureOwnGerenteDisplayNamePersisted(user, gerenteRow) {
+  if (!supabase || !gerenteRow || !gerenteRow.email) return Promise.resolve(false);
+  var em = String(gerenteRow.email || '').toLowerCase().trim();
+  var sess = String(window.__tareasSessionEmail || '').toLowerCase().trim();
+  if (!em || em !== sess) return Promise.resolve(false);
+  if (__tareasOwnDisplaySyncRan) return Promise.resolve(false);
+
+  var fromLsRaw = getStoredHolisticUserName();
+  var fromLs = (!isBadHolisticDisplayName(fromLsRaw)) ? String(fromLsRaw).trim() : '';
+
+  var curDisp = (gerenteRow.display_name != null && String(gerenteRow.display_name).trim()) || '';
+  var assembled = gerenteNombreCompletoFromRow(gerenteRow);
+  var dbShown = curDisp || assembled;
+
+  var candidate = '';
+  if (fromLs) {
+    if (fromLs !== curDisp || (fromLs !== assembled && assembled && tareasDbNameProbablyAutoGarbage(assembled, em))) {
+      candidate = fromLs;
+    }
+  }
+  if (!candidate) {
+    var meta = tareasAuthMetadataDisplayName(user);
+    if (meta && !isBadHolisticDisplayName(meta) && !tareasNameLooksLikeEmailLocalOnly(meta, em)) {
+      if (tareasDbNameProbablyAutoGarbage(dbShown, em)) candidate = meta;
+    }
+  }
+
+  if (!candidate) {
+    __tareasOwnDisplaySyncRan = true;
+    return Promise.resolve(false);
+  }
+
+  var parts = candidate.split(/\s+/).filter(Boolean);
+  var nombre = parts[0] || '';
+  var apellido = parts.length > 1 ? parts.slice(1).join(' ') : '';
+
+  return supabase.from('gerentes').update({
+    display_name: candidate,
+    nombre: nombre,
+    apellido: apellido
+  }).eq('email', em).then(function(r) {
+    if (r.error) {
+      console.warn('[Pendientes] sync automático display_name:', r.error);
+      __tareasOwnDisplaySyncRan = true;
+      return false;
+    }
+    __tareasOwnDisplaySyncRan = true;
+    try { localStorage.setItem('creativos_user_name', candidate); } catch (e) {}
+    if (window.__tareasGerentePerms && String(window.__tareasGerentePerms.email || '').toLowerCase().trim() === em) {
+      window.__tareasGerentePerms.display_name = candidate;
+      window.__tareasGerentePerms.nombre = nombre;
+      window.__tareasGerentePerms.apellido = apellido;
+    }
+    return true;
+  });
+}
+
 /** Nombre que el usuario cargó al entrar (gerentes) o en tareas_equipo; evita mostrar solo el local del mail. */
 function tareasDisplayNameForEmail(rawEmail) {
   var em = tareasMemberEmailKey(rawEmail);
@@ -4624,6 +4782,97 @@ function submitResolveTicket() {
   }
 }
 
+function entregableNotesSplitBlocks(raw) {
+  var s = String(raw || '');
+  if (!s.trim()) return [];
+  var lines = s.split('\n');
+  var blocks = [];
+  var curHeader = null;
+  var curBody = [];
+  var headerRe = /^─── .+ ───\s*$/;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (headerRe.test(line)) {
+      if (curHeader !== null || curBody.length) {
+        blocks.push({ header: curHeader, body: curBody.join('\n').trim() });
+      }
+      curHeader = line.trim();
+      curBody = [];
+    } else {
+      curBody.push(line);
+    }
+  }
+  blocks.push({ header: curHeader, body: curBody.join('\n').trim() });
+  return blocks.filter(function(b) { return b.header || (b.body && b.body.length); });
+}
+/** Una línea corta para tarjetas (última nota o bloque sin cabecera). */
+function entregableNotesCardPreview(raw) {
+  var blocks = entregableNotesSplitBlocks(raw);
+  if (!blocks.length) return '';
+  var last = blocks[blocks.length - 1];
+  var text = ((last && last.body) ? last.body : '').trim();
+  if (!text) text = (blocks[0].body || '').trim();
+  if (!text) return '';
+  var line = text.split('\n')[0].trim();
+  if (line.length > 100) line = line.slice(0, 97) + '…';
+  return line;
+}
+function renderEntregableNotesHistoryHtml(notesRaw) {
+  var blocks = entregableNotesSplitBlocks(notesRaw);
+  if (!blocks.length) return '';
+  return blocks.map(function(b) {
+    var meta = b.header ? '<div class="ent-note-meta">' + escTareas(b.header) + '</div>' : '<div class="ent-note-meta">Notas anteriores</div>';
+    var bd = b.body ? '<div class="ent-note-body">' + escTareas(b.body) + '</div>' : '';
+    return '<div class="ent-note-entry">' + meta + bd + '</div>';
+  }).join('');
+}
+function refreshEntregableNotesHistoryDom(notesRaw) {
+  var wrap = document.getElementById('ent-notes-history');
+  if (!wrap) return;
+  var html = renderEntregableNotesHistoryHtml(notesRaw);
+  wrap.innerHTML = html;
+  wrap.style.display = html ? '' : 'none';
+}
+function appendEntregableNote(kanbanId) {
+  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
+  if (!k) return;
+  var input = document.getElementById('ent-notes-new');
+  var newTxt = (input && input.value || '').trim();
+  var hint = document.getElementById('ent-notes-save-hint');
+  if (!newTxt) {
+    if (hint) { hint.textContent = 'Escribí algo para añadir una nota.'; hint.style.color = 'var(--orange2)'; setTimeout(function() { if (hint.textContent.indexOf('Escribí') === 0) hint.textContent = ''; }, 3500); }
+    return;
+  }
+  var whoRaw = (typeof getCurrentUserNameTareas === 'function' ? getCurrentUserNameTareas() : '') || (window.__tareasSessionEmail || '') || 'Equipo';
+  var who = String(whoRaw).replace(/\s+/g, ' ').trim().replace(/───/g, '—').slice(0, 120);
+  var when = new Date().toLocaleString('es', { dateStyle: 'medium', timeStyle: 'short' });
+  var header = '─── ' + when + ' · ' + who + ' ───';
+  var prev = (k.notes || '').trim();
+  var combined = prev ? (prev + '\n\n' + header + '\n' + newTxt) : (header + '\n' + newTxt);
+  function applyOk() {
+    k.notes = combined;
+    if (input) input.value = '';
+    refreshEntregableNotesHistoryDom(combined);
+    if (hint) {
+      hint.textContent = 'Nota añadida.';
+      hint.style.color = 'var(--green)';
+      setTimeout(function() { if (hint.textContent === 'Nota añadida.') { hint.textContent = ''; hint.style.color = ''; } }, 2800);
+    }
+    try { renderers.kanban(); } catch (e) {}
+  }
+  if (!supabase || !k.id) {
+    applyOk();
+    return;
+  }
+  supabase.from('tareas_kanban').update({ notas: combined }).eq('id', k.id).then(function(r) {
+    if (r.error) {
+      alert('No se pudo guardar la nota: ' + (r.error.message || ''));
+      return;
+    }
+    applyOk();
+  });
+}
+
 function openEntregableDetailModal(kanbanId) {
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
   if (!k) return;
@@ -4636,7 +4885,8 @@ function openEntregableDetailModal(kanbanId) {
   if (k.slaMin) {
     body += '<div class="entregable-detail-block"><h4>Tiempo máximo de cumplimiento</h4><p style="font-size:var(--text-sm)">⏱ ' + escTareas(formatSlaMinutesOrHours(k.slaMin, null)) + '</p></div>';
   }
-  body += '<div class="entregable-detail-block"><h4>Notas internas</h4><textarea class="form-textarea" id="ent-notes" rows="4" placeholder="Anota cambios, acuerdos o pendientes...">' + escTareas(k.notes || '') + '</textarea><div style="margin-top:8px"><button type="button" class="btn-primary btn-sm" onclick="saveEntregableNotes(\'' + String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">Guardar notas</button></div></div>';
+  var histHtml = renderEntregableNotesHistoryHtml(k.notes || '');
+  body += '<div class="entregable-detail-block"><h4>Notas internas</h4><p class="ent-notes-empty-hint">Cada guardado añade una nota con fecha y quién la escribió.</p><div class="ent-notes-history" id="ent-notes-history"' + (histHtml ? '' : ' style="display:none"') + '>' + histHtml + '</div><textarea class="form-textarea" id="ent-notes-new" rows="3" placeholder="Escribí una nota nueva…"></textarea><div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="btn-primary btn-sm" onclick="appendEntregableNote(\'' + String(k.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + '\')">Añadir nota</button></div><p id="ent-notes-save-hint" class="form-hint" style="margin:0;color:var(--color-text-muted)"></p></div>';
   if (tk) {
     body += '<div class="entregable-detail-block"><h4>Ticket origen (' + escTareas(tk.id) + ')</h4><p style="font-size:var(--text-sm);color:var(--color-text-muted)">' + escTareas(tk.title) + '</p><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Referencias del reporte:</p><div class="ticket-attach-grid" id="entModalTkSol"></div></div>';
   }
@@ -4653,24 +4903,6 @@ function openEntregableDetailModal(kanbanId) {
     if (tk) fillTicketAttachGridInto(document.getElementById('entModalTkSol'), tk.solicitudAdjuntos);
   }, 60);
 }
-function saveEntregableNotes(kanbanId) {
-  var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
-  if (!k) return;
-  var notes = (document.getElementById('ent-notes') && document.getElementById('ent-notes').value || '').trim();
-  if (!supabase || !k.id) {
-    k.notes = notes;
-    renderers.kanban();
-    alert('Notas guardadas en modo local.');
-    return;
-  }
-  supabase.from('tareas_kanban').update({ notas: notes || null }).eq('id', k.id).then(function(r) {
-    if (r.error) { alert('No se pudieron guardar las notas: ' + (r.error.message || '')); return; }
-    k.notes = notes;
-    renderers.kanban();
-    alert('Notas guardadas.');
-  });
-}
-
 function submitEntregableEvidence(kanbanId) {
   var k = KT.find(function(x) { return String(x.id) === String(kanbanId); });
   if (!k || !k.ticketDbId || !supabase) return;
@@ -5788,7 +6020,12 @@ function openClientDetail(idx) {
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
     ${relTk.length ? relTk.map(tk=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--sp-2) var(--sp-3);background:var(--color-surface-2);border-radius:var(--r-md);margin-bottom:var(--sp-2);font-size:var(--text-xs)"><span><strong>${tk.id}</strong> ${tk.title}</span><span class="pill ${tk.status==='open'?'pill-orange':tk.status==='progress'?'pill-orange2':'pill-green'}">${tk.status==='open'?'Abierto':tk.status==='progress'?'En Proceso':'Resuelto'}</span></div>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin tickets abiertos ✅</div>'}
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin:var(--sp-4) 0 var(--sp-2)">📦 Entregables (${relDel.length})</div>
-    ${relDel.length ? relDel.map(d=>`<article class="kanban-card" data-sv="${d.sv}" style="margin-bottom:var(--sp-2);cursor:pointer" onclick="openEntregableDetailModal('${String(d.id||'').replace(/"/g,'&quot;')}')"><div class="kanban-card-top"><span class="service-tag ${d.tg}">${d.sv}</span><div class="priority-dot ${d.pr}" title="Prioridad"></div></div><div class="card-title">${escTareas(d.tt || 'Entregable')}</div><div class="card-desc">${escTareas((d.notes || d.ds || '').trim() || 'Sin notas todavía')}</div><div class="card-meta"><span class="card-date">${d.slaMin ? '⏱ ' + escTareas(formatSlaMinutesOrHours(d.slaMin, null)) : '📅 ' + escTareas(d.du || 'Sin fecha')}</span><span style="font-weight:600;font-variant-numeric:tabular-nums">${d.pc || 0}%</span></div></article>`).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
+    ${relDel.length ? relDel.map(function(d) {
+      var np = entregableNotesCardPreview(d.notes);
+      var dsc = (d.ds || '').trim();
+      var cardDesc = np || dsc || 'Sin notas todavía';
+      return '<article class="kanban-card" data-sv="' + d.sv + '" style="margin-bottom:var(--sp-2);cursor:pointer" onclick="openEntregableDetailModal(\'' + String(d.id||'').replace(/"/g,'&quot;') + '\')"><div class="kanban-card-top"><span class="service-tag ' + d.tg + '">' + d.sv + '</span><div class="priority-dot ' + d.pr + '" title="Prioridad"></div></div><div class="card-title">' + escTareas(d.tt || 'Entregable') + '</div><div class="card-desc">' + escTareas(cardDesc) + '</div><div class="card-meta"><span class="card-date">' + (d.slaMin ? '⏱ ' + escTareas(formatSlaMinutesOrHours(d.slaMin, null)) : '📅 ' + escTareas(d.du || 'Sin fecha')) + '</span><span style="font-weight:600;font-variant-numeric:tabular-nums">' + (d.pc || 0) + '%</span></div></article>';
+    }).join('') : '<div style="padding:var(--sp-2);font-size:var(--text-xs);color:var(--color-text-faint)">Sin entregables asignados</div>'}`;
   var footerBtns = '<button class="btn-secondary" onclick="closeModal()">Cerrar</button>';
   if (c.id) {
     footerBtns += '<button class="btn-secondary" onclick="closeModal();openEditClient(\'' + c.id + '\')">Editar</button>';
