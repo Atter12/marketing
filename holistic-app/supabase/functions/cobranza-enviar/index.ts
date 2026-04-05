@@ -32,15 +32,12 @@ function safeHttpsUrl(raw: string | undefined): string | null {
 function buildCobranzaEmail(opts: {
   innerHtml: string;
   brandName: string;
-  panelUrl: string;
   plainBody: string;
   logoUrl: string | null;
   tagline: string;
 }): { html: string; text: string } {
   const brand = escapeHtml(opts.brandName);
   const taglineEsc = escapeHtml(opts.tagline);
-  const panel = opts.panelUrl.replace(/\/$/, "");
-  const panelEsc = escapeHtml(panel);
   const logo = opts.logoUrl ? escapeHtml(opts.logoUrl) : "";
   const logoBlock = logo
     ? `<img src="${logo}" width="140" alt="${brand}" style="display:block;max-width:140px;height:auto;border:0;margin:0 0 12px 0;" />`
@@ -77,7 +74,7 @@ function buildCobranzaEmail(opts: {
         </td>
       </tr>
       <tr>
-        <td style="padding:0 28px 22px;">
+        <td style="padding:0 28px 28px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:12px;background:#fafafa;padding:18px 20px;">
             <tr><td>
               <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">Firma</p>
@@ -87,13 +84,6 @@ function buildCobranzaEmail(opts: {
               <p style="margin:10px 0 0;font-size:12px;color:#94a3b8;line-height:1.45;">Correo enviado de forma segura desde el panel Crédito.</p>
             </td></tr>
           </table>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:0 28px 28px;">
-          <p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.5;">¿Necesitás ver tu cuenta o subir un comprobante?</p>
-          <a href="${panelEsc}" style="display:inline-block;padding:12px 22px;background:#1b2559;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">Entrar al panel Crédito</a>
-          <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">Si no reconocés este mensaje, podés ignorarlo o responder a este correo.</p>
         </td>
       </tr>
       <tr>
@@ -112,9 +102,7 @@ function buildCobranzaEmail(opts: {
     `${opts.plainBody.trim()}\n\n` +
     `---\n` +
     `${opts.brandName}\n` +
-    `${opts.tagline}\n\n` +
-    `Entrar al panel Crédito: ${panel}\n` +
-    `Si no reconocés este mensaje, podés ignorarlo.\n`;
+    `${opts.tagline}\n`;
 
   return { html, text };
 }
@@ -234,8 +222,6 @@ Deno.serve(async (req) => {
 
     const from = Deno.env.get("RESEND_FROM") || "Holistic Marketing <onboarding@resend.dev>";
     const brandName = (Deno.env.get("COBRANZA_BRAND_NAME") || Deno.env.get("EMAIL_BRAND_NAME") || "Holistic Marketing").trim();
-    const panelUrl =
-      (Deno.env.get("COBRANZA_PANEL_URL") || Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "https://www.marketingconholistic.com/credito").trim();
     const tagline = (
       Deno.env.get("COBRANZA_TAGLINE") ||
       Deno.env.get("EMAIL_TAGLINE") ||
@@ -257,7 +243,6 @@ Deno.serve(async (req) => {
     const { html, text } = buildCobranzaEmail({
       innerHtml,
       brandName,
-      panelUrl,
       plainBody,
       logoUrl,
       tagline,

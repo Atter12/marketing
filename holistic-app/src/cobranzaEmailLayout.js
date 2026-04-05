@@ -21,13 +21,6 @@ export function defaultCobranzaLogoUrlForPreview() {
   return `${window.location.origin}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
-export function defaultCobranzaPanelUrlForPreview() {
-  if (typeof window === "undefined") return "https://www.marketingconholistic.com/credito";
-  const fromEnv = (import.meta.env.VITE_COBRANZA_PANEL_URL || "").trim();
-  if (fromEnv) return fromEnv.replace(/\/$/, "");
-  return `${window.location.origin}/credito`;
-}
-
 export function cobranzaBrandNameForPreview() {
   return (import.meta.env.VITE_COBRANZA_BRAND_NAME || "Holistic Marketing").trim();
 }
@@ -37,19 +30,16 @@ export function cobranzaTaglineForPreview() {
 }
 
 /**
- * Misma estructura visual que el correo real (cabecera, cuerpo editable, firma, CTA, pie).
+ * Misma estructura visual que el correo real (cabecera, cuerpo editable, firma, pie).
  * @param {object} opts
  * @param {string} opts.innerHtml - cuerpo HTML del borrador (ya escapado o confiable)
  * @param {string} opts.brandName
- * @param {string} opts.panelUrl
  * @param {string|null} opts.logoUrl - URL absoluta https o http (preview); vacío = sin imágenes
  * @param {string} opts.tagline
  */
 export function buildCobranzaWrappedPreviewHtml(opts) {
   const brand = escapeHtmlCobranza(opts.brandName);
   const taglineEsc = escapeHtmlCobranza(opts.tagline);
-  const panel = String(opts.panelUrl || "").replace(/\/$/, "");
-  const panelEsc = escapeHtmlCobranza(panel);
   const rawLogo = (opts.logoUrl || "").trim();
   const logoSafe =
     rawLogo && /^https?:\/\//i.test(rawLogo) ? escapeHtmlCobranza(rawLogo) : "";
@@ -90,7 +80,7 @@ export function buildCobranzaWrappedPreviewHtml(opts) {
         </td>
       </tr>
       <tr>
-        <td style="padding:0 28px 22px;">
+        <td style="padding:0 28px 28px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:12px;background:#fafafa;padding:18px 20px;">
             <tr><td>
               <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">Firma</p>
@@ -100,13 +90,6 @@ export function buildCobranzaWrappedPreviewHtml(opts) {
               <p style="margin:10px 0 0;font-size:12px;color:#94a3b8;line-height:1.45;">Correo enviado de forma segura desde el panel Crédito.</p>
             </td></tr>
           </table>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:0 28px 28px;">
-          <p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.5;">¿Necesitás ver tu cuenta o subir un comprobante?</p>
-          <a href="${panelEsc}" style="display:inline-block;padding:12px 22px;background:#1b2559;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;">Entrar al panel Crédito</a>
-          <p style="margin:18px 0 0;font-size:12px;color:#94a3b8;line-height:1.5;">Si no reconocés este mensaje, podés ignorarlo o responder a este correo.</p>
         </td>
       </tr>
       <tr>

@@ -12,16 +12,13 @@ Secrets: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESE
 
 ### Marca y enlace al panel (opcional)
 
-El HTML que guardás en `cuerpo_html` se **envuelve** en una plantilla tipo “correo oficial”: cabecera con nombre de empresa, colores Holistic (#1b2559), botón **Entrar al panel Crédito** y pie legal. Así el cliente ve algo **pro**, no solo el párrafo suelto.
+El HTML que guardás en `cuerpo_html` se **envuelve** en una plantilla tipo “correo oficial”: cabecera con logo y marca, tu mensaje, recuadro **Firma** (logo + nombre + tagline) y pie legal. Sin botón al panel: solo el contenido del borrador más la firma.
 
 | Variable | Default | Uso |
 |----------|---------|-----|
 | `COBRANZA_BRAND_NAME` o `EMAIL_BRAND_NAME` | `Holistic Marketing` | Nombre en cabecera, firma y pie |
-| `COBRANZA_PANEL_URL` o `APP_URL` / `PUBLIC_APP_URL` | `https://www.marketingconholistic.com/credito` | URL del botón y del pie |
 | `COBRANZA_LOGO_URL` o `EMAIL_LOGO_URL` | `https://www.marketingconholistic.com/credito-app/logo/logoh.png` | Logo en cabecera y bloque **Firma** (debe ser **https** público; subí `logoh.png` al sitio o usá CDN) |
 | `COBRANZA_TAGLINE` o `EMAIL_TAGLINE` | `Marketing digital · Gestión de cuentas` | Subtítulo bajo la marca |
-
-La plantilla incluye un recuadro **Firma** con logo + nombre + tagline antes del botón del panel.
 
 También se envía **`text`** (plano) a Resend usando `cuerpo_texto` si existe, para mejor entregabilidad.
 

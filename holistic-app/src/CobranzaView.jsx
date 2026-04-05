@@ -21,7 +21,6 @@ import {
   cobranzaBrandNameForPreview,
   cobranzaTaglineForPreview,
   defaultCobranzaLogoUrlForPreview,
-  defaultCobranzaPanelUrlForPreview,
 } from "./cobranzaEmailLayout.js";
 
 const TH = {
@@ -362,7 +361,6 @@ export default function CobranzaView({
       buildCobranzaWrappedPreviewHtml({
         innerHtml: editCuerpo && String(editCuerpo).trim() ? editCuerpo : "<p>(vacío)</p>",
         brandName: cobranzaBrandNameForPreview(),
-        panelUrl: defaultCobranzaPanelUrlForPreview(),
         logoUrl: defaultCobranzaLogoUrlForPreview(),
         tagline: cobranzaTaglineForPreview(),
       }),
@@ -1891,17 +1889,11 @@ export default function CobranzaView({
                     </div>
                     <iframe
                       title="Vista previa del correo de cobranza"
-                      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                      sandbox="allow-same-origin"
                       srcDoc={cobranzaEmailPreviewDoc}
-                      style={{ width: "100%", height: 560, border: "none", display: "block", background: "#f1f5f9" }}
+                      style={{ width: "100%", height: 520, border: "none", display: "block", background: "#f1f5f9" }}
                     />
                   </div>
-                  <p style={{ margin: "12px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
-                    Esto coincide con la plantilla de la función <code style={{ fontSize: 11 }}>cobranza-enviar</code> (cabecera con logo, tu texto, firma, botón
-                    al panel y pie). En producción el logo puede venir de <code style={{ fontSize: 11 }}>COBRANZA_LOGO_URL</code>; acá se usa el logo de esta
-                    web (<code style={{ fontSize: 11 }}>…/logo/logoh.png</code>) o <code style={{ fontSize: 11 }}>VITE_COBRANZA_LOGO_URL</code> si lo definís en{" "}
-                    <code style={{ fontSize: 11 }}>.env</code>.
-                  </p>
                 </div>
               )}
 
