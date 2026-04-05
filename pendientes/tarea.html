@@ -1328,6 +1328,13 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 /* ══════════════════════════════════════════════
    CALENDAR VIEW
 ══════════════════════════════════════════════ */
+#view-calendar .section-header {
+  align-items: flex-start;
+}
+#view-calendar .section-header .section-actions {
+  flex-shrink: 0;
+  padding-top: 4px;
+}
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1379,6 +1386,47 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   text-overflow: ellipsis;
 }
 .cal-day.other { opacity: 0.3; }
+button.cal-event {
+  cursor: pointer;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+button.cal-event:hover { filter: brightness(0.97); box-shadow: 0 0 0 1px rgba(0,0,0,.06); }
+button.cal-event:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+.modal.modal-calendar-event {
+  max-width: min(96vw, 560px);
+}
+.cal-event-form-intro {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.55;
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--color-surface-2);
+  border-radius: var(--r-md);
+  border: 1px solid var(--color-divider);
+  margin-bottom: var(--sp-4);
+}
+.cal-event-form-intro strong { color: var(--color-text); font-weight: 600; }
+.cal-event-form-section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-faint);
+  margin: var(--sp-4) 0 var(--sp-2);
+}
+.cal-event-form-section-title:first-of-type { margin-top: 0; }
+input.form-input[type="date"] {
+  min-height: 42px;
+  color-scheme: light dark;
+}
 
 /* ══════════════════════════════════════════════
    WORKLOAD VIEW
@@ -2654,9 +2702,12 @@ body.holistic-name-gate-open { overflow: hidden; }
 </section>
 
 <!-- ══════════════ CALENDAR VIEW ══════════════ -->
-<section class="view" id="view-calendar" aria-label="Calendario Editorial">
+<section class="view" id="view-calendar" aria-label="Calendario del equipo">
   <div class="section-header">
-    <h3 id="calendarTitle">Calendario Editorial</h3>
+    <div>
+      <h3 id="calendarTitle">Calendario del equipo</h3>
+      <p class="section-subtitle" style="margin:6px 0 0;font-size:var(--text-sm);color:var(--color-text-muted);font-weight:500">Tareas internas (limpieza, capacitaciones, fechas clave). Las reuniones con clientes van en vuestro otro CRM.</p>
+    </div>
     <div class="section-actions">
       <button type="button" class="btn-secondary btn-sm" onclick="calendarPrevMonth()" aria-label="Mes anterior">← Anterior</button>
       <button type="button" class="btn-primary btn-sm" onclick="calendarGoToday()" aria-label="Ir a hoy">Hoy</button>
@@ -2666,7 +2717,7 @@ body.holistic-name-gate-open { overflow: hidden; }
   </div>
   <div class="card">
     <div class="card-body" style="padding:var(--sp-4)">
-      <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Calendario editorial"></div>
+      <div class="calendar-grid" id="calendarGrid" role="grid" aria-label="Calendario del equipo"></div>
     </div>
   </div>
 </section>
@@ -2805,9 +2856,9 @@ body.holistic-name-gate-open { overflow: hidden; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
         <div class="cmd-item-text"><div class="cmd-item-name">Tickets</div><div class="cmd-item-desc">Mesa de ayuda y soporte</div></div>
       </div>
-      <div class="cmd-item" onclick="navigate('calendar');closeCmdPalette()" data-cmd="Calendario Editorial">
+      <div class="cmd-item" onclick="navigate('calendar');closeCmdPalette()" data-cmd="Calendario del equipo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Calendario</div><div class="cmd-item-desc">Calendario editorial Feb 2026</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Calendario del equipo</div><div class="cmd-item-desc">Tareas internas y fechas del equipo</div></div>
       </div>
       <div class="cmd-item" onclick="navigate('workload');closeCmdPalette()" data-cmd="Equipo de trabajo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -4014,7 +4065,16 @@ async function loadTareasData() {
       MT[r.equipo_id].push({ t: r.titulo, d: r.dias || 0 });
     });
     TEAM.forEach(function(m) { if (!MT[m.id]) MT[m.id] = []; });
-    var calI = (calRes.data || []).map(function(r) { return { d: r.dia, t: r.titulo, cl: r.clase_css || 'pill-orange' }; });
+    var calI = (calRes.data || []).map(function(r) {
+      return {
+        id: r.id,
+        d: r.dia,
+        t: r.titulo,
+        cl: r.clase_css || 'pill-orange',
+        desc: (r.descripcion != null && String(r.descripcion).trim()) || '',
+        assignees: Array.isArray(r.responsables_emails) ? r.responsables_emails : []
+      };
+    });
     var ticketIds = (tkRes.data || []).map(function(t) { return t.id; });
     var comentariosRes = ticketIds.length ? await supabase.from('tareas_ticket_comentarios').select('*').in('ticket_id', ticketIds).order('created_at', { ascending: true }) : { data: [] };
     var comentarios = comentariosRes.data || [];
@@ -4130,7 +4190,7 @@ function clientAvatarMarkup(c, opts) {
 // ══════════════════════════════════════════════════════════════════
 const pageNames = {
   dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables',
-  tickets:'Sistema de Tickets',calendar:'Calendario Editorial',workload:'Equipo de trabajo',
+  tickets:'Sistema de Tickets',calendar:'Calendario del equipo',workload:'Equipo de trabajo',
   attendance:'Asistencia Verificada'
 };
 
@@ -5146,24 +5206,37 @@ function filterTickets(s, btn) {
   });
 }
 
-// ─── CALENDAR (Calendario Editorial) ───
+// ─── CALENDAR (equipo / tareas internas) ───
 var MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 function updateCalendarHeaderTitle() {
   var el = document.getElementById('calendarTitle');
-  if (el) el.textContent = 'Calendario Editorial — ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear;
+  if (el) el.textContent = 'Calendario del equipo — ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear;
   var grid = document.getElementById('calendarGrid');
-  if (grid) grid.setAttribute('aria-label', 'Calendario ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear);
+  if (grid) grid.setAttribute('aria-label', 'Calendario del equipo ' + MONTH_NAMES[calendarViewMonth - 1] + ' ' + calendarViewYear);
 }
 function loadCalendarMonth(mes, anio, thenRender) {
   if (supabase) {
     supabase.from('tareas_calendario').select('*').eq('mes', mes).eq('anio', anio).order('dia').then(function(r) {
-      if (!r.error) calI = (r.data || []).map(function(row) { return { id: row.id, d: row.dia, t: row.titulo, cl: row.clase_css || 'pill-orange' }; });
-      if (typeof thenRender === 'function') thenRender(); else renderers.calendar?.();
+      if (!r.error) {
+        calI = (r.data || []).map(function(row) {
+          return {
+            id: row.id,
+            d: row.dia,
+            t: row.titulo,
+            cl: row.clase_css || 'pill-orange',
+            desc: (row.descripcion != null && String(row.descripcion).trim()) || '',
+            assignees: Array.isArray(row.responsables_emails) ? row.responsables_emails : []
+          };
+        });
+      }
+      renderers.calendar?.();
       updateCalendarHeaderTitle();
+      if (typeof thenRender === 'function') thenRender();
     });
   } else {
-    if (typeof thenRender === 'function') thenRender(); else renderers.calendar?.();
+    renderers.calendar?.();
     updateCalendarHeaderTitle();
+    if (typeof thenRender === 'function') thenRender();
   }
 }
 function calendarPrevMonth() {
@@ -5212,7 +5285,21 @@ renderers.calendar = function() {
     cell.className = 'cal-day'; cell.setAttribute('role','gridcell');
     cell.setAttribute('aria-label', day + ' ' + MONTH_NAMES[calendarViewMonth - 1] + (items.length ? ', ' + items.length + ' evento' + (items.length > 1 ? 's' : '') : ''));
     cell.innerHTML = (isToday(day) ? '<div class="cal-day-num today" aria-current="date">' + day + '</div>' : '<div class="cal-day-num">' + day + '</div>') +
-      items.map(function(i) { return '<div class="cal-event pill ' + (i.cl || 'pill-orange') + '">' + (i.t || '').replace(/</g,'&lt;') + '</div>'; }).join('');
+      items.map(function(i) {
+        var tipParts = [];
+        if (i.desc) tipParts.push(i.desc);
+        if (i.assignees && i.assignees.length) {
+          tipParts.push('Responsables: ' + i.assignees.map(function(em) { return tareasDisplayNameForEmail(em) || em; }).join(', '));
+        }
+        var tip = tipParts.join('\n\n');
+        var titleAttr = tip ? ' title="' + escAttrUrlTareas(tip) + '"' : '';
+        var label = (i.t || '').replace(/</g, '&lt;');
+        if (i.id) {
+          var idJs = String(i.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+          return '<button type="button" class="cal-event pill ' + (i.cl || 'pill-orange') + '"' + titleAttr + ' onclick="event.stopPropagation();openCalendarEventDetail(\'' + idJs + '\')">' + label + '</button>';
+        }
+        return '<div class="cal-event pill ' + (i.cl || 'pill-orange') + '"' + titleAttr + '>' + label + '</div>';
+      }).join('');
     grid.appendChild(cell);
   }
   var totalCells = firstDayOffset + lastDay;
@@ -5831,7 +5918,10 @@ function openModal(type) {
   const body    = document.getElementById('modalBody');
   const footer  = document.getElementById('modalFooter');
   const modalEl = document.querySelector('#modalOverlay .modal');
-  if (modalEl) modalEl.classList.remove('modal-compact');
+  if (modalEl) {
+    modalEl.classList.remove('modal-compact');
+    modalEl.classList.remove('modal-calendar-event');
+  }
 
   if (type === 'task') {
     title.textContent = 'Nuevo Entregable';
@@ -5917,21 +6007,28 @@ function openModal(type) {
       <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
   } else if (type === 'calendarEvent') {
+    if (modalEl) modalEl.classList.add('modal-calendar-event');
     var now = new Date();
     var defMes = typeof calendarViewMonth !== 'undefined' ? calendarViewMonth : now.getMonth() + 1;
     var defAnio = typeof calendarViewYear !== 'undefined' ? calendarViewYear : now.getFullYear();
     var defDia = (defMes === now.getMonth() + 1 && defAnio === now.getFullYear()) ? now.getDate() : 1;
-    var maxDia = new Date(defAnio, defMes, 0).getDate();
+    var defDateStr = defAnio + '-' + String(defMes).padStart(2, '0') + '-' + String(defDia).padStart(2, '0');
     title.textContent = 'Nuevo evento';
     body.innerHTML = `
-      <div class="form-group"><label for="cal-titulo">Título</label><input class="form-input" id="cal-titulo" placeholder="Ej: Reunión cliente"></div>
-      <div class="form-row-3">
-        <div class="form-group"><label for="cal-dia">Día</label><input class="form-input" type="number" min="1" max="31" value="${defDia}" id="cal-dia"></div>
-        <div class="form-group"><label for="cal-mes">Mes</label><input class="form-input" type="number" min="1" max="12" value="${defMes}" id="cal-mes"></div>
-        <div class="form-group"><label for="cal-anio">Año</label><input class="form-input" type="number" min="2024" max="2030" value="${defAnio}" id="cal-anio"></div>
-      </div>
-      <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase"><option value="pill-orange">Naranja</option><option value="pill-green">Verde</option><option value="pill-red">Rojo</option><option value="pill-purple">Púrpura</option><option value="pill-pink">Rosa</option></select></div>`;
-    footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addCalendarEvent()">Crear evento</button>`;
+      <div class="cal-event-form-intro"><strong>Este calendario es para el equipo</strong> (tareas internas, limpieza de oficina, capacitaciones, fechas que deben asistir todos, etc.). <strong>No</strong> sustituye al programa donde gestionan clientes y reuniones con clientes.</div>
+      <div class="cal-event-form-section-title">Qué es el evento</div>
+      <div class="form-group"><label for="cal-titulo">Título</label><input class="form-input" id="cal-titulo" placeholder="Ej: Limpieza general oficina · Capacitación nuevas herramientas"></div>
+      <div class="form-group"><label for="cal-desc">Descripción</label><textarea class="form-textarea" id="cal-desc" rows="3" placeholder="Para qué es, qué hay que hacer o tener en cuenta, lugar, etc."></textarea></div>
+      <div class="cal-event-form-section-title">Cuándo</div>
+      <div class="form-group cal-date-row"><label for="cal-fecha">Fecha</label><input class="form-input" type="date" id="cal-fecha" value="${defDateStr}"></div>
+      <div class="cal-event-form-section-title">Color en el calendario</div>
+      <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase"><option value="pill-orange">Naranja</option><option value="pill-green">Verde</option><option value="pill-red">Rojo</option><option value="pill-purple">Púrpura</option><option value="pill-pink">Rosa</option></select></div>
+      <div class="cal-event-form-section-title">Quién participa</div>
+      <div class="form-group ticket-assign-group"><label for="cal-assign-multi-filter">Responsables</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('cal-assign-multi', [])}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Marcá a quienes corresponda; podés buscar por nombre o correo.' : 'Solo podés asignarte a vos; un administrador puede marcar a más personas.'}</p></div>`;
+    footer.innerHTML = `<button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button><button type="button" class="btn-primary" onclick="addCalendarEvent()">Crear evento</button>`;
+    setTimeout(function() {
+      wireTareasAssignPicker(document.getElementById('modalBody'));
+    }, 80);
   } else if (type === 'equipo') {
     if (!tareasEffectivePerms().invite) {
       alert('No tienes permiso para invitar miembros (solo administradores).');
@@ -5988,7 +6085,10 @@ function closeModal(e) {
   if (!overlay) return;
   if (e && e.target !== overlay) return;
   var modalEl = document.querySelector('#modalOverlay .modal');
-  if (modalEl) modalEl.classList.remove('modal-compact');
+  if (modalEl) {
+    modalEl.classList.remove('modal-compact');
+    modalEl.classList.remove('modal-calendar-event');
+  }
   hideModalOverlay();
 }
 
@@ -6475,22 +6575,207 @@ function addClient() {
   }
 }
 
+function openCalendarEventDetail(calId) {
+  var ev = calI.find(function(x) { return String(x.id) === String(calId); });
+  if (!ev) return;
+  var modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) {
+    modalEl.classList.remove('modal-compact');
+    modalEl.classList.add('modal-calendar-event');
+  }
+  document.getElementById('modalTitle').textContent = ev.t || 'Evento';
+  var fechaStr = String(ev.d).padStart(2, '0') + '/' + String(calendarViewMonth).padStart(2, '0') + '/' + calendarViewYear;
+  var assigneeStr = (ev.assignees && ev.assignees.length)
+    ? (ev.assignees.map(function(em) { return escTareas(tareasDisplayNameForEmail(em) || em); }).join(', '))
+    : '—';
+  document.getElementById('modalBody').innerHTML = `
+    <div class="info-grid" style="grid-template-columns:1fr;gap:var(--sp-3)">
+      <div class="info-item"><div class="lbl">Fecha</div><div class="val">${escTareas(fechaStr)}</div></div>
+      <div class="info-item"><div class="lbl">Descripción</div><div class="val" style="white-space:pre-wrap;font-weight:500">${ev.desc ? escTareas(ev.desc) : '—'}</div></div>
+      <div class="info-item"><div class="lbl">Responsables</div><div class="val" style="line-height:1.45">${assigneeStr}</div></div>
+    </div>`;
+  var idEsc = String(ev.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  var editBtn = ev.id ? '<button type="button" class="btn-primary" onclick="openCalendarEventEdit(\'' + idEsc + '\')">Editar</button>' : '';
+  var delBtn = ev.id ? '<button type="button" class="btn-secondary" style="border-color:var(--red);color:var(--red)" onclick="deleteCalendarEvent(\'' + idEsc + '\')">Eliminar evento</button>' : '';
+  document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal()">Cerrar</button>' + editBtn + delBtn;
+  showModalOverlay();
+}
+function calendarEstiloOptionsHtml(selectedClase) {
+  var sel = selectedClase || 'pill-orange';
+  var rows = [
+    ['pill-orange', 'Naranja'],
+    ['pill-green', 'Verde'],
+    ['pill-red', 'Rojo'],
+    ['pill-purple', 'Púrpura'],
+    ['pill-pink', 'Rosa']
+  ];
+  return rows.map(function(p) {
+    return '<option value="' + p[0] + '"' + (p[0] === sel ? ' selected' : '') + '>' + p[1] + '</option>';
+  }).join('');
+}
+function openCalendarEventEdit(calId) {
+  var ev = calI.find(function(x) { return String(x.id) === String(calId); });
+  if (!ev || ev.id == null || ev.id === '') return;
+  var modalEl = document.querySelector('#modalOverlay .modal');
+  if (modalEl) {
+    modalEl.classList.remove('modal-compact');
+    modalEl.classList.add('modal-calendar-event');
+  }
+  var dateStr = calendarViewYear + '-' + String(calendarViewMonth).padStart(2, '0') + '-' + String(ev.d).padStart(2, '0');
+  var clase = ev.cl || 'pill-orange';
+  document.getElementById('modalTitle').textContent = 'Editar evento';
+  document.getElementById('modalBody').innerHTML = `
+      <input type="hidden" id="cal-edit-id" value="${escAttrUrlTareas(String(ev.id))}">
+      <div class="cal-event-form-intro"><strong>Este calendario es para el equipo</strong> (tareas internas). Ajustá título, fecha, descripción, color o responsables.</div>
+      <div class="cal-event-form-section-title">Qué es el evento</div>
+      <div class="form-group"><label for="cal-titulo">Título</label><input class="form-input" id="cal-titulo" value="${escAttrUrlTareas(ev.t || '')}"></div>
+      <div class="form-group"><label for="cal-desc">Descripción</label><textarea class="form-textarea" id="cal-desc" rows="3" placeholder="Para qué es, qué hay que hacer o tener en cuenta…">${ev.desc ? escTareas(ev.desc) : ''}</textarea></div>
+      <div class="cal-event-form-section-title">Cuándo</div>
+      <div class="form-group cal-date-row"><label for="cal-fecha">Fecha</label><input class="form-input" type="date" id="cal-fecha" value="${escAttrUrlTareas(dateStr)}"></div>
+      <div class="cal-event-form-section-title">Color en el calendario</div>
+      <div class="form-group"><label for="cal-clase">Estilo</label><select class="form-select" id="cal-clase">${calendarEstiloOptionsHtml(clase)}</select></div>
+      <div class="cal-event-form-section-title">Quién participa</div>
+      <div class="form-group ticket-assign-group"><label for="cal-assign-multi-edit-filter">Responsables</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('cal-assign-multi-edit', ev.assignees || [])}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Marcá a quienes corresponda; podés buscar por nombre o correo.' : 'Solo podés asignarte a vos; un administrador puede marcar a más personas.'}</p></div>`;
+  var idEsc = String(ev.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="openCalendarEventDetail(\'' + idEsc + '\')">Volver</button><button type="button" class="btn-secondary" onclick="closeModal()">Cancelar</button><button type="button" class="btn-primary" onclick="saveCalendarEventEdit()">Guardar cambios</button>';
+  setTimeout(function() {
+    wireTareasAssignPicker(document.getElementById('modalBody'));
+  }, 80);
+  showModalOverlay();
+}
+function saveCalendarEventEdit() {
+  var idEl = document.getElementById('cal-edit-id');
+  if (!idEl || !String(idEl.value || '').trim()) {
+    alert('No se pudo identificar el evento.');
+    return;
+  }
+  var calId = String(idEl.value).trim();
+  var titulo = document.getElementById('cal-titulo').value.trim();
+  if (!titulo) { alert('Título requerido'); return; }
+  var desc = (document.getElementById('cal-desc') && document.getElementById('cal-desc').value || '').trim();
+  var fechaVal = (document.getElementById('cal-fecha') && document.getElementById('cal-fecha').value || '').trim();
+  var parts = fechaVal.split('-');
+  var anio = parseInt(parts[0], 10);
+  var mes = parseInt(parts[1], 10);
+  var dia = parseInt(parts[2], 10);
+  if (!fechaVal || !isFinite(anio) || !isFinite(mes) || !isFinite(dia)) {
+    alert('Elegí una fecha válida.');
+    return;
+  }
+  var maxD = new Date(anio, mes, 0).getDate();
+  if (dia < 1 || dia > maxD || mes < 1 || mes > 12) {
+    alert('La fecha no es válida para el mes elegido.');
+    return;
+  }
+  var clase = document.getElementById('cal-clase').value || 'pill-orange';
+  var responsables = typeof getTicketSelectedAssigneeEmails === 'function' ? getTicketSelectedAssigneeEmails('cal-assign-multi-edit') : [];
+  var payload = {
+    dia: dia,
+    mes: mes,
+    anio: anio,
+    titulo: titulo,
+    clase_css: clase,
+    descripcion: desc || null,
+    responsables_emails: responsables
+  };
+  if (supabase) {
+    supabase.from('tareas_calendario').update(payload).eq('id', calId).then(function(r) {
+      if (r.error) {
+        alert('No se pudo guardar: ' + (r.error.message || ''));
+        return;
+      }
+      if (mes !== calendarViewMonth || anio !== calendarViewYear) {
+        calendarViewMonth = mes;
+        calendarViewYear = anio;
+      }
+      loadCalendarMonth(calendarViewMonth, calendarViewYear, function() {
+        openCalendarEventDetail(calId);
+      });
+    });
+  } else {
+    var idx = calI.findIndex(function(x) { return String(x.id) === String(calId); });
+    if (idx < 0) return;
+    calI[idx] = {
+      id: calI[idx].id,
+      d: dia,
+      t: titulo,
+      cl: clase,
+      desc: desc,
+      assignees: responsables
+    };
+    if (mes !== calendarViewMonth || anio !== calendarViewYear) {
+      calendarViewMonth = mes;
+      calendarViewYear = anio;
+    }
+    renderers.calendar?.();
+    openCalendarEventDetail(calId);
+  }
+}
+function deleteCalendarEvent(id) {
+  if (!id || !confirm('¿Eliminar este evento del calendario?')) return;
+  if (supabase) {
+    supabase.from('tareas_calendario').delete().eq('id', id).then(function(r) {
+      if (r.error) { alert('No se pudo eliminar: ' + (r.error.message || '')); return; }
+      closeModal();
+      loadCalendarMonth(calendarViewMonth, calendarViewYear);
+    });
+  } else {
+    calI = calI.filter(function(x) { return String(x.id) !== String(id); });
+    closeModal();
+    renderers.calendar();
+  }
+}
 function addCalendarEvent() {
   var titulo = document.getElementById('cal-titulo').value.trim();
   if (!titulo) { alert('Título requerido'); return; }
-  var dia = parseInt(document.getElementById('cal-dia').value, 10) || 1;
-  var mes = parseInt(document.getElementById('cal-mes').value, 10) || new Date().getMonth() + 1;
-  var anio = parseInt(document.getElementById('cal-anio').value, 10) || new Date().getFullYear();
+  var desc = (document.getElementById('cal-desc') && document.getElementById('cal-desc').value || '').trim();
+  var fechaVal = (document.getElementById('cal-fecha') && document.getElementById('cal-fecha').value || '').trim();
+  var parts = fechaVal.split('-');
+  var anio = parseInt(parts[0], 10);
+  var mes = parseInt(parts[1], 10);
+  var dia = parseInt(parts[2], 10);
+  if (!fechaVal || !isFinite(anio) || !isFinite(mes) || !isFinite(dia)) {
+    alert('Elegí una fecha válida.');
+    return;
+  }
+  var maxD = new Date(anio, mes, 0).getDate();
+  if (dia < 1 || dia > maxD || mes < 1 || mes > 12) {
+    alert('La fecha no es válida para el mes elegido.');
+    return;
+  }
   var clase = document.getElementById('cal-clase').value || 'pill-orange';
+  var responsables = typeof getTicketSelectedAssigneeEmails === 'function' ? getTicketSelectedAssigneeEmails('cal-assign-multi') : [];
+  var payload = {
+    dia: dia,
+    mes: mes,
+    anio: anio,
+    titulo: titulo,
+    clase_css: clase,
+    descripcion: desc || null,
+    responsables_emails: responsables
+  };
   if (supabase) {
-    supabase.from('tareas_calendario').insert({ dia: dia, mes: mes, anio: anio, titulo: titulo, clase_css: clase }).then(function(r) {
-      if (r.error) { alert('Error al crear evento: ' + (r.error.message||'')); return; }
+    supabase.from('tareas_calendario').insert(payload).then(function(r) {
+      if (r.error) {
+        var msg = (r.error.message || '');
+        if (msg.indexOf('descripcion') >= 0 || msg.indexOf('responsables') >= 0 || msg.indexOf('column') >= 0) {
+          alert('Error al crear evento: ' + msg + '\n\nSi acabas de desplegar la app, aplicá en Supabase la migración 041_tareas_calendario_descripcion_responsables.sql');
+        } else {
+          alert('Error al crear evento: ' + msg);
+        }
+        return;
+      }
+      if (mes !== calendarViewMonth || anio !== calendarViewYear) {
+        calendarViewMonth = mes;
+        calendarViewYear = anio;
+      }
       loadCalendarMonth(calendarViewMonth, calendarViewYear);
       closeModal();
     });
   } else {
-    calI.push({ d: dia, t: titulo, cl: clase });
-    renderers.calendar?.(); closeModal();
+    calI.push({ id: 'local-cal-' + Date.now(), d: dia, t: titulo, cl: clase, desc: desc, assignees: responsables });
+    renderers.calendar?.();
+    closeModal();
   }
 }
 
