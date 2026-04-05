@@ -3,10 +3,14 @@
  * GET  /api/cobranzaClaudeSuggest  → health check (ver en navegador si la función existe)
  *
  * Variables: ANTHROPIC_API_KEY, opcional ANTHROPIC_MODEL, PUBLIC_SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY
+ *
+ * Modelo por defecto: alias Haiku 4.5 (rápido / económico). Los viejos p.ej. claude-3-5-haiku-20241022
+ * pueden devolver 404 desde Anthropic. Ver https://docs.anthropic.com/en/docs/about-claude/models
  */
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
-const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
+/** Alias estable a último Haiku 4.5; snapshot fijo alternativo: claude-haiku-4-5-20251001 */
+const DEFAULT_MODEL = "claude-haiku-4-5";
 const LOG = "[cobranzaClaudeSuggest]";
 
 function stripJsonFence(s) {
