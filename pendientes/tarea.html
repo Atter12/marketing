@@ -3060,7 +3060,7 @@ function isBadHolisticDisplayName(s) {
 function tryApplyHolisticUserNameFromGerenteRow(row) {
   if (!row) return;
   if (!isBadHolisticDisplayName(getStoredHolisticUserName())) return;
-  var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+  var fn = (row.display_name != null && String(row.display_name).trim()) || ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
   if (fn && !isBadHolisticDisplayName(fn)) {
     try { localStorage.setItem('creativos_user_name', fn); } catch (e) {}
   }
@@ -3078,7 +3078,7 @@ function getResolvedHolisticDisplayTitleNamePendientes() {
   if (!isBadHolisticDisplayName(raw)) return String(raw).trim();
   var row = window.__tareasGerentePerms;
   if (row) {
-    var fn = ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
+    var fn = (row.display_name != null && String(row.display_name).trim()) || ((row.nombre || '') + ' ' + (row.apellido || '')).trim();
     if (fn && !isBadHolisticDisplayName(fn)) return fn;
   }
   return '';
@@ -3123,12 +3123,16 @@ function saveHolisticUserDisplayNamePendientes(fullName, done) {
   var nombre = parts[0];
   var apellido = parts.slice(1).join(' ');
   if (window.__tareasGerentePerms) {
-    try { window.__tareasGerentePerms.nombre = nombre; window.__tareasGerentePerms.apellido = apellido; } catch (e) {}
+    try {
+      window.__tareasGerentePerms.nombre = nombre;
+      window.__tareasGerentePerms.apellido = apellido;
+      window.__tareasGerentePerms.display_name = v;
+    } catch (e) {}
   }
   if (!supabase) { if (done) done(true); return; }
   var em = (window.__tareasSessionEmail || '').trim();
   if (!em) { if (done) done(true); return; }
-  supabase.from('gerentes').update({ nombre: nombre, apellido: apellido }).eq('email', em).then(function(r) {
+  supabase.from('gerentes').update({ nombre: nombre, apellido: apellido, display_name: v }).eq('email', em).then(function(r) {
     if (r.error) console.warn('[Pendientes] actualizar nombre en gerentes:', r.error);
     if (done) done(!r.error);
   }).catch(function(err) {
@@ -3398,6 +3402,23 @@ function normalizeTicketAssigneeEmails(tk) {
 /** Email normalizado para cruzar con gerentes / equipo (los tickets pueden guardar mayúsculas distintas). */
 function tareasMemberEmailKey(email) {
   return String(email || '').toLowerCase().trim();
+}
+/** nombre + apellido en gerentes (sin display_name). */
+function gerenteNombreCompletoFromRow(g) {
+  if (!g) return '';
+  var fn = (g.nombre && String(g.nombre).trim()) || '';
+  var ln = (g.apellido && String(g.apellido).trim()) || '';
+  return [fn, ln].filter(Boolean).join(' ');
+}
+/**
+ * Nombre que el usuario dejó al entrar / cambiar nombre: columna display_name (texto completo del formulario).
+ * Si no existe en BD, cae a nombre+apellido y luego al correo.
+ */
+function gerenteNombrePreferidoFromRow(g) {
+  if (!g) return '';
+  var dn = (g.display_name != null && String(g.display_name).trim()) || '';
+  if (dn) return dn;
+  return gerenteNombreCompletoFromRow(g);
 }
 /** Nombre que el usuario cargó al entrar (gerentes) o en tareas_equipo; evita mostrar solo el local del mail. */
 function tareasDisplayNameForEmail(rawEmail) {
@@ -3750,18 +3771,12 @@ async function loadTareasData() {
       var em = (g.email || '').toLowerCase().trim();
       if (em) gerentesByEmail[em] = g;
     });
-    function gerenteNombreCompleto(g) {
-      if (!g) return '';
-      var fn = (g.nombre && String(g.nombre).trim()) || '';
-      var ln = (g.apellido && String(g.apellido).trim()) || '';
-      return [fn, ln].filter(Boolean).join(' ');
-    }
     var TEAM = (eqRes.data || []).map(function(r) {
       var ge = (r.gerente_email && String(r.gerente_email).toLowerCase().trim()) || '';
       var gMatch = ge ? gerentesByEmail[ge] : null;
       var rolFromGerente = gMatch ? permMiembroLabel(gMatch) : '';
       var rol = rolFromGerente || r.rol || '';
-      var gFull = gerenteNombreCompleto(gMatch);
+      var gFull = gerenteNombrePreferidoFromRow(gMatch);
       var eqNombre = (r.nombre && String(r.nombre).trim()) || '';
       var displayN = (gFull && gFull.trim()) ? gFull.trim() : eqNombre;
       return { id: r.id, n: displayN, r: rol, c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', gerente_email: ge };
@@ -3771,7 +3786,7 @@ async function loadTareasData() {
       var tn = workloadNormName(t.n);
       if (!tn) return;
       var hit = (gerentesRes.data || []).find(function(g) {
-        var gn = workloadNormName(gerenteNombreCompleto(g));
+        var gn = workloadNormName(gerenteNombrePreferidoFromRow(g));
         if (gn && (gn === tn || tn.indexOf(gn) === 0 || gn.indexOf(tn) === 0)) return true;
         if (!tareasPermBool(g.perm_admin)) return false;
         var em = (g.email || '').toLowerCase().trim();
@@ -3803,9 +3818,7 @@ async function loadTareasData() {
       if (!Object.prototype.hasOwnProperty.call(activeByGerenteEmail, em)) return true;
       return activeByGerenteEmail[em] !== false;
     }).map(function(r) {
-      var fn = (r.nombre && String(r.nombre).trim()) || '';
-      var ln = (r.apellido && String(r.apellido).trim()) || '';
-      var name = [fn, ln].filter(Boolean).join(' ');
+      var name = gerenteNombrePreferidoFromRow(r);
       if (!name) {
         var raw = (r.email || '').trim();
         var at = raw.indexOf('@');
@@ -6559,10 +6572,12 @@ function submitEquipoInvite() {
   var fotoInp = document.getElementById('eq-invite-foto');
   var file = fotoInp && fotoInp.files && fotoInp.files[0];
   if (!supabase) { alert('Conecta Supabase para invitar miembros.'); return; }
+  var nombreCompletoInv = [nombre, apellido].filter(function(x) { return x && String(x).trim(); }).map(function(x) { return String(x).trim(); }).join(' ');
   var rowG = {
     email: email,
     nombre: nombre,
     apellido: apellido,
+    display_name: nombreCompletoInv || null,
     perm_admin: !!adm,
     perm_estandar: !!std,
     perm_gestor_financiero: !!gf,
@@ -6572,6 +6587,7 @@ function submitEquipoInvite() {
     var payload = {
       nombre: nombre,
       apellido: apellido,
+      display_name: nombreCompletoInv || null,
       perm_admin: !!adm,
       perm_estandar: !!std,
       perm_gestor_financiero: !!gf,
