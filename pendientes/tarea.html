@@ -1668,7 +1668,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .modal.modal-compact .form-input,
 .modal.modal-compact .form-select { min-height: 38px; padding: 8px 10px; }
 .modal.modal-compact .form-textarea { min-height: 54px; padding: 8px 10px; }
-.modal.modal-compact .ticket-assign-wrap { max-height: 84px; }
+.modal.modal-compact .ticket-assign-wrap { max-height: none; }
+.modal.modal-compact .ticket-assign-list { max-height: min(46vh, 320px); }
 .modal-overlay.show .modal { transform: scale(1) translateY(0); }
 
 /* Aviso obligatorio: nombre para sidebar / equipo */
@@ -1792,6 +1793,30 @@ body.holistic-name-gate-open { overflow: hidden; }
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+/* Filas de asignación: sin mayúsculas forzadas (antes heredaban .form-group label) */
+.form-group label.ticket-assign-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  margin-bottom: 0;
+  padding: 10px 10px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background var(--tr), border-color var(--tr);
+}
+.form-group label.ticket-assign-item:hover {
+  background: var(--color-surface);
+}
+.form-group label.ticket-assign-item:has(input:focus-visible) {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-glow);
+}
 .form-input, .form-select, .form-textarea {
   width: 100%;
   padding: var(--sp-2) var(--sp-3);
@@ -1815,29 +1840,84 @@ body.holistic-name-gate-open { overflow: hidden; }
   align-items: start;
 }
 .ticket-meta-grid .ticket-assign-group { grid-column: 1 / -1; }
+/* Encabezado del bloque (Responsable / Asignar a…): tipografía normal, sin versalitas */
+.form-group.ticket-assign-group > label:not(.ticket-assign-item) {
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
 .ticket-sla-inline { display: grid; grid-template-columns: minmax(72px, 100px) minmax(110px, 140px); gap: 8px; }
 .ticket-assign-wrap {
   border: 1px solid var(--color-divider);
   border-radius: var(--r-md);
-  padding: 8px 10px;
-  max-height: 140px;
-  overflow: auto;
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-surface-2);
+}
+.tareas-assign-picker { display: flex; flex-direction: column; min-width: 0; }
+.tareas-assign-search {
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  border: none;
+  border-bottom: 1px solid var(--color-divider);
+  border-radius: 0;
+  padding: 10px 12px 10px 38px;
+  font-size: var(--text-sm);
+  background-color: var(--color-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6'/%3E%3Cpath d='M13 13l4 4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px 50%;
+  color: var(--color-text);
+}
+.tareas-assign-search::placeholder { color: var(--color-text-faint); }
+.tareas-assign-search:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-primary-glow);
+}
+.ticket-assign-list {
+  max-height: min(40vh, 300px);
+  overflow-y: auto;
+  padding: 6px 6px 10px;
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 900px) {
+  .ticket-assign-list {
+    max-height: min(32vh, 380px);
+  }
 }
 .ticket-assign-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 6px 0;
+  gap: 10px;
+  padding: 0;
   font-size: var(--text-sm);
 }
-.ticket-assign-item input { margin-top: 2px; }
-.ticket-assign-name { font-weight: 600; color: var(--color-text); line-height: 1.25; }
+.ticket-assign-item + .ticket-assign-item { margin-top: 2px; }
+.ticket-assign-item input { margin-top: 4px; flex-shrink: 0; }
+.ticket-assign-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.ticket-assign-name { font-weight: 600; color: var(--color-text); line-height: 1.35; }
 .ticket-assign-email {
-  font-size: var(--text-xs);
-  color: var(--color-text-faint);
-  line-height: 1.2;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+.ticket-assign-email--muted { color: var(--color-text-faint); font-style: italic; }
+.tareas-assign-empty {
+  padding: 14px 12px;
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
 }
 
 /* ══════════════════════════════════════════════
@@ -2131,6 +2211,7 @@ body.holistic-name-gate-open { overflow: hidden; }
   .cmd-palette { margin: 0 var(--sp-4); }
   .ticket-meta-grid { grid-template-columns: 1fr; }
   .ticket-meta-grid .ticket-assign-group { grid-column: auto; }
+  .ticket-assign-list { max-height: min(42vh, 280px); }
 }
 @media (max-width: 480px) {
   .stats-row { grid-template-columns: 1fr; }
@@ -2139,7 +2220,7 @@ body.holistic-name-gate-open { overflow: hidden; }
   .ticket-meta-grid { grid-template-columns: 1fr; }
   .ticket-meta-grid .ticket-assign-group { grid-column: auto; }
   .ticket-sla-inline { grid-template-columns: 1fr 1fr; }
-  .ticket-assign-wrap { max-height: 96px; }
+  .ticket-assign-list { max-height: min(52vh, 300px); }
   .modal { max-width: 96vw; max-height: 94vh; border-radius: var(--r-lg); }
   .modal-header { padding: var(--sp-3); }
   .modal-body { padding: var(--sp-3); }
@@ -3314,6 +3395,22 @@ function normalizeTicketAssigneeEmails(tk) {
     return true;
   });
 }
+/** Email normalizado para cruzar con gerentes / equipo (los tickets pueden guardar mayúsculas distintas). */
+function tareasMemberEmailKey(email) {
+  return String(email || '').toLowerCase().trim();
+}
+/** Nombre que el usuario cargó al entrar (gerentes) o en tareas_equipo; evita mostrar solo el local del mail. */
+function tareasDisplayNameForEmail(rawEmail) {
+  var em = tareasMemberEmailKey(rawEmail);
+  if (!em) return '';
+  var gM = (ATTENDANCE_MEMBERS || []).find(function(x) { return tareasMemberEmailKey(x.email) === em; });
+  if (gM && String(gM.n || '').trim()) return String(gM.n).trim();
+  var tM = (TEAM || []).find(function(x) { return tareasMemberEmailKey(x.gerente_email) === em; });
+  if (tM && String(tM.n || '').trim()) return String(tM.n).trim();
+  var at = em.indexOf('@');
+  if (at > 0) return em.slice(0, at).replace(/[._]/g, ' ');
+  return em;
+}
 function getVisibleTicketsForSession(list) {
   var rows = Array.isArray(list) ? list : [];
   if (tareasEffectivePerms().admin) return rows.slice();
@@ -3366,6 +3463,13 @@ function attendanceMembersSorted() {
   });
 }
 
+function tareasAssigneeSearchHaystack(displayName, email) {
+  return String((displayName || '') + ' ' + (email || '')).toLowerCase().replace(/\s+/g, ' ').trim();
+}
+function escDataAssigneeSearchAttr(s) {
+  return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
 /** Lista de opciones para Responsable / Asignar a: administradores ven a todo el equipo; asistentes solo a sí mismos. */
 function tareasAssigneeOptionsHtml() {
   var list = attendanceMembersSorted().filter(function(m) { return (m.email || '').trim(); });
@@ -3375,8 +3479,45 @@ function tareasAssigneeOptionsHtml() {
   }
   return list.map(function(m) {
     var em = (m.email || '').replace(/"/g, '&quot;');
-    return '<option value="' + em + '">' + escTareas(m.n || m.email) + '</option>';
+    var disp = tareasDisplayNameForEmail(m.email) || (m.n || m.email);
+    return '<option value="' + em + '">' + escTareas(disp) + '</option>';
   }).join('');
+}
+/** Picker con buscador para un solo responsable (entregables); sincroniza #m-assignee (hidden). */
+function tareasAssigneeSinglePickerHtml(preselectedEmail) {
+  var list = attendanceMembersSorted().filter(function(m) { return (m.email || '').trim(); });
+  if (!tareasEffectivePerms().admin) {
+    var my = (window.__tareasSessionEmail || '').toLowerCase().trim();
+    list = my ? list.filter(function(m) { return (m.email || '').toLowerCase().trim() === my; }) : [];
+  }
+  var pre = tareasMemberEmailKey(preselectedEmail || '');
+  var hidVal = pre || '';
+  if (!list.length) {
+    return '<div class="form-hint">No hay miembros disponibles para asignar.</div><input type="hidden" id="m-assignee" value="">';
+  }
+  var rows = list.map(function(m, idx) {
+    var em = (m.email || '').trim();
+    var disp = tareasDisplayNameForEmail(em) || (m.n || em);
+    var hay = escDataAssigneeSearchAttr(tareasAssigneeSearchHaystack(disp, em));
+    var id = 'm-assignee-pick-' + idx;
+    var chk = (tareasMemberEmailKey(em) === pre) ? ' checked' : '';
+    return '<label class="ticket-assign-item" data-assignee-search="' + hay + '"><input id="' + id + '" type="radio" name="m-assignee-pick" value="' + escAttrUrlTareas(em) + '"' + chk + '><span class="ticket-assign-item-body"><span class="ticket-assign-name">' + escTareas(disp) + '</span><span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
+  });
+  var noneChecked = !pre ? ' checked' : '';
+  var noneHay = escDataAssigneeSearchAttr('sin asignar ninguno —');
+  var head = [
+    '<div class="tareas-assign-picker" data-assign-picker>',
+    '<input type="search" class="form-input tareas-assign-search" id="m-assignee-filter" placeholder="Buscar por nombre o correo…" aria-label="Filtrar responsables" autocomplete="off" data-assignee-filter>',
+    '<div class="ticket-assign-list" role="radiogroup" aria-label="Responsable del entregable">',
+    '<label class="ticket-assign-item" data-assignee-pinned data-assignee-search="' + noneHay + '"><input type="radio" name="m-assignee-pick" value=""' + noneChecked + '><span class="ticket-assign-item-body"><span class="ticket-assign-name">Sin asignar</span><span class="ticket-assign-email ticket-assign-email--muted">Nadie por ahora</span></span></label>'
+  ].join('');
+  var foot = [
+    '</div>',
+    '<p class="tareas-assign-empty" data-assignee-empty style="display:none">Nadie coincide con la búsqueda.</p>',
+    '</div>',
+    '<input type="hidden" id="m-assignee" value="' + escAttrUrlTareas(hidVal) + '">'
+  ].join('');
+  return head + rows.join('') + foot;
 }
 function tareasAssigneeChecklistHtml(inputName, preselectedEmails) {
   var list = attendanceMembersSorted().filter(function(m) { return (m.email || '').trim(); });
@@ -3390,13 +3531,77 @@ function tareasAssigneeChecklistHtml(inputName, preselectedEmails) {
     if (k) selected[k] = true;
   });
   if (!list.length) return '<div class="form-hint">No hay miembros disponibles para asignar.</div>';
-  return list.map(function(m, idx) {
+  var nm = inputName || 'tk-assign-multi';
+  var fid = nm.replace(/[^a-zA-Z0-9_-]/g, '-') + '-filter';
+  var rows = list.map(function(m, idx) {
     var em = (m.email || '').trim();
-    var lab = escTareas(m.n || em);
-    var id = (inputName || 'tk-assign-multi') + '-' + idx;
+    var disp = tareasDisplayNameForEmail(em) || (m.n || em);
+    var hay = escDataAssigneeSearchAttr(tareasAssigneeSearchHaystack(disp, em));
+    var id = nm + '-' + idx;
     var chk = selected[String(em).toLowerCase().trim()] ? ' checked' : '';
-    return '<label class="ticket-assign-item"><input id="' + id + '" type="checkbox" name="' + (inputName || 'tk-assign-multi') + '" value="' + escAttrUrlTareas(em) + '"' + chk + '><span><span class="ticket-assign-name">' + lab + '</span> <span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
-  }).join('');
+    return '<label class="ticket-assign-item" data-assignee-search="' + hay + '"><input id="' + id + '" type="checkbox" name="' + nm + '" value="' + escAttrUrlTareas(em) + '"' + chk + '><span class="ticket-assign-item-body"><span class="ticket-assign-name">' + escTareas(disp) + '</span><span class="ticket-assign-email">' + escTareas(em) + '</span></span></label>';
+  });
+  return [
+    '<div class="tareas-assign-picker" data-assign-picker>',
+    '<input type="search" class="form-input tareas-assign-search" id="' + fid + '" placeholder="Buscar por nombre o correo…" aria-label="Filtrar responsables" autocomplete="off" data-assignee-filter>',
+    '<div class="ticket-assign-list" role="group" aria-label="Asignar a">',
+    rows.join(''),
+    '</div>',
+    '<p class="tareas-assign-empty" data-assignee-empty style="display:none">Nadie coincide con la búsqueda.</p>',
+    '</div>'
+  ].join('');
+}
+/** Conecta el filtro de texto y, en entregables, radios → #m-assignee. */
+function wireTareasAssignPicker(root) {
+  if (!root || !root.querySelector) return;
+  var picker = root.querySelector('[data-assign-picker]');
+  if (!picker) return;
+  var inp = picker.querySelector('[data-assignee-filter]');
+  var items = picker.querySelectorAll('.ticket-assign-item[data-assignee-search]');
+  var emptyEl = picker.querySelector('[data-assignee-empty]');
+  function applyFilter() {
+    var q = (inp && inp.value || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    var any = false;
+    for (var i = 0; i < items.length; i++) {
+      var el = items[i];
+      if (el.hasAttribute('data-assignee-pinned')) {
+        el.style.display = '';
+        any = true;
+        continue;
+      }
+      var hay = (el.getAttribute('data-assignee-search') || '').toLowerCase();
+      var show = !q || hay.indexOf(q) >= 0;
+      el.style.display = show ? '' : 'none';
+      if (show) any = true;
+    }
+    if (emptyEl) emptyEl.style.display = any ? 'none' : 'block';
+  }
+  if (inp) {
+    inp.addEventListener('input', applyFilter);
+    inp.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Escape') {
+        inp.value = '';
+        applyFilter();
+      }
+    });
+  }
+  var hidden = document.getElementById('m-assignee');
+  var radios = picker.querySelectorAll('input[type="radio"][name="m-assignee-pick"]');
+  if (hidden && radios.length) {
+    function syncHiddenFromRadios() {
+      for (var j = 0; j < radios.length; j++) {
+        if (radios[j].checked) {
+          hidden.value = (radios[j].value || '').trim();
+          return;
+        }
+      }
+      hidden.value = '';
+    }
+    for (var r = 0; r < radios.length; r++) {
+      radios[r].addEventListener('change', syncHiddenFromRadios);
+    }
+    syncHiddenFromRadios();
+  }
 }
 function getTicketSelectedAssigneeEmails(inputName) {
   var sel = inputName || 'tk-assign-multi';
@@ -3556,7 +3761,10 @@ async function loadTareasData() {
       var gMatch = ge ? gerentesByEmail[ge] : null;
       var rolFromGerente = gMatch ? permMiembroLabel(gMatch) : '';
       var rol = rolFromGerente || r.rol || '';
-      return { id: r.id, n: r.nombre, r: rol, c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', gerente_email: ge };
+      var gFull = gerenteNombreCompleto(gMatch);
+      var eqNombre = (r.nombre && String(r.nombre).trim()) || '';
+      var displayN = (gFull && gFull.trim()) ? gFull.trim() : eqNombre;
+      return { id: r.id, n: displayN, r: rol, c: r.color || '#666', on: r.activo !== false, att: r.asistencia || '', ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, svc: r.servicio || '', gerente_email: ge };
     });
     (TEAM || []).forEach(function(t) {
       if (t.gerente_email) return;
@@ -4109,10 +4317,9 @@ renderers.tickets = function() {
     var assigneeCellHtml;
     if (assignedEmails.length) {
       var chips = assignedEmails.slice(0, 3).map(function(em) {
-        var gM = (ATTENDANCE_MEMBERS || []).find(function(x) { return x.email === em; });
-        var shortName = gM ? gM.n : (em.indexOf('@') > 0 ? em.split('@')[0] : em);
-        var letter = (em[0] || '?').toUpperCase();
-        return '<span style="display:inline-flex;align-items:center;gap:6px"><div class="tk-avatar" style="background:#6366f1;width:20px;height:20px;font-size:8px;flex-shrink:0" title="' + escTareas(em) + '">' + escTareas(letter) + '</div><span>' + escTareas(shortName) + '</span></span>';
+        var disp = tareasDisplayNameForEmail(em);
+        var letter = (disp && disp[0] ? disp[0] : (em[0] || '?')).toUpperCase();
+        return '<span style="display:inline-flex;align-items:center;gap:6px"><div class="tk-avatar" style="background:#6366f1;width:20px;height:20px;font-size:8px;flex-shrink:0" title="' + escTareas(em) + '">' + escTareas(letter) + '</div><span>' + escTareas(disp || em) + '</span></span>';
       }).join('');
       if (assignedEmails.length > 3) chips += '<span style="font-size:var(--text-xs);color:var(--color-text-faint)">+' + (assignedEmails.length - 3) + '</span>';
       assigneeCellHtml = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + chips + '</div>';
@@ -4154,7 +4361,7 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Vence</div><div class="val" style="color:${slaColor}">${escTareas(tk.due)}</div></div>
             <div class="info-item"><div class="lbl">Plazo acordado</div><div class="val">${escTareas(tk.sla)}</div></div>
             <div class="info-item"><div class="lbl">Cliente</div><div class="val">${tk.client ? escTareas(tk.client) : '—'}</div></div>
-            <div class="info-item"><div class="lbl">Asignado a</div><div class="val">${(assignedEmails.length ? assignedEmails.map(function(em){ return escTareas(em); }).join(', ') : (tk.assigneeEmail ? escTareas(tk.assigneeEmail) : (m && m.n ? escTareas(m.n) : '—')))}</div></div>
+            <div class="info-item"><div class="lbl">Asignado a</div><div class="val">${(assignedEmails.length ? assignedEmails.map(function(em){ return escTareas(tareasDisplayNameForEmail(em)); }).join(', ') : (tk.assigneeEmail ? escTareas(tareasDisplayNameForEmail(tk.assigneeEmail)) : (m && m.n ? escTareas(m.n) : '—')))}</div></div>
             <div class="info-item"><div class="lbl">Notas</div><div class="val">${tk.notes ? escTareas(tk.notes) : '—'}</div></div>
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
@@ -4310,11 +4517,12 @@ function openReassignTicketModal(idx) {
   var selected = normalizeTicketAssigneeEmails(tk);
   document.getElementById('modalTitle').textContent = 'Reasignar ' + (tk.id || 'ticket');
   document.getElementById('modalBody').innerHTML = `
-    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-3)">Selecciona uno o varios responsables del equipo.</p>
+    <p style="font-size:var(--text-sm);color:var(--color-text-muted);margin-bottom:var(--sp-3)">Seleccioná uno o varios responsables. Usá el buscador para filtrar por nombre o correo.</p>
     <div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-reassign-multi', selected)}</div>
-    <p class="form-hint" style="margin-top:var(--sp-2)">Si no marcas a nadie, el ticket quedará sin asignar.</p>`;
+    <p class="form-hint" style="margin-top:var(--sp-2)">Si no marcás a nadie, el ticket quedará sin asignar.</p>`;
   document.getElementById('modalFooter').innerHTML = '<button type="button" class="btn-secondary" onclick="closeModal();_reassignTicketIdx=null">Cancelar</button><button type="button" class="btn-primary" onclick="submitReassignTicket()">Guardar asignación</button>';
   showModalOverlay();
+  wireTareasAssignPicker(document.getElementById('modalBody'));
 }
 function submitReassignTicket() {
   var idx = _reassignTicketIdx;
@@ -4337,7 +4545,7 @@ function submitReassignTicket() {
     asignados_emails: selected
   }).eq('id', tk.dbId).then(function(r) {
     if (r.error) { alert('No se pudo reasignar: ' + (r.error.message || '')); return; }
-    var q = selected.length ? ('👥 Reasignado a: ' + selected.join(', ')) : '👥 Ticket sin asignación.';
+    var q = selected.length ? ('👥 Reasignado a: ' + selected.map(function(e) { return tareasDisplayNameForEmail(e); }).join(', ')) : '👥 Ticket sin asignación.';
     supabase.from('tareas_ticket_comentarios').insert({
       ticket_id: tk.dbId,
       quien: 'Sistema',
@@ -5397,13 +5605,14 @@ function openModal(type) {
       </div>
       <div class="form-row-3 ticket-meta-grid">
         <div class="form-group"><label for="m-priority">Prioridad</label><select class="form-select" id="m-priority"><option value="hi">🔴 Alta</option><option value="md">🟡 Media</option><option value="lo">🟢 Baja</option></select></div>
-        <div class="form-group"><label for="m-assignee">Responsable</label><select class="form-select" id="m-assignee"><option value="">— Sin asignar —</option>${tareasAssigneeOptionsHtml()}</select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Como administrador puedes asignar a cualquier miembro de Asistencia. La primera vez se enlaza automáticamente con equipo.' : 'Como asistente solo puedes asignarte a ti mismo. Un administrador puede asignar entregables a cualquiera del equipo.'}</p></div>
+        <div class="form-group ticket-assign-group"><label for="m-assignee-filter">Responsable</label><div class="ticket-assign-wrap">${tareasAssigneeSinglePickerHtml('')}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Elegí una persona o dejá sin asignar. Podés filtrar por nombre o correo.' : 'Solo podés asignarte a vos; un administrador puede asignar a otras personas.'}</p></div>
         <div class="form-group"><label for="m-sla">Tiempo máximo para cumplir</label><select class="form-select" id="m-sla"><option value="15">15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120" selected>2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
       </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTask()">Crear Entregable</button>`;
     setTimeout(function() {
       var fi = document.getElementById('m-files');
       if (fi) fi.onchange = function() { previewMTaskFiles(this); };
+      wireTareasAssignPicker(document.getElementById('modalBody'));
     }, 80);
 
   } else if (type === 'ticket') {
@@ -5426,13 +5635,14 @@ function openModal(type) {
       <div class="form-row-3">
         <div class="form-group"><label for="tk-sla">Plazo para entregar</label><select class="form-select" id="tk-sla"><option value="15" selected>15 minutos</option><option value="30">30 minutos</option><option value="45">45 minutos</option><option value="60">1 hora</option><option value="120">2 horas</option><option value="240">4 horas</option><option value="480">8 horas</option><option value="720">12 horas</option><option value="1440">1 día</option></select><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">Rango permitido: mínimo 15 minutos, máximo 1 día.</p></div>
         <div class="form-group"><label for="tk-priority">Prioridad (etiqueta)</label><select class="form-select" id="tk-priority"><option value="urgente">🔴 Urgente</option><option value="alta">🟠 Alta</option><option value="media" selected>🟡 Media</option><option value="baja">⚪ Baja</option></select></div>
-        <div class="form-group ticket-assign-group"><label>Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi', [])}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Puedes asignar el ticket a varios miembros.' : 'Solo puedes asignarte a ti; un administrador puede asignar a más personas.'}</p></div>
+        <div class="form-group ticket-assign-group"><label for="tk-assign-multi-filter">Asignar a (uno o varios)</label><div class="ticket-assign-wrap">${tareasAssigneeChecklistHtml('tk-assign-multi', [])}</div><p class="form-hint" style="margin:var(--sp-2) 0 0;font-size:var(--text-xs);color:var(--color-text-muted)">${tareasEffectivePerms().admin ? 'Podés elegir varios y filtrar por nombre o correo.' : 'Solo podés asignarte a vos; un administrador puede asignar a más personas.'}</p></div>
       </div>
       <div class="form-group"><label for="tk-notes">Notas internas (opcional)</label><textarea class="form-textarea" id="tk-notes" placeholder="Contexto adicional para el equipo…"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addTicket()">Crear ticket</button>`;
     setTimeout(function() {
       var fi = document.getElementById('tk-files');
       if (fi) fi.onchange = function() { previewTkFiles(this); };
+      wireTareasAssignPicker(document.getElementById('modalBody'));
     }, 80);
 
   } else if (type === 'client') {
