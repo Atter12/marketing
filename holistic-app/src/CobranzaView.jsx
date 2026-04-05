@@ -960,6 +960,7 @@ export default function CobranzaView({
           monto_pendiente: v.monto_pendiente != null ? String(v.monto_pendiente) : String(detail.monto_pendiente ?? ""),
           moneda: detail.moneda || v.moneda || "USD",
           periodo_etiqueta: v.periodo_etiqueta || "",
+          agencia_nombre: cobranzaBrandNameForPreview(),
         }),
       });
       const rawText = await res.text();
@@ -1002,7 +1003,7 @@ export default function CobranzaView({
     } finally {
       setAiSuggesting(false);
     }
-  }, [detail, supabase, cobranzaAiUrl]);
+  }, [detail, supabase, cobranzaAiUrl, cobranzaBrandNameForPreview]);
 
   if (!supabase) {
     return (

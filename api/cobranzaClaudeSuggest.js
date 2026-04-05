@@ -49,20 +49,37 @@ async function verifySupabaseSession(req) {
   }
 }
 
-function buildUserPrompt(body) {
+function resolveAgencyName(body) {
+  const fromBody = String(body.agencia_nombre || "").trim();
+  if (fromBody) return fromBody;
+  const fromEnv = String(process.env.COBRANZA_BRAND_NAME || process.env.EMAIL_BRAND_NAME || "").trim();
+  if (fromEnv) return fromEnv;
+  return "Holistic Marketing";
+}
+
+function buildUserPrompt(body, agenciaNombre) {
   const tipo = body.tipo === "agradecimiento" ? "agradecimiento" : "cobro";
   const nombre = String(body.cliente_nombre || "Cliente").trim();
   const empresa = String(body.empresa || "").trim();
   const monto = String(body.monto_pendiente ?? "").trim();
   const moneda = String(body.moneda || "USD").trim();
   const periodo = String(body.periodo_etiqueta || "").trim();
+  const marcaAgencia = String(agenciaNombre || "Holistic Marketing").trim();
+
+  const reglaMarca = `OBLIGATORIO — Agencia que envía el correo: "${marcaAgencia}".
+- El cuerpo HTML debe incluir al menos una vez la cadena exacta ${marcaAgencia} (sin abreviar ni sustituir por "nosotros" solo).
+- Frases útiles: "desde ${marcaAgencia}", "el equipo de ${marcaAgencia}", "en ${marcaAgencia}".
+- El asunto puede incluir "${marcaAgencia}" si encaja.
+- "${empresa || "(sin dato)"}" es el negocio del CLIENTE; no lo uses como nombre de la agencia.`;
 
   if (tipo === "agradecimiento") {
-    return `Generá un correo en español (Perú/Latam, voseo o tú según suene natural) para un cliente de agencia de marketing.
+    return `Generá un correo en español (Perú/Latam, voseo o tú según suene natural).
 
 Tipo: AGRADECIMIENTO — el cliente está al día, sin saldo pendiente según nuestros registros.
-Cliente: ${nombre}${empresa ? `\nEmpresa/marca: ${empresa}` : ""}
+Cliente: ${nombre}${empresa ? `\nEmpresa o marca del cliente (su negocio): ${empresa}` : ""}
 Contexto del período: ${periodo || "Cuenta al día."}
+
+${reglaMarca}
 
 Requisitos:
 - Tono profesional, breve y humano (no frío ni amenazante).
@@ -74,12 +91,14 @@ Respondé ÚNICAMENTE con un JSON válido en una sola línea o bloque, sin texto
 {"subject":"asunto corto para la bandeja","bodyHtml":"<p>…</p>"}`;
   }
 
-  return `Generá un correo en español (Perú/Latam) para un cliente de agencia de marketing.
+  return `Generá un correo en español (Perú/Latam).
 
 Tipo: COBRO / recordatorio de saldo pendiente.
-Cliente: ${nombre}${empresa ? `\nEmpresa/marca: ${empresa}` : ""}
+Cliente: ${nombre}${empresa ? `\nEmpresa o marca del cliente (su negocio): ${empresa}` : ""}
 Monto pendiente: ${moneda} ${monto}
 Contexto del período o deuda: ${periodo || "Saldo pendiente según cuenta."}
+
+${reglaMarca}
 
 Requisitos:
 - Tono firme pero respetuoso; recordá el pago sin sonar agresivo.
@@ -133,8 +152,9 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
-  console.log(LOG, "POST body keys", Object.keys(body), "tipo", body.tipo);
-  const userContent = buildUserPrompt(body);
+  const agenciaNombre = resolveAgencyName(body);
+  console.log(LOG, "POST body keys", Object.keys(body), "tipo", body.tipo, "agencia", agenciaNombre);
+  const userContent = buildUserPrompt(body, agenciaNombre);
   const model = (process.env.ANTHROPIC_MODEL || DEFAULT_MODEL).trim();
 
   try {
@@ -150,7 +170,7 @@ export default async function handler(req, res) {
         model,
         max_tokens: 1200,
         system:
-          "Sos un asistente que solo responde con JSON válido: {\"subject\":\"...\",\"bodyHtml\":\"...\"}. El bodyHtml usa solo <p>, <strong> y <br>. Sin markdown fuera del JSON.",
+          "Sos un asistente para redactar correos de una agencia de marketing. Si el prompt da un nombre de agencia entre comillas, el bodyHtml debe contener ese nombre textual al menos una vez; no lo omitas por brevedad. Respondé solo con JSON: {\"subject\":\"...\",\"bodyHtml\":\"...\"}. bodyHtml: solo <p>, <strong> y <br>. Sin markdown fuera del JSON.",
         messages: [{ role: "user", content: userContent }],
       }),
     });
