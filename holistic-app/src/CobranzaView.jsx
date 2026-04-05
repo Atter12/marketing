@@ -16,6 +16,13 @@ import {
   ChevronRight,
 } from "lucide-react";
 import TableScrollWrap from "./TableScrollWrap";
+import {
+  buildCobranzaWrappedPreviewHtml,
+  cobranzaBrandNameForPreview,
+  cobranzaTaglineForPreview,
+  defaultCobranzaLogoUrlForPreview,
+  defaultCobranzaPanelUrlForPreview,
+} from "./cobranzaEmailLayout.js";
 
 const TH = {
   textAlign: "left",
@@ -348,6 +355,19 @@ export default function CobranzaView({
     }
     return "en el conjunto de tu cuenta (deuda neta actual total en el panel, como «A cobrar» en Gastos).";
   }, [periodoCobranza, fmtM]);
+
+  /** Misma plantilla que envuelve Resend en cobranza-enviar (cuerpo = borrador editable). */
+  const cobranzaEmailPreviewDoc = useMemo(
+    () =>
+      buildCobranzaWrappedPreviewHtml({
+        innerHtml: editCuerpo && String(editCuerpo).trim() ? editCuerpo : "<p>(vacío)</p>",
+        brandName: cobranzaBrandNameForPreview(),
+        panelUrl: defaultCobranzaPanelUrlForPreview(),
+        logoUrl: defaultCobranzaLogoUrlForPreview(),
+        tagline: cobranzaTaglineForPreview(),
+      }),
+    [editCuerpo],
+  );
 
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
   const supabaseAnon = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
@@ -1820,25 +1840,67 @@ export default function CobranzaView({
               )}
 
               {modalTab === "prevista" && (
-                <div
-                  style={{
-                    border: "1px solid #e5e7eb",
-                    borderRadius: 12,
-                    minHeight: 280,
-                    background: "#fafafa",
-                    overflow: "hidden",
-                  }}
-                >
-                  <iframe
-                    title="preview"
-                    sandbox=""
-                    srcDoc={`<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Inter,system-ui,sans-serif;padding:16px;color:#0f172a;line-height:1.5;} .sbj{font-size:14px;color:#64748b;margin-bottom:8px} .ttl{font-weight:700;margin-bottom:14px;font-size:17px}</style></head><body><div class="sbj">Asunto:</div><div class="ttl">${(editAsunto || "").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>${editCuerpo || "<p>(vacío)</p>"}</body></html>`}
-                    style={{ width: "100%", height: 360, border: "none" }}
-                  />
-                  <p style={{ margin: "10px 12px 0", fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-                    <strong>Al enviar por Resend</strong> el cliente recibe este mensaje dentro de un correo con cabecera (logo + marca), bloque de{" "}
-                    <strong>firma</strong> con el mismo logo, botón <strong>Entrar al panel Crédito</strong> y pie. La marca y el logo se configuran en la
-                    función <code style={{ fontSize: 11 }}>cobranza-enviar</code> (variables de entorno).
+                <div>
+                  <div
+                    style={{
+                      marginBottom: 12,
+                      padding: "14px 16px",
+                      background: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                        color: "#94a3b8",
+                        marginBottom: 6,
+                      }}
+                    >
+                      Asunto del correo (va en la bandeja del cliente, no dentro del cuerpo HTML)
+                    </div>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", lineHeight: 1.35 }}>
+                      {editAsunto?.trim() ? editAsunto : <span style={{ color: "#94a3b8", fontWeight: 600 }}>(sin asunto)</span>}
+                    </div>
+                  </div>
+                  <div
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 12,
+                      background: "#e2e8f0",
+                      overflow: "hidden",
+                      boxShadow: "inset 0 1px 2px rgba(15,23,42,.06)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "8px 12px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.06em",
+                        color: "#64748b",
+                        background: "#f1f5f9",
+                        borderBottom: "1px solid #e2e8f0",
+                      }}
+                    >
+                      Vista previa del cuerpo del correo (como lo envía Resend)
+                    </div>
+                    <iframe
+                      title="Vista previa del correo de cobranza"
+                      sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+                      srcDoc={cobranzaEmailPreviewDoc}
+                      style={{ width: "100%", height: 560, border: "none", display: "block", background: "#f1f5f9" }}
+                    />
+                  </div>
+                  <p style={{ margin: "12px 0 0", fontSize: 12, color: "#64748b", lineHeight: 1.5 }}>
+                    Esto coincide con la plantilla de la función <code style={{ fontSize: 11 }}>cobranza-enviar</code> (cabecera con logo, tu texto, firma, botón
+                    al panel y pie). En producción el logo puede venir de <code style={{ fontSize: 11 }}>COBRANZA_LOGO_URL</code>; acá se usa el logo de esta
+                    web (<code style={{ fontSize: 11 }}>…/logo/logoh.png</code>) o <code style={{ fontSize: 11 }}>VITE_COBRANZA_LOGO_URL</code> si lo definís en{" "}
+                    <code style={{ fontSize: 11 }}>.env</code>.
                   </p>
                 </div>
               )}

@@ -27,7 +27,8 @@ function safeHttpsUrl(raw: string | undefined): string | null {
   return u;
 }
 
-/** Misma línea visual que acceso Crédito (Resend): marca Holistic + firma con logo + panel. */
+/** Misma línea visual que acceso Crédito (Resend): marca Holistic + firma con logo + panel.
+ *  Mantener HTML alineado con holistic-app/src/cobranzaEmailLayout.js (vista previa en Cobranza). */
 function buildCobranzaEmail(opts: {
   innerHtml: string;
   brandName: string;
