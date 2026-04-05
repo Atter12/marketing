@@ -35,6 +35,57 @@ const TD = {
   verticalAlign: "middle",
 };
 
+/** Tablas en móvil: tarjetas apiladas; en desktop: scroll horizontal con min-width. */
+const COBRANZA_RESPONSIVE_CSS = `
+@media (max-width: 900px) {
+  .hm-cobranza-flow { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 520px) {
+  .hm-cobranza-flow { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 640px) {
+  .hm-cobranza-root .hm-page-header { padding-left: 16px !important; padding-right: 16px !important; }
+}
+.hm-cobranza-stack table { min-width: 1020px; width: 100%; border-collapse: collapse; }
+@media (max-width: 720px) {
+  .hm-cobranza-stack { -webkit-overflow-scrolling: touch; }
+  .hm-cobranza-stack table { min-width: 0 !important; }
+  .hm-cobranza-stack thead {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+  .hm-cobranza-stack tbody tr {
+    display: block;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    margin-bottom: 12px;
+    padding: 4px 0 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+  .hm-cobranza-stack tbody td {
+    display: grid !important;
+    grid-template-columns: minmax(88px, 32%) 1fr;
+    gap: 4px 10px;
+    align-items: start;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    font-size: 13px !important;
+    vertical-align: top !important;
+  }
+  .hm-cobranza-stack tbody tr td:last-child { border-bottom: none !important; }
+  .hm-cobranza-stack tbody td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    line-height: 1.4;
+  }
+}
+`;
+
 const fmtMoney = (n) => {
   const v = parseFloat(n);
   if (Number.isNaN(v)) return "0";
@@ -191,6 +242,7 @@ function FlowSteps() {
   ];
   return (
     <div
+      className="hm-cobranza-flow"
       style={{
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",
@@ -864,7 +916,8 @@ export default function CobranzaView({
   }
 
   return (
-    <div>
+    <div className="hm-cobranza-root">
+      <style>{COBRANZA_RESPONSIVE_CSS}</style>
       <div
         className="hm-page-header"
         style={{
@@ -1301,7 +1354,7 @@ export default function CobranzaView({
                 boxShadow: "0 1px 4px rgba(15,23,42,.04)",
               }}
             >
-              <TableScrollWrap className="hm-table-wrap" autoFocusScroll={mainTab === "bandeja"}>
+              <TableScrollWrap className="hm-table-wrap hm-cobranza-stack" autoFocusScroll={mainTab === "bandeja"}>
                 <table>
                   <thead>
                     <tr>
@@ -1358,7 +1411,7 @@ export default function CobranzaView({
                         const refTitle = v.periodo_etiqueta ? String(v.periodo_etiqueta) : v.periodo_ym ? fmtM(v.periodo_ym) : "Deuda acumulada total al generar (borradores anteriores a período explícito)";
                         return (
                           <tr key={r.id}>
-                            <td style={TD}>
+                            <td style={TD} data-label="Incluir">
                               {canSel ? (
                                 <button
                                   type="button"
@@ -1378,20 +1431,28 @@ export default function CobranzaView({
                                 <span style={{ display: "inline-block", width: 26 }} />
                               )}
                             </td>
-                            <td style={{ ...TD, fontWeight: 600 }}>{r.cliente_nombre || "—"}</td>
-                            <td style={{ ...TD, fontSize: 12.5, color: "#64748b" }}>{r.email_destino}</td>
-                            <td style={{ ...TD, fontSize: 12.5, color: "#475569", maxWidth: 120 }} title={refTitle}>
+                            <td style={{ ...TD, fontWeight: 600 }} data-label="Cliente">
+                              {r.cliente_nombre || "—"}
+                            </td>
+                            <td style={{ ...TD, fontSize: 12.5, color: "#64748b" }} data-label="Email">
+                              {r.email_destino}
+                            </td>
+                            <td style={{ ...TD, fontSize: 12.5, color: "#475569", maxWidth: 120 }} title={refTitle} data-label="Período ref.">
                               {refPer}
                             </td>
-                            <td style={{ ...TD, fontVariantNumeric: "tabular-nums" }}>
+                            <td style={{ ...TD, fontVariantNumeric: "tabular-nums" }} data-label="Deuda (USD)">
                               {r.moneda || "USD"} {fmtMoney(r.monto_pendiente)}
                             </td>
-                            <td style={{ ...TD, fontSize: 12 }}>{tipo}</td>
-                            <td style={{ ...TD, maxWidth: 180 }}>{r.asunto}</td>
-                            <td style={{ ...TD, color: "#64748b", fontSize: 12.5, maxWidth: 220 }}>
+                            <td style={{ ...TD, fontSize: 12 }} data-label="Tipo">
+                              {tipo}
+                            </td>
+                            <td style={{ ...TD, maxWidth: 180 }} data-label="Asunto">
+                              {r.asunto}
+                            </td>
+                            <td style={{ ...TD, color: "#64748b", fontSize: 12.5, maxWidth: 220 }} data-label="Vista previa">
                               {stripHtmlPreview(r.cuerpo_html)}
                             </td>
-                            <td style={TD}>
+                            <td style={TD} data-label="Estado">
                               <span
                                 style={{
                                   display: "inline-flex",
@@ -1420,7 +1481,7 @@ export default function CobranzaView({
                                 {ESTADO_LABEL[r.estado] || r.estado}
                               </span>
                             </td>
-                            <td style={TD}>
+                            <td style={TD} data-label="Acciones">
                               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                 <Btn variant="outline" size="sm" onClick={() => openDetail(r)}>
                                   <Eye size={13} /> Revisar
@@ -1479,7 +1540,7 @@ export default function CobranzaView({
               boxShadow: "0 1px 4px rgba(15,23,42,.04)",
             }}
           >
-            <TableScrollWrap className="hm-table-wrap" autoFocusScroll={mainTab === "historial"}>
+            <TableScrollWrap className="hm-table-wrap hm-cobranza-stack" autoFocusScroll={mainTab === "historial"}>
               <table>
                 <thead>
                   <tr>
@@ -1512,15 +1573,25 @@ export default function CobranzaView({
                               : "—";
                       return (
                         <tr key={ev.id}>
-                          <td style={{ ...TD, fontSize: 12.5, color: "#64748b", whiteSpace: "nowrap" }}>
+                          <td style={{ ...TD, fontSize: 12.5, color: "#64748b", whiteSpace: "nowrap" }} data-label="Fecha">
                             {fmtDt(ev.created_at)}
                           </td>
-                          <td style={TD}>{EVENTO_LABEL[ev.evento] || ev.evento}</td>
-                          <td style={{ ...TD, fontSize: 12.5 }}>{ev.actor_email || "—"}</td>
-                          <td style={TD}>{b?.cliente_nombre || "—"}</td>
-                          <td style={{ ...TD, fontSize: 12.5 }}>{b?.email_destino || "—"}</td>
-                          <td style={{ ...TD, maxWidth: 200, fontSize: 12.5 }}>{b?.asunto || "—"}</td>
-                          <td style={{ ...TD, fontSize: 12, color: "#64748b", maxWidth: 240 }} title={detStr}>
+                          <td style={TD} data-label="Evento">
+                            {EVENTO_LABEL[ev.evento] || ev.evento}
+                          </td>
+                          <td style={{ ...TD, fontSize: 12.5 }} data-label="Quién">
+                            {ev.actor_email || "—"}
+                          </td>
+                          <td style={TD} data-label="Cliente">
+                            {b?.cliente_nombre || "—"}
+                          </td>
+                          <td style={{ ...TD, fontSize: 12.5 }} data-label="Email">
+                            {b?.email_destino || "—"}
+                          </td>
+                          <td style={{ ...TD, maxWidth: 200, fontSize: 12.5 }} data-label="Asunto">
+                            {b?.asunto || "—"}
+                          </td>
+                          <td style={{ ...TD, fontSize: 12, color: "#64748b", maxWidth: 240 }} title={detStr} data-label="Detalle">
                             {detStr}
                           </td>
                         </tr>
@@ -1765,9 +1836,9 @@ export default function CobranzaView({
                     style={{ width: "100%", height: 360, border: "none" }}
                   />
                   <p style={{ margin: "10px 12px 0", fontSize: 12, color: "#64748b", lineHeight: 1.45 }}>
-                    <strong>Al enviar por Resend</strong> el cliente recibe este mensaje dentro de un correo con marca{" "}
-                    <strong>Holistic Marketing</strong> (cabecera y pie profesionales) y un botón{" "}
-                    <strong>Entrar al panel Crédito</strong>, alineado con el mail de acceso al panel.
+                    <strong>Al enviar por Resend</strong> el cliente recibe este mensaje dentro de un correo con cabecera (logo + marca), bloque de{" "}
+                    <strong>firma</strong> con el mismo logo, botón <strong>Entrar al panel Crédito</strong> y pie. La marca y el logo se configuran en la
+                    función <code style={{ fontSize: 11 }}>cobranza-enviar</code> (variables de entorno).
                   </p>
                 </div>
               )}

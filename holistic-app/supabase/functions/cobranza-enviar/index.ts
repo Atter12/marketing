@@ -20,16 +20,37 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Misma línea visual que acceso Crédito (Resend): marca Holistic + panel. */
+/** Solo URLs https para <img> (evita javascript: en src). */
+function safeHttpsUrl(raw: string | undefined): string | null {
+  const u = String(raw || "").trim();
+  if (!u || !/^https:\/\//i.test(u)) return null;
+  return u;
+}
+
+/** Misma línea visual que acceso Crédito (Resend): marca Holistic + firma con logo + panel. */
 function buildCobranzaEmail(opts: {
   innerHtml: string;
   brandName: string;
   panelUrl: string;
   plainBody: string;
+  logoUrl: string | null;
+  tagline: string;
 }): { html: string; text: string } {
   const brand = escapeHtml(opts.brandName);
+  const taglineEsc = escapeHtml(opts.tagline);
   const panel = opts.panelUrl.replace(/\/$/, "");
   const panelEsc = escapeHtml(panel);
+  const logo = opts.logoUrl ? escapeHtml(opts.logoUrl) : "";
+  const logoBlock = logo
+    ? `<img src="${logo}" width="140" alt="${brand}" style="display:block;max-width:140px;height:auto;border:0;margin:0 0 12px 0;" />`
+    : "";
+  const headerInner = logo
+    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;width:100%;"><tr><td style="vertical-align:middle;padding-right:16px;width:1%;"><img src="${logo}" width="120" alt="" style="display:block;max-width:120px;height:auto;border:0;" /></td><td style="vertical-align:middle;">
+          <div style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">${taglineEsc}</div>
+        </td></tr></table>`
+    : `<div style="font-size:22px;font-weight:800;color:#ffffff;margin-top:10px;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">${taglineEsc}</div>`;
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -41,8 +62,7 @@ function buildCobranzaEmail(opts: {
       <tr>
         <td style="padding:26px 28px;background:linear-gradient(135deg,#1b2559 0%,#2d3a6e 100%);">
           <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600;">Comunicación oficial</div>
-          <div style="font-size:22px;font-weight:800;color:#ffffff;margin-top:10px;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">Marketing digital · Gestión de cuentas</div>
+          ${headerInner}
         </td>
       </tr>
       <tr>
@@ -51,8 +71,21 @@ function buildCobranzaEmail(opts: {
         </td>
       </tr>
       <tr>
-        <td style="padding:8px 28px 24px;">
+        <td style="padding:8px 28px 20px;">
           <div style="height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent);"></div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 28px 22px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:12px;background:#fafafa;padding:18px 20px;">
+            <tr><td>
+              <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">Firma</p>
+              ${logoBlock}
+              <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${brand}</p>
+              <p style="margin:6px 0 0;font-size:13px;color:#64748b;line-height:1.5;">${taglineEsc}</p>
+              <p style="margin:10px 0 0;font-size:12px;color:#94a3b8;line-height:1.45;">Correo enviado de forma segura desde el panel Crédito.</p>
+            </td></tr>
+          </table>
         </td>
       </tr>
       <tr>
@@ -74,9 +107,11 @@ function buildCobranzaEmail(opts: {
 </html>`;
 
   const text =
-    `${opts.brandName}\n\n` +
+    `${opts.brandName}\n${opts.tagline}\n\n` +
     `${opts.plainBody.trim()}\n\n` +
     `---\n` +
+    `${opts.brandName}\n` +
+    `${opts.tagline}\n\n` +
     `Entrar al panel Crédito: ${panel}\n` +
     `Si no reconocés este mensaje, podés ignorarlo.\n`;
 
@@ -200,6 +235,17 @@ Deno.serve(async (req) => {
     const brandName = (Deno.env.get("COBRANZA_BRAND_NAME") || Deno.env.get("EMAIL_BRAND_NAME") || "Holistic Marketing").trim();
     const panelUrl =
       (Deno.env.get("COBRANZA_PANEL_URL") || Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "https://www.marketingconholistic.com/credito").trim();
+    const tagline = (
+      Deno.env.get("COBRANZA_TAGLINE") ||
+      Deno.env.get("EMAIL_TAGLINE") ||
+      "Marketing digital · Gestión de cuentas"
+    ).trim();
+    const logoRaw = (
+      Deno.env.get("COBRANZA_LOGO_URL") ||
+      Deno.env.get("EMAIL_LOGO_URL") ||
+      "https://www.marketingconholistic.com/credito-app/logo/logoh.png"
+    ).trim();
+    const logoUrl = safeHttpsUrl(logoRaw);
 
     const subject = String(row.asunto || `Mensaje de ${brandName}`);
     const innerHtml = String(row.cuerpo_html || "<p>(sin cuerpo)</p>");
@@ -212,6 +258,8 @@ Deno.serve(async (req) => {
       brandName,
       panelUrl,
       plainBody,
+      logoUrl,
+      tagline,
     });
 
     await adminClient.from("cobranza_bandeja").update({ estado: "sending", ultimo_error: null }).eq("id", id);
