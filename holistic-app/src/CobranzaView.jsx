@@ -933,9 +933,9 @@ export default function CobranzaView({
     const u = (import.meta.env.VITE_COBRANZA_AI_URL || "").trim();
     if (u) return u.replace(/\/$/, "");
     if (typeof window !== "undefined" && window.location?.origin) {
-      return `${window.location.origin}/api/cobranza-claude/suggest`;
+      return `${window.location.origin}/api/cobranzaClaudeSuggest`;
     }
-    return "/api/cobranza-claude/suggest";
+    return "/api/cobranzaClaudeSuggest";
   }, []);
 
   const suggestClaudePersonalized = useCallback(async () => {
@@ -962,9 +962,29 @@ export default function CobranzaView({
           periodo_etiqueta: v.periodo_etiqueta || "",
         }),
       });
-      const out = await res.json().catch(() => ({}));
+      const rawText = await res.text();
+      let out = {};
+      try {
+        out = JSON.parse(rawText);
+      } catch (e) {
+        console.error("[Cobranza IA] respuesta no JSON", res.status, rawText.slice(0, 800));
+      }
       if (!res.ok || !out.success) {
-        alert(out.error || "No se pudo generar con IA. Revisá ANTHROPIC_API_KEY en Vercel y que estés logueado.");
+        console.error("[Cobranza IA] fallo", {
+          url: cobranzaAiUrl,
+          status: res.status,
+          endpoint: res.headers.get("x-cobranza-endpoint"),
+          body: rawText.slice(0, 600),
+        });
+        if (res.status === 404) {
+          alert(
+            "El servidor no encontró la ruta de IA (404). Hacé deploy del repo con api/cobranzaClaudeSuggest.js. Probá en el navegador: " +
+              (typeof window !== "undefined" ? window.location.origin : "") +
+              "/api/cobranzaClaudeSuggest (debe mostrar JSON, no 404).",
+          );
+        } else {
+          alert(out.error || `Error ${res.status}: ${rawText.slice(0, 200) || "sin detalle"}`);
+        }
         return;
       }
       const { subject, bodyHtml } = out.data || {};

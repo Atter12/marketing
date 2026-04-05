@@ -1,18 +1,13 @@
 /**
- * POST /api/cobranza-claude/suggest
- * Genera asunto + cuerpo HTML para cobranza con Claude (Anthropic).
+ * POST /api/cobranzaClaudeSuggest  (ruta plana: evita 404 en algunos deploys con carpetas anidadas en /api)
+ * GET  /api/cobranzaClaudeSuggest  → health check (ver en navegador si la función existe)
  *
- * Vercel → Settings → Environment Variables:
- *   ANTHROPIC_API_KEY     (obligatorio) — de console.anthropic.com
- *   ANTHROPIC_MODEL       (opcional)    — default claude-3-5-haiku-20241022
- *   PUBLIC_SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY — si están, exige Authorization: Bearer <access_token>
- *
- * Body JSON:
- *   { tipo: "cobro"|"agradecimiento", cliente_nombre, empresa?, monto_pendiente, moneda, periodo_etiqueta }
+ * Variables: ANTHROPIC_API_KEY, opcional ANTHROPIC_MODEL, PUBLIC_SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY
  */
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const DEFAULT_MODEL = "claude-3-5-haiku-20241022";
+const LOG = "[cobranzaClaudeSuggest]";
 
 function stripJsonFence(s) {
   let t = String(s || "").trim();
@@ -27,6 +22,7 @@ async function verifySupabaseSession(req) {
   const anon = process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
   const auth = req.headers.authorization;
   if (!url || !anon) {
+    console.log(LOG, "auth: sin PUBLIC_SUPABASE_URL/ANON → no se exige JWT");
     return { ok: true, skipped: true };
   }
   if (!auth || !/^Bearer\s+\S+/i.test(auth)) {
@@ -37,11 +33,14 @@ async function verifySupabaseSession(req) {
       headers: { apikey: anon, Authorization: auth },
     });
     if (!r.ok) {
+      console.warn(LOG, "auth: Supabase /user status", r.status);
       return { ok: false, status: 401, error: "Sesión inválida o expirada." };
     }
     await r.json();
+    console.log(LOG, "auth: sesión OK");
     return { ok: true };
   } catch (e) {
+    console.error(LOG, "auth: fetch error", e?.message || e);
     return { ok: false, status: 503, error: "No se pudo validar la sesión." };
   }
 }
@@ -89,12 +88,34 @@ Respondé ÚNICAMENTE con un JSON válido con esta forma exacta:
 }
 
 export default async function handler(req, res) {
+  res.setHeader("x-cobranza-endpoint", "cobranzaClaudeSuggest");
+
+  console.log(LOG, "request", {
+    method: req.method,
+    url: req.url,
+    vercelId: req.headers["x-vercel-id"],
+    hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
+  });
+
+  if (req.method === "GET") {
+    return res.status(200).json({
+      ok: true,
+      message: "Endpoint activo. Usá POST con JSON desde Crédito → Cobranza → Personalizar con IA.",
+      anthropicConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
+      supabaseAuthEnforced: Boolean(
+        (process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL) &&
+          (process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY),
+      ),
+    });
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ success: false, error: "Método no permitido" });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
+    console.error(LOG, "ANTHROPIC_API_KEY ausente");
     return res.status(503).json({
       success: false,
       error:
@@ -108,10 +129,12 @@ export default async function handler(req, res) {
   }
 
   const body = req.body || {};
+  console.log(LOG, "POST body keys", Object.keys(body), "tipo", body.tipo);
   const userContent = buildUserPrompt(body);
   const model = (process.env.ANTHROPIC_MODEL || DEFAULT_MODEL).trim();
 
   try {
+    console.log(LOG, "Anthropic request", { model });
     const response = await fetch(ANTHROPIC_URL, {
       method: "POST",
       headers: {
@@ -136,8 +159,11 @@ export default async function handler(req, res) {
       data = {};
     }
 
+    console.log(LOG, "Anthropic response", { status: response.status, ok: response.ok });
+
     if (!response.ok) {
       const msg = data.error?.message || raw.slice(0, 200) || response.statusText;
+      console.error(LOG, "Anthropic error body", raw.slice(0, 500));
       return res.status(response.status >= 400 && response.status < 600 ? response.status : 502).json({
         success: false,
         error: msg || "Error al llamar a Anthropic",
@@ -146,6 +172,7 @@ export default async function handler(req, res) {
 
     const text = data.content?.find((b) => b.type === "text")?.text;
     if (!text) {
+      console.error(LOG, "sin content text", JSON.stringify(data).slice(0, 300));
       return res.status(502).json({ success: false, error: "Respuesta vacía de Claude." });
     }
 
@@ -153,6 +180,7 @@ export default async function handler(req, res) {
     try {
       parsed = JSON.parse(stripJsonFence(text));
     } catch (e) {
+      console.error(LOG, "JSON parse fallo", text.slice(0, 400));
       return res.status(502).json({
         success: false,
         error: "Claude no devolvió JSON válido. Probá de nuevo o acortá el contexto.",
@@ -165,9 +193,10 @@ export default async function handler(req, res) {
       return res.status(502).json({ success: false, error: "Faltan subject o bodyHtml en la respuesta." });
     }
 
+    console.log(LOG, "éxito", { subjectLen: subject.length, bodyLen: bodyHtml.length });
     return res.status(200).json({ success: true, data: { subject, bodyHtml } });
   } catch (err) {
-    console.error("[cobranza-claude/suggest]", err);
+    console.error(LOG, "excepción", err?.stack || err?.message || err);
     return res.status(500).json({ success: false, error: err.message || "Error interno" });
   }
 }
