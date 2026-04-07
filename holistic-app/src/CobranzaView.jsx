@@ -346,14 +346,14 @@ export default function CobranzaView({
 
   const etiquetaPeriodoCorreo = useMemo(() => {
     if (periodoCobranza && String(periodoCobranza).trim()) {
-      return `Este monto corresponde al mes ${fmtM(periodoCobranza)} (gastos con fecha de movimiento en ese mes, cobros contabilizados en ese período y garantías vigentes con mes en resumen en ese mes — igual que el Resumen).`;
+      return `Este monto corresponde al mes ${fmtM(periodoCobranza)}: suma del pendiente de cada gasto cuyo período (columna mes) es ese mes, menos garantías vigentes con mes en resumen en ese mes — igual que al filtrar Gastos Ads por ese mes.`;
     }
     return "Este monto es la deuda neta actual total del cliente en el panel (todos los períodos), igual que la columna «A cobrar» en Gastos Ads.";
   }, [periodoCobranza, fmtM]);
 
   const etiquetaPeriodoThanks = useMemo(() => {
     if (periodoCobranza && String(periodoCobranza).trim()) {
-      return `respecto al mes ${fmtM(periodoCobranza)} (mismo criterio que el Resumen: fecha de movimiento, cobros de ese período, garantías con mes en resumen).`;
+      return `respecto al mes ${fmtM(periodoCobranza)} (sin pendiente en gastos de ese período mes, según Gastos Ads).`;
     }
     return "en el conjunto de tu cuenta (deuda neta actual total en el panel, como «A cobrar» en Gastos).";
   }, [periodoCobranza, fmtM]);
@@ -1226,7 +1226,7 @@ export default function CobranzaView({
               <p style={{ margin: "0 0 14px", fontSize: 13, color: "#57534e", lineHeight: 1.55, maxWidth: 900 }}>
                 {periodoCobranza.trim() ? (
                   <>
-                    Con <strong>un mes</strong>, el monto al pulsar «Borradores cobro» / «Agradecimiento» es el <strong>pendiente neto de ese mes</strong>, igual que en <strong>Resumen</strong>: gastos con <strong>fecha de movimiento</strong> en el mes, cobros cuyo <strong>período contable</strong> cae en ese mes y <strong>garantías vigentes</strong> con <strong>mes en resumen</strong> en ese mes.
+                    Con <strong>un mes</strong>, el monto al pulsar «Borradores cobro» / «Agradecimiento» usa el <strong>período del gasto</strong> (columna mes en Gastos Ads): se suma el <strong>pendiente</strong> de cada línea de ese mes y se restan <strong>garantías vigentes</strong> con mes en resumen en ese mes. Así coincide con lo que ves al filtrar pendientes por ese mes.
                   </>
                 ) : (
                   <>
