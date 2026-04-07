@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Holistic Marketing — Dashboard Financiero</title>
+<title>Marketing Holistic — Finanzas</title>
+<link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png?v=2" />
+<link rel="shortcut icon" type="image/png" href="/credito-app/favicon/favicon.png?v=2" />
+<link rel="apple-touch-icon" href="/credito-app/favicon/favicon.png?v=2" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300..800&display=swap" rel="stylesheet">
@@ -128,6 +131,11 @@ img,svg{display:block;max-width:100%}
 .sidebar-header{display:flex;align-items:center;gap:12px;padding:20px 20px 16px;position:relative}
 .sidebar-header::after{content:'';position:absolute;bottom:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--sidebar-border),transparent)}
 .sidebar-logo{width:36px;height:36px;flex-shrink:0}
+.sidebar-logo-wrap{width:36px;height:36px;flex-shrink:0;position:relative}
+.sidebar-logo-img{width:36px;height:36px;object-fit:contain;border-radius:8px;display:block}
+.sidebar-logo-img.sidebar-logo-img--fail{display:none}
+.sidebar-logo-fallback{display:none;width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,var(--blue) 0%,#F97316 100%);align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:800;letter-spacing:-0.02em}
+.sidebar-logo-fallback.is-visible{display:flex}
 .sidebar-brand{display:flex;flex-direction:column}
 .sidebar-brand h1{font-size:15px;font-weight:700;color:var(--text);line-height:1.2;white-space:nowrap;letter-spacing:-0.01em}
 .sidebar-brand span{font-size:11px;color:var(--text-muted);font-weight:500;letter-spacing:0.02em}
@@ -484,17 +492,13 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
-    <svg class="sidebar-logo" viewBox="0 0 36 36" fill="none">
-      <rect width="36" height="36" rx="8" fill="var(--blue)"/>
-      <path d="M9 10.5V25.5M9 18H17.5M27 10.5V25.5" stroke="white" stroke-width="2.8" stroke-linecap="round"/>
-      <path d="M19 13L24 10V17L19 14" fill="rgba(255,255,255,0.4)"/>
-      <circle cx="27" cy="25" r="0" fill="white">
-        <animate attributeName="r" values="0;2.5;0" dur="3s" repeatCount="indefinite"/>
-      </circle>
-    </svg>
+    <div class="sidebar-logo-wrap" aria-hidden="true">
+      <img class="sidebar-logo-img" src="/logo/logoh.png" alt="" width="36" height="36" decoding="async" onerror="this.classList.add('sidebar-logo-img--fail');var f=this.nextElementSibling;if(f)f.classList.add('is-visible');" />
+      <div class="sidebar-logo-fallback" title="Marketing Holistic">MH</div>
+    </div>
     <div class="sidebar-brand">
-      <h1>Holistic Marketing</h1>
-      <span>Dashboard Financiero</span>
+      <h1>Marketing Holistic</h1>
+      <span>Finanzas · Organización</span>
     </div>
   </div>
   <nav class="sidebar-nav" id="sidebarNav"></nav>
@@ -688,7 +692,7 @@ function drawSparkline(canvasId, dataPoints, colorKey) {
   ctx.fill();
 }
 
-// ===== DATOS (Supabase: tablas finanzas_app_*; separado de Crédito) =====
+// ===== DATOS (Supabase: finanzas_app_* — un solo libro para Marketing Holistic; separado de Crédito) =====
 let ingresos = [];
 let gastos = [];
 let deudas = [];
@@ -734,7 +738,7 @@ function updateLastUpdated() {
   const el = document.querySelector('.last-updated');
   if (!el) return;
   const t = finanzasDataLoadedAt ? new Date(finanzasDataLoadedAt) : new Date();
-  const src = window.finanzasSupabase ? 'Supabase' : 'Sin conexión BD';
+  const src = window.finanzasSupabase ? 'Datos de la organización' : 'Sin conexión BD';
   el.innerHTML = '<span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' + src + ' · ' + t.toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 }
 function finanzasRebuildAnalytics() {
@@ -802,7 +806,7 @@ async function finanzasLoadAll() {
   if (firstErr) {
     finanzasLoadError = firstErr.message || 'Error al cargar desde Supabase';
     if (String(finanzasLoadError).toLowerCase().indexOf('relation') !== -1 || String(finanzasLoadError).indexOf('does not exist') !== -1) {
-      finanzasLoadError += ' · Aplicá la migración 042_finanzas_app_tables en el proyecto Supabase.';
+      finanzasLoadError += ' · Aplicá las migraciones 042_finanzas_app_tables y, si tu BD tenía la versión por usuario, 043_finanzas_app_org_shared.';
     }
   }
   ingresos = (iRes.data || []).map((row) => ({
@@ -1324,7 +1328,7 @@ function renderIngresos(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Los ingresos se guardan en <strong>finanzas_app_ingresos</strong> (Supabase), independientes de Crédito.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Ingresos compartidos por la organización en Supabase (<strong>finanzas_app_ingresos</strong>), independientes de Crédito.</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('ingreso')">
@@ -1399,7 +1403,7 @@ function renderGastos(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Los gastos se guardan en <strong>finanzas_app_gastos</strong>.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Gastos compartidos por la organización (<strong>finanzas_app_gastos</strong>).</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('gasto')">
@@ -1606,7 +1610,7 @@ function renderCobrar(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Cuentas por cobrar en <strong>finanzas_app_cuentas_cobrar</strong>; el estado se calcula al guardar según el vencimiento.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Cuentas por cobrar compartidas (<strong>finanzas_app_cuentas_cobrar</strong>); el estado se recalcula al cargar según el vencimiento.</p>
       <div class="section-header">
         <div></div>
         <button type="button" class="btn btn-primary" onclick="openModal('cuenta')">
