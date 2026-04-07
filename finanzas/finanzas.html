@@ -440,6 +440,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   if(!lib||typeof createClientFn!=='function'){ console.warn('[Finanzas] createClient no disponible'); document.body.classList.remove('finanzas-auth-pending'); var g1=document.getElementById('finanzasAuthGate'); if(g1)g1.remove(); window.__FINANZAS_AUTH_OK=true; return; }
   var authStorage={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
   var sb=createClientFn(url,key,{auth:authStorage});
+  window.finanzasSupabase=sb;
   var hash=window.location.hash||'';
   function allow(){
     window.__FINANZAS_AUTH_OK=true;
@@ -687,76 +688,266 @@ function drawSparkline(canvasId, dataPoints, colorKey) {
   ctx.fill();
 }
 
-// ===== SAMPLE DATA =====
-const ingresos = [
-  {fecha:'2026-04-01',cliente:'Grupo Restaurantes SAC',concepto:'Gestión Redes Sociales - Marzo',montoUSD:2800,fechaPago:'2026-04-05',estado:'Pagado'},
-  {fecha:'2026-03-28',cliente:'InnovaTech Perú',concepto:'Campaña Google Ads Q1',montoUSD:4500,fechaPago:'2026-04-10',estado:'Pagado'},
-  {fecha:'2026-03-25',cliente:'Bella Cosmética',concepto:'Diseño Branding Completo',montoUSD:3200,fechaPago:'2026-04-15',estado:'Pendiente'},
-  {fecha:'2026-03-20',cliente:'FastFood Lima',concepto:'TikTok Ads Management',montoUSD:1800,fechaPago:'2026-04-08',estado:'Pagado'},
-  {fecha:'2026-03-18',cliente:'EcoVerde SAC',concepto:'Estrategia de Contenidos',montoUSD:2100,fechaPago:'2026-04-20',estado:'Pendiente'},
-  {fecha:'2026-03-15',cliente:'Hotel Andino',concepto:'Campaña Meta Ads',montoUSD:3500,fechaPago:'2026-03-30',estado:'Pagado'},
-  {fecha:'2026-03-10',cliente:'TechStart Peru',concepto:'Diseño Web + Landing Pages',montoUSD:2700,fechaPago:'2026-04-12',estado:'Pendiente'},
-  {fecha:'2026-03-05',cliente:'Farma Salud',concepto:'Email Marketing Mensual',montoUSD:950,fechaPago:'2026-03-25',estado:'Pagado'},
-  {fecha:'2026-02-28',cliente:'Moda Express',concepto:'Fotografía de Producto',montoUSD:1200,fechaPago:'2026-03-15',estado:'Pagado'},
-  {fecha:'2026-02-20',cliente:'Constructora Lima',concepto:'Social Media Management',montoUSD:1800,fechaPago:'2026-03-10',estado:'Pagado'},
-  {fecha:'2026-02-15',cliente:'Deportes Plus',concepto:'Campaña Influencers',montoUSD:2500,fechaPago:'2026-03-20',estado:'Vencido'},
-  {fecha:'2026-02-10',cliente:'Café Orgánico',concepto:'Rebranding + Manual de Marca',montoUSD:3200,fechaPago:'2026-03-05',estado:'Pagado'},
-];
+// ===== DATOS (Supabase: Crédito + tablas finanzas_*) =====
+let ingresos = [];
+let gastos = [];
+let deudas = [];
+let cuentasCobrar = [];
+let sueldos = [];
+let impuestos = [];
+let rawClientes = [];
+let rawGastosAds = [];
+let rawCobros = [];
+let rawManual = [];
+let finanzasLoadError = '';
+let finanzasDataLoadedAt = null;
+let finanzasAnalytics = { monthKeys: [], monthLabels: [], ing: [], gas: [], balance: [] };
 
-const gastos = [
-  {fecha:'2026-04-01',categoria:'Sueldos',concepto:'Nómina Marzo 2026',proveedor:'Planilla Interna',montoUSD:5675.68,fechaPago:'2026-04-01',estado:'Pagado'},
-  {fecha:'2026-03-28',categoria:'Publicidad',concepto:'Meta Ads - Clientes',proveedor:'Meta Platforms',montoUSD:2200,fechaPago:'2026-03-28',estado:'Pagado'},
-  {fecha:'2026-03-25',categoria:'Software',concepto:'Adobe Creative Cloud',proveedor:'Adobe Inc.',montoUSD:540,fechaPago:'2026-04-01',estado:'Pagado'},
-  {fecha:'2026-03-20',categoria:'Oficina',concepto:'Alquiler Oficina Miraflores',proveedor:'Inmobiliaria Lima',montoUSD:1350,fechaPago:'2026-04-01',estado:'Pendiente'},
-  {fecha:'2026-03-18',categoria:'Publicidad',concepto:'Google Ads - Clientes',proveedor:'Google LLC',montoUSD:1800,fechaPago:'2026-03-20',estado:'Pagado'},
-  {fecha:'2026-03-15',categoria:'Software',concepto:'HubSpot Marketing Hub',proveedor:'HubSpot',montoUSD:450,fechaPago:'2026-04-01',estado:'Pendiente'},
-  {fecha:'2026-03-10',categoria:'Servicios',concepto:'Hosting y Dominios',proveedor:'AWS/GoDaddy',montoUSD:280,fechaPago:'2026-03-15',estado:'Pagado'},
-  {fecha:'2026-03-08',categoria:'Oficina',concepto:'Servicios Básicos',proveedor:'Varios',montoUSD:320,fechaPago:'2026-03-10',estado:'Pagado'},
-  {fecha:'2026-03-05',categoria:'Impuestos',concepto:'IGV Febrero',proveedor:'SUNAT',montoUSD:1100,fechaPago:'2026-03-15',estado:'Pagado'},
-  {fecha:'2026-02-28',categoria:'Otros',concepto:'Material de Oficina',proveedor:'Tai Loy',montoUSD:95,fechaPago:'2026-03-01',estado:'Pagado'},
-  {fecha:'2026-02-25',categoria:'Servicios',concepto:'Contador Externo',proveedor:'Estudio Contable',montoUSD:400,fechaPago:'2026-03-01',estado:'Pagado'},
-  {fecha:'2026-02-20',categoria:'Publicidad',concepto:'TikTok Ads Budget',proveedor:'ByteDance',montoUSD:950,fechaPago:'2026-02-25',estado:'Pagado'},
-];
-
-const deudas = [
-  {banco:'BCP',concepto:'Préstamo Capital de Trabajo',montoTotal:45000,pagado:22500,cuotaMensual:2250,proxPago:'2026-04-15',estado:'Al día',color:'blue'},
-  {banco:'Interbank',concepto:'Línea de Crédito Revolvente',montoTotal:30000,pagado:12000,cuotaMensual:1800,proxPago:'2026-04-20',estado:'Al día',color:'green'},
-  {banco:'BBVA',concepto:'Leasing Equipos de Oficina',montoTotal:18500,pagado:7400,cuotaMensual:925,proxPago:'2026-04-10',estado:'Al día',color:'purple'},
-  {banco:'Scotiabank',concepto:'Préstamo Expansión',montoTotal:55000,pagado:16500,cuotaMensual:2750,proxPago:'2026-04-25',estado:'Al día',color:'amber'},
-];
-
-const cuentasCobrar = [
-  {cliente:'Grupo Restaurantes SAC',servicio:'Gestión Redes Abril',montoUSD:2800,fechaEmision:'2026-04-01',fechaVencimiento:'2026-04-30',estado:'Al día'},
-  {cliente:'InnovaTech Perú',servicio:'Campaña Q2 Setup',montoUSD:4500,fechaEmision:'2026-03-25',fechaVencimiento:'2026-04-25',estado:'Al día'},
-  {cliente:'Bella Cosmética',servicio:'Branding Fase 2',montoUSD:3200,fechaEmision:'2026-03-15',fechaVencimiento:'2026-04-15',estado:'Por vencer'},
-  {cliente:'TechStart Peru',servicio:'Mantenimiento Web',montoUSD:1350,fechaEmision:'2026-03-10',fechaVencimiento:'2026-04-10',estado:'Por vencer'},
-  {cliente:'Deportes Plus',servicio:'Campaña Influencers',montoUSD:2500,fechaEmision:'2026-02-15',fechaVencimiento:'2026-03-15',estado:'Vencido'},
-  {cliente:'Moda Express',servicio:'Social Media Q1',montoUSD:1800,fechaEmision:'2026-03-01',fechaVencimiento:'2026-04-01',estado:'Vencido'},
-  {cliente:'EcoVerde SAC',servicio:'Content Strategy',montoUSD:2100,fechaEmision:'2026-03-20',fechaVencimiento:'2026-04-20',estado:'Al día'},
-  {cliente:'Café Orgánico',servicio:'Email Automation',montoUSD:1200,fechaEmision:'2026-03-28',fechaVencimiento:'2026-04-28',estado:'Al día'},
-];
-
-const sueldos = [
-  {empleado:'Carlos Mendoza',cargo:'Director Creativo',brutoUSD:2700,fechaPago:'2026-04-30'},
-  {empleado:'María López',cargo:'Social Media Manager',brutoUSD:1600,fechaPago:'2026-04-30'},
-  {empleado:'Ana Torres',cargo:'Diseñadora Gráfica Senior',brutoUSD:1450,fechaPago:'2026-04-30'},
-  {empleado:'Jorge Ramírez',cargo:'Especialista SEM/SEO',brutoUSD:1500,fechaPago:'2026-04-30'},
-  {empleado:'Lucía Fernández',cargo:'Content Manager',brutoUSD:1350,fechaPago:'2026-04-30'},
-  {empleado:'Diego Vargas',cargo:'Community Manager',brutoUSD:1050,fechaPago:'2026-04-30'},
-  {empleado:'Paola Castro',cargo:'Ejecutiva de Cuentas',brutoUSD:1250,fechaPago:'2026-04-30'},
-  {empleado:'Roberto Silva',cargo:'Analista de Datos',brutoUSD:1400,fechaPago:'2026-04-30'},
-];
-
-const impuestos = [
-  {tipo:'IGV',periodo:'Marzo 2026',baseUSD:23081.08,tasa:18,montoUSD:4154.59,fechaVencimiento:'2026-04-18',estado:'Pendiente'},
-  {tipo:'Renta 3ra Categoría',periodo:'Marzo 2026',baseUSD:8945.95,tasa:29.5,montoUSD:2639.06,fechaVencimiento:'2026-04-18',estado:'Pendiente'},
-  {tipo:'EsSalud',periodo:'Marzo 2026',baseUSD:10095.00,tasa:9,montoUSD:908.55,fechaVencimiento:'2026-04-15',estado:'Pendiente'},
-  {tipo:'AFP',periodo:'Marzo 2026',baseUSD:10095.00,tasa:13,montoUSD:1312.35,fechaVencimiento:'2026-04-15',estado:'Pendiente'},
-  {tipo:'IGV',periodo:'Febrero 2026',baseUSD:20500,tasa:18,montoUSD:3690,fechaVencimiento:'2026-03-18',estado:'Pagado'},
-  {tipo:'Renta 3ra Categoría',periodo:'Febrero 2026',baseUSD:7800,tasa:29.5,montoUSD:2301,fechaVencimiento:'2026-03-18',estado:'Pagado'},
-  {tipo:'EsSalud',periodo:'Febrero 2026',baseUSD:9800,tasa:9,montoUSD:882,fechaVencimiento:'2026-03-15',estado:'Pagado'},
-  {tipo:'ITAN',periodo:'Anual 2025',baseUSD:148500,tasa:0.4,montoUSD:594,fechaVencimiento:'2026-04-30',estado:'Pendiente'},
-];
+function parseNumFin(n) {
+  const x = parseFloat(n);
+  return Number.isFinite(x) ? x : 0;
+}
+function lineTotalGasto(g) {
+  const ads = parseNumFin(g.gasto);
+  const fp = parseNumFin(g.fee);
+  return ads + ads * (fp / 100);
+}
+function paidForGastoId(gastoId, cobrosList) {
+  if (!gastoId) return 0;
+  return cobrosList.filter((c) => c.gasto_id === gastoId).reduce((s, c) => s + parseNumFin(c.monto), 0);
+}
+function getPeriodRange() {
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+  const start = new Date(end);
+  if (currentPeriod === 'month') start.setMonth(start.getMonth() - 1);
+  else if (currentPeriod === '3months') start.setMonth(start.getMonth() - 3);
+  else if (currentPeriod === '6months') start.setMonth(start.getMonth() - 6);
+  else {
+    start.setMonth(0);
+    start.setDate(1);
+  }
+  start.setHours(0, 0, 0, 0);
+  return { start, end };
+}
+function rowInPeriod(isoDate, start, end) {
+  if (!isoDate) return false;
+  const t = new Date(String(isoDate).slice(0, 10) + 'T12:00:00');
+  return t >= start && t <= end;
+}
+function filterFinanzasRows(arr, dateKey) {
+  const { start, end } = getPeriodRange();
+  let out = filterByEstado(arr);
+  return out.filter((r) => rowInPeriod(r[dateKey], start, end));
+}
+function finanzasTodayYmd() {
+  return new Date().toISOString().slice(0, 10);
+}
+function updateLastUpdated() {
+  const el = document.querySelector('.last-updated');
+  if (!el) return;
+  const t = finanzasDataLoadedAt ? new Date(finanzasDataLoadedAt) : new Date();
+  el.innerHTML = '<span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Datos: ' + t.toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+}
+function finanzasRebuildAnalytics() {
+  const now = new Date();
+  const monthKeys = [];
+  const monthLabels = [];
+  const ing = [];
+  const gas = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    monthKeys.push(ym);
+    monthLabels.push(monthShort[d.getMonth()]);
+    let iSum = 0;
+    let gSum = 0;
+    (rawCobros || []).forEach((c) => {
+      if ((c.fecha || '').slice(0, 7) === ym) iSum += parseNumFin(c.monto);
+    });
+    (rawManual || []).forEach((m) => {
+      if ((m.fecha || '').slice(0, 7) !== ym) return;
+      if (m.tipo === 'Ingreso') iSum += parseNumFin(m.monto);
+      if (m.tipo === 'Gasto') gSum += parseNumFin(m.monto);
+    });
+    ing.push(Math.round(iSum * 100) / 100);
+    gas.push(Math.round(gSum * 100) / 100);
+  }
+  const balance = ing.map((v, idx) => Math.round((v - gas[idx]) * 100) / 100);
+  finanzasAnalytics = { monthKeys, monthLabels, ing, gas, balance };
+}
+function computePanelKpis() {
+  const { start, end } = getPeriodRange();
+  const ingPagado = ingresos.filter((r) => r.estado === 'Pagado' && rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + r.montoUSD, 0);
+  const gasAll = gastos.filter((r) => rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + r.montoUSD, 0);
+  const deudaPend = deudas.reduce((s, r) => s + Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado)), 0);
+  const cobrarTot = cuentasCobrar.reduce((s, r) => s + r.montoUSD, 0);
+  const sparkIng = finanzasAnalytics.ing.length ? finanzasAnalytics.ing : [0, 0, 0, 0, 0, 0];
+  const sparkGas = finanzasAnalytics.gas.length ? finanzasAnalytics.gas : [0, 0, 0, 0, 0, 0];
+  const sparkBal = finanzasAnalytics.balance.length ? finanzasAnalytics.balance : sparkIng.map((v, i) => v - (sparkGas[i] || 0));
+  const lastD = deudas.map((r) => Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado)));
+  const sparkDeu = lastD.length >= 6 ? lastD.slice(-6) : Array.from({ length: 6 }, (_, i) => lastD[i] != null ? lastD[i] : deudaPend);
+  const cobHist = [];
+  for (let i = 0; i < 6; i++) cobHist.push(cobrarTot * (0.85 + i * 0.03));
+  cobHist[5] = cobrarTot;
+  return {
+    ingPeriod: ingPagado,
+    gasPeriod: gasAll,
+    balance: ingPagado - gasAll,
+    deudaPend,
+    cobrarTot,
+    sparkIng,
+    sparkGas,
+    sparkBal,
+    sparkDeu: sparkDeu.length ? sparkDeu : [deudaPend, deudaPend, deudaPend, deudaPend, deudaPend, deudaPend],
+    sparkCob: cobHist,
+  };
+}
+async function finanzasLoadAll() {
+  finanzasLoadError = '';
+  const sb = window.finanzasSupabase;
+  if (!sb) {
+    finanzasDataLoadedAt = new Date().toISOString();
+    return;
+  }
+  const { data: auth } = await sb.auth.getUser();
+  const email = (auth && auth.user && auth.user.email) ? String(auth.user.email).trim() : '';
+  if (!email) return;
+  const { data: ger, error: ge } = await sb.from('gerentes').select('id').ilike('email', email).maybeSingle();
+  if (ge || !ger) {
+    window.location.replace('/credito');
+    return;
+  }
+  const q = (p) => (p && p.error ? (console.warn('[Finanzas]', p.error.message || p.error), null) : p.data);
+  const [cRes, gRes, coRes, mRes, dRes, iRes, sRes] = await Promise.all([
+    sb.from('clientes').select('id,name').order('name'),
+    sb.from('gastos').select('*').order('mes', { ascending: false }),
+    sb.from('cobros').select('*').order('created_at', { ascending: false }),
+    sb.from('manual').select('*').order('fecha', { ascending: false }),
+    sb.from('finanzas_deudas').select('*').order('prox_pago', { ascending: true }),
+    sb.from('finanzas_impuestos').select('*').order('fecha_vencimiento', { ascending: true }),
+    sb.from('finanzas_sueldos').select('*').order('fecha_pago', { ascending: true }),
+  ]);
+  rawClientes = q(cRes) || [];
+  rawGastosAds = q(gRes) || [];
+  rawCobros = q(coRes) || [];
+  rawManual = q(mRes) || [];
+  const deudasRows = q(dRes);
+  const impRows = q(iRes);
+  const sueRows = q(sRes);
+  if (cRes.error) finanzasLoadError = (cRes.error && cRes.error.message) || 'Error clientes';
+  else if (gRes.error) finanzasLoadError = (gRes.error && gRes.error.message) || 'Error gastos';
+  const clientName = {};
+  rawClientes.forEach((c) => { clientName[c.id] = c.name || '—'; });
+  const gastoById = {};
+  rawGastosAds.forEach((g) => { gastoById[g.id] = g; });
+  ingresos = [];
+  cuentasCobrar = [];
+  (rawCobros || []).forEach((co) => {
+    const amount = parseNumFin(co.monto);
+    const fecha = co.fecha || finanzasTodayYmd();
+    let cliente = '—';
+    let concepto = (co.notas && String(co.notas).trim()) || 'Cobro';
+    const g = co.gasto_id ? gastoById[co.gasto_id] : null;
+    if (g) {
+      cliente = clientName[g.client_id] || '—';
+      concepto = (g.camp || 'Ads') + ' · ' + (g.mes || '');
+    } else if (co.client_id) {
+      cliente = clientName[co.client_id] || '—';
+    }
+    ingresos.push({ fecha, cliente, concepto, montoUSD: amount, fechaPago: fecha, estado: 'Pagado', _src: 'cobro' });
+  });
+  (rawManual || []).forEach((m) => {
+    if (m.tipo !== 'Ingreso') return;
+    const nota = (m.nota || '').trim();
+    const cliente = nota.indexOf('Cliente:') === 0 ? nota.replace(/^Cliente:\s*/i, '').trim() : 'Varios';
+    ingresos.push({
+      fecha: m.fecha || finanzasTodayYmd(),
+      cliente,
+      concepto: m.conc || 'Ingreso',
+      montoUSD: parseNumFin(m.monto),
+      fechaPago: m.fecha || finanzasTodayYmd(),
+      estado: 'Pagado',
+      _src: 'manual',
+    });
+  });
+  (rawGastosAds || []).forEach((g) => {
+    const tot = lineTotalGasto(g);
+    const paid = paidForGastoId(g.id, rawCobros);
+    const pend = Math.max(0, Math.round((tot - paid) * 100) / 100);
+    if (pend < 0.005) return;
+    const mes = (g.mes || '').slice(0, 7);
+    const emi = (g.fecha_movimiento || (mes ? mes + '-01' : finanzasTodayYmd())).slice(0, 10);
+    const due = mes ? mes + '-28' : emi;
+    const du = daysUntil(due);
+    const estadoC = du < 0 ? 'Vencido' : (du <= 14 ? 'Por vencer' : 'Al día');
+    ingresos.push({
+      fecha: emi,
+      cliente: clientName[g.client_id] || '—',
+      concepto: 'Pendiente cobro: ' + (g.camp || 'Ads') + (mes ? ' (' + mes + ')' : ''),
+      montoUSD: pend,
+      fechaPago: due,
+      estado: 'Pendiente',
+      _src: 'pendiente',
+    });
+    cuentasCobrar.push({
+      cliente: clientName[g.client_id] || '—',
+      servicio: (g.camp || 'Ads') + (mes ? ' · ' + mes : ''),
+      montoUSD: pend,
+      fechaEmision: emi,
+      fechaVencimiento: due,
+      estado: estadoC,
+    });
+  });
+  gastos = [];
+  (rawManual || []).forEach((m) => {
+    if (m.tipo !== 'Gasto') return;
+    const raw = (m.conc || '').trim();
+    const catMatch = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
+    const categoria = catMatch ? catMatch[1] : 'General';
+    const concepto = catMatch ? (catMatch[2] || raw) : raw;
+    const est = (m.nota || '').indexOf('Estado:Pendiente') >= 0 ? 'Pendiente' : 'Pagado';
+    gastos.push({
+      fecha: m.fecha || finanzasTodayYmd(),
+      categoria,
+      concepto: concepto || 'Gasto',
+      proveedor: (m.nota || '').replace(/Estado:Pendiente\s*/i, '').trim() || '—',
+      montoUSD: parseNumFin(m.monto),
+      fechaPago: m.fecha || finanzasTodayYmd(),
+      estado: est,
+    });
+  });
+  deudas = (deudasRows || []).map((r) => ({
+    id: r.id,
+    banco: r.banco || '',
+    concepto: r.concepto || '',
+    montoTotal: parseNumFin(r.monto_total),
+    pagado: parseNumFin(r.pagado),
+    cuotaMensual: r.cuota_mensual != null ? parseNumFin(r.cuota_mensual) : null,
+    proxPago: r.prox_pago || finanzasTodayYmd(),
+    estado: r.estado || 'Al día',
+    color: r.color || 'blue',
+  }));
+  impuestos = (impRows || []).map((r) => ({
+    id: r.id,
+    tipo: r.tipo || '',
+    periodo: r.periodo || '',
+    baseUSD: parseNumFin(r.base_usd),
+    tasa: parseNumFin(r.tasa),
+    montoUSD: parseNumFin(r.monto_usd),
+    fechaVencimiento: r.fecha_vencimiento || finanzasTodayYmd(),
+    estado: r.estado || 'Pendiente',
+  }));
+  sueldos = (sueRows || []).map((r) => ({
+    id: r.id,
+    empleado: r.empleado || '',
+    cargo: r.cargo || '',
+    brutoUSD: parseNumFin(r.bruto_usd),
+    fechaPago: r.fecha_pago || finanzasTodayYmd(),
+  }));
+  finanzasRebuildAnalytics();
+  finanzasDataLoadedAt = new Date().toISOString();
+}
 
 // ===== INIT SIDEBAR =====
 function renderSidebar(){
@@ -812,15 +1003,8 @@ function renderFilterBar(){
     {id:'year',label:'Este Año'},
   ];
 
-  // Compute date range
-  const now = new Date(2026,3,6); // April 6, 2026
-  let startDate;
-  if(currentPeriod==='month') startDate = new Date(2026,2,6);
-  else if(currentPeriod==='3months') startDate = new Date(2026,0,6);
-  else if(currentPeriod==='6months') startDate = new Date(2025,9,6);
-  else startDate = new Date(2026,0,1);
-
-  const dateRange = `${fmtDate(startDate)} – ${fmtDate(now)}`;
+  const { start: startDate, end: now } = getPeriodRange();
+  const dateRange = `${fmtDate(startDate.toISOString().slice(0,10))} – ${fmtDate(now.toISOString().slice(0,10))}`;
 
   const filterChipsHTML = activeFilters.map((f,i)=>`
     <span class="filter-chip">${f} <span class="filter-chip-remove" onclick="removeFilter(${i})">✕</span></span>
@@ -970,14 +1154,17 @@ const arrowDownSVG = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor"
 
 // ===== VIEW: PANEL GENERAL =====
 function renderPanel(el){
+  const k = computePanelKpis();
+  const nFact = cuentasCobrar.length;
   el.innerHTML = `
     <div class="view active" id="viewPanel">
+      ${finanzasLoadError ? `<div class="card" style="margin-bottom:16px;border-color:var(--red);background:var(--red-light);color:var(--red);padding:12px 16px;font-size:13px">${finanzasLoadError}</div>` : ''}
       <div class="kpi-row cols-5">
-        ${kpiCardPremium('Ingresos del Período',23081.08,12.3,'up','ingresos',[18000,19500,20200,21000,22000,23081,23081])}
-        ${kpiCardPremium('Gastos del Período',14135.14,3.1,'up','gastos',[12500,13000,13200,13800,14000,14135,14135])}
-        ${kpiCardPremium('Balance Neto',8945.95,28.7,'up','balance',[5500,6500,7000,7200,8000,8946,8946])}
-        ${kpiCardPremium('Deudas Pendientes',33648.65,null,'neutral','deudas',[38000,37000,36000,35000,34000,33649,33649],'—')}
-        ${kpiCardPremium('Cuentas por Cobrar',18162.16,null,'neutral','cobrar',[15000,16000,17000,17500,18000,18162,18162],'6 facturas')}
+        ${kpiCardPremium('Cobrado en el período',k.ingPeriod,null,'neutral','ingresos',k.sparkIng)}
+        ${kpiCardPremium('Gastos del período',k.gasPeriod,null,'neutral','gastos',k.sparkGas)}
+        ${kpiCardPremium('Balance (cobrado − gastos)',k.balance,null,'neutral','balance',k.sparkBal)}
+        ${kpiCardPremium('Deuda bancaria pendiente',k.deudaPend,null,'neutral','deudas',k.sparkDeu,'—')}
+        ${kpiCardPremium('Por cobrar (clientes)',k.cobrarTot,null,'neutral','cobrar',k.sparkCob,nFact ? nFact + ' ítems' : '—')}
       </div>
       <div class="charts-row">
         <div class="card">
@@ -1015,11 +1202,12 @@ function renderPanel(el){
   renderDoughnutChart();
   // Draw sparklines after DOM is ready
   requestAnimationFrame(()=>{
-    drawSparkline('spark-0',[18000,19500,20200,21000,22000,23081,23081],'ingresos');
-    drawSparkline('spark-1',[12500,13000,13200,13800,14000,14135,14135],'gastos');
-    drawSparkline('spark-2',[5500,6500,7000,7200,8000,8946,8946],'balance');
-    drawSparkline('spark-3',[38000,37000,36000,35000,34000,33649,33649],'deudas');
-    drawSparkline('spark-4',[15000,16000,17000,17500,18000,18162,18162],'cobrar');
+    const kk = computePanelKpis();
+    drawSparkline('spark-0',kk.sparkIng,'ingresos');
+    drawSparkline('spark-1',kk.sparkGas,'gastos');
+    drawSparkline('spark-2',kk.sparkBal,'balance');
+    drawSparkline('spark-3',kk.sparkDeu,'deudas');
+    drawSparkline('spark-4',kk.sparkCob,'cobrar');
   });
 }
 
@@ -1077,49 +1265,37 @@ function renderMainChart(){
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
   const blueColor = isDark?'#60A5FA':'#3B82F6';
   const redColor = isDark?'#F87171':'#EF4444';
-
-  let config;
+  const L = (finanzasAnalytics.monthLabels && finanzasAnalytics.monthLabels.length) ? finanzasAnalytics.monthLabels : ['—'];
+  const ingFull = (finanzasAnalytics.ing && finanzasAnalytics.ing.length) ? finanzasAnalytics.ing : [0];
+  const gasFull = (finanzasAnalytics.gas && finanzasAnalytics.gas.length) ? finanzasAnalytics.gas : [0];
+  const toDisplay = (v) => primaryCurrency==='PEN' ? Math.round(v * RATE * 100) / 100 : v;
+  let labels, ingData, gasData;
   if(currentChartTab==='1m'){
-    const labels = Array.from({length:30},(_,i)=>{const d=new Date(2026,2,7+i);return d.getDate()+' '+monthShort[d.getMonth()]});
-    const ingData = Array.from({length:30},()=>Math.round(500+Math.random()*1500));
-    const gasData = Array.from({length:30},()=>Math.round(300+Math.random()*1000));
-    config = {
-      type:'bar',
-      data:{labels,datasets:[
-        {label:'Ingresos',data:ingData,backgroundColor:blueColor+'CC',borderRadius:6,borderSkipped:false,barPercentage:0.65},
-        {label:'Gastos',data:gasData,backgroundColor:redColor+'99',borderRadius:6,borderSkipped:false,barPercentage:0.65}
-      ]},
-      options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'top'}},scales:{...chartDefaults().scales,x:{...chartDefaults().scales.x,ticks:{...chartDefaults().scales.x.ticks,maxTicksLimit:10}}}}
-    };
+    const im = ingFull[ingFull.length-1]||0, gm = gasFull[gasFull.length-1]||0;
+    labels = ['S1','S2','S3','S4'];
+    ingData = [im*0.22,im*0.28,im*0.24,im*0.26].map((x)=>toDisplay(Math.round(x*100)/100));
+    gasData = [gm*0.24,gm*0.26,gm*0.22,gm*0.28].map((x)=>toDisplay(Math.round(x*100)/100));
   } else if(currentChartTab==='3m'){
-    const labels = ['Sem 1 Feb','Sem 2 Feb','Sem 3 Feb','Sem 4 Feb','Sem 1 Mar','Sem 2 Mar','Sem 3 Mar','Sem 4 Mar','Sem 1 Abr'];
-    const ingPEN = [16000,17500,15800,18200,19000,20500,21800,22000,21500];
-    const gasPEN = [11500,12000,11800,12500,12800,13200,13000,13500,12800];
-    const ingData = ingPEN.map(v=>primaryCurrency==='USD'?Math.round(v/RATE):v);
-    const gasData = gasPEN.map(v=>primaryCurrency==='USD'?Math.round(v/RATE):v);
-    config = {
-      type:'line',
-      data:{labels,datasets:[
-        {label:'Ingresos',data:ingData,borderColor:blueColor,backgroundColor:'transparent',tension:0.3,pointRadius:0,pointHoverRadius:5,borderWidth:2.5},
-        {label:'Gastos',data:gasData,borderColor:redColor,backgroundColor:'transparent',tension:0.3,pointRadius:0,pointHoverRadius:5,borderWidth:2.5}
-      ]},
-      options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'top'}}}
-    };
+    labels = L.slice(-3);
+    ingData = ingFull.slice(-3).map(toDisplay);
+    gasData = gasFull.slice(-3).map(toDisplay);
   } else {
-    const labels = ['Nov','Dic','Ene','Feb','Mar','Abr'];
-    const ingPEN = [62000,71000,68000,79500,76000,85400];
-    const gasPEN = [45000,48000,51000,47000,50800,52300];
-    const ingData = ingPEN.map(v=>primaryCurrency==='USD'?Math.round(v/RATE):v);
-    const gasData = gasPEN.map(v=>primaryCurrency==='USD'?Math.round(v/RATE):v);
-    config = {
-      type:'line',
-      data:{labels,datasets:[
-        {label:'Ingresos',data:ingData,borderColor:blueColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,blueColor+'33');g.addColorStop(1,blueColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5},
-        {label:'Gastos',data:gasData,borderColor:redColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,redColor+'33');g.addColorStop(1,redColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5}
-      ]},
-      options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'top'}}}
-    };
+    labels = L;
+    ingData = ingFull.map(toDisplay);
+    gasData = gasFull.map(toDisplay);
   }
+  const config = {
+    type: currentChartTab==='1m' ? 'bar' : 'line',
+    data:{labels,datasets:[
+      currentChartTab==='1m'
+        ? {label:'Cobros (est.)',data:ingData,backgroundColor:blueColor+'CC',borderRadius:6,borderSkipped:false,barPercentage:0.65}
+        : {label:'Cobros',data:ingData,borderColor:blueColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,blueColor+'33');g.addColorStop(1,blueColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5},
+      currentChartTab==='1m'
+        ? {label:'Gastos manual (est.)',data:gasData,backgroundColor:redColor+'99',borderRadius:6,borderSkipped:false,barPercentage:0.65}
+        : {label:'Gastos manual',data:gasData,borderColor:redColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,redColor+'33');g.addColorStop(1,redColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5}
+    ]},
+    options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'top'}}}
+  };
   charts.main = new Chart(ctx, config);
 }
 
@@ -1128,25 +1304,42 @@ function renderDoughnutChart(){
   if(!ctx) return;
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
   const cardBg = isDark?'#141927':'#FFFFFF';
+  const { start, end } = getPeriodRange();
+  const byCat = {};
+  gastos.filter((r)=>rowInPeriod(r.fecha,start,end)).forEach((r)=>{
+    const k = r.categoria || 'General';
+    byCat[k] = (byCat[k]||0) + r.montoUSD;
+  });
+  const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const labels = entries.length ? entries.map((e)=>e[0]) : ['Sin gastos'];
+  const data = entries.length ? entries.map((e)=>e[1]) : [1];
+  const palette = [
+    isDark?'#60A5FA':'#3B82F6',
+    isDark?'#F472B6':'#EC4899',
+    isDark?'#34D399':'#10B981',
+    isDark?'#A78BFA':'#8B5CF6',
+    isDark?'#FBBF24':'#F59E0B',
+    isDark?'#64748B':'#94A3B8',
+    isDark?'#2DD4BF':'#14B8A6',
+    isDark?'#FB7185':'#F43F5E'
+  ];
+  const bg = labels.map((_,i)=>palette[i%palette.length]);
   charts.doughnut = new Chart(ctx,{
     type:'doughnut',
     data:{
-      labels:['Sueldos','Publicidad','Oficina','Software','Impuestos','Otros'],
-      datasets:[{data:[40,22,15,12,8,3],backgroundColor:[
-        isDark?'#60A5FA':'#3B82F6',
-        isDark?'#F472B6':'#EC4899',
-        isDark?'#34D399':'#10B981',
-        isDark?'#A78BFA':'#8B5CF6',
-        isDark?'#FBBF24':'#F59E0B',
-        isDark?'#64748B':'#94A3B8'
-      ],borderWidth:3,borderColor:cardBg,hoverOffset:6}]
+      labels,
+      datasets:[{data,backgroundColor:bg,borderWidth:3,borderColor:cardBg,hoverOffset:6}]
     },
     options:{
       responsive:true,maintainAspectRatio:false,cutout:'72%',
       animation:{duration:800,easing:'easeOutQuart'},
       plugins:{
         legend:{position:'bottom',labels:{font:{family:'Inter',size:11,weight:'500'},color:isDark?'#94A3B8':'#64748B',usePointStyle:true,pointStyleWidth:8,padding:12}},
-        tooltip:{...chartDefaults().plugins.tooltip,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed}%`}}
+        tooltip:{...chartDefaults().plugins.tooltip,callbacks:{label:ctx=>{
+          const total = ctx.dataset.data.reduce((a,b)=>a+b,0)||1;
+          const pct = ((ctx.parsed / total) * 100).toFixed(1);
+          return ' ' + ctx.label + ': ' + fmtPrimary(ctx.parsed) + ' (' + pct + '%)';
+        }}}
       }
     }
   });
@@ -1154,15 +1347,16 @@ function renderDoughnutChart(){
 
 function recentActivity(){
   const all = [
-    ...ingresos.slice(0,4).map(r=>({...r,tipo:'Ingreso'})),
-    ...gastos.slice(0,4).map(r=>({...r,tipo:'Gasto'}))
-  ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha));
+    ...ingresos.slice(0,6).map(r=>({...r,tipo:'Ingreso'})),
+    ...gastos.slice(0,6).map(r=>({...r,tipo:'Gasto',concepto:r.concepto}))
+  ].sort((a,b)=>new Date(b.fecha)-new Date(a.fecha)).slice(0,8);
   return all.map(r=>{
     const badge = r.tipo==='Ingreso'?'badge-green':'badge-red';
+    const desc = r.concepto || r.conc || '—';
     return `<tr>
       <td>${fmtDate(r.fecha)}</td>
       <td><span class="badge badge-tipo ${badge}">${r.tipo}</span></td>
-      <td>${r.concepto}</td>
+      <td>${desc}</td>
       <td class="amount">${fmtPrimary(r.montoUSD)}</td>
       <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
       <td>${statusBadge(r.estado)}</td>
@@ -1173,24 +1367,26 @@ function recentActivity(){
 // ===== VIEW: INGRESOS =====
 function renderIngresos(el){
   sparkCounter = 0;
-  const data = filterByEstado(ingresos);
+  const data = filterFinanzasRows(ingresos,'fecha');
   const total = data.reduce((s,r)=>s+r.montoUSD,0);
-  const totalYear = ingresos.reduce((s,r)=>s+r.montoUSD,0);
-  const promedio = totalYear/6;
+  const y = new Date().getFullYear();
+  const totalYear = ingresos.filter((r)=>(r.fecha||'').slice(0,4)==String(y)).reduce((s,r)=>s+r.montoUSD,0);
+  const promedio = totalYear / 12;
   const clientesActivos = new Set(data.map(r=>r.cliente)).size;
 
   el.innerHTML = `
     <div class="view active">
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px"><strong>Cobros</strong> reales vienen de Crédito (tabla <code style="font-size:11px">cobros</code>). Las filas <strong>Pendiente</strong> son saldo de gastos Ads sin cubrir. El botón agrega un movimiento <strong>manual</strong> tipo Ingreso.</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('ingreso')">
-          ${icons.plus} Agregar Ingreso
+          ${icons.plus} Ingreso manual
         </button>
       </div>
       <div class="kpi-row cols-4">
-        ${kpiCard('Total del Período',total,12.3,'up')}
-        ${kpiCard('Total del Año',totalYear,null,'neutral')}
-        ${kpiCard('Promedio Mensual',promedio,null,'neutral')}
+        ${kpiCard('Total del período (filtro)',total,null,'neutral')}
+        ${kpiCard('Acumulado año ' + y,totalYear,null,'neutral')}
+        ${kpiCard('Promedio mensual (÷12)',promedio,null,'neutral')}
         <div class="kpi-card">
           <div class="kpi-label">Clientes Activos</div>
           <div class="kpi-value">${clientesActivos}</div>
@@ -1225,16 +1421,19 @@ function renderIngresos(el){
   // Chart
   const ctx = document.getElementById('ingresosChart');
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-  const monthlyPEN = [62000,71000,68000,79500,76000,85400];
-  const monthlyData = monthlyPEN.map(v=>primaryCurrency==='USD'?Math.round(v/RATE):v);
-  const trendData = monthlyData.map((_,i)=>{const slope=(monthlyData[5]-monthlyData[0])/5;return Math.round(monthlyData[0]+slope*i);});
+  const labels = finanzasAnalytics.monthLabels.length ? finanzasAnalytics.monthLabels : ['—'];
+  const monthlyData = (finanzasAnalytics.ing.length ? finanzasAnalytics.ing : [0]).map((v)=>primaryCurrency==='PEN'?Math.round(v*RATE*100)/100:v);
+  const trendData = monthlyData.map((_,i)=>{
+    const slope = monthlyData.length>1 ? (monthlyData[monthlyData.length-1]-monthlyData[0])/(monthlyData.length-1) : 0;
+    return Math.round((monthlyData[0]+slope*i)*100)/100;
+  });
   const blueColor = isDark?'#60A5FA':'#3B82F6';
   charts.ingresos = new Chart(ctx,{
     type:'bar',
     data:{
-      labels:['Nov','Dic','Ene','Feb','Mar','Abr'],
+      labels,
       datasets:[
-        {type:'bar',label:'Ingresos',data:monthlyData,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,260);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'88');return g;},borderRadius:6,borderSkipped:false,barPercentage:0.55},
+        {type:'bar',label:'Cobros (mensual)',data:monthlyData,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,260);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'88');return g;},borderRadius:6,borderSkipped:false,barPercentage:0.55},
         {type:'line',label:'Tendencia',data:trendData,borderColor:isDark?'#F87171':'#EF4444',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false}
       ]
     },
@@ -1245,38 +1444,29 @@ function renderIngresos(el){
 // ===== VIEW: GASTOS =====
 function renderGastos(el){
   sparkCounter = 0;
-  const data = filterByEstado(gastos);
+  const data = filterFinanzasRows(gastos,'fecha');
   const total = data.reduce((s,r)=>s+r.montoUSD,0);
-  const presupuesto = 16000;
-  const pctUsed = Math.round(total/presupuesto*100);
-  const mayorGasto = data.reduce((max,r)=>r.montoUSD>max.montoUSD?r:max,data[0]);
-  const catColors = {Sueldos:'blue',Publicidad:'pink',Oficina:'green',Software:'purple',Servicios:'orange',Impuestos:'amber',Otros:'gray'};
+  const mayorGasto = data.length ? data.reduce((max,r)=>r.montoUSD>max.montoUSD?r:max,data[0]) : null;
+  const catColors = {Sueldos:'blue',Publicidad:'pink',Oficina:'green',Software:'purple',Servicios:'orange',Impuestos:'amber',Otros:'gray',General:'gray'};
 
   el.innerHTML = `
     <div class="view active">
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Gastos operativos desde la tabla <strong>manual</strong> de Crédito (tipo Gasto). Usá categorías con <code style="font-size:11px">[Categoría] concepto</code> en el concepto.</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('gasto')">
-          ${icons.plus} Agregar Gasto
+          ${icons.plus} Registrar gasto manual
         </button>
       </div>
-      <div class="kpi-row cols-4">
-        ${kpiCard('Total del Período',total,3.1,'up')}
-        ${kpiCard('Presupuesto',presupuesto,null,'neutral')}
+      <div class="kpi-row cols-3">
+        ${kpiCard('Total del período (filtro)',total,null,'neutral')}
         <div class="kpi-card">
-          <div class="kpi-label">% Utilizado</div>
-          <div style="display:flex;align-items:center;gap:16px;margin-top:4px">
-            <div class="progress-ring-wrap">
-              <svg width="56" height="56" viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="22" fill="none" stroke="var(--bg-tertiary)" stroke-width="6"/>
-                <circle cx="28" cy="28" r="22" fill="none" stroke="${pctUsed>90?'var(--red)':'var(--blue)'}" stroke-width="6" stroke-linecap="round" stroke-dasharray="${2*Math.PI*22}" stroke-dashoffset="${2*Math.PI*22*(1-pctUsed/100)}" transform="rotate(-90 28 28)"/>
-              </svg>
-              <span class="progress-ring-text">${pctUsed}%</span>
-            </div>
-          </div>
+          <div class="kpi-label">Movimientos</div>
+          <div class="kpi-value">${data.length}</div>
+          <div class="kpi-secondary">en el período</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Mayor Gasto</div>
+          <div class="kpi-label">Mayor gasto</div>
           <div class="kpi-value" style="font-size:18px">${fmtPrimary(mayorGasto?.montoUSD||0)}</div>
           <div class="kpi-secondary">${mayorGasto?.concepto||'—'}</div>
         </div>
@@ -1315,33 +1505,32 @@ function renderGastos(el){
     </div>
   `;
 
-  // Stacked bar
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-  const cats = ['Sueldos','Publicidad','Oficina','Software','Impuestos','Otros'];
   const catColorMap = {
     Sueldos:isDark?'#60A5FA':'#3B82F6',
     Publicidad:isDark?'#F472B6':'#EC4899',
     Oficina:isDark?'#34D399':'#10B981',
     Software:isDark?'#A78BFA':'#8B5CF6',
+    Servicios:isDark?'#FB923C':'#F97316',
     Impuestos:isDark?'#FBBF24':'#F59E0B',
-    Otros:isDark?'#64748B':'#94A3B8'
+    General:isDark?'#64748B':'#94A3B8',
+    Otros:isDark?'#94A3B8':'#CBD5E1'
   };
-  const monthlyByCat = cats.map(cat=>{
-    return {
-      label:cat,
-      data:[3200,3400,3500,3300,3600,3800].map((v,i)=>{
-        const mult = cat==='Sueldos'?1.6:cat==='Publicidad'?0.9:cat==='Oficina'?0.5:cat==='Software'?0.4:cat==='Impuestos'?0.3:0.1;
-        const val = Math.round(v*mult*(0.9+Math.random()*0.2));
-        return primaryCurrency==='USD'?val:Math.round(val*RATE);
-      }),
-      backgroundColor:catColorMap[cat],
-      borderRadius:4,
-      borderSkipped:false
-    };
+  const monthKeys = finanzasAnalytics.monthKeys.length ? finanzasAnalytics.monthKeys : [finanzasTodayYmd().slice(0,7)];
+  const stackLabels = finanzasAnalytics.monthLabels.length ? finanzasAnalytics.monthLabels : ['—'];
+  const catSet = new Set((gastos||[]).map((g)=>g.categoria||'General'));
+  const cats = Array.from(catSet).sort();
+  if (cats.length === 0) cats.push('General');
+  const monthlyByCat = cats.map((cat)=>{
+    const rowData = monthKeys.map((ym)=>{
+      const sum = (gastos||[]).filter((g)=>(g.fecha||'').slice(0,7)===ym && (g.categoria||'General')===cat).reduce((s,g)=>s+g.montoUSD,0);
+      return primaryCurrency==='PEN' ? Math.round(sum*RATE*100)/100 : sum;
+    });
+    return { label:cat, data:rowData, backgroundColor:catColorMap[cat]||catColorMap.General, borderRadius:4, borderSkipped:false };
   });
   charts.gastosStacked = new Chart(document.getElementById('gastosStackedChart'),{
     type:'bar',
-    data:{labels:['Nov','Dic','Ene','Feb','Mar','Abr'],datasets:monthlyByCat},
+    data:{labels:stackLabels,datasets:monthlyByCat},
     options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'bottom'}},scales:{...chartDefaults().scales,x:{...chartDefaults().scales.x,stacked:true},y:{...chartDefaults().scales.y,stacked:true}}}
   });
 
@@ -1361,12 +1550,13 @@ function renderGastos(el){
 // ===== VIEW: DEUDAS =====
 function renderDeudas(el){
   sparkCounter = 0;
-  const totalPendiente = deudas.reduce((s,d)=>s+(d.montoTotal-d.pagado),0);
-  const cuotaTotal = deudas.reduce((s,d)=>s+d.cuotaMensual,0);
-  const proxVenc = deudas.reduce((min,d)=>new Date(d.proxPago)<new Date(min.proxPago)?d:min,deudas[0]);
-  const totalDeuda = deudas.reduce((s,d)=>s+d.montoTotal,0);
-  const totalPagado = deudas.reduce((s,d)=>s+d.pagado,0);
-  const pctGlobal = Math.round(totalPagado/totalDeuda*100);
+  const dataD = filterByEstado(deudas);
+  const totalPendiente = dataD.reduce((s,d)=>s+Math.max(0,d.montoTotal-d.pagado),0);
+  const cuotaTotal = dataD.reduce((s,d)=>s+(parseNumFin(d.cuotaMensual)||0),0);
+  const proxVenc = dataD.length ? dataD.reduce((min,d)=>new Date(d.proxPago)<new Date(min.proxPago)?d:min,dataD[0]) : { proxPago: finanzasTodayYmd(), banco:'—', cuotaMensual:0 };
+  const totalDeuda = dataD.reduce((s,d)=>s+d.montoTotal,0);
+  const totalPagado = dataD.reduce((s,d)=>s+d.pagado,0);
+  const pctGlobal = totalDeuda > 0 ? Math.round(totalPagado/totalDeuda*100) : 0;
   const debtCardColors = {blue:'var(--blue)',green:'var(--green)',purple:'var(--purple)',amber:'var(--amber)'};
   const debtDotColors = {blue:'#3B82F6',green:'#10B981',purple:'#8B5CF6',amber:'#F59E0B'};
 
@@ -1400,8 +1590,8 @@ function renderDeudas(el){
         </div>
       </div>
       <div class="debt-cards">
-        ${deudas.map(d=>{
-          const pct = Math.round(d.pagado/d.montoTotal*100);
+        ${dataD.length?dataD.map(d=>{
+          const pct = d.montoTotal > 0 ? Math.round(d.pagado/d.montoTotal*100) : 0;
           const pendiente = d.montoTotal - d.pagado;
           const dias = daysUntil(d.proxPago);
           const dotColor = debtDotColors[d.color]||'#3B82F6';
@@ -1419,18 +1609,18 @@ function renderDeudas(el){
               <span>Pendiente: <strong>${fmtPrimary(pendiente)}</strong></span>
             </div>
             <div class="debt-card-footer">
-              <span>Cuota: <strong>${fmtPrimary(d.cuotaMensual)}</strong>/mes</span>
+              <span>Cuota: <strong>${d.cuotaMensual!=null?fmtPrimary(d.cuotaMensual):'—'}</strong>/mes</span>
               <span>Próx. pago: <strong>${fmtDate(d.proxPago)}</strong> ${dias<=7?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:4px;animation:chipPulse 1.5s infinite"></span>':''} (${dias} días)</span>
             </div>
           </div>`;
-        }).join('')}
+        }).join(''):'<p style="padding:24px;color:var(--text-muted)">No hay deudas registradas. Creá la migración SQL en Supabase y agregá filas con «Agregar Deuda».</p>'}
       </div>
       <div class="card">
         <div class="card-header"><h3>Resumen de Deudas</h3></div>
         <div class="card-body no-pad">
           <table class="data-table">
             <thead><tr><th>Banco</th><th>Concepto</th><th class="right">Total</th><th class="right">Pagado</th><th class="right">Pendiente</th><th class="right">Cuota/Mes</th><th>Próx. Pago</th><th>Días</th><th>Estado</th></tr></thead>
-            <tbody>${deudas.map(d=>{
+            <tbody>${dataD.map(d=>{
               const pendiente = d.montoTotal-d.pagado;
               const dias = daysUntil(d.proxPago);
               return `<tr>
@@ -1439,7 +1629,7 @@ function renderDeudas(el){
                 <td class="amount">${fmtPrimary(d.montoTotal)}</td>
                 <td class="amount">${fmtPrimary(d.pagado)}</td>
                 <td class="amount">${fmtPrimary(pendiente)}</td>
-                <td class="amount">${fmtPrimary(d.cuotaMensual)}</td>
+                <td class="amount">${d.cuotaMensual!=null?fmtPrimary(d.cuotaMensual):'—'}</td>
                 <td>${fmtDate(d.proxPago)}</td>
                 <td><span class="badge ${dias<=7?'badge-amber':'badge-green'}">${dias} días</span></td>
                 <td>${statusBadge(d.estado)}</td>
@@ -1461,17 +1651,18 @@ function renderCobrar(el){
   const porVencer = data.filter(r=>r.estado==='Por vencer').reduce((s,r)=>s+r.montoUSD,0);
   const vencido = data.filter(r=>r.estado==='Vencido').reduce((s,r)=>s+r.montoUSD,0);
 
-  // DSO calculation
-  const totalCobrar = cuentasCobrar.reduce((s,r)=>s+r.montoUSD,0);
-  const ingDiarios = 23081.08/30;
-  const dso = Math.round(totalCobrar/ingDiarios);
+  const sumIng = (finanzasAnalytics.ing||[]).reduce((a,b)=>a+b,0);
+  const avgMes = sumIng / Math.max(1,(finanzasAnalytics.ing||[]).length);
+  const ingDiarios = Math.max(1, avgMes / 30);
+  const dso = Math.round(total / ingDiarios);
 
   el.innerHTML = `
     <div class="view active">
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Saldo pendiente por <strong>gasto Ads</strong> en Crédito (total − cobros). Para cobrar, registrá el cobro en el panel <strong>Cobros</strong>.</p>
       <div class="section-header">
         <div></div>
-        <button class="btn btn-primary" onclick="openModal('cuenta')">
-          ${icons.plus} Agregar Cuenta
+        <button type="button" class="btn btn-secondary" disabled title="Los saldos vienen de Crédito / Gastos y Cobros">
+          Solo lectura
         </button>
       </div>
       <div class="kpi-row cols-5">
@@ -1509,14 +1700,23 @@ function renderCobrar(el){
     </div>
   `;
 
-  // Aging chart
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
+  let b0=0,b1=0,b2=0,b3=0,b4=0;
+  data.forEach((r)=>{
+    const du = daysUntil(r.fechaVencimiento);
+    const m = r.montoUSD;
+    if (du > 15) b0 += m;
+    else if (du > 0) b1 += m;
+    else if (du > -15) b2 += m;
+    else if (du > -30) b3 += m;
+    else b4 += m;
+  });
   charts.aging = new Chart(document.getElementById('agingChart'),{
     type:'bar',
     data:{
       labels:['Al día','1-15 días','16-30 días','31-60 días','60+ días'],
       datasets:[{
-        data:[alDia,porVencer,vencido*0.4,vencido*0.6,0].map(v=>primaryCurrency==='USD'?v:Math.round(v*RATE)),
+        data:[b0,b1,b2,b3,b4].map(v=>primaryCurrency==='USD'?v:Math.round(v*RATE)),
         backgroundColor:[isDark?'#34D399':'#10B981',isDark?'#FBBF24':'#F59E0B',isDark?'#FB923C':'#F97316',isDark?'#F87171':'#EF4444',isDark?'#64748B':'#94A3B8'],
         borderRadius:6,
         borderSkipped:false
@@ -1529,13 +1729,14 @@ function renderCobrar(el){
 // ===== VIEW: SUELDOS =====
 function renderSueldos(el){
   sparkCounter = 0;
-  const totalBruto = sueldos.reduce((s,r)=>s+r.brutoUSD,0);
+  const dataS = filterFinanzasRows(sueldos,'fechaPago');
+  const totalBruto = dataS.reduce((s,r)=>s+r.brutoUSD,0);
   const essaludRate = 0.09;
   const afpRate = 0.13;
-  const totalDeducciones = sueldos.reduce((s,r)=>s+r.brutoUSD*(essaludRate+afpRate),0);
-  const totalNeto = totalBruto - sueldos.reduce((s,r)=>s+r.brutoUSD*afpRate,0); // EsSalud is employer cost
-  const numEmpleados = sueldos.length;
-  const costoEmpleado = totalBruto/numEmpleados;
+  const totalDeducciones = dataS.reduce((s,r)=>s+r.brutoUSD*(essaludRate+afpRate),0);
+  const totalNeto = totalBruto - dataS.reduce((s,r)=>s+r.brutoUSD*afpRate,0);
+  const numEmpleados = dataS.length;
+  const costoEmpleado = numEmpleados ? totalBruto/numEmpleados : 0;
 
   el.innerHTML = `
     <div class="view active">
@@ -1561,7 +1762,7 @@ function renderSueldos(el){
         <div class="card-body no-pad">
           <table class="data-table">
             <thead><tr><th>Empleado</th><th>Cargo</th><th class="right">Bruto ${primaryCurrency==='USD'?'USD':'PEN'}</th><th class="right">Bruto ${primaryCurrency==='USD'?'PEN':'USD'}</th><th class="right">EsSalud (9%)</th><th class="right">AFP (13%)</th><th class="right">Neto ${primaryCurrency==='USD'?'USD':'PEN'}</th><th class="right">Neto ${primaryCurrency==='USD'?'PEN':'USD'}</th><th>Fecha de Pago</th></tr></thead>
-            <tbody>${sueldos.map(r=>{
+            <tbody>${dataS.map(r=>{
               const essalud = r.brutoUSD*essaludRate;
               const afp = r.brutoUSD*afpRate;
               const neto = r.brutoUSD - afp;
@@ -1598,8 +1799,8 @@ function renderSueldos(el){
   charts.sueldos = new Chart(document.getElementById('sueldosChart'),{
     type:'doughnut',
     data:{
-      labels:sueldos.map(r=>r.cargo),
-      datasets:[{data:sueldos.map(r=>r.brutoUSD),backgroundColor:colors,borderWidth:3,borderColor:cardBg,hoverOffset:6}]
+      labels:dataS.length?dataS.map(r=>r.cargo||r.empleado):['—'],
+      datasets:[{data:dataS.length?dataS.map(r=>r.brutoUSD):[1],backgroundColor:colors,borderWidth:3,borderColor:cardBg,hoverOffset:6}]
     },
     options:{
       responsive:true,maintainAspectRatio:false,cutout:'68%',
@@ -1615,11 +1816,13 @@ function renderSueldos(el){
 // ===== VIEW: IMPUESTOS =====
 function renderImpuestos(el){
   sparkCounter = 0;
-  const data = filterByEstado(impuestos);
-  const totalMensual = data.filter(r=>r.periodo.includes('Marzo')).reduce((s,r)=>s+r.montoUSD,0);
-  const totalAnual = impuestos.reduce((s,r)=>s+r.montoUSD,0);
-  const proxVenc = data.filter(r=>r.estado==='Pendiente').sort((a,b)=>new Date(a.fechaVencimiento)-new Date(b.fechaVencimiento))[0];
-  const tasaEfectiva = Math.round(totalMensual/23081.08*100*10)/10;
+  const data = filterFinanzasRows(filterByEstado(impuestos),'fechaVencimiento');
+  const totalMensual = data.reduce((s,r)=>s+r.montoUSD,0);
+  const y = new Date().getFullYear();
+  const totalAnual = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,4)==String(y)).reduce((s,r)=>s+r.montoUSD,0);
+  const proxVenc = filterByEstado(impuestos).filter(r=>r.estado==='Pendiente').sort((a,b)=>new Date(a.fechaVencimiento)-new Date(b.fechaVencimiento))[0];
+  const k = computePanelKpis();
+  const tasaEfectiva = k.ingPeriod > 0 ? Math.round(totalMensual/k.ingPeriod*1000)/10 : 0;
 
   el.innerHTML = `
     <div class="view active">
@@ -1672,11 +1875,16 @@ function renderImpuestos(el){
 
   const isDark = document.documentElement.getAttribute('data-theme')==='dark';
   const amberColor = isDark?'#FBBF24':'#F59E0B';
-  const taxMonthly = [6800,7200,7500,7100,7800,9014.55].map(v=>primaryCurrency==='USD'?v:Math.round(v*RATE));
+  const mKeys = finanzasAnalytics.monthKeys.length ? finanzasAnalytics.monthKeys : [finanzasTodayYmd().slice(0,7)];
+  const tLabels = finanzasAnalytics.monthLabels.length ? finanzasAnalytics.monthLabels : ['—'];
+  const taxMonthly = mKeys.map((ym)=>{
+    const sum = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,7)===ym).reduce((s,r)=>s+r.montoUSD,0);
+    return primaryCurrency==='PEN' ? Math.round(sum*RATE*100)/100 : sum;
+  });
   charts.tax = new Chart(document.getElementById('taxChart'),{
     type:'bar',
     data:{
-      labels:['Nov','Dic','Ene','Feb','Mar','Abr'],
+      labels:tLabels,
       datasets:[{label:'Impuestos',data:taxMonthly,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,260);g.addColorStop(0,amberColor+'DD');g.addColorStop(1,amberColor+'77');return g;},borderRadius:6,borderSkipped:false,barPercentage:0.55}]
     },
     options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{display:false}}}
@@ -1691,14 +1899,13 @@ function renderCalendario(el){
   const firstDay = new Date(year,month,1).getDay();
   const daysInMonth = new Date(year,month+1,0).getDate();
   const daysInPrevMonth = new Date(year,month,0).getDate();
-  const today = new Date(2026,3,6);
-
-  // Calendar events
+  const today = new Date();
+  const ymCal = `${year}-${String(month+1).padStart(2,'0')}`;
   const events = [
-    ...deudas.map(d=>({date:d.proxPago,label:d.banco+' - Cuota',type:'debt'})),
-    ...cuentasCobrar.filter(r=>r.estado!=='Vencido').map(r=>({date:r.fechaVencimiento,label:r.cliente,type:'income'})),
-    ...sueldos.slice(0,1).map(r=>({date:r.fechaPago,label:'Nómina',type:'salary'})),
-    ...impuestos.filter(r=>r.estado==='Pendiente').map(r=>({date:r.fechaVencimiento,label:r.tipo,type:'tax'})),
+    ...deudas.map(d=>({date:(d.proxPago||'').slice(0,10),label:d.banco+' - Cuota',type:'debt'})),
+    ...cuentasCobrar.filter(r=>r.estado!=='Vencido').map(r=>({date:(r.fechaVencimiento||'').slice(0,10),label:r.cliente,type:'income'})),
+    ...sueldos.filter(r=>(r.fechaPago||'').slice(0,7)===ymCal).map(r=>({date:(r.fechaPago||'').slice(0,10),label:'Nómina '+r.empleado,type:'salary'})),
+    ...impuestos.filter(r=>r.estado==='Pendiente').map(r=>({date:(r.fechaVencimiento||'').slice(0,10),label:r.tipo,type:'tax'})),
   ];
 
   const getEvents = (d)=>{
@@ -1730,12 +1937,13 @@ function renderCalendario(el){
   }
 
   // Upcoming payments
+  const nominaMes = sueldos.filter(r=>(r.fechaPago||'').slice(0,7)===ymCal).reduce((s,r)=>s+r.brutoUSD,0);
   const allUpcoming = [
-    ...deudas.map(d=>({date:d.proxPago,concepto:d.concepto,tipo:'Deuda',badge:'badge-red',monto:d.cuotaMensual,target:d.banco})),
+    ...deudas.map(d=>({date:d.proxPago,concepto:d.concepto,tipo:'Deuda',badge:'badge-red',monto:d.cuotaMensual!=null?d.cuotaMensual:0,target:d.banco})),
     ...cuentasCobrar.filter(r=>r.estado!=='Vencido').map(r=>({date:r.fechaVencimiento,concepto:r.servicio,tipo:'Cobro',badge:'badge-blue',monto:r.montoUSD,target:r.cliente})),
-    {date:'2026-04-30',concepto:'Nómina Abril',tipo:'Sueldo',badge:'badge-green',monto:sueldos.reduce((s,r)=>s+r.brutoUSD,0),target:'Empleados'},
+    ...(nominaMes>0?[{date:ymCal+'-28',concepto:'Nómina (mes vista)',tipo:'Sueldo',badge:'badge-green',monto:nominaMes,target:'Planilla'}]:[]),
     ...impuestos.filter(r=>r.estado==='Pendiente').map(r=>({date:r.fechaVencimiento,concepto:r.tipo+' '+r.periodo,tipo:'Impuesto',badge:'badge-amber',monto:r.montoUSD,target:'SUNAT'})),
-  ].sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,10);
+  ].sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,12);
 
   const totalPagar = allUpcoming.filter(u=>u.tipo!=='Cobro').reduce((s,u)=>s+u.monto,0);
   const totalCobrar = allUpcoming.filter(u=>u.tipo==='Cobro').reduce((s,u)=>s+u.monto,0);
@@ -1912,7 +2120,7 @@ function openModal(type){
     if(f.type==='select'){
       return `<select class="form-input" name="${f.name}">${f.options.map(o=>`<option value="${o}">${o}</option>`).join('')}</select>`;
     }
-    return `<input class="form-input" type="${f.type}" name="${f.name}" placeholder="${f.placeholder||''}" ${f.type==='date'?'value="2026-04-06"':''}>`;
+    return `<input class="form-input" type="${f.type}" name="${f.name}" placeholder="${f.placeholder||''}" ${f.type==='date'?'value="'+finanzasTodayYmd()+'"':''}>`;
   }
 
   body.innerHTML = cfg.fields.map(f=>{
@@ -1937,7 +2145,8 @@ function closeModal(){
   document.getElementById('modalOverlay').classList.remove('active');
 }
 
-function handleModalSubmit(){
+async function handleModalSubmit(){
+  const sb = window.finanzasSupabase;
   const overlay = document.getElementById('modalOverlay');
   const type = overlay.dataset.type;
   const body = document.getElementById('modalBody');
@@ -1945,24 +2154,78 @@ function handleModalSubmit(){
   const data = {};
   inputs.forEach(inp=>{ data[inp.name] = inp.type==='number'?parseFloat(inp.value)||0:inp.value; });
 
-  // Add to arrays
-  switch(type){
-    case 'ingreso':
-      ingresos.unshift({...data}); break;
-    case 'gasto':
-      gastos.unshift({...data}); break;
-    case 'deuda':
-      deudas.push({...data,estado:'Al día',color:'blue'}); break;
-    case 'cuenta':
-      cuentasCobrar.push({...data,estado:'Al día'}); break;
-    case 'empleado':
-      sueldos.push({...data}); break;
-    case 'impuesto':
-      impuestos.unshift({...data,estado:'Pendiente'}); break;
+  if (type==='cuenta') {
+    alert('El pendiente por cobrar se calcula en Crédito (gastos y cobros). No se guarda una fila aparte aquí.');
+    closeModal();
+    return;
   }
-
-  closeModal();
-  renderView();
+  if (!sb) {
+    alert('Sin conexión a Supabase.');
+    return;
+  }
+  try {
+    if (type==='ingreso') {
+      const { error } = await sb.from('manual').insert({
+        tipo: 'Ingreso',
+        conc: data.concepto || 'Ingreso',
+        monto: data.montoUSD || 0,
+        fecha: data.fecha || finanzasTodayYmd(),
+        nota: 'Cliente: ' + (data.cliente || ''),
+      });
+      if (error) throw error;
+    } else if (type==='gasto') {
+      const conc = '[' + (data.categoria || 'General') + '] ' + (data.concepto || '');
+      let nota = data.proveedor || '';
+      if (data.estado === 'Pendiente') nota = (nota ? nota + ' · ' : '') + 'Estado:Pendiente';
+      const { error } = await sb.from('manual').insert({
+        tipo: 'Gasto',
+        conc,
+        monto: data.montoUSD || 0,
+        fecha: data.fecha || finanzasTodayYmd(),
+        nota,
+      });
+      if (error) throw error;
+    } else if (type==='deuda') {
+      const { error } = await sb.from('finanzas_deudas').insert({
+        banco: data.banco || '',
+        concepto: data.concepto || '',
+        monto_total: data.montoTotal || 0,
+        pagado: data.pagado || 0,
+        cuota_mensual: data.cuotaMensual,
+        prox_pago: data.proxPago || finanzasTodayYmd(),
+        estado: 'Al día',
+        color: 'blue',
+      });
+      if (error) throw error;
+    } else if (type==='empleado') {
+      const { error } = await sb.from('finanzas_sueldos').insert({
+        empleado: data.empleado || '',
+        cargo: data.cargo || '',
+        bruto_usd: data.brutoUSD || 0,
+        fecha_pago: data.fechaPago || finanzasTodayYmd(),
+      });
+      if (error) throw error;
+    } else if (type==='impuesto') {
+      const { error } = await sb.from('finanzas_impuestos').insert({
+        tipo: data.tipo || '',
+        periodo: data.periodo || '',
+        base_usd: data.baseUSD,
+        tasa: data.tasa,
+        monto_usd: data.montoUSD || 0,
+        fecha_vencimiento: data.fechaVencimiento || finanzasTodayYmd(),
+        estado: 'Pendiente',
+      });
+      if (error) throw error;
+    }
+    await finanzasLoadAll();
+    closeModal();
+    renderSidebar();
+    renderFilterBar();
+    renderView();
+    updateLastUpdated();
+  } catch (e) {
+    alert((e && e.message) ? e.message : 'No se pudo guardar. ¿Aplicaste la migración finanzas en Supabase?');
+  }
 }
 
 // Close modal on overlay click
@@ -1971,12 +2234,21 @@ document.getElementById('modalOverlay').addEventListener('click',function(e){
 });
 
 // ===== INIT (solo tras login; ver script al inicio de body) =====
-window.finanzasInitApp = function finanzasInitApp(){
+window.finanzasInitApp = async function finanzasInitApp(){
   document.documentElement.setAttribute('data-theme','light');
   sparkCounter = 0;
+  const mc = document.getElementById('mainContent');
+  if (mc) mc.innerHTML = '<div class="view active" style="padding:48px;text-align:center;color:var(--text-muted);font-size:14px">Cargando datos desde Supabase…</div>';
+  try {
+    await finanzasLoadAll();
+  } catch (e) {
+    console.error(e);
+    finanzasLoadError = (e && e.message) ? e.message : String(e);
+  }
   renderSidebar();
   renderFilterBar();
   renderView();
+  updateLastUpdated();
 };
 if (window.__FINANZAS_AUTH_OK) window.finanzasInitApp();
 </script>
