@@ -440,7 +440,6 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
   if(!lib||typeof createClientFn!=='function'){ console.warn('[Finanzas] createClient no disponible'); document.body.classList.remove('finanzas-auth-pending'); var g1=document.getElementById('finanzasAuthGate'); if(g1)g1.remove(); window.__FINANZAS_AUTH_OK=true; return; }
   var authStorage={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
   var sb=createClientFn(url,key,{auth:authStorage});
-  window.finanzasSupabase=sb;
   var hash=window.location.hash||'';
   function allow(){
     window.__FINANZAS_AUTH_OK=true;
@@ -688,33 +687,18 @@ function drawSparkline(canvasId, dataPoints, colorKey) {
   ctx.fill();
 }
 
-// ===== DATOS (Supabase: Crédito + tablas finanzas_*) =====
+// ===== DATOS (solo esta app: empieza en 0; se llena con los formularios; no se guarda en Crédito ni en BD) =====
 let ingresos = [];
 let gastos = [];
 let deudas = [];
 let cuentasCobrar = [];
 let sueldos = [];
 let impuestos = [];
-let rawClientes = [];
-let rawGastosAds = [];
-let rawCobros = [];
-let rawManual = [];
-let finanzasLoadError = '';
-let finanzasDataLoadedAt = null;
 let finanzasAnalytics = { monthKeys: [], monthLabels: [], ing: [], gas: [], balance: [] };
 
 function parseNumFin(n) {
   const x = parseFloat(n);
   return Number.isFinite(x) ? x : 0;
-}
-function lineTotalGasto(g) {
-  const ads = parseNumFin(g.gasto);
-  const fp = parseNumFin(g.fee);
-  return ads + ads * (fp / 100);
-}
-function paidForGastoId(gastoId, cobrosList) {
-  if (!gastoId) return 0;
-  return cobrosList.filter((c) => c.gasto_id === gastoId).reduce((s, c) => s + parseNumFin(c.monto), 0);
 }
 function getPeriodRange() {
   const end = new Date();
@@ -746,8 +730,8 @@ function finanzasTodayYmd() {
 function updateLastUpdated() {
   const el = document.querySelector('.last-updated');
   if (!el) return;
-  const t = finanzasDataLoadedAt ? new Date(finanzasDataLoadedAt) : new Date();
-  el.innerHTML = '<span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Datos: ' + t.toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
+  const t = new Date();
+  el.innerHTML = '<span class="dot"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Vista local · ' + t.toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' });
 }
 function finanzasRebuildAnalytics() {
   const now = new Date();
@@ -760,16 +744,8 @@ function finanzasRebuildAnalytics() {
     const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     monthKeys.push(ym);
     monthLabels.push(monthShort[d.getMonth()]);
-    let iSum = 0;
-    let gSum = 0;
-    (rawCobros || []).forEach((c) => {
-      if ((c.fecha || '').slice(0, 7) === ym) iSum += parseNumFin(c.monto);
-    });
-    (rawManual || []).forEach((m) => {
-      if ((m.fecha || '').slice(0, 7) !== ym) return;
-      if (m.tipo === 'Ingreso') iSum += parseNumFin(m.monto);
-      if (m.tipo === 'Gasto') gSum += parseNumFin(m.monto);
-    });
+    const iSum = ingresos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + parseNumFin(r.montoUSD), 0);
+    const gSum = gastos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + parseNumFin(r.montoUSD), 0);
     ing.push(Math.round(iSum * 100) / 100);
     gas.push(Math.round(gSum * 100) / 100);
   }
@@ -803,152 +779,6 @@ function computePanelKpis() {
     sparkCob: cobHist,
   };
 }
-async function finanzasLoadAll() {
-  finanzasLoadError = '';
-  const sb = window.finanzasSupabase;
-  if (!sb) {
-    finanzasDataLoadedAt = new Date().toISOString();
-    return;
-  }
-  const { data: auth } = await sb.auth.getUser();
-  const email = (auth && auth.user && auth.user.email) ? String(auth.user.email).trim() : '';
-  if (!email) return;
-  const { data: ger, error: ge } = await sb.from('gerentes').select('id').ilike('email', email).maybeSingle();
-  if (ge || !ger) {
-    window.location.replace('/credito');
-    return;
-  }
-  const q = (p) => (p && p.error ? (console.warn('[Finanzas]', p.error.message || p.error), null) : p.data);
-  const [cRes, gRes, coRes, mRes, dRes, iRes, sRes] = await Promise.all([
-    sb.from('clientes').select('id,name').order('name'),
-    sb.from('gastos').select('*').order('mes', { ascending: false }),
-    sb.from('cobros').select('*').order('created_at', { ascending: false }),
-    sb.from('manual').select('*').order('fecha', { ascending: false }),
-    sb.from('finanzas_deudas').select('*').order('prox_pago', { ascending: true }),
-    sb.from('finanzas_impuestos').select('*').order('fecha_vencimiento', { ascending: true }),
-    sb.from('finanzas_sueldos').select('*').order('fecha_pago', { ascending: true }),
-  ]);
-  rawClientes = q(cRes) || [];
-  rawGastosAds = q(gRes) || [];
-  rawCobros = q(coRes) || [];
-  rawManual = q(mRes) || [];
-  const deudasRows = q(dRes);
-  const impRows = q(iRes);
-  const sueRows = q(sRes);
-  if (cRes.error) finanzasLoadError = (cRes.error && cRes.error.message) || 'Error clientes';
-  else if (gRes.error) finanzasLoadError = (gRes.error && gRes.error.message) || 'Error gastos';
-  const clientName = {};
-  rawClientes.forEach((c) => { clientName[c.id] = c.name || '—'; });
-  const gastoById = {};
-  rawGastosAds.forEach((g) => { gastoById[g.id] = g; });
-  ingresos = [];
-  cuentasCobrar = [];
-  (rawCobros || []).forEach((co) => {
-    const amount = parseNumFin(co.monto);
-    const fecha = co.fecha || finanzasTodayYmd();
-    let cliente = '—';
-    let concepto = (co.notas && String(co.notas).trim()) || 'Cobro';
-    const g = co.gasto_id ? gastoById[co.gasto_id] : null;
-    if (g) {
-      cliente = clientName[g.client_id] || '—';
-      concepto = (g.camp || 'Ads') + ' · ' + (g.mes || '');
-    } else if (co.client_id) {
-      cliente = clientName[co.client_id] || '—';
-    }
-    ingresos.push({ fecha, cliente, concepto, montoUSD: amount, fechaPago: fecha, estado: 'Pagado', _src: 'cobro' });
-  });
-  (rawManual || []).forEach((m) => {
-    if (m.tipo !== 'Ingreso') return;
-    const nota = (m.nota || '').trim();
-    const cliente = nota.indexOf('Cliente:') === 0 ? nota.replace(/^Cliente:\s*/i, '').trim() : 'Varios';
-    ingresos.push({
-      fecha: m.fecha || finanzasTodayYmd(),
-      cliente,
-      concepto: m.conc || 'Ingreso',
-      montoUSD: parseNumFin(m.monto),
-      fechaPago: m.fecha || finanzasTodayYmd(),
-      estado: 'Pagado',
-      _src: 'manual',
-    });
-  });
-  (rawGastosAds || []).forEach((g) => {
-    const tot = lineTotalGasto(g);
-    const paid = paidForGastoId(g.id, rawCobros);
-    const pend = Math.max(0, Math.round((tot - paid) * 100) / 100);
-    if (pend < 0.005) return;
-    const mes = (g.mes || '').slice(0, 7);
-    const emi = (g.fecha_movimiento || (mes ? mes + '-01' : finanzasTodayYmd())).slice(0, 10);
-    const due = mes ? mes + '-28' : emi;
-    const du = daysUntil(due);
-    const estadoC = du < 0 ? 'Vencido' : (du <= 14 ? 'Por vencer' : 'Al día');
-    ingresos.push({
-      fecha: emi,
-      cliente: clientName[g.client_id] || '—',
-      concepto: 'Pendiente cobro: ' + (g.camp || 'Ads') + (mes ? ' (' + mes + ')' : ''),
-      montoUSD: pend,
-      fechaPago: due,
-      estado: 'Pendiente',
-      _src: 'pendiente',
-    });
-    cuentasCobrar.push({
-      cliente: clientName[g.client_id] || '—',
-      servicio: (g.camp || 'Ads') + (mes ? ' · ' + mes : ''),
-      montoUSD: pend,
-      fechaEmision: emi,
-      fechaVencimiento: due,
-      estado: estadoC,
-    });
-  });
-  gastos = [];
-  (rawManual || []).forEach((m) => {
-    if (m.tipo !== 'Gasto') return;
-    const raw = (m.conc || '').trim();
-    const catMatch = raw.match(/^\[([^\]]+)\]\s*(.*)$/);
-    const categoria = catMatch ? catMatch[1] : 'General';
-    const concepto = catMatch ? (catMatch[2] || raw) : raw;
-    const est = (m.nota || '').indexOf('Estado:Pendiente') >= 0 ? 'Pendiente' : 'Pagado';
-    gastos.push({
-      fecha: m.fecha || finanzasTodayYmd(),
-      categoria,
-      concepto: concepto || 'Gasto',
-      proveedor: (m.nota || '').replace(/Estado:Pendiente\s*/i, '').trim() || '—',
-      montoUSD: parseNumFin(m.monto),
-      fechaPago: m.fecha || finanzasTodayYmd(),
-      estado: est,
-    });
-  });
-  deudas = (deudasRows || []).map((r) => ({
-    id: r.id,
-    banco: r.banco || '',
-    concepto: r.concepto || '',
-    montoTotal: parseNumFin(r.monto_total),
-    pagado: parseNumFin(r.pagado),
-    cuotaMensual: r.cuota_mensual != null ? parseNumFin(r.cuota_mensual) : null,
-    proxPago: r.prox_pago || finanzasTodayYmd(),
-    estado: r.estado || 'Al día',
-    color: r.color || 'blue',
-  }));
-  impuestos = (impRows || []).map((r) => ({
-    id: r.id,
-    tipo: r.tipo || '',
-    periodo: r.periodo || '',
-    baseUSD: parseNumFin(r.base_usd),
-    tasa: parseNumFin(r.tasa),
-    montoUSD: parseNumFin(r.monto_usd),
-    fechaVencimiento: r.fecha_vencimiento || finanzasTodayYmd(),
-    estado: r.estado || 'Pendiente',
-  }));
-  sueldos = (sueRows || []).map((r) => ({
-    id: r.id,
-    empleado: r.empleado || '',
-    cargo: r.cargo || '',
-    brutoUSD: parseNumFin(r.bruto_usd),
-    fechaPago: r.fecha_pago || finanzasTodayYmd(),
-  }));
-  finanzasRebuildAnalytics();
-  finanzasDataLoadedAt = new Date().toISOString();
-}
-
 // ===== INIT SIDEBAR =====
 function renderSidebar(){
   const nav = document.getElementById('sidebarNav');
@@ -1158,11 +988,10 @@ function renderPanel(el){
   const nFact = cuentasCobrar.length;
   el.innerHTML = `
     <div class="view active" id="viewPanel">
-      ${finanzasLoadError ? `<div class="card" style="margin-bottom:16px;border-color:var(--red);background:var(--red-light);color:var(--red);padding:12px 16px;font-size:13px">${finanzasLoadError}</div>` : ''}
       <div class="kpi-row cols-5">
-        ${kpiCardPremium('Cobrado en el período',k.ingPeriod,null,'neutral','ingresos',k.sparkIng)}
+        ${kpiCardPremium('Ingresos del período',k.ingPeriod,null,'neutral','ingresos',k.sparkIng)}
         ${kpiCardPremium('Gastos del período',k.gasPeriod,null,'neutral','gastos',k.sparkGas)}
-        ${kpiCardPremium('Balance (cobrado − gastos)',k.balance,null,'neutral','balance',k.sparkBal)}
+        ${kpiCardPremium('Balance (ingresos − gastos)',k.balance,null,'neutral','balance',k.sparkBal)}
         ${kpiCardPremium('Deuda bancaria pendiente',k.deudaPend,null,'neutral','deudas',k.sparkDeu,'—')}
         ${kpiCardPremium('Por cobrar (clientes)',k.cobrarTot,null,'neutral','cobrar',k.sparkCob,nFact ? nFact + ' ítems' : '—')}
       </div>
@@ -1291,8 +1120,8 @@ function renderMainChart(){
         ? {label:'Cobros (est.)',data:ingData,backgroundColor:blueColor+'CC',borderRadius:6,borderSkipped:false,barPercentage:0.65}
         : {label:'Cobros',data:ingData,borderColor:blueColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,blueColor+'33');g.addColorStop(1,blueColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5},
       currentChartTab==='1m'
-        ? {label:'Gastos manual (est.)',data:gasData,backgroundColor:redColor+'99',borderRadius:6,borderSkipped:false,barPercentage:0.65}
-        : {label:'Gastos manual',data:gasData,borderColor:redColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,redColor+'33');g.addColorStop(1,redColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5}
+        ? {label:'Gastos (est.)',data:gasData,backgroundColor:redColor+'99',borderRadius:6,borderSkipped:false,barPercentage:0.65}
+        : {label:'Gastos',data:gasData,borderColor:redColor,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,300);g.addColorStop(0,redColor+'33');g.addColorStop(1,redColor+'00');return g;},fill:true,tension:0.35,pointRadius:0,pointHoverRadius:5,borderWidth:2.5}
     ]},
     options:{...chartDefaults(),plugins:{...chartDefaults().plugins,legend:{...chartDefaults().plugins.legend,position:'top'}}}
   };
@@ -1376,11 +1205,11 @@ function renderIngresos(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px"><strong>Cobros</strong> reales vienen de Crédito (tabla <code style="font-size:11px">cobros</code>). Las filas <strong>Pendiente</strong> son saldo de gastos Ads sin cubrir. El botón agrega un movimiento <strong>manual</strong> tipo Ingreso.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Los ingresos son solo de esta vista: se agregan aquí y no se sincronizan con otros paneles.</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('ingreso')">
-          ${icons.plus} Ingreso manual
+          ${icons.plus} Agregar ingreso
         </button>
       </div>
       <div class="kpi-row cols-4">
@@ -1433,7 +1262,7 @@ function renderIngresos(el){
     data:{
       labels,
       datasets:[
-        {type:'bar',label:'Cobros (mensual)',data:monthlyData,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,260);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'88');return g;},borderRadius:6,borderSkipped:false,barPercentage:0.55},
+        {type:'bar',label:'Ingresos (mensual)',data:monthlyData,backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,0,260);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'88');return g;},borderRadius:6,borderSkipped:false,barPercentage:0.55},
         {type:'line',label:'Tendencia',data:trendData,borderColor:isDark?'#F87171':'#EF4444',borderWidth:2,borderDash:[6,4],pointRadius:0,fill:false}
       ]
     },
@@ -1451,11 +1280,11 @@ function renderGastos(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Gastos operativos desde la tabla <strong>manual</strong> de Crédito (tipo Gasto). Usá categorías con <code style="font-size:11px">[Categoría] concepto</code> en el concepto.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Los gastos son solo de esta vista; elegí la categoría en el formulario.</p>
       <div class="section-header">
         <div></div>
         <button class="btn btn-primary" onclick="openModal('gasto')">
-          ${icons.plus} Registrar gasto manual
+          ${icons.plus} Agregar gasto
         </button>
       </div>
       <div class="kpi-row cols-3">
@@ -1613,7 +1442,7 @@ function renderDeudas(el){
               <span>Próx. pago: <strong>${fmtDate(d.proxPago)}</strong> ${dias<=7?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:4px;animation:chipPulse 1.5s infinite"></span>':''} (${dias} días)</span>
             </div>
           </div>`;
-        }).join(''):'<p style="padding:24px;color:var(--text-muted)">No hay deudas registradas. Creá la migración SQL en Supabase y agregá filas con «Agregar Deuda».</p>'}
+        }).join(''):'<p style="padding:24px;color:var(--text-muted)">No hay deudas registradas. Usá «Agregar Deuda».</p>'}
       </div>
       <div class="card">
         <div class="card-header"><h3>Resumen de Deudas</h3></div>
@@ -1658,11 +1487,11 @@ function renderCobrar(el){
 
   el.innerHTML = `
     <div class="view active">
-      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Saldo pendiente por <strong>gasto Ads</strong> en Crédito (total − cobros). Para cobrar, registrá el cobro en el panel <strong>Cobros</strong>.</p>
+      <p style="font-size:12px;color:var(--text-muted);margin:0 0 12px">Cuentas por cobrar locales; el estado se calcula según la fecha de vencimiento.</p>
       <div class="section-header">
         <div></div>
-        <button type="button" class="btn btn-secondary" disabled title="Los saldos vienen de Crédito / Gastos y Cobros">
-          Solo lectura
+        <button type="button" class="btn btn-primary" onclick="openModal('cuenta')">
+          ${icons.plus} Agregar cuenta
         </button>
       </div>
       <div class="kpi-row cols-5">
@@ -2145,8 +1974,7 @@ function closeModal(){
   document.getElementById('modalOverlay').classList.remove('active');
 }
 
-async function handleModalSubmit(){
-  const sb = window.finanzasSupabase;
+function handleModalSubmit(){
   const overlay = document.getElementById('modalOverlay');
   const type = overlay.dataset.type;
   const body = document.getElementById('modalBody');
@@ -2154,78 +1982,73 @@ async function handleModalSubmit(){
   const data = {};
   inputs.forEach(inp=>{ data[inp.name] = inp.type==='number'?parseFloat(inp.value)||0:inp.value; });
 
-  if (type==='cuenta') {
-    alert('El pendiente por cobrar se calcula en Crédito (gastos y cobros). No se guarda una fila aparte aquí.');
-    closeModal();
-    return;
+  if (type==='ingreso') {
+    ingresos.unshift({
+      fecha: data.fecha || finanzasTodayYmd(),
+      cliente: data.cliente || '—',
+      concepto: data.concepto || 'Ingreso',
+      montoUSD: data.montoUSD || 0,
+      fechaPago: data.fechaPago || finanzasTodayYmd(),
+      estado: data.estado || 'Pagado',
+    });
+  } else if (type==='gasto') {
+    gastos.unshift({
+      fecha: data.fecha || finanzasTodayYmd(),
+      categoria: data.categoria || 'General',
+      concepto: data.concepto || 'Gasto',
+      proveedor: data.proveedor || '—',
+      montoUSD: data.montoUSD || 0,
+      fechaPago: data.fechaPago || finanzasTodayYmd(),
+      estado: data.estado || 'Pagado',
+    });
+  } else if (type==='cuenta') {
+    const due = data.fechaVencimiento || finanzasTodayYmd();
+    const du = daysUntil(due);
+    const estadoC = du < 0 ? 'Vencido' : (du <= 14 ? 'Por vencer' : 'Al día');
+    cuentasCobrar.unshift({
+      cliente: data.cliente || '—',
+      servicio: data.servicio || '—',
+      montoUSD: data.montoUSD || 0,
+      fechaEmision: data.fechaEmision || finanzasTodayYmd(),
+      fechaVencimiento: due,
+      estado: estadoC,
+    });
+  } else if (type==='deuda') {
+    deudas.unshift({
+      banco: data.banco || '',
+      concepto: data.concepto || '',
+      montoTotal: data.montoTotal || 0,
+      pagado: data.pagado || 0,
+      cuotaMensual: data.cuotaMensual != null && data.cuotaMensual !== '' ? data.cuotaMensual : null,
+      proxPago: data.proxPago || finanzasTodayYmd(),
+      estado: 'Al día',
+      color: 'blue',
+    });
+  } else if (type==='empleado') {
+    sueldos.unshift({
+      empleado: data.empleado || '',
+      cargo: data.cargo || '',
+      brutoUSD: data.brutoUSD || 0,
+      fechaPago: data.fechaPago || finanzasTodayYmd(),
+    });
+  } else if (type==='impuesto') {
+    impuestos.unshift({
+      tipo: data.tipo || '',
+      periodo: data.periodo || '',
+      baseUSD: data.baseUSD,
+      tasa: data.tasa,
+      montoUSD: data.montoUSD || 0,
+      fechaVencimiento: data.fechaVencimiento || finanzasTodayYmd(),
+      estado: 'Pendiente',
+    });
   }
-  if (!sb) {
-    alert('Sin conexión a Supabase.');
-    return;
-  }
-  try {
-    if (type==='ingreso') {
-      const { error } = await sb.from('manual').insert({
-        tipo: 'Ingreso',
-        conc: data.concepto || 'Ingreso',
-        monto: data.montoUSD || 0,
-        fecha: data.fecha || finanzasTodayYmd(),
-        nota: 'Cliente: ' + (data.cliente || ''),
-      });
-      if (error) throw error;
-    } else if (type==='gasto') {
-      const conc = '[' + (data.categoria || 'General') + '] ' + (data.concepto || '');
-      let nota = data.proveedor || '';
-      if (data.estado === 'Pendiente') nota = (nota ? nota + ' · ' : '') + 'Estado:Pendiente';
-      const { error } = await sb.from('manual').insert({
-        tipo: 'Gasto',
-        conc,
-        monto: data.montoUSD || 0,
-        fecha: data.fecha || finanzasTodayYmd(),
-        nota,
-      });
-      if (error) throw error;
-    } else if (type==='deuda') {
-      const { error } = await sb.from('finanzas_deudas').insert({
-        banco: data.banco || '',
-        concepto: data.concepto || '',
-        monto_total: data.montoTotal || 0,
-        pagado: data.pagado || 0,
-        cuota_mensual: data.cuotaMensual,
-        prox_pago: data.proxPago || finanzasTodayYmd(),
-        estado: 'Al día',
-        color: 'blue',
-      });
-      if (error) throw error;
-    } else if (type==='empleado') {
-      const { error } = await sb.from('finanzas_sueldos').insert({
-        empleado: data.empleado || '',
-        cargo: data.cargo || '',
-        bruto_usd: data.brutoUSD || 0,
-        fecha_pago: data.fechaPago || finanzasTodayYmd(),
-      });
-      if (error) throw error;
-    } else if (type==='impuesto') {
-      const { error } = await sb.from('finanzas_impuestos').insert({
-        tipo: data.tipo || '',
-        periodo: data.periodo || '',
-        base_usd: data.baseUSD,
-        tasa: data.tasa,
-        monto_usd: data.montoUSD || 0,
-        fecha_vencimiento: data.fechaVencimiento || finanzasTodayYmd(),
-        estado: 'Pendiente',
-      });
-      if (error) throw error;
-    }
-    await finanzasLoadAll();
-    closeModal();
-    renderSidebar();
-    renderFilterBar();
-    renderView();
-    updateLastUpdated();
-  } catch (e) {
-    alert((e && e.message) ? e.message : 'No se pudo guardar. ¿Aplicaste la migración finanzas en Supabase?');
-  }
+
+  finanzasRebuildAnalytics();
+  closeModal();
+  renderSidebar();
+  renderFilterBar();
+  renderView();
+  updateLastUpdated();
 }
 
 // Close modal on overlay click
@@ -2234,17 +2057,10 @@ document.getElementById('modalOverlay').addEventListener('click',function(e){
 });
 
 // ===== INIT (solo tras login; ver script al inicio de body) =====
-window.finanzasInitApp = async function finanzasInitApp(){
+window.finanzasInitApp = function finanzasInitApp(){
   document.documentElement.setAttribute('data-theme','light');
   sparkCounter = 0;
-  const mc = document.getElementById('mainContent');
-  if (mc) mc.innerHTML = '<div class="view active" style="padding:48px;text-align:center;color:var(--text-muted);font-size:14px">Cargando datos desde Supabase…</div>';
-  try {
-    await finanzasLoadAll();
-  } catch (e) {
-    console.error(e);
-    finanzasLoadError = (e && e.message) ? e.message : String(e);
-  }
+  finanzasRebuildAnalytics();
   renderSidebar();
   renderFilterBar();
   renderView();
