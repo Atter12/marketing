@@ -198,6 +198,15 @@ function isLikelyAgradecimientoRow(r) {
   return false;
 }
 
+/** Comparar YYYY-MM aunque venga YYYY-MM-DD. */
+function ymComparable(s) {
+  if (s == null || String(s).trim() === "") return "";
+  const t = String(s).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 7);
+  if (/^\d{4}-\d{2}$/.test(t)) return t;
+  return t.length >= 7 ? t.slice(0, 7) : t;
+}
+
 function htmlToPlainText(html) {
   if (!html) return "";
   try {
@@ -329,6 +338,8 @@ export default function CobranzaView({
   parsePeriodoInput = null,
   userEmail = "",
   onRefetchClients,
+  cobranzaJump = null,
+  onCobranzaJumpConsumed = null,
 }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -442,6 +453,13 @@ export default function CobranzaView({
   }, [loadRows]);
 
   useEffect(() => {
+    if (!cobranzaJump) return;
+    if (cobranzaJump.search) setQ(cobranzaJump.search);
+    if (cobranzaJump.periodoYM) setPeriodoCobranza(cobranzaJump.periodoYM);
+    onCobranzaJumpConsumed?.();
+  }, [cobranzaJump, onCobranzaJumpConsumed]);
+
+  useEffect(() => {
     if (mainTab === "historial") loadHistorial();
   }, [mainTab, loadHistorial]);
 
@@ -511,6 +529,16 @@ export default function CobranzaView({
     }
     return list;
   }, [rows, filterEstado, filterTipo, q, sortBy]);
+
+  const periodoSelectorYm = periodoCobranza.trim();
+  const bandejaPeriodoMismatchCount = useMemo(() => {
+    if (!periodoSelectorYm) return 0;
+    return filtered.filter((r) => {
+      const v = parseRowVariables(r);
+      const rowYm = v.periodo_ym ? String(v.periodo_ym).trim() : "";
+      return rowYm && ymComparable(periodoSelectorYm) !== ymComparable(rowYm);
+    }).length;
+  }, [filtered, periodoSelectorYm]);
 
   const pendingFiltered = useMemo(
     () => filtered.filter((r) => r.estado === "pending_approval"),
@@ -1429,6 +1457,27 @@ export default function CobranzaView({
               </div>
             </div>
             <FlowSteps />
+            {periodoSelectorYm && bandejaPeriodoMismatchCount > 0 && (
+              <div
+                style={{
+                  marginBottom: 14,
+                  padding: "12px 16px",
+                  background: "#fff7ed",
+                  border: "1px solid #fdba74",
+                  borderRadius: 12,
+                  fontSize: 12.5,
+                  color: "#9a3412",
+                  lineHeight: 1.55,
+                }}
+              >
+                <strong>Período distinto al del selector.</strong> Tenés{" "}
+                <strong>{bandejaPeriodoMismatchCount}</strong> fila(s) en esta vista generada(s) con otro mes que{" "}
+                <strong>{fmtM(periodoSelectorYm)}</strong> (mirá la columna «Período ref.»). Por eso puede ser
+                agradecimiento con $0 aunque el cliente deba en otro mes.{" "}
+                <strong>Rechazá</strong> esas filas, ajustá el mes arriba si hace falta y tocá{" "}
+                <strong>Borradores cobro</strong>.
+              </div>
+            )}
             <div
               style={{
                 marginBottom: 18,
@@ -1558,9 +1607,17 @@ export default function CobranzaView({
                       filtered.map((r) => {
                         const tipo = correoTipo(r) === "agradecimiento" ? "Agradecimiento" : "Cobro";
                         const canSel = r.estado === "pending_approval";
-                        const v = r.variables && typeof r.variables === "object" ? r.variables : {};
+                        const v = parseRowVariables(r);
                         const refPer = v.periodo_ym ? fmtM(v.periodo_ym) : "Total cuenta";
                         const refTitle = v.periodo_etiqueta ? String(v.periodo_etiqueta) : v.periodo_ym ? fmtM(v.periodo_ym) : "Deuda acumulada total al generar (borradores anteriores a período explícito)";
+                        const rowYm = v.periodo_ym ? String(v.periodo_ym).trim() : "";
+                        const periodoMismatch =
+                          Boolean(periodoSelectorYm) &&
+                          Boolean(rowYm) &&
+                          ymComparable(periodoSelectorYm) !== ymComparable(rowYm);
+                        const refCellTitle = periodoMismatch
+                          ? `Selector arriba: ${fmtM(periodoSelectorYm)}. Esta fila se generó con ${fmtM(rowYm)}. ${refTitle}`
+                          : refTitle;
                         return (
                           <tr key={r.id}>
                             <td style={TD} data-label="Incluir">
@@ -1589,8 +1646,27 @@ export default function CobranzaView({
                             <td style={{ ...TD, fontSize: 12.5, color: "#64748b" }} data-label="Email">
                               {r.email_destino}
                             </td>
-                            <td style={{ ...TD, fontSize: 12.5, color: "#475569", maxWidth: 120 }} title={refTitle} data-label="Período ref.">
+                            <td
+                              style={{
+                                ...TD,
+                                fontSize: 12.5,
+                                color: "#475569",
+                                maxWidth: 140,
+                                ...(periodoMismatch
+                                  ? { background: "#fff7ed", boxShadow: "inset 3px 0 0 #ea580c" }
+                                  : {}),
+                              }}
+                              title={refCellTitle}
+                              data-label="Período ref."
+                            >
                               {refPer}
+                              {periodoMismatch ? (
+                                <span
+                                  style={{ display: "block", fontSize: 10, color: "#c2410c", fontWeight: 700, marginTop: 2 }}
+                                >
+                                  ≠ selector ({fmtM(periodoSelectorYm)})
+                                </span>
+                              ) : null}
                             </td>
                             <td style={{ ...TD, fontVariantNumeric: "tabular-nums" }} data-label="Deuda (USD)">
                               {r.moneda || "USD"} {fmtMoney(r.monto_pendiente)}
