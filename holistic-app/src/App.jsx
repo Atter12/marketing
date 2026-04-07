@@ -62,39 +62,24 @@ const mesGarantiaResumen = (g, gastosList) => {
   return "";
 };
 /**
- * Deuda neta para Cobranza cuando el período es un mes (YYYY-MM): alineado con Gastos / pendientes por mes.
- * Usa el período contable del gasto (`g.mes`), no la fecha de movimiento en el calendario.
- * El pendiente por línea (`_pend`) ya incluye cobros aplicados; solo restamos garantías vigentes con mes en resumen en ese mes.
+ * Cobranza con mes (YYYY-MM): suma `_pend` de gastos cuyo período (`mes`) es ese mes.
+ * No resta garantías aquí: en Gastos la columna Pendiente tampoco las descuenta por línea; si no, muchos clientes
+ * quedaban en 0 y salían agradecimientos con líneas aún en rojo.
  */
-function netPendingClienteCobranzaEnMes(cid, periodoMes, sGastos, gastosList, garantias) {
+function netPendingClienteCobranzaEnMes(cid, periodoMes, sGastos) {
   const mesIni = normalizePeriod(periodoMes);
   if (!mesIni) return 0;
   const gs = sGastos.filter(
     (g) => String(g.clientId) === String(cid) && mesGastoYYYYMM(g) === mesIni,
   );
-  const sumPend = gs.reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
-  const garantiasParaReporte = garantias.filter((g) => {
-    if (g.estado !== "Vigente" || String(g.clientId) !== String(cid)) return false;
-    const mesG = mesGarantiaResumen(g, gastosList);
-    if (!mesG) return false;
-    return mesG === mesIni;
-  });
-  const gar = garantiasParaReporte.reduce((a, g) => a + parseFloat(g.valor || 0), 0);
-  return Math.max(0, sumPend - gar);
+  return gs.reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
 }
 
-/**
- * Cobranza en «Cuenta completa»: suma el pendiente de cada línea de gasto (`_pend`), igual que en la tabla Gastos.
- * No usa `cData().net` porque los cobros sin `gastoId` bajan la deuda global pero no el `_pend` por línea → antes se
- * generaban agradecimientos en falso con deuda visible en gastos.
- */
-function netPendienteCobranzaCuentaCompleta(cid, sGastos, garantias) {
-  const gs = sGastos.filter((g) => String(g.clientId) === String(cid));
-  const sumPend = gs.reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
-  const tGar = garantias
-    .filter((g) => g.estado === "Vigente" && String(g.clientId) === String(cid))
-    .reduce((a, g) => a + parseFloat(g.valor || 0), 0);
-  return Math.max(0, sumPend - tGar);
+/** Cobranza «Cuenta completa»: suma de `_pend` de todos los gastos del cliente (lo que ves línea a línea). */
+function netPendienteCobranzaCuentaCompleta(cid, sGastos) {
+  return sGastos
+    .filter((g) => String(g.clientId) === String(cid))
+    .reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
 }
 const addOneMonthYm = (ym) => { if (!ym || typeof ym !== "string") return tm(); const [y, m] = ym.split("-").map(Number); if (!y || !m) return tm(); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
@@ -2626,8 +2611,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             clients={clients}
             getClienteDeudaNeta={(id, periodoYM) => {
               const p = periodoYM && String(periodoYM).trim() ? normalizePeriod(periodoYM) : "";
-              if (!p) return netPendienteCobranzaCuentaCompleta(id, sGastos, garantias);
-              return netPendingClienteCobranzaEnMes(id, p, sGastos, gastos, garantias);
+              if (!p) return netPendienteCobranzaCuentaCompleta(id, sGastos);
+              return netPendingClienteCobranzaEnMes(id, p, sGastos);
             }}
             fmtM={fmtM}
             parsePeriodoInput={parsePeriodoInput}

@@ -167,8 +167,35 @@ function stripHtmlPreview(html, max = 140) {
   }
 }
 
+function parseRowVariables(r) {
+  const v = r?.variables;
+  if (v == null) return {};
+  if (typeof v === "string") {
+    try {
+      const o = JSON.parse(v);
+      return o && typeof o === "object" ? o : {};
+    } catch {
+      return {};
+    }
+  }
+  return typeof v === "object" ? v : {};
+}
+
 function correoTipo(r) {
-  return r?.variables?.tipo_correo === "agradecimiento" ? "agradecimiento" : "cobro";
+  const v = parseRowVariables(r);
+  if (v.tipo_correo === "agradecimiento") return "agradecimiento";
+  const a = String(r?.asunto || "").toLowerCase();
+  if (a.includes("gracias por estar al día")) return "agradecimiento";
+  return "cobro";
+}
+
+/** Fila de agradecimiento aunque `variables` venga mal o vacío (evita bloquear cobros nuevos). */
+function isLikelyAgradecimientoRow(r) {
+  if (correoTipo(r) === "agradecimiento") return true;
+  const mp = parseFloat(r?.monto_pendiente);
+  const a = String(r?.asunto || "").toLowerCase();
+  if (!Number.isNaN(mp) && mp <= 0 && a.includes("gracias") && a.includes("al día")) return true;
+  return false;
 }
 
 function htmlToPlainText(html) {
@@ -330,7 +357,7 @@ export default function CobranzaView({
   const [selected, setSelected] = useState(() => new Set());
   const [sendProgress, setSendProgress] = useState(null);
 
-  /** Mes de referencia para montos al generar borradores (vacío = suma pendientes por línea en Gastos − garantías vigentes). */
+  /** Mes de referencia para montos al generar borradores (vacío = suma pendientes por línea en Gastos). */
   const [periodoCobranza, setPeriodoCobranza] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -346,16 +373,16 @@ export default function CobranzaView({
 
   const etiquetaPeriodoCorreo = useMemo(() => {
     if (periodoCobranza && String(periodoCobranza).trim()) {
-      return `Este monto corresponde al mes ${fmtM(periodoCobranza)}: suma del pendiente de cada gasto cuyo período (columna mes) es ese mes, menos garantías vigentes con mes en resumen en ese mes — igual que al filtrar Gastos Ads por ese mes.`;
+      return `Este monto corresponde al mes ${fmtM(periodoCobranza)}: suma del pendiente de cada gasto cuyo período (columna mes) es ese mes — igual que la columna Pendiente al filtrar Gastos Ads por ese mes.`;
     }
-    return "Este monto es la suma del pendiente de cada gasto del cliente (columna Pendiente en Gastos Ads), menos garantías vigentes. Así coincide con las líneas con saldo; si hay cobros sin vincular a un gasto, puede diferir del resumen «A cobrar» del listado.";
+    return "Este monto es la suma del pendiente de cada gasto del cliente (columna Pendiente en Gastos Ads). Si hay cobros sin vincular a un gasto, puede diferir del resumen «A cobrar» del listado.";
   }, [periodoCobranza, fmtM]);
 
   const etiquetaPeriodoThanks = useMemo(() => {
     if (periodoCobranza && String(periodoCobranza).trim()) {
       return `respecto al mes ${fmtM(periodoCobranza)} (sin pendiente en gastos de ese período mes, según Gastos Ads).`;
     }
-    return "en el conjunto de tu cuenta (suma de pendientes por línea en Gastos, menos garantías vigentes).";
+    return "en el conjunto de tu cuenta (suma de pendientes por línea en Gastos).";
   }, [periodoCobranza, fmtM]);
 
   /** Misma plantilla que envuelve Resend en cobranza-enviar (cuerpo = borrador editable). */
@@ -770,7 +797,7 @@ export default function CobranzaView({
           (r) =>
             String(r.client_id) === cid &&
             r.estado === "pending_approval" &&
-            correoTipo(r) === "agradecimiento",
+            isLikelyAgradecimientoRow(r),
         );
         for (const r of pendingThanks) {
           const { error: rejErr } = await supabase
@@ -954,7 +981,7 @@ export default function CobranzaView({
     }
   };
 
-  const variablesObj = detail?.variables && typeof detail.variables === "object" ? detail.variables : {};
+  const variablesObj = detail ? parseRowVariables(detail) : {};
 
   const cobranzaAiUrl = useMemo(() => {
     const u = (import.meta.env.VITE_COBRANZA_AI_URL || "").trim();
@@ -973,7 +1000,7 @@ export default function CobranzaView({
       const { data: sess } = await supabase.auth.getSession();
       const token = sess?.session?.access_token;
       const tipo = correoTipo(detail) === "agradecimiento" ? "agradecimiento" : "cobro";
-      const v = detail.variables && typeof detail.variables === "object" ? detail.variables : {};
+      const v = parseRowVariables(detail);
       const res = await fetch(cobranzaAiUrl, {
         method: "POST",
         headers: {
@@ -1253,11 +1280,11 @@ export default function CobranzaView({
               <p style={{ margin: "0 0 14px", fontSize: 13, color: "#57534e", lineHeight: 1.55, maxWidth: 900 }}>
                 {periodoCobranza.trim() ? (
                   <>
-                    Con <strong>un mes</strong>, el monto al pulsar «Borradores cobro» / «Agradecimiento» usa el <strong>período del gasto</strong> (columna mes en Gastos Ads): se suma el <strong>pendiente</strong> de cada línea de ese mes y se restan <strong>garantías vigentes</strong> con mes en resumen en ese mes. Así coincide con lo que ves al filtrar pendientes por ese mes.
+                    Con <strong>un mes</strong>, el monto al pulsar «Borradores cobro» / «Agradecimiento» usa el <strong>período del gasto</strong> (columna mes): se suma el <strong>pendiente</strong> de cada línea de ese mes (misma idea que la columna Pendiente en Gastos Ads).
                   </>
                 ) : (
                   <>
-                    Con <strong>Cuenta completa</strong>, el monto es la <strong>suma del pendiente de cada gasto</strong> (lo que ves en la columna Pendiente) <strong>menos garantías vigentes</strong>. No usa solo el resumen global del listado, para no marcar «al día» si aún hay líneas con saldo (p. ej. cobros aún sin asignar a un gasto).
+                    Con <strong>Cuenta completa</strong>, el monto es la <strong>suma del pendiente de cada gasto</strong> (columna Pendiente). Así no se marca «al día» si sigue habiendo líneas con saldo aunque el resumen global diga otra cosa.
                   </>
                 )}
               </p>
