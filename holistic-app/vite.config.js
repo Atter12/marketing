@@ -6,14 +6,29 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-/** Sirve `marketing/finanzas/` en dev bajo `/finanzas/*` (mismo origen que en Vercel). */
-function serveFinanzasFromRepo() {
-  const finRoot = resolve(__dirname, '..', 'finanzas');
+/** En dev: `/finanzas/*` → repo `finanzas/`; `/acceso-finanzas` → `acceso-finanzas.html` en la raíz del repo. */
+function serveRepoMarketingStatics() {
+  const repoRoot = resolve(__dirname, '..');
+  const finRoot = join(repoRoot, 'finanzas');
   return {
-    name: 'serve-finanzas-repo',
+    name: 'serve-repo-marketing-statics',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         const raw = req.url?.split('?')[0] || '';
+        if (raw === '/acceso-finanzas' || raw === '/acceso-finanzas/') {
+          const acc = join(repoRoot, 'acceso-finanzas.html');
+          if (existsSync(acc)) {
+            try {
+              if (statSync(acc).isFile()) {
+                res.setHeader('Content-Type', 'text/html; charset=utf-8');
+                return createReadStream(acc).on('error', () => next()).pipe(res);
+              }
+            } catch {
+              /* fall through */
+            }
+          }
+          return next();
+        }
         if (!raw.startsWith('/finanzas')) return next();
         let rel = raw === '/finanzas' || raw === '/finanzas/' ? 'finanzas.html' : raw.slice('/finanzas/'.length);
         if (!rel || rel.includes('..')) return next();
@@ -52,7 +67,7 @@ function authConfigPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), authConfigPlugin(), serveFinanzasFromRepo()],
+  plugins: [react(), authConfigPlugin(), serveRepoMarketingStatics()],
   base: '/credito-app/',
   define: {
     'import.meta.env.PUBLIC_SUPABASE_URL': JSON.stringify(process.env.PUBLIC_SUPABASE_URL ?? ''),

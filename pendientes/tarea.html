@@ -2346,18 +2346,37 @@ body.holistic-name-gate-open { overflow: hidden; }
   var lib=window.supabase;
   var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
   if(!lib||typeof createClientFn!=='function'){ console.warn('[Pendientes] auth: createClient no encontrado en window.supabase'); return; }
-  var supabase=createClientFn(url,key);
+  var authStorage={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
+  var supabase=createClientFn(url,key,{auth:authStorage});
   var hash=window.location.hash||'';
   if(hash.indexOf('access_token')!==-1){
     var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
     if(params.access_token&&params.refresh_token){
-      supabase.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token}).then(function(){ window.history.replaceState(null,'','/pendientes'); });
+      supabase.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token})
+        .then(function(res){ if(res&&res.error) throw res.error; window.history.replaceState(null,'','/pendientes'); })
+        .catch(function(){ window.location.replace('/acceso-pendientes'); });
+    } else {
+      window.location.replace('/acceso-pendientes');
     }
     return;
   }
-  supabase.auth.getSession().then(function(r){
-    if(!r.data.session) window.location.replace('/acceso-pendientes');
-  });
+  var maxAttempts=12;var delayMs=90;var attempt=0;
+  function trySession(){
+    supabase.auth.getSession().then(function(r){
+      if(r.data&&r.data.session){ return; }
+      attempt++;
+      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
+      supabase.auth.getUser().then(function(ur){
+        if(ur.data&&ur.data.user){ return; }
+        window.location.replace('/acceso-pendientes');
+      }).catch(function(){ window.location.replace('/acceso-pendientes'); });
+    }).catch(function(){
+      attempt++;
+      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
+      window.location.replace('/acceso-pendientes');
+    });
+  }
+  trySession();
 })();
 </script>
 
@@ -3009,7 +3028,9 @@ function tryInitSupabase(retryCount) {
     return;
   }
   try {
-    supabase = createClientFn(url, key);
+    supabase = createClientFn(url, key, {
+      auth: { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true },
+    });
     console.log('[Pendientes] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
     tryRunTareasAppBootstrap();
   } catch (e) {

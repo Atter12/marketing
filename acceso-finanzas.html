@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Acceso Pendientes | Holistic Marketing</title>
+  <title>Acceso Finanzas | Holistic Marketing</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -20,9 +20,9 @@
     .form-subtitle{font-size:16px;font-weight:400;color:#6B7280;line-height:1.5;margin-bottom:32px;}
     .input-group{margin-bottom:16px;}
     .input-field{width:100%;height:44px;padding:0 14px;border:1px solid #E5E7EB;border-radius:8px;background:#fff;font-family:inherit;font-size:16px;color:#111827;outline:none;box-sizing:border-box;}
-    .input-field:focus{border-color:#3B82F6;box-shadow:0 0 0 3px rgba(59,130,246,0.12);}
-    .btn{width:100%;height:44px;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;background:#3B82F6;color:#fff;}
-    .btn:hover{background:#2563EB;}
+    .input-field:focus{border-color:#0D9488;box-shadow:0 0 0 3px rgba(13,148,136,0.12);}
+    .btn{width:100%;height:44px;border:none;border-radius:8px;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;background:#0D9488;color:#fff;}
+    .btn:hover{background:#0F766E;}
     .btn:disabled{background:#9CA3AF;cursor:not-allowed;}
     .hint-text{font-size:14px;color:#9CA3AF;text-align:center;margin-top:12px;line-height:1.5;}
     .success-box{display:flex;align-items:center;gap:8px;margin-bottom:20px;padding:12px 14px;background:#ECFDF5;color:#059669;border-radius:8px;font-size:14px;}
@@ -32,17 +32,17 @@
 </head>
 <body>
   <header class="header">
-    <a href="/pendientes" class="header-logo">
-      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden><rect width="28" height="28" rx="6" fill="#3B82F6"/><path d="M9 8v12M19 8v12M9 14h10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+    <a href="/finanzas" class="header-logo">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden><rect width="28" height="28" rx="6" fill="#0D9488"/><path d="M8 18V10M14 22V6M20 18V10" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
       <span class="header-logo-text">Holistic Marketing</span>
     </a>
   </header>
   <main class="main">
     <div class="form-wrapper">
       <h1 class="form-heading">Iniciar sesión</h1>
-      <p class="form-subtitle">Ingresa tu correo para acceder a Pendientes.</p>
+      <p class="form-subtitle">Ingresá tu correo para acceder al dashboard Finanzas (misma cuenta que Crédito / Pendientes).</p>
       <div id="successBox" class="success-box" style="display:none;">
-        <span>Revisá tu correo. Abrí el enlace para entrar a Pendientes.</span>
+        <span>Revisá tu correo. Abrí el enlace para entrar a Finanzas.</span>
       </div>
       <form id="form">
         <div id="errorBox" class="error-box" style="display:none;"></div>
@@ -68,13 +68,13 @@
         if (h === 'localhost' || h === '127.0.0.1') return window.location.origin;
         return 'https://www.marketingconholistic.com';
       }
-      function pendientesAppUrl() { return holisticWebBase() + '/pendientes'; }
+      function finanzasAppUrl() { return holisticWebBase() + '/finanzas'; }
       var hashEarly = window.location.hash || '';
       var hostEarly = window.location.hostname;
       var isLocalEarly = hostEarly === 'localhost' || hostEarly === '127.0.0.1';
       var isHolisticHost = hostEarly === 'www.marketingconholistic.com' || hostEarly === 'marketingconholistic.com';
       if (hashEarly.indexOf('access_token') !== -1 && !isLocalEarly && !isHolisticHost) {
-        window.location.replace(pendientesAppUrl() + hashEarly);
+        window.location.replace(finanzasAppUrl() + hashEarly);
         return;
       }
       var url = window.__SUPABASE_URL__;
@@ -89,7 +89,7 @@
       });
       var hash = window.location.hash || '';
       if (hash.indexOf('access_token') !== -1) {
-        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Pendientes…</div>';
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Finanzas…</div>';
         var params = {};
         hash.slice(1).split('&').forEach(function(p) {
           var kv = p.split('=');
@@ -97,14 +97,14 @@
         });
         if (params.access_token && params.refresh_token) {
           supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
-            .then(function() { window.location.replace(pendientesAppUrl()); })
-            .catch(function() { window.location.replace(holisticWebBase() + '/acceso-pendientes'); });
+            .then(function() { window.location.replace(finanzasAppUrl()); })
+            .catch(function() { window.location.replace(holisticWebBase() + '/acceso-finanzas'); });
         } else {
-          window.location.replace(pendientesAppUrl());
+          window.location.replace(finanzasAppUrl());
         }
         return;
       }
-      var redirectTo = pendientesAppUrl();
+      var redirectTo = finanzasAppUrl();
       var successBox = document.getElementById('successBox');
       var btnEl = document.getElementById('btn');
 

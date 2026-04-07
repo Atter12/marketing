@@ -412,7 +412,73 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 /* ===== TOOLTIP OVERRIDE (via Chart.js external) ===== */
 </style>
 </head>
-<body>
+<body class="finanzas-auth-pending">
+<script src="/credito-app/auth-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  function holisticWebBase(){
+    var b=(typeof window.__HOLISTIC_WEB_ORIGIN__==='string'&&window.__HOLISTIC_WEB_ORIGIN__.trim())?String(window.__HOLISTIC_WEB_ORIGIN__).replace(/\/$/,''):'';
+    if(b)return b;
+    var h=window.location.hostname;
+    if(h==='localhost'||h==='127.0.0.1')return window.location.origin;
+    return 'https://www.marketingconholistic.com';
+  }
+  var hashEarly=window.location.hash||'';
+  var hostEarly=window.location.hostname;
+  var isLocalEarly=hostEarly==='localhost'||hostEarly==='127.0.0.1';
+  var isHolisticHost=hostEarly==='www.marketingconholistic.com'||hostEarly==='marketingconholistic.com';
+  if(hashEarly.indexOf('access_token')!==-1&&!isLocalEarly&&!isHolisticHost){
+    window.location.replace(holisticWebBase()+'/finanzas'+hashEarly);
+    return;
+  }
+  var url=window.__SUPABASE_URL__;
+  var key=window.__SUPABASE_ANON_KEY__;
+  if(!url||!key){ console.warn('[Finanzas] Sin URL/KEY Supabase'); document.body.classList.remove('finanzas-auth-pending'); var g0=document.getElementById('finanzasAuthGate'); if(g0)g0.remove(); window.__FINANZAS_AUTH_OK=true; return; }
+  var lib=window.supabase;
+  var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
+  if(!lib||typeof createClientFn!=='function'){ console.warn('[Finanzas] createClient no disponible'); document.body.classList.remove('finanzas-auth-pending'); var g1=document.getElementById('finanzasAuthGate'); if(g1)g1.remove(); window.__FINANZAS_AUTH_OK=true; return; }
+  var authStorage={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
+  var sb=createClientFn(url,key,{auth:authStorage});
+  var hash=window.location.hash||'';
+  function allow(){
+    window.__FINANZAS_AUTH_OK=true;
+    document.body.classList.remove('finanzas-auth-pending');
+    var g=document.getElementById('finanzasAuthGate');
+    if(g)g.remove();
+    if(typeof window.finanzasInitApp==='function'){ window.finanzasInitApp(); }
+  }
+  function deny(){ window.location.replace('/acceso-finanzas'); }
+  if(hash.indexOf('access_token')!==-1){
+    var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
+    if(params.access_token&&params.refresh_token){
+      sb.auth.setSession({access_token:params.access_token,refresh_token:params.refresh_token})
+        .then(function(res){ if(res&&res.error)throw res.error; window.history.replaceState(null,'','/finanzas'); allow(); })
+        .catch(function(){ deny(); });
+    } else { deny(); }
+    return;
+  }
+  var maxAttempts=12,delayMs=90,attempt=0;
+  function trySession(){
+    sb.auth.getSession().then(function(r){
+      if(r.data&&r.data.session){ allow(); return; }
+      attempt++;
+      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
+      sb.auth.getUser().then(function(ur){
+        if(ur.data&&ur.data.user){ allow(); return; }
+        deny();
+      }).catch(function(){ deny(); });
+    }).catch(function(){
+      attempt++;
+      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
+      deny();
+    });
+  }
+  trySession();
+})();
+</script>
+<style>body.finanzas-auth-pending .app{visibility:hidden}#finanzasAuthGate{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:#F8FAFC;color:#475569;font-family:'Inter',sans-serif;font-size:14px}</style>
+<div id="finanzasAuthGate" aria-live="polite">Comprobando sesión…</div>
 <div class="app">
 <!-- ===== SIDEBAR ===== -->
 <aside class="sidebar" id="sidebar">
@@ -1904,15 +1970,15 @@ document.getElementById('modalOverlay').addEventListener('click',function(e){
   if(e.target===this) closeModal();
 });
 
-// ===== INIT =====
-function init(){
+// ===== INIT (solo tras login; ver script al inicio de body) =====
+window.finanzasInitApp = function finanzasInitApp(){
   document.documentElement.setAttribute('data-theme','light');
   sparkCounter = 0;
   renderSidebar();
   renderFilterBar();
   renderView();
-}
-init();
+};
+if (window.__FINANZAS_AUTH_OK) window.finanzasInitApp();
 </script>
 <script data-pplx-inline-edit>
 (function(){
