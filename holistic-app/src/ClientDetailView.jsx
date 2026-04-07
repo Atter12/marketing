@@ -185,7 +185,6 @@ export default function ClientDetailView(props) {
         ),
         effectiveTab === "todos" && (() => {
           const cellAds = { background: "#fce7f3" };
-          const cellFee = { background: "#e0f2fe" };
           const cellGar = { background: "#dcfce7" };
           const cellCobro = { background: "#f8fafc" };
           const raw = [];
@@ -194,8 +193,8 @@ export default function ClientDetailView(props) {
             const gastoNum = parseFloat(g.gasto || 0);
             const feeNum = g._f || 0;
             const camp = (g.camp || "").trim();
-            const obsAds = [camp, gastoNum ? `${fmt(gastoNum)} USD` : "", g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General";
-            if (gastoNum !== 0) {
+            if (gastoNum !== 0 || feeNum !== 0) {
+              const obsAds = [camp, g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General";
               raw.push({
                 sortKey: ledgerSortKey(ymd, "00:00:00", 0, `${g.id}-ads`),
                 fechaYmd: ymd,
@@ -203,18 +202,8 @@ export default function ClientDetailView(props) {
                 descStyle: cellAds,
                 obs: obsAds,
                 moneda: "USD",
-                delta: gastoNum,
-              });
-            }
-            if (feeNum !== 0) {
-              raw.push({
-                sortKey: ledgerSortKey(ymd, "00:00:01", 1, `${g.id}-fee`),
-                fechaYmd: ymd,
-                desc: "FEE",
-                descStyle: cellFee,
-                obs: [camp, `${fmt(feeNum)} USD`, g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General",
-                moneda: "USD",
-                delta: feeNum,
+                delta: gastoNum + feeNum,
+                adsBreakdown: { gasto: gastoNum, fee: feeNum, total: gastoNum + feeNum },
               });
             }
           });
@@ -265,19 +254,19 @@ export default function ClientDetailView(props) {
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>
-                Movimientos del período seleccionado (o todos), en orden cronológico. <strong>Importe</strong>: gastos y fee suman al saldo; <strong>cobros</strong> y <strong>garantías vigentes</strong> restan. La columna <strong>Saldo</strong> es el acumulado fila a fila.
+                Movimientos del período seleccionado (o todos), en orden cronológico. En <strong>ADS</strong>, una sola fila muestra gasto (<strong>Importe</strong>), <strong>Fee</strong> y <strong>Total</strong>; el saldo avanza con ese total. <strong>Cobros</strong> y <strong>garantías vigentes</strong> restan. La columna <strong>Saldo</strong> es el acumulado fila a fila.
               </p>
               <TableScrollWrap className="hm-table-wrap hm-table-detail" autoFocusScroll={effectiveTab === "todos"}>
                 <table>
                   <thead>
                     <tr>
-                      {["N°", "Fecha", "Descripción", "Obs.", "Moneda", "Importe", "Saldo"].map((h) => (
+                      {["N°", "Fecha", "Descripción", "Obs.", "Moneda", "Importe", "Fee", "Total", "Saldo"].map((h) => (
                         <th key={h} style={TH}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {!rows.length && <Empty cols={7} msg="Sin movimientos en este período" />}
+                    {!rows.length && <Empty cols={9} msg="Sin movimientos en este período" />}
                     {rows.map((r) => (
                       <tr key={r.sortKey}>
                         <td style={{ ...TD, ...MN }}>{r.n}</td>
@@ -286,7 +275,9 @@ export default function ClientDetailView(props) {
                         <td style={{ ...TD, fontSize: 12.5, color: "#5f6577", maxWidth: 280 }}>{r.obs}</td>
                         <td style={{ ...TD, ...MN }}>{r.moneda}</td>
                         <td style={{ ...TD, ...MN, fontWeight: 700, verticalAlign: "top" }}>
-                          {r.garantiaSinEfecto ? (
+                          {r.adsBreakdown ? (
+                            <span style={{ color: "#1a1d26" }}>{r.adsBreakdown.gasto ? `$${fmt(r.adsBreakdown.gasto)}` : "—"}</span>
+                          ) : r.garantiaSinEfecto ? (
                             <>
                               <span style={{ color: "#5f6577" }}>${fmt(r.garantiaValorRef)}</span>
                               <span style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", display: "block", marginTop: 2 }}>Sin efecto en saldo (no vigente)</span>
@@ -296,6 +287,12 @@ export default function ClientDetailView(props) {
                               {r.delta === 0 ? "$0" : r.delta < 0 ? `-$${fmt(Math.abs(r.delta))}` : `$${fmt(r.delta)}`}
                             </span>
                           )}
+                        </td>
+                        <td style={{ ...TD, ...MN, fontWeight: 700, verticalAlign: "top", color: r.adsBreakdown ? "#2563eb" : "#9498a8" }}>
+                          {r.adsBreakdown ? (r.adsBreakdown.fee ? `$${fmt(r.adsBreakdown.fee)}` : "—") : "—"}
+                        </td>
+                        <td style={{ ...TD, ...MN, fontWeight: 700, verticalAlign: "top", color: r.adsBreakdown ? "#d97706" : "#9498a8" }}>
+                          {r.adsBreakdown ? `$${fmt(r.adsBreakdown.total)}` : "—"}
                         </td>
                         <td style={{ ...TD, ...MN, fontWeight: 700, color: r.saldo > 0 ? "#c2410c" : r.saldo < 0 ? "#059669" : "#1a1d26" }}>${fmt(r.saldo)}</td>
                       </tr>
