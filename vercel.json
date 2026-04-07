@@ -181,6 +181,18 @@
       "dest": "/video-app/video.html"
     },
     {
+      "src": "/finanzas",
+      "dest": "/finanzas/finanzas.html"
+    },
+    {
+      "src": "/finanzas/",
+      "dest": "/finanzas/finanzas.html"
+    },
+    {
+      "src": "/finanzas/finanzas.html",
+      "dest": "/finanzas/finanzas.html"
+    },
+    {
       "src": "/backup-dashboard",
       "dest": "/backup-dashboard/index.html"
     },

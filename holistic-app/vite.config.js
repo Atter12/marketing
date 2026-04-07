@@ -1,10 +1,37 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { writeFileSync, mkdirSync } from 'fs';
-import { dirname, join } from 'path';
+import { writeFileSync, mkdirSync, createReadStream, existsSync, statSync } from 'fs';
+import { dirname, join, normalize, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/** Sirve `marketing/finanzas/` en dev bajo `/finanzas/*` (mismo origen que en Vercel). */
+function serveFinanzasFromRepo() {
+  const finRoot = resolve(__dirname, '..', 'finanzas');
+  return {
+    name: 'serve-finanzas-repo',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const raw = req.url?.split('?')[0] || '';
+        if (!raw.startsWith('/finanzas')) return next();
+        let rel = raw === '/finanzas' || raw === '/finanzas/' ? 'finanzas.html' : raw.slice('/finanzas/'.length);
+        if (!rel || rel.includes('..')) return next();
+        const fp = resolve(finRoot, normalize(rel));
+        if (!fp.startsWith(finRoot) || !existsSync(fp)) return next();
+        try {
+          if (!statSync(fp).isFile()) return next();
+        } catch {
+          return next();
+        }
+        if (fp.endsWith('.html')) res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        else if (fp.endsWith('.css')) res.setHeader('Content-Type', 'text/css; charset=utf-8');
+        else if (fp.endsWith('.js')) res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+        createReadStream(fp).on('error', () => next()).pipe(res);
+      });
+    },
+  };
+}
 
 function authConfigPlugin() {
   return {
@@ -25,7 +52,7 @@ function authConfigPlugin() {
 }
 
 export default defineConfig({
-  plugins: [react(), authConfigPlugin()],
+  plugins: [react(), authConfigPlugin(), serveFinanzasFromRepo()],
   base: '/credito-app/',
   define: {
     'import.meta.env.PUBLIC_SUPABASE_URL': JSON.stringify(process.env.PUBLIC_SUPABASE_URL ?? ''),

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail, Activity } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail, Activity, Landmark } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { buildClientLedgerRows } from "./clientDetailLedger";
 import CobranzaView from "./CobranzaView";
@@ -1515,6 +1515,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return <text x={cx + r * Math.cos(-midAngle * R)} y={cy + r * Math.sin(-midAngle * R)} fill="var(--color-text-muted)" textAnchor={cx + r * Math.cos(-midAngle * R) > cx ? "start" : "end"} dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600, fontFamily: "var(--font-body)" }}>{(percent * 100).toFixed(1)}%</text>;
   };
 
+  const finanzasExternalUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/finanzas`
+      : "https://www.marketingconholistic.com/finanzas";
+
   /* NAV: gerente = Métricas (gráficos/KPIs) + Resumen (tabla desglose); cliente = Mi cuenta, Resumen, … */
   const nav = isCliente
     ? [
@@ -1532,7 +1537,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "cobros", icon: <CreditCard size={18} />, label: "Cobros", accent: "#059669" },
         { id: "cobranza", icon: <Mail size={18} />, label: "Cobranza", accent: "#e11d48" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías", accent: "#7c3aed" },
-        { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", section: "Sistema", accent: "#64748b" },
+        { id: "finanzas", icon: <Landmark size={18} />, label: "Finanzas", external: finanzasExternalUrl, section: "Sistema", accent: "#0d9488" },
+        { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", accent: "#64748b" },
       ];
 
   const pct = curDDisplay && (curDDisplay.tG + curDDisplay.tF) > 0 ? (curDDisplay.tP / (curDDisplay.tG + curDDisplay.tF)) * 100 : 0;
