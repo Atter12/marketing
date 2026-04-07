@@ -367,6 +367,8 @@ export default function CobranzaView({
 
   const [selected, setSelected] = useState(() => new Set());
   const [sendProgress, setSendProgress] = useState(null);
+  /** Con un mes elegido, la bandeja muestra solo borradores de ese mes; activá esto para ver filas de otros meses o sin mes. */
+  const [bandejaIncluirTodosPeriodos, setBandejaIncluirTodosPeriodos] = useState(false);
 
   /** Mes de referencia para montos al generar borradores (vacío = suma pendientes por línea en Gastos). */
   const [periodoCobranza, setPeriodoCobranza] = useState(() => {
@@ -463,6 +465,10 @@ export default function CobranzaView({
     if (mainTab === "historial") loadHistorial();
   }, [mainTab, loadHistorial]);
 
+  useEffect(() => {
+    setBandejaIncluirTodosPeriodos(false);
+  }, [periodoCobranza]);
+
   const insertEvent = async (correoId, evento, detalle = {}) => {
     if (!supabase || !correoId) return;
     await supabase.from("cobranza_eventos").insert({
@@ -486,7 +492,7 @@ export default function CobranzaView({
     setDetailEvents(data || []);
   };
 
-  const filtered = useMemo(() => {
+  const filteredBase = useMemo(() => {
     let list = rows.slice();
     if (filterEstado === "activos") {
       list = list.filter((r) =>
@@ -531,14 +537,24 @@ export default function CobranzaView({
   }, [rows, filterEstado, filterTipo, q, sortBy]);
 
   const periodoSelectorYm = periodoCobranza.trim();
-  const bandejaPeriodoMismatchCount = useMemo(() => {
-    if (!periodoSelectorYm) return 0;
-    return filtered.filter((r) => {
+
+  const bandejaOcultasPorPeriodo = useMemo(() => {
+    if (!periodoSelectorYm || bandejaIncluirTodosPeriodos) return 0;
+    return filteredBase.filter((r) => {
       const v = parseRowVariables(r);
       const rowYm = v.periodo_ym ? String(v.periodo_ym).trim() : "";
-      return rowYm && ymComparable(periodoSelectorYm) !== ymComparable(rowYm);
+      return !rowYm || ymComparable(rowYm) !== ymComparable(periodoSelectorYm);
     }).length;
-  }, [filtered, periodoSelectorYm]);
+  }, [filteredBase, periodoSelectorYm, bandejaIncluirTodosPeriodos]);
+
+  const filtered = useMemo(() => {
+    if (!periodoSelectorYm || bandejaIncluirTodosPeriodos) return filteredBase;
+    return filteredBase.filter((r) => {
+      const v = parseRowVariables(r);
+      const rowYm = v.periodo_ym ? String(v.periodo_ym).trim() : "";
+      return rowYm && ymComparable(rowYm) === ymComparable(periodoSelectorYm);
+    });
+  }, [filteredBase, periodoSelectorYm, bandejaIncluirTodosPeriodos]);
 
   const pendingFiltered = useMemo(
     () => filtered.filter((r) => r.estado === "pending_approval"),
@@ -1140,8 +1156,8 @@ export default function CobranzaView({
             />
             Cobranza
           </h2>
-          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 720, lineHeight: 1.45 }}>
-            El monto de los <strong>correos nuevos</strong> depende del <strong>período de referencia</strong> (abajo). Las filas ya guardadas conservan el monto del momento en que se generaron. Si un <strong>agradecimiento</strong> quedó mal, usá <strong>Borradores cobro</strong>: con saldo pendiente, el sistema <strong>rechaza solo ese agradecimiento en revisión</strong> y crea el cobro (no hace falta borrarlo a mano). Si ya estaba aprobado, rechazalo vos y volvé a generar.
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 760, lineHeight: 1.45 }}>
+            Con un <strong>mes</strong> elegido, la <strong>bandeja solo lista borradores de ese mes</strong> (mismo criterio que el selector). Los <strong>correos nuevos</strong> usan ese período para el monto. Si un agradecimiento quedó mal, <strong>Borradores cobro</strong> puede reemplazar el que está en revisión. Con <strong>Cuenta completa</strong> se muestran todas las filas.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -1253,6 +1269,28 @@ export default function CobranzaView({
                   fontSize: 13,
                 }}
               />
+              {periodoCobranza.trim() ? (
+                <label
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: "#475569",
+                    cursor: "pointer",
+                    userSelect: "none",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={bandejaIncluirTodosPeriodos}
+                    onChange={(e) => setBandejaIncluirTodosPeriodos(e.target.checked)}
+                    style={{ width: 16, height: 16, accentColor: "#e11d48" }}
+                  />
+                  Ver todos los períodos
+                </label>
+              ) : null}
               <Btn variant="outline" size="sm" onClick={loadRows} disabled={loading || busy}>
                 <RefreshCw size={14} /> Actualizar
               </Btn>
@@ -1457,25 +1495,35 @@ export default function CobranzaView({
               </div>
             </div>
             <FlowSteps />
-            {periodoSelectorYm && bandejaPeriodoMismatchCount > 0 && (
+            {periodoSelectorYm && !bandejaIncluirTodosPeriodos && (
               <div
                 style={{
                   marginBottom: 14,
                   padding: "12px 16px",
-                  background: "#fff7ed",
-                  border: "1px solid #fdba74",
+                  background: "#eff6ff",
+                  border: "1px solid #93c5fd",
                   borderRadius: 12,
                   fontSize: 12.5,
-                  color: "#9a3412",
+                  color: "#1e40af",
                   lineHeight: 1.55,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 10,
+                  justifyContent: "space-between",
                 }}
               >
-                <strong>Período distinto al del selector.</strong> Tenés{" "}
-                <strong>{bandejaPeriodoMismatchCount}</strong> fila(s) en esta vista generada(s) con otro mes que{" "}
-                <strong>{fmtM(periodoSelectorYm)}</strong> (mirá la columna «Período ref.»). Por eso puede ser
-                agradecimiento con $0 aunque el cliente deba en otro mes.{" "}
-                <strong>Rechazá</strong> esas filas, ajustá el mes arriba si hace falta y tocá{" "}
-                <strong>Borradores cobro</strong>.
+                <span>
+                  <strong>Bandeja = solo {fmtM(periodoSelectorYm)}.</strong> Coincide con el período de arriba.{" "}
+                  {bandejaOcultasPorPeriodo > 0 ? (
+                    <>
+                      Hay <strong>{bandejaOcultasPorPeriodo}</strong> fila(s) de otro mes o sin mes guardado (no se
+                      muestran). Para verlas, marcá <strong>Ver todos los períodos</strong> en la barra de filtros.
+                    </>
+                  ) : (
+                    <>No hay borradores ocultos para este filtro.</>
+                  )}
+                </span>
               </div>
             )}
             <div
@@ -1747,7 +1795,22 @@ export default function CobranzaView({
                     {!loading && !filtered.length && (
                       <tr>
                         <td colSpan={10} style={{ ...TD, textAlign: "center", color: "#94a3b8", padding: 40 }}>
-                          No hay registros. Usá «Borradores cobro» o «Agradecimiento» o revisá el filtro.
+                          {periodoSelectorYm && !bandejaIncluirTodosPeriodos ? (
+                            <>
+                              No hay borradores para <strong style={{ color: "#64748b" }}>{fmtM(periodoSelectorYm)}</strong>{" "}
+                              con los filtros actuales. Tocá <strong>«Borradores cobro»</strong> o{" "}
+                              <strong>«Agradecimiento»</strong>.
+                              {bandejaOcultasPorPeriodo > 0 ? (
+                                <>
+                                  {" "}
+                                  O hay <strong>{bandejaOcultasPorPeriodo}</strong> fila(s) de otros meses: marcá{" "}
+                                  <strong>Ver todos los períodos</strong> arriba.
+                                </>
+                              ) : null}
+                            </>
+                          ) : (
+                            <>No hay registros. Usá «Borradores cobro» o «Agradecimiento» o revisá el filtro.</>
+                          )}
                         </td>
                       </tr>
                     )}
