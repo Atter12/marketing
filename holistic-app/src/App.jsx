@@ -74,6 +74,20 @@ function netPendingClienteCobranzaEnMes(cid, periodoMes, sGastos, gastosList, ga
   const gar = garantiasParaReporte.reduce((a, g) => a + parseFloat(g.valor || 0), 0);
   return Math.max(0, sumPend - gar);
 }
+
+/**
+ * Cobranza en «Cuenta completa»: suma el pendiente de cada línea de gasto (`_pend`), igual que en la tabla Gastos.
+ * No usa `cData().net` porque los cobros sin `gastoId` bajan la deuda global pero no el `_pend` por línea → antes se
+ * generaban agradecimientos en falso con deuda visible en gastos.
+ */
+function netPendienteCobranzaCuentaCompleta(cid, sGastos, garantias) {
+  const gs = sGastos.filter((g) => String(g.clientId) === String(cid));
+  const sumPend = gs.reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
+  const tGar = garantias
+    .filter((g) => g.estado === "Vigente" && String(g.clientId) === String(cid))
+    .reduce((a, g) => a + parseFloat(g.valor || 0), 0);
+  return Math.max(0, sumPend - tGar);
+}
 const addOneMonthYm = (ym) => { if (!ym || typeof ym !== "string") return tm(); const [y, m] = ym.split("-").map(Number); if (!y || !m) return tm(); const d = new Date(y, m, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`; };
 const fmtDD = (d) => { if (!d) return "—"; const x = new Date(d + "T12:00:00"); const dd = String(x.getDate()).padStart(2, "0"); const mm = String(x.getMonth() + 1).padStart(2, "0"); return dd + "/" + mm + "/" + x.getFullYear(); };
 const fmtT = (t) => { if (!t) return "—"; const s = String(t).slice(0, 5); return s.length >= 5 ? s : t; };
@@ -2604,7 +2618,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             clients={clients}
             getClienteDeudaNeta={(id, periodoYM) => {
               const p = periodoYM && String(periodoYM).trim() ? normalizePeriod(periodoYM) : "";
-              if (!p) return cData(id).net;
+              if (!p) return netPendienteCobranzaCuentaCompleta(id, sGastos, garantias);
               return netPendingClienteCobranzaEnMes(id, p, sGastos, gastos, garantias);
             }}
             fmtM={fmtM}

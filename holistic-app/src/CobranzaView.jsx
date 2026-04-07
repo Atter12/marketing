@@ -330,7 +330,7 @@ export default function CobranzaView({
   const [selected, setSelected] = useState(() => new Set());
   const [sendProgress, setSendProgress] = useState(null);
 
-  /** Mes de referencia para montos al generar borradores (vacío = deuda neta total actual, igual que «A cobrar» en Gastos). */
+  /** Mes de referencia para montos al generar borradores (vacío = suma pendientes por línea en Gastos − garantías vigentes). */
   const [periodoCobranza, setPeriodoCobranza] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -348,14 +348,14 @@ export default function CobranzaView({
     if (periodoCobranza && String(periodoCobranza).trim()) {
       return `Este monto corresponde al mes ${fmtM(periodoCobranza)}: suma del pendiente de cada gasto cuyo período (columna mes) es ese mes, menos garantías vigentes con mes en resumen en ese mes — igual que al filtrar Gastos Ads por ese mes.`;
     }
-    return "Este monto es la deuda neta actual total del cliente en el panel (todos los períodos), igual que la columna «A cobrar» en Gastos Ads.";
+    return "Este monto es la suma del pendiente de cada gasto del cliente (columna Pendiente en Gastos Ads), menos garantías vigentes. Así coincide con las líneas con saldo; si hay cobros sin vincular a un gasto, puede diferir del resumen «A cobrar» del listado.";
   }, [periodoCobranza, fmtM]);
 
   const etiquetaPeriodoThanks = useMemo(() => {
     if (periodoCobranza && String(periodoCobranza).trim()) {
       return `respecto al mes ${fmtM(periodoCobranza)} (sin pendiente en gastos de ese período mes, según Gastos Ads).`;
     }
-    return "en el conjunto de tu cuenta (deuda neta actual total en el panel, como «A cobrar» en Gastos).";
+    return "en el conjunto de tu cuenta (suma de pendientes por línea en Gastos, menos garantías vigentes).";
   }, [periodoCobranza, fmtM]);
 
   /** Misma plantilla que envuelve Resend en cobranza-enviar (cuerpo = borrador editable). */
@@ -1230,7 +1230,7 @@ export default function CobranzaView({
                   </>
                 ) : (
                   <>
-                    Con <strong>Cuenta completa</strong>, el monto es la <strong>deuda neta actual total</strong> del cliente (todos los períodos), igual que la columna <strong>«A cobrar»</strong> en Gastos Ads.
+                    Con <strong>Cuenta completa</strong>, el monto es la <strong>suma del pendiente de cada gasto</strong> (lo que ves en la columna Pendiente) <strong>menos garantías vigentes</strong>. No usa solo el resumen global del listado, para no marcar «al día» si aún hay líneas con saldo (p. ej. cobros aún sin asignar a un gasto).
                   </>
                 )}
               </p>
