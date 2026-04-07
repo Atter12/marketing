@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { CreditCard, Plus, ChevronLeft, ChevronRight, Edit3, Camera, Trash2, KeyRound, Download, Paperclip } from "lucide-react";
 import TableScrollWrap from "./TableScrollWrap";
+import { buildClientLedgerRows } from "./clientDetailLedger";
 import { isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
 
 const Slot = ({ content }) => content;
@@ -55,13 +56,6 @@ export default function ClientDetailView(props) {
   useEffect(() => { setPhotoUrl(curC.avatar_url || ""); }, [curC.avatar_url]);
 
   const effectiveTab = isCliente && detailTab === "cobros" ? "gastos" : detailTab;
-
-  /** Clave para ordenar movimientos del libro (cronológico ascendente). */
-  const ledgerSortKey = (dateYmd, timeHms, seq, id) => {
-    const d = (dateYmd || "1970-01-01").slice(0, 10);
-    const t = (timeHms || "00:00:00").toString().slice(0, 8);
-    return `${d}T${t}#${String(seq).padStart(2, "0")}#${id || ""}`;
-  };
 
   const handleSavePhoto = async () => {
     if (!updateClientAvatar) return;
@@ -187,70 +181,8 @@ export default function ClientDetailView(props) {
           const cellAds = { background: "#fce7f3" };
           const cellGar = { background: "#dcfce7" };
           const cellCobro = { background: "#f8fafc" };
-          const raw = [];
-          (curGastos || []).forEach((g) => {
-            const ymd = (g.fechaMovimiento && String(g.fechaMovimiento).slice(0, 10)) || (g.mes ? `${g.mes}-15` : "1970-01-01");
-            const gastoNum = parseFloat(g.gasto || 0);
-            const feeNum = g._f || 0;
-            const camp = (g.camp || "").trim();
-            if (gastoNum !== 0 || feeNum !== 0) {
-              const obsAds = [camp, g.codigo ? `Gasto ${g.codigo}` : ""].filter(Boolean).join(" · ") || "General";
-              raw.push({
-                sortKey: ledgerSortKey(ymd, "00:00:00", 0, `${g.id}-ads`),
-                fechaYmd: ymd,
-                desc: "ADS",
-                descStyle: cellAds,
-                obs: obsAds,
-                moneda: "USD",
-                delta: gastoNum + feeNum,
-                adsBreakdown: { gasto: gastoNum, fee: feeNum, total: gastoNum + feeNum },
-              });
-            }
-          });
-          (curCobros || []).forEach((co) => {
-            const ymd = (co.fecha && String(co.fecha).slice(0, 10)) || "1970-01-01";
-            const monto = parseFloat(co.monto || 0);
-            const gAsoc = gastos.find((x) => x.id === co.gastoId);
-            const periodoStr = mesCobro && fmtM && gastos ? fmtM(mesCobro(co, gastos)) : (gAsoc ? fmtM(gAsoc.mes) : "—");
-            raw.push({
-              sortKey: ledgerSortKey(ymd, co.hora || "12:00:00", 2, co.id),
-              fechaYmd: ymd,
-              desc: "COBRO",
-              descStyle: cellCobro,
-              obs: ["Pago", periodoStr !== "—" ? `Período ${periodoStr}` : "", co.metodo || "", co.codigo ? `Cód. ${co.codigo}` : ""].filter(Boolean).join(" · ") || "General",
-              moneda: "USD",
-              delta: -monto,
-            });
-          });
-          (curGars || []).forEach((gr) => {
-            const gastoAsoc = gr.gastoId ? gastos.find((x) => x.id === gr.gastoId) : null;
-            const ymd = (gr.fechaColocacion && String(gr.fechaColocacion).slice(0, 10))
-              || (gr.created_at && String(gr.created_at).slice(0, 10))
-              || "1970-01-01";
-            const valor = parseFloat(gr.valor || 0);
-            const vigente = gr.estado === "Vigente";
-            const mesRes = (gr.periodoResumen && String(gr.periodoResumen).trim())
-              ? String(gr.periodoResumen).slice(0, 7)
-              : (gastoAsoc?.mes || "");
-            const mesStr = mesRes && fmtM ? fmtM(mesRes) : "—";
-            raw.push({
-              sortKey: ledgerSortKey(ymd, "00:00:02", 3, gr.id),
-              fechaYmd: ymd,
-              desc: "GARANTÍA",
-              descStyle: cellGar,
-              obs: [gr.tipo || "", gr.desc || "", mesStr !== "—" ? `Mes resumen ${mesStr}` : "", gr.estado || ""].filter(Boolean).join(" · ") || "General",
-              moneda: "USD",
-              delta: vigente ? -valor : 0,
-              garantiaSinEfecto: !vigente && valor > 0,
-              garantiaValorRef: valor,
-            });
-          });
-          raw.sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-          let run = 0;
-          const rows = raw.map((r, i) => {
-            run += r.delta;
-            return { ...r, n: i + 1, saldo: run };
-          });
+          const descStyle = (d) => (d === "ADS" ? cellAds : d === "COBRO" ? cellCobro : d === "GARANTÍA" ? cellGar : {});
+          const rows = buildClientLedgerRows({ curGastos, curCobros, curGars, gastos, mesCobro, fmtM }).map((r) => ({ ...r, descStyle: descStyle(r.desc) }));
           return (
             <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 14, overflow: "hidden" }}>
               <p style={{ margin: "0 0 12px", padding: "0 4px", fontSize: 11.5, color: "#5f6577" }}>

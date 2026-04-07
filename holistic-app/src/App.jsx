@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail, Activity } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
+import { buildClientLedgerRows } from "./clientDetailLedger";
 import CobranzaView from "./CobranzaView";
 import { logHolisticFontDiagnostics } from "./holisticFontDiag.js";
 import TableScrollWrap from "./TableScrollWrap";
@@ -1389,6 +1390,26 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const hM = ["Fecha", "Concepto", "Monto", "Tipo", "Nota"];
       const rM = curManDisplay.map((m) => [fmtDD(m.fecha), m.conc || "—", fmtExcel(m.monto), m.tipo || "—", m.nota || "—"]);
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hM, ...rM]), "Datos manuales");
+      const hMov = ["N°", "Fecha", "Descripción", "Obs.", "Moneda", "Importe", "Fee", "Total", "Saldo"];
+      const ledgerRowsX = buildClientLedgerRows({ curGastos: curGastosDisplay, curCobros: curCobrosDisplay, curGars: curGarsDisplay, gastos, mesCobro, fmtM });
+      const rMov = ledgerRowsX.map((r) => {
+        let imp; let fee; let tot;
+        if (r.adsBreakdown) {
+          imp = r.adsBreakdown.gasto ? fmtExcel(r.adsBreakdown.gasto) : "—";
+          fee = r.adsBreakdown.fee ? fmtExcel(r.adsBreakdown.fee) : "—";
+          tot = fmtExcel(r.adsBreakdown.total);
+        } else if (r.garantiaSinEfecto) {
+          imp = fmtExcel(r.garantiaValorRef);
+          fee = "—";
+          tot = "—";
+        } else {
+          imp = fmtExcel(r.delta);
+          fee = "—";
+          tot = "—";
+        }
+        return [r.n, fmtDD(r.fechaYmd), r.desc, r.obs, r.moneda, imp, fee, tot, fmtExcel(r.saldo)];
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([hMov, ...rMov]), "Movimientos");
       XLSX.writeFile(wb, `cliente_${safeName}_periodo_${fileSuffix}_${td()}.xlsx`);
     }
 
@@ -1449,6 +1470,25 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         y = doc.lastAutoTable.finalY + 10;
       };
       const toStr = (x) => (x != null && x !== undefined ? String(x) : "—");
+      const ledgerRowsPdf = buildClientLedgerRows({ curGastos: curGastosDisplay, curCobros: curCobrosDisplay, curGars: curGarsDisplay, gastos, mesCobro, fmtM });
+      const rMovPdf = ledgerRowsPdf.map((r) => {
+        let imp; let fee; let tot;
+        if (r.adsBreakdown) {
+          imp = r.adsBreakdown.gasto ? fmt(r.adsBreakdown.gasto) : "—";
+          fee = r.adsBreakdown.fee ? fmt(r.adsBreakdown.fee) : "—";
+          tot = fmt(r.adsBreakdown.total);
+        } else if (r.garantiaSinEfecto) {
+          imp = fmt(r.garantiaValorRef);
+          fee = "—";
+          tot = "—";
+        } else {
+          imp = r.delta === 0 ? "0" : fmt(r.delta);
+          fee = "—";
+          tot = "—";
+        }
+        return [toStr(r.n), toStr(fmtDD(r.fechaYmd)), toStr(r.desc), toStr(r.obs), toStr(r.moneda), toStr(imp), toStr(fee), toStr(tot), toStr(fmt(r.saldo))];
+      });
+      addTable("Movimientos (cronológico)", ["N°", "Fecha", "Descripción", "Obs.", "Moneda", "Importe", "Fee", "Total", "Saldo"], rMovPdf);
       const rG = curGastosDisplay.map((g) => [toStr(fmtDD(g.fechaMovimiento)), toStr(fmtM(g.mes)), toStr(g.camp), toStr(fmt(g.gasto)), g.fee + "%", toStr(fmt(g._f)), toStr(fmt(g._t)), toStr(fmt(g._p)), curDExp.tGar > 0 ? fmt(curDExp.tGar) : "—", toStr(fmt(g._pend)), g._st, g.prepago ? "S" : "N"]);
       addTable("Gastos Ads", ["Fecha", "Período", "Campaña", "Gasto", "Fee %", "Fee $", "Total", "Pagado", "Garantía", "Pendiente", "Estado", "Prepago"], rG);
       const rC = curCobrosDisplay.map((co) => { const g = gastos.find((x) => x.id === co.gastoId); return [toStr(fmtD(co.fecha)), toStr(fmtT(co.hora)), toStr(co.codigo), toStr(g?.codigo), toStr(fmt(co.monto)), toStr(co.metodo), toStr(co.notas)]; });
