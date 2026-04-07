@@ -710,12 +710,18 @@ export default function CobranzaView({
     }
   };
 
-  const activeClientIds = useMemo(() => {
-    return new Set(
-      rows
-        .filter((r) => r.client_id && ["pending_approval", "approved", "sending"].includes(r.estado))
-        .map((r) => r.client_id),
-    );
+  /** Solo bloquea duplicados del mismo tipo: un agradecimiento activo ya no impide generar cobro (y viceversa). */
+  const activeClientsByTipo = useMemo(() => {
+    const cobro = new Set();
+    const thanks = new Set();
+    const estadosActivos = new Set(["pending_approval", "approved", "sending"]);
+    for (const r of rows) {
+      if (!r.client_id || !estadosActivos.has(r.estado)) continue;
+      const id = String(r.client_id);
+      if (correoTipo(r) === "agradecimiento") thanks.add(id);
+      else cobro.add(id);
+    }
+    return { cobro, thanks };
   }, [rows]);
 
   const insertBorrador = async (c, vars, asunto, cuerpo_html, monto, tipo) => {
@@ -751,13 +757,33 @@ export default function CobranzaView({
     if (!supabase || typeof getClienteDeudaNeta !== "function") return;
     setBusy(true);
     let n = 0;
+    const snapshotRows = rows;
     try {
       for (const c of clients) {
+        const cid = String(c.id);
         const net = deudaReferencia(c.id);
         if (net <= 0) continue;
-        if (activeClientIds.has(c.id)) continue;
+        if (activeClientsByTipo.cobro.has(cid)) continue;
         const email = firstClientEmail(c);
         if (!email) continue;
+        const pendingThanks = snapshotRows.filter(
+          (r) =>
+            String(r.client_id) === cid &&
+            r.estado === "pending_approval" &&
+            correoTipo(r) === "agradecimiento",
+        );
+        for (const r of pendingThanks) {
+          const { error: rejErr } = await supabase
+            .from("cobranza_bandeja")
+            .update({
+              estado: "rejected",
+              motivo_rechazo: "Reemplazado: hay saldo pendiente; se generó borrador de cobro.",
+              rechazado_por: userEmail || null,
+              rechazado_at: new Date().toISOString(),
+            })
+            .eq("id", r.id);
+          if (!rejErr) await insertEvent(r.id, "rechazado", { motivo: "Reemplazado al generar cobro", auto: true });
+        }
         const vars = {
           cliente_nombre: c.name || "Cliente",
           empresa: c.biz || "",
@@ -783,7 +809,7 @@ export default function CobranzaView({
       }
       if (n === 0) {
         alert(
-          "No hay borradores nuevos de cobro (sin deuda según el período elegido, sin email, o ya hay pendiente/aprobado para ese cliente).",
+          "No hay borradores nuevos de cobro (sin deuda según el período elegido, sin email, o ya hay cobro pendiente/aprobado/en envío para ese cliente). Si solo tenía agradecimiento en revisión, debería haberse reemplazado al haber saldo: revisá período y Actualizar.",
         );
       } else {
         alert(`Listo: ${n} borrador(es) de cobro para revisar.`);
@@ -801,9 +827,10 @@ export default function CobranzaView({
     let n = 0;
     try {
       for (const c of clients) {
+        const cid = String(c.id);
         const net = deudaReferencia(c.id);
         if (net > 0) continue;
-        if (activeClientIds.has(c.id)) continue;
+        if (activeClientsByTipo.thanks.has(cid)) continue;
         const email = firstClientEmail(c);
         if (!email) continue;
         const vars = {
@@ -1058,8 +1085,8 @@ export default function CobranzaView({
             />
             Cobranza
           </h2>
-          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 640, lineHeight: 1.45 }}>
-            El monto de los <strong>correos nuevos</strong> depende del <strong>período de referencia</strong> (abajo). Las filas ya guardadas conservan el monto del momento en que se generaron.
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 720, lineHeight: 1.45 }}>
+            El monto de los <strong>correos nuevos</strong> depende del <strong>período de referencia</strong> (abajo). Las filas ya guardadas conservan el monto del momento en que se generaron. Si un <strong>agradecimiento</strong> quedó mal, usá <strong>Borradores cobro</strong>: con saldo pendiente, el sistema <strong>rechaza solo ese agradecimiento en revisión</strong> y crea el cobro (no hace falta borrarlo a mano). Si ya estaba aprobado, rechazalo vos y volvé a generar.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

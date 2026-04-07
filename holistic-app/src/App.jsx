@@ -42,6 +42,14 @@ const lastDayOfMonth = (ym) => { const [y, m] = (ym || "").split("-").map(Number
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
 const normalizePeriod = (p) => { if (!p || typeof p !== "string") return ""; const t = String(p).trim(); const i = t.indexOf("-"); if (i === -1) return t; const y = t.slice(0, i), m = t.slice(i + 1); const mon = parseInt(m, 10); if (mon >= 1 && mon <= 12) return `${y}-${String(mon).padStart(2, "0")}`; return t; };
+/** Período del gasto (YYYY-MM) aunque en BD venga como fecha completa (2026-03-15). */
+const mesGastoYYYYMM = (g) => {
+  const raw = g?.mes;
+  if (raw == null || raw === "") return "";
+  const s = String(raw).trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 7);
+  return normalizePeriod(s);
+};
 const mesCobro = (c, gastosList) => { if (c.periodoResumen && String(c.periodoResumen).trim()) return normalizePeriod(String(c.periodoResumen).trim()); if (c.gastoId && gastosList && gastosList.length) { const g = gastosList.find((x) => x.id === c.gastoId); if (g && g.mes) return normalizePeriod(g.mes); } return normalizePeriod((c.fecha || "").slice(0, 7)); };
 /** Mes en que la garantía cuenta en el resumen (período explícito, gasto, fecha colocación o alta). */
 const mesGarantiaResumen = (g, gastosList) => {
@@ -62,7 +70,7 @@ function netPendingClienteCobranzaEnMes(cid, periodoMes, sGastos, gastosList, ga
   const mesIni = normalizePeriod(periodoMes);
   if (!mesIni) return 0;
   const gs = sGastos.filter(
-    (g) => String(g.clientId) === String(cid) && normalizePeriod(g.mes) === mesIni,
+    (g) => String(g.clientId) === String(cid) && mesGastoYYYYMM(g) === mesIni,
   );
   const sumPend = gs.reduce((a, g) => a + Math.max(0, parseFloat(g._pend) || 0), 0);
   const garantiasParaReporte = garantias.filter((g) => {
