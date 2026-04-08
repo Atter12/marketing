@@ -19,6 +19,7 @@ El HTML que guardás en `cuerpo_html` se **envuelve** en una plantilla tipo “c
 | `COBRANZA_BRAND_NAME` o `EMAIL_BRAND_NAME` | `Holistic Marketing` | Nombre en cabecera, firma y pie |
 | `COBRANZA_LOGO_URL` o `EMAIL_LOGO_URL` | `https://www.marketingconholistic.com/credito-app/logo/logoh.png` | Logo en cabecera y bloque **Firma** (debe ser **https** público; subí `logoh.png` al sitio o usá CDN) |
 | `COBRANZA_TAGLINE` o `EMAIL_TAGLINE` | `Marketing digital · Gestión de cuentas` | Subtítulo bajo la marca |
+| `COBRANZA_REDIRECT_TO_EMAIL` | _(vacío)_ | **Solo pruebas:** si lo definís (ej. tu Gmail), Resend entrega el correo **ahí** en lugar del `email_destino` del registro. El asunto lleva prefijo `[Prueba · iba a: cliente@…]` y el evento `enviado_resend` guarda `destino_original` y `entregado_en`. **Quitá este secret cuando termines** para que vuelva a enviarse al cliente real. |
 
 También se envía **`text`** (plano) a Resend usando `cuerpo_texto` si existe, para mejor entregabilidad.
 

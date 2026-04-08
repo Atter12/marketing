@@ -581,13 +581,13 @@ export default function CobranzaView({
     });
   }, [histRows, histQ]);
 
-  const openDetail = (r) => {
+  const openDetail = (r, initialTab = "editar") => {
     setDetail(r);
     setEditAsunto(r.asunto || "");
     setEditCuerpo(r.cuerpo_html || "");
     setEditTexto((r.cuerpo_texto && String(r.cuerpo_texto).trim()) || htmlToPlainText(r.cuerpo_html || ""));
     setEditorMode("texto");
-    setModalTab("editar");
+    setModalTab(initialTab === "prevista" ? "prevista" : "editar");
     setSaveHint("");
     setAiDetailHint("");
     setRejectMotivo("");
@@ -1633,7 +1633,10 @@ export default function CobranzaView({
                         "Deuda (USD)",
                         "Tipo",
                         "Asunto",
-                        "Vista previa",
+                        <span key="vp" title="Abrir vista previa del mensaje (no ensancha la tabla)" style={{ display: "inline-flex", alignItems: "center", gap: 6, whiteSpace: "nowrap" }}>
+                          <Eye size={14} strokeWidth={2.2} aria-hidden />
+                          Msg
+                        </span>,
                         "Estado",
                         "Acciones",
                       ].map((h, i) => (
@@ -1725,8 +1728,38 @@ export default function CobranzaView({
                             <td style={{ ...TD, maxWidth: 180 }} data-label="Asunto">
                               {r.asunto}
                             </td>
-                            <td style={{ ...TD, color: "#64748b", fontSize: 12.5, maxWidth: 220 }} data-label="Vista previa">
-                              {stripHtmlPreview(r.cuerpo_html)}
+                            <td style={{ ...TD, textAlign: "center", width: 56, maxWidth: 56, padding: "10px 8px" }} data-label="Vista previa">
+                              <button
+                                type="button"
+                                title="Ver mensaje (vista previa como en Resend)"
+                                aria-label="Vista previa del mensaje"
+                                onClick={() => openDetail(r, "prevista")}
+                                style={{
+                                  width: 36,
+                                  height: 36,
+                                  borderRadius: 10,
+                                  border: "1px solid #e5e7eb",
+                                  background: "#fafafa",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "#64748b",
+                                  transition: "background .15s, color .15s, border-color .15s",
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "#fef2f2";
+                                  e.currentTarget.style.borderColor = "#fecdd3";
+                                  e.currentTarget.style.color = "#e11d48";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "#fafafa";
+                                  e.currentTarget.style.borderColor = "#e5e7eb";
+                                  e.currentTarget.style.color = "#64748b";
+                                }}
+                              >
+                                <Eye size={18} strokeWidth={2} />
+                              </button>
                             </td>
                             <td style={TD} data-label="Estado">
                               <span

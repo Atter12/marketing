@@ -189,6 +189,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    /** Pruebas: si está definido, el correo llega a esta bandeja pero el cuerpo sigue siendo el del borrador (firma igual). Quitar el secret en producción. */
+    const redirectRaw = String(Deno.env.get("COBRANZA_REDIRECT_TO_EMAIL") || "").trim();
+    const redirectTo = normalizeEmail(redirectRaw);
+    const resendTo = redirectTo.includes("@") ? redirectTo : to;
+    const subjectRedirectNote =
+      resendTo !== to ? `[Prueba · iba a: ${to}] ` : "";
+
     if (!force) {
       const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
       let q = adminClient
@@ -234,7 +241,7 @@ Deno.serve(async (req) => {
     ).trim();
     const logoUrl = safeHttpsUrl(logoRaw);
 
-    const subject = String(row.asunto || `Mensaje de ${brandName}`);
+    const subject = subjectRedirectNote + String(row.asunto || `Mensaje de ${brandName}`);
     const innerHtml = String(row.cuerpo_html || "<p>(sin cuerpo)</p>");
     const plainBody =
       (row.cuerpo_texto && String(row.cuerpo_texto).trim()) ||
@@ -253,7 +260,7 @@ Deno.serve(async (req) => {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ from, to, subject, html, text }),
+      body: JSON.stringify({ from, to: resendTo, subject, html, text }),
     });
     const resData = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -287,14 +294,24 @@ Deno.serve(async (req) => {
     await adminClient.from("cobranza_eventos").insert({
       correo_id: id,
       evento: "enviado_resend",
-      detalle: { resend_id: resData?.id },
+      detalle: {
+        resend_id: resData?.id,
+        ...(resendTo !== to ? { destino_original: to, entregado_en: resendTo, modo_prueba_redirect: true } : {}),
+      },
       actor_email: callerEmail,
     });
 
-    return new Response(JSON.stringify({ ok: true, message: "Correo enviado." }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        message: "Correo enviado.",
+        ...(resendTo !== to ? { entregado_en: resendTo, destino_registro: to } : {}),
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (e) {
     console.error("[cobranza-enviar]", e);
     return new Response(JSON.stringify({ error: (e as Error)?.message || "Error interno" }), {
