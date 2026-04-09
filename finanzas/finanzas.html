@@ -582,6 +582,14 @@ function fmtUSD(v){ return '$' + Number(v).toLocaleString('en-US',{minimumFracti
 function fmtPEN(v){ return 'S/ ' + Number(v).toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function usdToPen(v){ return v * RATE; }
 function penToUsd(v){ return v / RATE; }
+/** USD o PEN guardado en BD por fila */
+function normMoneda(m){ return m==='PEN'?'PEN':'USD'; }
+/** monto_usd / montos en fila son NOMINALES en `moneda`; devuelve equivalente USD para sumas y gráficos */
+function montoAUsd(nominal, moneda){
+  const n = parseNumFin(nominal);
+  return normMoneda(moneda)==='PEN' ? penToUsd(n) : n;
+}
+function monedaForm(v){ return normMoneda(String(v||'').toUpperCase()); }
 function fmtPrimary(usd){
   if(primaryCurrency==='USD') return fmtUSD(usd);
   return fmtPEN(usdToPen(usd));
@@ -750,8 +758,8 @@ function finanzasRebuildAnalytics() {
     const ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     monthKeys.push(ym);
     monthLabels.push(monthShort[d.getMonth()]);
-    const iSum = ingresos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + parseNumFin(r.montoUSD), 0);
-    const gSum = gastos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + parseNumFin(r.montoUSD), 0);
+    const iSum = ingresos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + montoAUsd(r.montoUSD, r.moneda), 0);
+    const gSum = gastos.filter((r) => (r.fecha || '').slice(0, 7) === ym).reduce((s, r) => s + montoAUsd(r.montoUSD, r.moneda), 0);
     ing.push(Math.round(iSum * 100) / 100);
     gas.push(Math.round(gSum * 100) / 100);
   }
@@ -804,7 +812,7 @@ async function finanzasLoadAll() {
   if (firstErr) {
     finanzasLoadError = firstErr.message || 'Error al cargar desde Supabase';
     if (String(finanzasLoadError).toLowerCase().indexOf('relation') !== -1 || String(finanzasLoadError).indexOf('does not exist') !== -1) {
-      finanzasLoadError += ' · Aplicá las migraciones 042_finanzas_app_tables y, si tu BD tenía la versión por usuario, 043_finanzas_app_org_shared.';
+      finanzasLoadError += ' · Aplicá las migraciones 042_finanzas_app_tables, 043_finanzas_app_org_shared si aplica, y 044_finanzas_app_moneda (USD/PEN por fila).';
     }
   }
   ingresos = (iRes.data || []).map((row) => ({
@@ -813,6 +821,7 @@ async function finanzasLoadAll() {
     cliente: row.cliente || '—',
     concepto: row.concepto || '',
     montoUSD: parseNumFin(row.monto_usd),
+    moneda: normMoneda(row.moneda),
     fechaPago: mapDate(row.fecha_pago),
     estado: row.estado || 'Pagado',
   }));
@@ -823,6 +832,7 @@ async function finanzasLoadAll() {
     concepto: row.concepto || '',
     proveedor: row.proveedor || '—',
     montoUSD: parseNumFin(row.monto_usd),
+    moneda: normMoneda(row.moneda),
     fechaPago: mapDate(row.fecha_pago),
     estado: row.estado || 'Pagado',
   }));
@@ -835,6 +845,7 @@ async function finanzasLoadAll() {
       cliente: row.cliente || '—',
       servicio: row.servicio || '—',
       montoUSD: parseNumFin(row.monto_usd),
+      moneda: normMoneda(row.moneda),
       fechaEmision: mapDate(row.fecha_emision),
       fechaVencimiento,
       estado: estadoCalc,
@@ -847,6 +858,7 @@ async function finanzasLoadAll() {
     montoTotal: parseNumFin(row.monto_total),
     pagado: parseNumFin(row.pagado),
     cuotaMensual: row.cuota_mensual != null ? parseNumFin(row.cuota_mensual) : null,
+    moneda: normMoneda(row.moneda),
     proxPago: mapDate(row.prox_pago),
     estado: row.estado || 'Al día',
     color: row.color || 'blue',
@@ -856,6 +868,7 @@ async function finanzasLoadAll() {
     empleado: row.empleado || '',
     cargo: row.cargo || '',
     brutoUSD: parseNumFin(row.bruto_usd),
+    moneda: normMoneda(row.moneda),
     fechaPago: mapDate(row.fecha_pago),
   }));
   impuestos = (imRes.data || []).map((row) => ({
@@ -865,6 +878,7 @@ async function finanzasLoadAll() {
     baseUSD: row.base_usd != null ? parseNumFin(row.base_usd) : 0,
     tasa: row.tasa != null ? parseNumFin(row.tasa) : 0,
     montoUSD: parseNumFin(row.monto_usd),
+    moneda: normMoneda(row.moneda),
     fechaVencimiento: mapDate(row.fecha_vencimiento),
     estado: row.estado || 'Pendiente',
   }));
@@ -874,14 +888,17 @@ async function finanzasLoadAll() {
 
 function computePanelKpis() {
   const { start, end } = getPeriodRange();
-  const ingPagado = ingresos.filter((r) => r.estado === 'Pagado' && rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + r.montoUSD, 0);
-  const gasAll = gastos.filter((r) => rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + r.montoUSD, 0);
-  const deudaPend = deudas.reduce((s, r) => s + Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado)), 0);
-  const cobrarTot = cuentasCobrar.reduce((s, r) => s + r.montoUSD, 0);
+  const ingPagado = ingresos.filter((r) => r.estado === 'Pagado' && rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + montoAUsd(r.montoUSD, r.moneda), 0);
+  const gasAll = gastos.filter((r) => rowInPeriod(r.fecha, start, end)).reduce((s, r) => s + montoAUsd(r.montoUSD, r.moneda), 0);
+  const deudaPend = deudas.reduce((s, r) => {
+    const pend = Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado));
+    return s + montoAUsd(pend, r.moneda);
+  }, 0);
+  const cobrarTot = cuentasCobrar.reduce((s, r) => s + montoAUsd(r.montoUSD, r.moneda), 0);
   const sparkIng = finanzasAnalytics.ing.length ? finanzasAnalytics.ing : [0, 0, 0, 0, 0, 0];
   const sparkGas = finanzasAnalytics.gas.length ? finanzasAnalytics.gas : [0, 0, 0, 0, 0, 0];
   const sparkBal = finanzasAnalytics.balance.length ? finanzasAnalytics.balance : sparkIng.map((v, i) => v - (sparkGas[i] || 0));
-  const lastD = deudas.map((r) => Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado)));
+  const lastD = deudas.map((r) => montoAUsd(Math.max(0, parseNumFin(r.montoTotal) - parseNumFin(r.pagado)), r.moneda));
   const sparkDeu = lastD.length >= 6 ? lastD.slice(-6) : Array.from({ length: 6 }, (_, i) => lastD[i] != null ? lastD[i] : deudaPend);
   const cobHist = [];
   for (let i = 0; i < 6; i++) cobHist.push(cobrarTot * (0.85 + i * 0.03));
@@ -1258,7 +1275,7 @@ function renderDoughnutChart(){
   const byCat = {};
   gastos.filter((r)=>rowInPeriod(r.fecha,start,end)).forEach((r)=>{
     const k = r.categoria || 'General';
-    byCat[k] = (byCat[k]||0) + r.montoUSD;
+    byCat[k] = (byCat[k]||0) + montoAUsd(r.montoUSD, r.moneda);
   });
   const entries = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   const labels = entries.length ? entries.map((e)=>e[0]) : ['Sin gastos'];
@@ -1307,8 +1324,8 @@ function recentActivity(){
       <td>${fmtDate(r.fecha)}</td>
       <td><span class="badge badge-tipo ${badge}">${r.tipo}</span></td>
       <td>${desc}</td>
-      <td class="amount">${fmtPrimary(r.montoUSD)}</td>
-      <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
+      <td class="amount">${fmtPrimary(montoAUsd(r.montoUSD,r.moneda))}</td>
+      <td class="amount-secondary">${fmtSecondary(montoAUsd(r.montoUSD,r.moneda))}</td>
       <td>${statusBadge(r.estado)}</td>
     </tr>`;
   }).join('');
@@ -1318,9 +1335,9 @@ function recentActivity(){
 function renderIngresos(el){
   sparkCounter = 0;
   const data = filterFinanzasRows(ingresos,'fecha');
-  const total = data.reduce((s,r)=>s+r.montoUSD,0);
+  const total = data.reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
   const y = new Date().getFullYear();
-  const totalYear = ingresos.filter((r)=>(r.fecha||'').slice(0,4)==String(y)).reduce((s,r)=>s+r.montoUSD,0);
+  const totalYear = ingresos.filter((r)=>(r.fecha||'').slice(0,4)==String(y)).reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
   const promedio = totalYear / 12;
   const clientesActivos = new Set(data.map(r=>r.cliente)).size;
 
@@ -1357,8 +1374,8 @@ function renderIngresos(el){
                 <td>${fmtDate(r.fecha)}</td>
                 <td style="font-weight:600;color:var(--text)">${r.cliente}</td>
                 <td>${r.concepto}</td>
-                <td class="amount">${fmtPrimary(r.montoUSD)}</td>
-                <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.montoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(r.montoUSD,r.moneda))}</td>
                 <td>${fmtDate(r.fechaPago)}</td>
                 <td>${statusBadge(r.estado)}</td>
               </tr>`;
@@ -1395,8 +1412,8 @@ function renderIngresos(el){
 function renderGastos(el){
   sparkCounter = 0;
   const data = filterFinanzasRows(gastos,'fecha');
-  const total = data.reduce((s,r)=>s+r.montoUSD,0);
-  const mayorGasto = data.length ? data.reduce((max,r)=>r.montoUSD>max.montoUSD?r:max,data[0]) : null;
+  const total = data.reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
+  const mayorGasto = data.length ? data.reduce((max,r)=>montoAUsd(r.montoUSD,r.moneda)>montoAUsd(max.montoUSD,max.moneda)?r:max,data[0]) : null;
   const catColors = {Sueldos:'blue',Publicidad:'pink',Oficina:'green',Software:'purple',Servicios:'orange',Impuestos:'amber',Otros:'gray',General:'gray'};
 
   el.innerHTML = `
@@ -1417,7 +1434,7 @@ function renderGastos(el){
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Mayor gasto</div>
-          <div class="kpi-value" style="font-size:18px">${fmtPrimary(mayorGasto?.montoUSD||0)}</div>
+          <div class="kpi-value" style="font-size:18px">${fmtPrimary(mayorGasto?montoAUsd(mayorGasto.montoUSD,mayorGasto.moneda):0)}</div>
           <div class="kpi-secondary">${mayorGasto?.concepto||'—'}</div>
         </div>
       </div>
@@ -1443,8 +1460,8 @@ function renderGastos(el){
                 <td><span class="badge ${catBadge}"><span style="display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-right:2px"></span>${r.categoria}</span></td>
                 <td>${r.concepto}</td>
                 <td>${r.proveedor}</td>
-                <td class="amount">${fmtPrimary(r.montoUSD)}</td>
-                <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.montoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(r.montoUSD,r.moneda))}</td>
                 <td>${fmtDate(r.fechaPago)}</td>
                 <td>${statusBadge(r.estado)}</td>
               </tr>`;
@@ -1473,7 +1490,7 @@ function renderGastos(el){
   if (cats.length === 0) cats.push('General');
   const monthlyByCat = cats.map((cat)=>{
     const rowData = monthKeys.map((ym)=>{
-      const sum = (gastos||[]).filter((g)=>(g.fecha||'').slice(0,7)===ym && (g.categoria||'General')===cat).reduce((s,g)=>s+g.montoUSD,0);
+      const sum = (gastos||[]).filter((g)=>(g.fecha||'').slice(0,7)===ym && (g.categoria||'General')===cat).reduce((s,g)=>s+montoAUsd(g.montoUSD,g.moneda),0);
       return primaryCurrency==='PEN' ? Math.round(sum*RATE*100)/100 : sum;
     });
     return { label:cat, data:rowData, backgroundColor:catColorMap[cat]||catColorMap.General, borderRadius:4, borderSkipped:false };
@@ -1485,13 +1502,13 @@ function renderGastos(el){
   });
 
   // Horizontal bar - top 5
-  const top5 = [...data].sort((a,b)=>b.montoUSD-a.montoUSD).slice(0,5);
+  const top5 = [...data].sort((a,b)=>montoAUsd(b.montoUSD,b.moneda)-montoAUsd(a.montoUSD,a.moneda)).slice(0,5);
   const blueColor = isDark?'#60A5FA':'#3B82F6';
   charts.gastosTop = new Chart(document.getElementById('gastosTopChart'),{
     type:'bar',
     data:{
       labels:top5.map(r=>r.concepto.length>25?r.concepto.substring(0,25)+'…':r.concepto),
-      datasets:[{data:top5.map(r=>primaryCurrency==='USD'?r.montoUSD:Math.round(r.montoUSD*RATE)),backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,300,0);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'77');return g;},borderRadius:6,borderSkipped:false}]
+      datasets:[{data:top5.map(r=>{ const u=montoAUsd(r.montoUSD,r.moneda); return primaryCurrency==='USD'?u:Math.round(u*RATE*100)/100; }),backgroundColor:(ctx2)=>{const c=ctx2.chart.ctx;const g=c.createLinearGradient(0,0,300,0);g.addColorStop(0,blueColor+'DD');g.addColorStop(1,blueColor+'77');return g;},borderRadius:6,borderSkipped:false}]
     },
     options:{...chartDefaults(),indexAxis:'y',plugins:{...chartDefaults().plugins,legend:{display:false}},scales:{x:{...chartDefaults().scales.y},y:{...chartDefaults().scales.x,ticks:{...chartDefaults().scales.x.ticks,font:{family:'Inter',size:11}}}}}
   });
@@ -1501,12 +1518,12 @@ function renderGastos(el){
 function renderDeudas(el){
   sparkCounter = 0;
   const dataD = filterByEstado(deudas);
-  const totalPendiente = dataD.reduce((s,d)=>s+Math.max(0,d.montoTotal-d.pagado),0);
-  const cuotaTotal = dataD.reduce((s,d)=>s+(parseNumFin(d.cuotaMensual)||0),0);
-  const proxVenc = dataD.length ? dataD.reduce((min,d)=>new Date(d.proxPago)<new Date(min.proxPago)?d:min,dataD[0]) : { proxPago: finanzasTodayYmd(), banco:'—', cuotaMensual:0 };
-  const totalDeuda = dataD.reduce((s,d)=>s+d.montoTotal,0);
-  const totalPagado = dataD.reduce((s,d)=>s+d.pagado,0);
-  const pctGlobal = totalDeuda > 0 ? Math.round(totalPagado/totalDeuda*100) : 0;
+  const totalPendiente = dataD.reduce((s,d)=>s+montoAUsd(Math.max(0,d.montoTotal-d.pagado),d.moneda),0);
+  const cuotaTotal = dataD.reduce((s,d)=>s+montoAUsd(parseNumFin(d.cuotaMensual)||0,d.moneda),0);
+  const proxVenc = dataD.length ? dataD.reduce((min,d)=>new Date(d.proxPago)<new Date(min.proxPago)?d:min,dataD[0]) : { proxPago: finanzasTodayYmd(), banco:'—', cuotaMensual:0, moneda:'USD' };
+  const totalDeuda = dataD.reduce((s,d)=>s+montoAUsd(d.montoTotal,d.moneda),0);
+  const totalPagado = dataD.reduce((s,d)=>s+montoAUsd(d.pagado,d.moneda),0);
+  const pctGlobal = totalDeuda > 0 ? Math.round((totalPagado/totalDeuda)*100) : 0;
   const debtCardColors = {blue:'var(--blue)',green:'var(--green)',purple:'var(--purple)',amber:'var(--amber)'};
   const debtDotColors = {blue:'#3B82F6',green:'#10B981',purple:'#8B5CF6',amber:'#F59E0B'};
 
@@ -1524,7 +1541,7 @@ function renderDeudas(el){
         <div class="kpi-card">
           <div class="kpi-label">Próximo Vencimiento</div>
           <div class="kpi-value" style="font-size:18px">${fmtDate(proxVenc.proxPago)}</div>
-          <div class="kpi-secondary">${proxVenc.banco} — ${fmtPrimary(proxVenc.cuotaMensual)}</div>
+          <div class="kpi-secondary">${proxVenc.banco} — ${fmtPrimary(montoAUsd(proxVenc.cuotaMensual||0,proxVenc.moneda||'USD'))}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">% Pagado Global</div>
@@ -1555,11 +1572,11 @@ function renderDeudas(el){
             </div>
             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${dotColor}88,${dotColor})"></div></div>
             <div class="debt-card-amounts">
-              <span>Pagado: <strong>${fmtPrimary(d.pagado)}</strong></span>
-              <span>Pendiente: <strong>${fmtPrimary(pendiente)}</strong></span>
+              <span>Pagado: <strong>${fmtPrimary(montoAUsd(d.pagado,d.moneda))}</strong></span>
+              <span>Pendiente: <strong>${fmtPrimary(montoAUsd(pendiente,d.moneda))}</strong></span>
             </div>
             <div class="debt-card-footer">
-              <span>Cuota: <strong>${d.cuotaMensual!=null?fmtPrimary(d.cuotaMensual):'—'}</strong>/mes</span>
+              <span>Cuota: <strong>${d.cuotaMensual!=null?fmtPrimary(montoAUsd(d.cuotaMensual,d.moneda)):'—'}</strong>/mes</span>
               <span>Próx. pago: <strong>${fmtDate(d.proxPago)}</strong> ${dias<=7?'<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-left:4px;animation:chipPulse 1.5s infinite"></span>':''} (${dias} días)</span>
             </div>
           </div>`;
@@ -1576,10 +1593,10 @@ function renderDeudas(el){
               return `<tr>
                 <td style="font-weight:600;color:var(--text)">${d.banco}</td>
                 <td>${d.concepto}</td>
-                <td class="amount">${fmtPrimary(d.montoTotal)}</td>
-                <td class="amount">${fmtPrimary(d.pagado)}</td>
-                <td class="amount">${fmtPrimary(pendiente)}</td>
-                <td class="amount">${d.cuotaMensual!=null?fmtPrimary(d.cuotaMensual):'—'}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(d.montoTotal,d.moneda))}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(d.pagado,d.moneda))}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(pendiente,d.moneda))}</td>
+                <td class="amount">${d.cuotaMensual!=null?fmtPrimary(montoAUsd(d.cuotaMensual,d.moneda)):'—'}</td>
                 <td>${fmtDate(d.proxPago)}</td>
                 <td><span class="badge ${dias<=7?'badge-amber':'badge-green'}">${dias} días</span></td>
                 <td>${statusBadge(d.estado)}</td>
@@ -1596,10 +1613,10 @@ function renderDeudas(el){
 function renderCobrar(el){
   sparkCounter = 0;
   const data = filterByEstado(cuentasCobrar);
-  const total = data.reduce((s,r)=>s+r.montoUSD,0);
-  const alDia = data.filter(r=>r.estado==='Al día').reduce((s,r)=>s+r.montoUSD,0);
-  const porVencer = data.filter(r=>r.estado==='Por vencer').reduce((s,r)=>s+r.montoUSD,0);
-  const vencido = data.filter(r=>r.estado==='Vencido').reduce((s,r)=>s+r.montoUSD,0);
+  const total = data.reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
+  const alDia = data.filter(r=>r.estado==='Al día').reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
+  const porVencer = data.filter(r=>r.estado==='Por vencer').reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
+  const vencido = data.filter(r=>r.estado==='Vencido').reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
 
   const sumIng = (finanzasAnalytics.ing||[]).reduce((a,b)=>a+b,0);
   const avgMes = sumIng / Math.max(1,(finanzasAnalytics.ing||[]).length);
@@ -1636,8 +1653,8 @@ function renderCobrar(el){
               return `<tr>
                 <td style="font-weight:600;color:var(--text)">${r.cliente}</td>
                 <td>${r.servicio}</td>
-                <td class="amount">${fmtPrimary(r.montoUSD)}</td>
-                <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.montoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(r.montoUSD,r.moneda))}</td>
                 <td>${fmtDate(r.fechaEmision)}</td>
                 <td>${fmtDate(r.fechaVencimiento)}</td>
                 <td><span class="badge ${dias<0?'badge-red':dias<=15?'badge-amber':'badge-green'}">${Math.abs(dias)} ${dias<0?'vencidos':'pendientes'}</span></td>
@@ -1654,7 +1671,7 @@ function renderCobrar(el){
   let b0=0,b1=0,b2=0,b3=0,b4=0;
   data.forEach((r)=>{
     const du = daysUntil(r.fechaVencimiento);
-    const m = r.montoUSD;
+    const m = montoAUsd(r.montoUSD,r.moneda);
     if (du > 15) b0 += m;
     else if (du > 0) b1 += m;
     else if (du > -15) b2 += m;
@@ -1680,11 +1697,11 @@ function renderCobrar(el){
 function renderSueldos(el){
   sparkCounter = 0;
   const dataS = filterFinanzasRows(sueldos,'fechaPago');
-  const totalBruto = dataS.reduce((s,r)=>s+r.brutoUSD,0);
   const essaludRate = 0.09;
   const afpRate = 0.13;
-  const totalDeducciones = dataS.reduce((s,r)=>s+r.brutoUSD*(essaludRate+afpRate),0);
-  const totalNeto = totalBruto - dataS.reduce((s,r)=>s+r.brutoUSD*afpRate,0);
+  const totalBruto = dataS.reduce((s,r)=>s+montoAUsd(r.brutoUSD,r.moneda),0);
+  const totalDeducciones = dataS.reduce((s,r)=>s+montoAUsd(r.brutoUSD*(essaludRate+afpRate),r.moneda),0);
+  const totalNeto = dataS.reduce((s,r)=>s+montoAUsd(r.brutoUSD-r.brutoUSD*afpRate,r.moneda),0);
   const numEmpleados = dataS.length;
   const costoEmpleado = numEmpleados ? totalBruto/numEmpleados : 0;
 
@@ -1719,12 +1736,12 @@ function renderSueldos(el){
               return `<tr>
                 <td style="font-weight:600;color:var(--text)">${r.empleado}</td>
                 <td>${r.cargo}</td>
-                <td class="amount">${fmtPrimary(r.brutoUSD)}</td>
-                <td class="amount-secondary">${fmtSecondary(r.brutoUSD)}</td>
-                <td class="amount-secondary">${fmtPrimary(essalud)}</td>
-                <td class="amount-secondary">${fmtPrimary(afp)}</td>
-                <td class="amount">${fmtPrimary(neto)}</td>
-                <td class="amount-secondary">${fmtSecondary(neto)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.brutoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(r.brutoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtPrimary(montoAUsd(essalud,r.moneda))}</td>
+                <td class="amount-secondary">${fmtPrimary(montoAUsd(afp,r.moneda))}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(neto,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(neto,r.moneda))}</td>
                 <td>${fmtDate(r.fechaPago)}</td>
               </tr>`;
             }).join('')}</tbody>
@@ -1750,7 +1767,7 @@ function renderSueldos(el){
     type:'doughnut',
     data:{
       labels:dataS.length?dataS.map(r=>r.cargo||r.empleado):['—'],
-      datasets:[{data:dataS.length?dataS.map(r=>r.brutoUSD):[1],backgroundColor:colors,borderWidth:3,borderColor:cardBg,hoverOffset:6}]
+      datasets:[{data:dataS.length?dataS.map(r=>montoAUsd(r.brutoUSD,r.moneda)):[1],backgroundColor:colors,borderWidth:3,borderColor:cardBg,hoverOffset:6}]
     },
     options:{
       responsive:true,maintainAspectRatio:false,cutout:'68%',
@@ -1767,9 +1784,9 @@ function renderSueldos(el){
 function renderImpuestos(el){
   sparkCounter = 0;
   const data = filterFinanzasRows(filterByEstado(impuestos),'fechaVencimiento');
-  const totalMensual = data.reduce((s,r)=>s+r.montoUSD,0);
+  const totalMensual = data.reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
   const y = new Date().getFullYear();
-  const totalAnual = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,4)==String(y)).reduce((s,r)=>s+r.montoUSD,0);
+  const totalAnual = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,4)==String(y)).reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
   const proxVenc = filterByEstado(impuestos).filter(r=>r.estado==='Pendiente').sort((a,b)=>new Date(a.fechaVencimiento)-new Date(b.fechaVencimiento))[0];
   const k = computePanelKpis();
   const tasaEfectiva = k.ingPeriod > 0 ? Math.round(totalMensual/k.ingPeriod*1000)/10 : 0;
@@ -1809,10 +1826,10 @@ function renderImpuestos(el){
               return `<tr>
                 <td style="font-weight:600;color:var(--text)">${r.tipo}</td>
                 <td>${r.periodo}</td>
-                <td class="amount">${fmtPrimary(r.baseUSD)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.baseUSD,r.moneda))}</td>
                 <td class="amount-secondary">${r.tasa}%</td>
-                <td class="amount">${fmtPrimary(r.montoUSD)}</td>
-                <td class="amount-secondary">${fmtSecondary(r.montoUSD)}</td>
+                <td class="amount">${fmtPrimary(montoAUsd(r.montoUSD,r.moneda))}</td>
+                <td class="amount-secondary">${fmtSecondary(montoAUsd(r.montoUSD,r.moneda))}</td>
                 <td>${fmtDate(r.fechaVencimiento)}</td>
                 <td>${statusBadge(r.estado)}</td>
               </tr>`;
@@ -1828,8 +1845,8 @@ function renderImpuestos(el){
   const mKeys = finanzasAnalytics.monthKeys.length ? finanzasAnalytics.monthKeys : [finanzasTodayYmd().slice(0,7)];
   const tLabels = finanzasAnalytics.monthLabels.length ? finanzasAnalytics.monthLabels : ['—'];
   const taxMonthly = mKeys.map((ym)=>{
-    const sum = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,7)===ym).reduce((s,r)=>s+r.montoUSD,0);
-    return primaryCurrency==='PEN' ? Math.round(sum*RATE*100)/100 : sum;
+    const sumUsd = impuestos.filter((r)=>(r.fechaVencimiento||'').slice(0,7)===ym).reduce((s,r)=>s+montoAUsd(r.montoUSD,r.moneda),0);
+    return primaryCurrency==='PEN' ? Math.round(sumUsd*RATE*100)/100 : sumUsd;
   });
   charts.tax = new Chart(document.getElementById('taxChart'),{
     type:'bar',
@@ -1887,12 +1904,12 @@ function renderCalendario(el){
   }
 
   // Upcoming payments
-  const nominaMes = sueldos.filter(r=>(r.fechaPago||'').slice(0,7)===ymCal).reduce((s,r)=>s+r.brutoUSD,0);
+  const nominaMes = sueldos.filter(r=>(r.fechaPago||'').slice(0,7)===ymCal).reduce((s,r)=>s+montoAUsd(r.brutoUSD,r.moneda),0);
   const allUpcoming = [
-    ...deudas.map(d=>({date:d.proxPago,concepto:d.concepto,tipo:'Deuda',badge:'badge-red',monto:d.cuotaMensual!=null?d.cuotaMensual:0,target:d.banco})),
-    ...cuentasCobrar.filter(r=>r.estado!=='Vencido').map(r=>({date:r.fechaVencimiento,concepto:r.servicio,tipo:'Cobro',badge:'badge-blue',monto:r.montoUSD,target:r.cliente})),
+    ...deudas.map(d=>({date:d.proxPago,concepto:d.concepto,tipo:'Deuda',badge:'badge-red',monto:montoAUsd(d.cuotaMensual!=null?d.cuotaMensual:0,d.moneda),target:d.banco})),
+    ...cuentasCobrar.filter(r=>r.estado!=='Vencido').map(r=>({date:r.fechaVencimiento,concepto:r.servicio,tipo:'Cobro',badge:'badge-blue',monto:montoAUsd(r.montoUSD,r.moneda),target:r.cliente})),
     ...(nominaMes>0?[{date:ymCal+'-28',concepto:'Nómina (mes vista)',tipo:'Sueldo',badge:'badge-green',monto:nominaMes,target:'Planilla'}]:[]),
-    ...impuestos.filter(r=>r.estado==='Pendiente').map(r=>({date:r.fechaVencimiento,concepto:r.tipo+' '+r.periodo,tipo:'Impuesto',badge:'badge-amber',monto:r.montoUSD,target:'SUNAT'})),
+    ...impuestos.filter(r=>r.estado==='Pendiente').map(r=>({date:r.fechaVencimiento,concepto:r.tipo+' '+r.periodo,tipo:'Impuesto',badge:'badge-amber',monto:montoAUsd(r.montoUSD,r.moneda),target:'SUNAT'})),
   ].sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,12);
 
   const totalPagar = allUpcoming.filter(u=>u.tipo!=='Cobro').reduce((s,u)=>s+u.monto,0);
@@ -1973,11 +1990,14 @@ function openModal(type){
         {label:'Cliente',name:'cliente',type:'text',placeholder:'Nombre del cliente'},
         {label:'Concepto',name:'concepto',type:'text',placeholder:'Servicio o concepto'},
         {row:true,fields:[
-          {label:'Monto (USD)',name:'montoUSD',type:'number',placeholder:'0.00'},
-          {label:'Fecha',name:'fecha',type:'date'},
+          {label:'Monto',name:'montoUSD',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
         ]},
         {row:true,fields:[
+          {label:'Fecha',name:'fecha',type:'date'},
           {label:'Fecha de Pago',name:'fechaPago',type:'date'},
+        ]},
+        {row:true,fields:[
           {label:'Estado',name:'estado',type:'select',options:['Pendiente','Pagado','Vencido']},
         ]},
       ]
@@ -1991,11 +2011,14 @@ function openModal(type){
         ]},
         {label:'Concepto',name:'concepto',type:'text',placeholder:'Descripción del gasto'},
         {row:true,fields:[
-          {label:'Monto (USD)',name:'montoUSD',type:'number',placeholder:'0.00'},
-          {label:'Fecha',name:'fecha',type:'date'},
+          {label:'Monto',name:'montoUSD',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
         ]},
         {row:true,fields:[
+          {label:'Fecha',name:'fecha',type:'date'},
           {label:'Fecha de Pago',name:'fechaPago',type:'date'},
+        ]},
+        {row:true,fields:[
           {label:'Estado',name:'estado',type:'select',options:['Pendiente','Pagado']},
         ]},
       ]
@@ -2008,12 +2031,15 @@ function openModal(type){
           {label:'Concepto',name:'concepto',type:'text',placeholder:'Tipo de deuda'},
         ]},
         {row:true,fields:[
-          {label:'Monto Total (USD)',name:'montoTotal',type:'number',placeholder:'0.00'},
-          {label:'Cuota Mensual (USD)',name:'cuotaMensual',type:'number',placeholder:'0.00'},
+          {label:'Monto total',name:'montoTotal',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
         ]},
         {row:true,fields:[
-          {label:'Monto Pagado (USD)',name:'pagado',type:'number',placeholder:'0.00'},
-          {label:'Próximo Pago',name:'proxPago',type:'date'},
+          {label:'Cuota mensual',name:'cuotaMensual',type:'number',placeholder:'0.00'},
+          {label:'Monto pagado',name:'pagado',type:'number',placeholder:'0.00'},
+        ]},
+        {row:true,fields:[
+          {label:'Próximo pago',name:'proxPago',type:'date'},
         ]},
       ]
     },
@@ -2024,7 +2050,10 @@ function openModal(type){
           {label:'Cliente',name:'cliente',type:'text',placeholder:'Cliente'},
           {label:'Servicio',name:'servicio',type:'text',placeholder:'Servicio'},
         ]},
-        {label:'Monto (USD)',name:'montoUSD',type:'number',placeholder:'0.00'},
+        {row:true,fields:[
+          {label:'Monto',name:'montoUSD',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
+        ]},
         {row:true,fields:[
           {label:'Fecha Emisión',name:'fechaEmision',type:'date'},
           {label:'Fecha Vencimiento',name:'fechaVencimiento',type:'date'},
@@ -2039,7 +2068,10 @@ function openModal(type){
           {label:'Cargo',name:'cargo',type:'text',placeholder:'Cargo'},
         ]},
         {row:true,fields:[
-          {label:'Sueldo Bruto (USD)',name:'brutoUSD',type:'number',placeholder:'0.00'},
+          {label:'Sueldo bruto',name:'brutoUSD',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
+        ]},
+        {row:true,fields:[
           {label:'Fecha de Pago',name:'fechaPago',type:'date'},
         ]},
       ]
@@ -2052,11 +2084,14 @@ function openModal(type){
           {label:'Período',name:'periodo',type:'text',placeholder:'Ej: Abril 2026'},
         ]},
         {row:true,fields:[
-          {label:'Base Imponible (USD)',name:'baseUSD',type:'number',placeholder:'0.00'},
+          {label:'Base imponible',name:'baseUSD',type:'number',placeholder:'0.00'},
           {label:'Tasa (%)',name:'tasa',type:'number',placeholder:'18'},
         ]},
         {row:true,fields:[
-          {label:'Monto (USD)',name:'montoUSD',type:'number',placeholder:'0.00'},
+          {label:'Monto',name:'montoUSD',type:'number',placeholder:'0.00'},
+          {label:'Moneda',name:'moneda',type:'select',options:['USD','PEN']},
+        ]},
+        {row:true,fields:[
           {label:'Fecha Vencimiento',name:'fechaVencimiento',type:'date'},
         ]},
       ]
@@ -2115,6 +2150,7 @@ async function handleModalSubmit(){
         cliente: data.cliente || '—',
         concepto: data.concepto || 'Ingreso',
         monto_usd: data.montoUSD || 0,
+        moneda: monedaForm(data.moneda),
         fecha_pago: data.fechaPago || finanzasTodayYmd(),
         estado: data.estado || 'Pagado',
       });
@@ -2126,6 +2162,7 @@ async function handleModalSubmit(){
         concepto: data.concepto || 'Gasto',
         proveedor: data.proveedor || '—',
         monto_usd: data.montoUSD || 0,
+        moneda: monedaForm(data.moneda),
         fecha_pago: data.fechaPago || finanzasTodayYmd(),
         estado: data.estado || 'Pagado',
       });
@@ -2138,6 +2175,7 @@ async function handleModalSubmit(){
         cliente: data.cliente || '—',
         servicio: data.servicio || '—',
         monto_usd: data.montoUSD || 0,
+        moneda: monedaForm(data.moneda),
         fecha_emision: data.fechaEmision || finanzasTodayYmd(),
         fecha_vencimiento: due,
         estado: estadoC,
@@ -2151,6 +2189,7 @@ async function handleModalSubmit(){
         monto_total: data.montoTotal || 0,
         pagado: data.pagado || 0,
         cuota_mensual: Number.isFinite(cm) ? cm : null,
+        moneda: monedaForm(data.moneda),
         prox_pago: data.proxPago || finanzasTodayYmd(),
         estado: 'Al día',
         color: 'blue',
@@ -2161,6 +2200,7 @@ async function handleModalSubmit(){
         empleado: data.empleado || '',
         cargo: data.cargo || '',
         bruto_usd: data.brutoUSD || 0,
+        moneda: monedaForm(data.moneda),
         fecha_pago: data.fechaPago || finanzasTodayYmd(),
       });
       if (error) throw error;
@@ -2171,6 +2211,7 @@ async function handleModalSubmit(){
         base_usd: Number.isFinite(data.baseUSD) ? data.baseUSD : null,
         tasa: Number.isFinite(data.tasa) ? data.tasa : null,
         monto_usd: data.montoUSD || 0,
+        moneda: monedaForm(data.moneda),
         fecha_vencimiento: data.fechaVencimiento || finanzasTodayYmd(),
         estado: 'Pendiente',
       });
