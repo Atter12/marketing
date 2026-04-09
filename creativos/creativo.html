@@ -4067,7 +4067,7 @@ function openClientModal(id) {
     <div class="form-group"><label class="form-label">Contacto (nombre de quien atiende)</label><input class="form-input" id="clientContactName" value="${c ? esc(c.contactName || '') : ''}" placeholder="Ej: Juan Pérez"></div>
     <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="clientNotes" rows="2" placeholder="Notas internas...">${c ? esc(c.notes || '') : ''}</textarea></div>
   `;
-  const footer = `<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn btn-primary" onclick="saveClient()">${c ? 'Guardar Cambios' : 'Agregar Cliente'}</button>`;
+  const footer = `<button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button><button type="button" class="btn btn-primary" onclick="saveClient()">${c ? 'Guardar Cambios' : 'Agregar Cliente'}</button>`;
   openModal(c ? 'Editar Cliente' : 'Nuevo Cliente', body, footer);
 }
 function saveClient() {
@@ -4081,11 +4081,36 @@ function saveClient() {
   var row = { name: name, company: company, email: email || null, phone: phone || null, contact_name: contactName || null, notes: notes || null };
   if (supabase) {
     if (editingId) {
+      var linkedCreditoId = (function() {
+        var cl = D.clients.find(function(x) { return x.id === editingId; });
+        return cl && cl.creditoClientId ? cl.creditoClientId : null;
+      })();
       supabase.from('creativos_clientes').update(row).eq('id', editingId).then(function(r) {
         if (r.error) { showToast('error', r.error.message || 'Error al guardar'); return; }
-        showToast('success', 'Cliente actualizado');
-        closeModal();
-        reloadCreativosData(function() { renderPage(currentPage); });
+        function doneOk() {
+          showToast('success', 'Cliente actualizado');
+          closeModal();
+          reloadCreativosData(function() { renderPage(currentPage); });
+        }
+        if (!linkedCreditoId) {
+          doneOk();
+          return;
+        }
+        /* Lista en Creativos toma nombre/empresa/email desde Crédito si hay credito_client_id; hay que actualizar ambas tablas. */
+        supabase.from('clientes').update({
+          name: name,
+          biz: company || null,
+          emails: email ? [email] : [],
+          phones: phone ? [phone] : [],
+          notes: notes || null
+        }).eq('id', linkedCreditoId).then(function(r2) {
+          if (r2.error) {
+            showToast('error', (r2.error.message || 'Error al sincronizar con Crédito') + '. Los datos en Creativos sí se guardaron; revisa permisos o el registro en Crédito.');
+            reloadCreativosData(function() { renderPage(currentPage); });
+            return;
+          }
+          doneOk();
+        });
       });
     } else {
       supabase.from('creativos_clientes').insert(row).then(function(r) {

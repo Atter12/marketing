@@ -4072,7 +4072,7 @@ async function loadTareasData() {
       var fotoTareas = (r.avatar_url && String(r.avatar_url).trim()) || '';
       var fotoCredito = (credito && credito.avatar_url) ? String(credito.avatar_url).trim() : '';
       var photo = fotoTareas || fotoCredito;
-      return { id: r.id, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+      return { id: r.id, creditoClientId: r.credito_client_id || null, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     clients.sort(function(a, b) {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
@@ -6222,11 +6222,34 @@ function updateClient() {
   if (feeEl && perms.finWrite) row.fee_mensual = feeEl.value || '';
   if (!row.nombre) { alert('Nombre requerido'); return; }
   if (supabase) {
+    var editingRow = clients.find(function(x) { return x.id === _editingClientId; });
+    var linkedCreditoId = editingRow && editingRow.creditoClientId ? editingRow.creditoClientId : null;
     supabase.from('tareas_clientes').update(row).eq('id', _editingClientId).then(function(r) {
       if (r.error) { alert('Error al guardar: ' + (r.error.message||'')); return; }
-      _editingClientId = null;
-      reloadTareasData();
-      closeModal();
+      function finishOk() {
+        _editingClientId = null;
+        reloadTareasData();
+        closeModal();
+      }
+      if (!linkedCreditoId) {
+        finishOk();
+        return;
+      }
+      /* Si hay credito_client_id, la lista muestra nombre/email/tel desde public.clientes; hay que actualizar ambas tablas. */
+      var credUp = {
+        name: row.nombre,
+        biz: row.tipo || null,
+        emails: row.email ? [row.email] : [],
+        phones: row.telefono ? [row.telefono] : [],
+        notes: row.notes || null
+      };
+      if (row.avatar_url) credUp.avatar_url = row.avatar_url;
+      supabase.from('clientes').update(credUp).eq('id', linkedCreditoId).then(function(r2) {
+        if (r2.error) {
+          alert('Datos guardados en Pendientes, pero no se pudo sincronizar con Crédito: ' + (r2.error.message || ''));
+        }
+        finishOk();
+      });
     });
   } else {
     var c = clients.find(function(x){ return x.id === _editingClientId; });
