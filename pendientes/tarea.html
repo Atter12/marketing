@@ -4072,7 +4072,7 @@ async function loadTareasData() {
       var fotoTareas = (r.avatar_url && String(r.avatar_url).trim()) || '';
       var fotoCredito = (credito && credito.avatar_url) ? String(credito.avatar_url).trim() : '';
       var photo = fotoTareas || fotoCredito;
-      return { id: r.id, creditoClientId: r.credito_client_id || null, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
+      return { id: r.id, creditoClientId: r.credito_client_id || null, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, birthday: tareasCumpleanosIsoFromRow(r), nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     clients.sort(function(a, b) {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
@@ -6005,26 +6005,12 @@ function openModal(type) {
     title.textContent = 'Nuevo Cliente';
     body.innerHTML = `
       <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" placeholder="Ej: Luna Beauty" id="cl-name"></div>
-      <div class="form-row">
-        <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" placeholder="Cosmética" id="cl-ind"></div>
-        <div class="form-group"><label for="cl-contact">Contacto Principal</label><input class="form-input" placeholder="Nombre completo" id="cl-contact"></div>
-      </div>
+      <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" placeholder="Cosmética" id="cl-ind"></div>
       <div class="form-row">
         <div class="form-group"><label for="cl-email">Email</label><input class="form-input" type="email" placeholder="email@empresa.com" id="cl-email"></div>
         <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" placeholder="+51 999 999 999" id="cl-phone"></div>
       </div>
-      <div class="form-row">
-        <div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" placeholder="$2,000" id="cl-fee"></div>
-        <div class="form-group"><label for="cl-dur">Duración Contrato</label><select class="form-select" id="cl-dur"><option>3 meses</option><option>6 meses</option><option selected>12 meses</option></select></div>
-      </div>
-      <div class="form-group">
-        <label>Servicios Contratados</label>
-        <select class="form-select" multiple style="height:80px" id="cl-svcs">
-          <option value="tag-mk">Marketing Digital</option><option value="tag-br">Branding</option>
-          <option value="tag-vi">Edición de Video</option><option value="tag-so">Social Media</option>
-          <option value="tag-de">Diseño</option><option value="tag-se">SEO</option><option value="tag-ad">Paid Ads</option>
-        </select>
-      </div>
+      <div class="form-group"><label for="cl-cumple">Cumpleaños</label><input class="form-input" type="date" id="cl-cumple"><p class="form-file-hint">Opcional · persona de contacto / titular</p></div>
       <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
   } else if (type === 'calendarEvent') {
@@ -6101,6 +6087,22 @@ function openModal(type) {
   }, 100);
 }
 
+/** ISO YYYY-MM-DD desde columna date de Supabase; vacío si no hay. */
+function tareasCumpleanosIsoFromRow(r) {
+  var v = r && r.cumpleanos;
+  if (v == null || v === '') return '';
+  var s = String(v).trim().slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : '';
+}
+function tareasFormatCumpleanosDisplay(iso) {
+  if (!iso || String(iso).trim() === '') return '';
+  var s = String(iso).trim().slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  try {
+    return new Date(s + 'T12:00:00').toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch (e) { return s; }
+}
+
 function closeModal(e) {
   var overlay = document.getElementById('modalOverlay');
   if (!overlay) return;
@@ -6122,6 +6124,7 @@ function openClientDetail(idx) {
   const satLabel = satNum != null ? (satNum + '%') : '—';
   var pFin = tareasEffectivePerms();
   var invBlock = pFin.finRead ? `<div class="info-item"><div class="lbl">Inversión</div><div class="val" style="font-variant-numeric:tabular-nums">${c.spent || '—'} de ${c.budget || '—'} (${c.monthlyFee || '—'}/mes)</div></div>` : '';
+  var cumpleBlock = (c.birthday && String(c.birthday).trim()) ? `<div class="info-item"><div class="lbl">Cumpleaños</div><div class="val">${escTareas(tareasFormatCumpleanosDisplay(c.birthday))}</div></div>` : '';
 
   document.getElementById('modalTitle').textContent = (c.n || 'Cliente') + ' — Detalle';
   var detailSubParts = [];
@@ -6136,6 +6139,7 @@ function openClientDetail(idx) {
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
       ${invBlock}
+      ${cumpleBlock}
       <div class="info-item"><div class="lbl">Satisfacción</div><div class="val" style="font-variant-numeric:tabular-nums">${satLabel}</div></div>
     </div>
     <div style="font-size:0.5625rem;text-transform:uppercase;letter-spacing:.7px;color:var(--color-text-faint);font-weight:700;margin-bottom:var(--sp-2)">🎫 Tickets (${relTk.length})</div>
@@ -6164,39 +6168,16 @@ function openEditClient(id) {
   var title = document.getElementById('modalTitle');
   var body = document.getElementById('modalBody');
   var footer = document.getElementById('modalFooter');
-  var pFin = tareasEffectivePerms();
-  var feeCol = '';
-  if (pFin.finRead) {
-    var feeRo = pFin.finWrite ? '' : ' readonly disabled';
-    feeCol = '<div class="form-group"><label for="cl-fee">Fee Mensual</label><input class="form-input" value="' + (c.monthlyFee||c.budget||'').replace(/"/g,'&quot;') + '" id="cl-fee"' + feeRo + '></div>';
-  }
   title.textContent = 'Editar Cliente';
   body.innerHTML = `
     <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" value="${(c.n||'').replace(/"/g,'&quot;')}" id="cl-name"></div>
-    <div class="form-row">
-      <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" value="${(c.tp||'').replace(/"/g,'&quot;')}" id="cl-ind"></div>
-      <div class="form-group"><label for="cl-contact">Contacto Principal</label><input class="form-input" value="${(c.contact||'').replace(/"/g,'&quot;')}" id="cl-contact"></div>
-    </div>
+    <div class="form-group"><label for="cl-ind">Industria</label><input class="form-input" value="${(c.tp||'').replace(/"/g,'&quot;')}" id="cl-ind"></div>
     <div class="form-row">
       <div class="form-group"><label for="cl-email">Email</label><input class="form-input" type="email" value="${(c.email||'').replace(/"/g,'&quot;')}" id="cl-email"></div>
       <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" value="${(c.phone||'').replace(/"/g,'&quot;')}" id="cl-phone"></div>
     </div>
-    <div class="form-row">
-      ${feeCol}
-      <div class="form-group"><label for="cl-status">Estado</label><select class="form-select" id="cl-status"><option value="activo" ${c.status==='activo'?'selected':''}>Activo</option><option value="onboarding" ${c.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
-    </div>
-    <div class="form-group">
-      <label>Servicios (mantener Ctrl para varios)</label>
-      <select class="form-select" multiple style="height:80px" id="cl-svcs">
-        <option value="tag-mk" ${(c.svcs||[]).indexOf('tag-mk')>=0?'selected':''}>Marketing Digital</option>
-        <option value="tag-br" ${(c.svcs||[]).indexOf('tag-br')>=0?'selected':''}>Branding</option>
-        <option value="tag-vi" ${(c.svcs||[]).indexOf('tag-vi')>=0?'selected':''}>Edición de Video</option>
-        <option value="tag-so" ${(c.svcs||[]).indexOf('tag-so')>=0?'selected':''}>Social Media</option>
-        <option value="tag-de" ${(c.svcs||[]).indexOf('tag-de')>=0?'selected':''}>Diseño</option>
-        <option value="tag-se" ${(c.svcs||[]).indexOf('tag-se')>=0?'selected':''}>SEO</option>
-        <option value="tag-ad" ${(c.svcs||[]).indexOf('tag-ad')>=0?'selected':''}>Paid Ads</option>
-      </select>
-    </div>
+    <div class="form-group"><label for="cl-status">Estado</label><select class="form-select" id="cl-status"><option value="activo" ${c.status==='activo'?'selected':''}>Activo</option><option value="onboarding" ${c.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
+    <div class="form-group"><label for="cl-cumple">Cumpleaños</label><input class="form-input" type="date" id="cl-cumple" value="${(c.birthday||'').replace(/"/g,'&quot;')}"><p class="form-file-hint">Opcional · persona de contacto / titular</p></div>
     <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>
     <div class="form-group"><label for="cl-avatar-url">URL foto de perfil (opcional)</label><input class="form-input" type="url" id="cl-avatar-url" value="${(c.photo||'').replace(/"/g,'&quot;')}" placeholder="https://… (misma que en Crédito si está vinculado)"><p class="form-file-hint">Si el cliente viene de Crédito, la foto se rellena desde allí; puedes pegar la URL pública del bucket avatars.</p></div>`;
   footer.innerHTML = `<button class="btn-secondary" onclick="closeModal();_editingClientId=null">Cancelar</button><button class="btn-primary" onclick="updateClient()">Guardar</button>`;
@@ -6204,22 +6185,20 @@ function openEditClient(id) {
 }
 function updateClient() {
   if (!_editingClientId) return;
-  var svcsEl = document.getElementById('cl-svcs');
-  var svcs = svcsEl ? Array.from(svcsEl.selectedOptions).map(function(o){ return o.value; }) : [];
-  var perms = tareasEffectivePerms();
+  var cPrev = clients.find(function(x) { return x.id === _editingClientId; });
   var row = {
     nombre: document.getElementById('cl-name').value.trim(),
     tipo: document.getElementById('cl-ind').value || '',
-    contacto_nombre: document.getElementById('cl-contact').value || '',
+    contacto_nombre: cPrev ? (cPrev.contact || '') : '',
     email: document.getElementById('cl-email').value || '',
     telefono: document.getElementById('cl-phone').value || '',
     status: document.getElementById('cl-status').value || 'activo',
-    servicios: svcs,
+    servicios: cPrev && Array.isArray(cPrev.svcs) ? cPrev.svcs : [],
+    fee_mensual: cPrev ? (cPrev.monthlyFee || cPrev.budget || '') : '',
     notes: document.getElementById('cl-notes').value || '',
+    cumpleanos: (function() { var el = document.getElementById('cl-cumple'); var v = el && el.value.trim(); return v ? v : null; })(),
     avatar_url: (function() { var el = document.getElementById('cl-avatar-url'); return (el && el.value.trim()) || null; })()
   };
-  var feeEl = document.getElementById('cl-fee');
-  if (feeEl && perms.finWrite) row.fee_mensual = feeEl.value || '';
   if (!row.nombre) { alert('Nombre requerido'); return; }
   if (supabase) {
     var editingRow = clients.find(function(x) { return x.id === _editingClientId; });
@@ -6253,7 +6232,7 @@ function updateClient() {
     });
   } else {
     var c = clients.find(function(x){ return x.id === _editingClientId; });
-    if (c) { c.n = row.nombre; c.tp = row.tipo; c.contact = row.contacto_nombre; c.email = row.email; c.phone = row.telefono; c.monthlyFee = row.fee_mensual; c.status = row.status; c.svcs = svcs; c.notes = row.notes; c.photo = row.avatar_url || c.photo || ''; }
+    if (c) { c.n = row.nombre; c.tp = row.tipo; c.email = row.email; c.phone = row.telefono; c.status = row.status; c.notes = row.notes; c.birthday = row.cumpleanos ? String(row.cumpleanos).slice(0, 10) : ''; c.photo = row.avatar_url || c.photo || ''; }
     _editingClientId = null;
     renderers.clients(); updateBadges();
     closeModal();
@@ -6570,36 +6549,34 @@ function addTicket() {
 function addClient() {
   var n = document.getElementById('cl-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
-  var svcsEl = document.getElementById('cl-svcs');
-  var svcs = svcsEl ? Array.from(svcsEl.selectedOptions).map(function(o){ return o.value; }) : [];
   var colors = ['#EA580C','#DC2626','#16A34A','#7C3AED','#B45309','#0891B2','#BE185D','#CA8A04'];
-  var fee = document.getElementById('cl-fee').value || '$0';
   var row = {
     nombre: n,
     tipo: document.getElementById('cl-ind').value || 'General',
     color: colors[clients.length % colors.length],
     fases: ['Onboarding','Estrategia','Ejecución','Medición','Optimización'],
     fase_actual: 0,
-    servicios: svcs.length ? svcs : ['tag-mk'],
+    servicios: [],
     equipo_ids: [],
     entregables: 0,
     entregables_hechos: 0,
     tickets_count: 0,
     meetings_count: 0,
     satisfaccion: null,
-    presupuesto: fee,
+    presupuesto: null,
     gastado: '$0',
-    contacto_nombre: document.getElementById('cl-contact').value || n,
+    contacto_nombre: null,
     email: document.getElementById('cl-email').value || '',
     telefono: document.getElementById('cl-phone').value || '',
     proxima_accion: 'Agendar kickoff meeting',
-    contrato_inicio: 'Feb 2026',
-    contrato_fin: 'Feb 2027',
-    fee_mensual: fee,
+    contrato_inicio: null,
+    contrato_fin: null,
+    fee_mensual: null,
     health: 50,
     health_txt: 'Nuevo — Pendiente de onboarding',
     notes: document.getElementById('cl-notes').value || '',
-    status: 'onboarding'
+    status: 'onboarding',
+    cumpleanos: (function() { var el = document.getElementById('cl-cumple'); var v = el && el.value.trim(); return v ? v : null; })()
   };
   if (supabase) {
     supabase.from('tareas_clientes').insert(row).then(function(r) {
@@ -6608,11 +6585,12 @@ function addClient() {
     });
   } else {
     clients.push({
-      n, id: null, tp: row.tipo, c: row.color, phases: row.fases, curr: 0, svcs: row.servicios, team: [],
-      entregables: 0, done: 0, tickets: 0, meetings: 0, satisfaction: null, budget: row.presupuesto, spent: row.gastado,
-      contact: row.contacto_nombre, email: row.email, phone: row.telefono,
-      nextAction: row.proxima_accion, contractStart: row.contrato_inicio, contractEnd: row.contrato_fin,
-      monthlyFee: row.fee_mensual, health: 50, healthTxt: row.health_txt, notes: row.notes, status: row.status,
+      n, id: null, tp: row.tipo, c: row.color, phases: row.fases, curr: 0, svcs: [], team: [],
+      entregables: 0, done: 0, tickets: 0, meetings: 0, satisfaction: null, budget: '', spent: row.gastado,
+      contact: '', email: row.email, phone: row.telefono,
+      nextAction: row.proxima_accion, contractStart: '', contractEnd: '',
+      monthlyFee: '', health: 50, healthTxt: row.health_txt, notes: row.notes, status: row.status,
+      birthday: row.cumpleanos ? String(row.cumpleanos).slice(0, 10) : '',
       photo: ''
     });
     renderers.clients(); updateBadges(); closeModal();
