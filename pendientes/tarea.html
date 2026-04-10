@@ -200,8 +200,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .user-card:hover { background: var(--sidebar-hover); }
 .user-avatar {
-  width: 30px;
-  height: 30px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #EA580C, #F97316);
   display: flex;
@@ -209,10 +209,12 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   justify-content: center;
   color: #fff;
   font-weight: 700;
-  font-size: 0.625rem;
+  font-size: 0.8125rem;
+  letter-spacing: -0.02em;
   flex-shrink: 0;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset, 0 2px 8px rgba(0,0,0,.12);
 }
 .user-avatar img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; }
 .user-name { color: var(--sidebar-text-active); font-size: var(--text-sm); font-weight: 600; }
@@ -221,13 +223,14 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .sidebar-name-btn { background: none; border: none; padding: 0; font-size: inherit; color: var(--color-primary); cursor: pointer; text-decoration: underline; margin: 0; }
 .sidebar-name-btn:hover { color: var(--color-primary-hover); }
 .user-avatar-camera {
-  position: absolute; right: -2px; bottom: -2px;
-  width: 18px; height: 18px; border-radius: 50%;
+  position: absolute; right: -1px; bottom: -1px;
+  width: 22px; height: 22px; border-radius: 50%;
   background: var(--color-primary); color: #fff;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 1px 4px rgba(0,0,0,.2);
   pointer-events: none;
 }
+.user-avatar-camera svg { width: 13px; height: 13px; flex-shrink: 0; }
 .user-avatar img ~ .user-avatar-camera { display: none; }
 
 /* ══════════════════════════════════════════════
@@ -2570,7 +2573,7 @@ button.att-action-btn:disabled {
         <img id="tareasUserAvatarImg" src="" alt="" style="display:none" />
         <span id="tareasUserAvatarIniciales">·</span>
         <span class="user-avatar-camera" aria-hidden="true" title="Clic para poner tu foto">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </span>
       </div>
       <div>
