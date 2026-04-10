@@ -1118,8 +1118,37 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 .sla-ok     { background: var(--green); }
 .sla-warn   { background: var(--orange2); }
 .sla-breach { background: var(--red); animation: pulse 1.5s infinite; }
+.sla-done { background: var(--green); }
+.sla-done-late { background: linear-gradient(135deg, #84cc16, #eab308); }
+.sla-neutral { background: #94a3b8; }
 .live-sla-text.is-warn { color: var(--orange2) !important; font-weight: 700; animation: pulse 1.8s infinite; }
 .live-sla-text.is-breach { color: var(--red) !important; font-weight: 800; animation: pulse 1.2s infinite; }
+.live-sla-text.is-done { color: var(--green) !important; font-weight: 600; animation: none; }
+.live-sla-text.is-done-late { color: #65a30d !important; font-weight: 600; animation: none; }
+.kanban-sla-line--done { color: var(--green); font-weight: 600; }
+.kanban-sla-line--done-late { color: #a16207; font-weight: 600; }
+.kanban-sla-line--done-ontime { color: #15803d; font-weight: 600; }
+.tickets-stats-hint { font-size: var(--text-xs); color: var(--color-text-muted); margin: 0 0 var(--sp-3); line-height: 1.45; max-width: 52rem; }
+.cierres-toolbar { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-5); align-items: center; }
+.cierres-toolbar .tab { padding: 8px 14px; font-size: var(--text-xs); font-weight: 600; border-radius: var(--r-md); border: 1px solid var(--color-divider); background: var(--color-surface); color: var(--color-text-muted); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.cierres-toolbar .tab:hover { border-color: var(--color-primary); color: var(--color-text); }
+.cierres-toolbar .tab.active { background: var(--color-primary-highlight); border-color: rgba(234,88,12,.35); color: var(--color-primary); }
+.cierres-day { margin-bottom: var(--sp-6); }
+.cierres-day-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); margin: 0 0 var(--sp-3); padding-bottom: var(--sp-2); border-bottom: 1px solid var(--color-divider); text-transform: capitalize; }
+.cierres-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-3); }
+.cierres-card {
+  background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--r-lg);
+  padding: var(--sp-4); cursor: pointer; text-align: left; transition: box-shadow .18s ease, border-color .18s ease;
+  display: flex; flex-direction: column; gap: var(--sp-2);
+}
+.cierres-card:hover { box-shadow: var(--shadow-md); border-color: rgba(234,88,12,.25); }
+.cierres-card-badge { font-size: 0.5625rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; align-self: flex-start; padding: 3px 8px; border-radius: 999px; }
+.cierres-card-badge--tk { background: rgba(59,130,246,.12); color: #2563eb; }
+.cierres-card-badge--dev { background: rgba(139,92,246,.12); color: #7c3aed; }
+.cierres-card-title { font-size: var(--text-sm); font-weight: 700; color: var(--color-text); line-height: 1.35; margin: 0; }
+.cierres-card-meta { font-size: var(--text-xs); color: var(--color-text-muted); line-height: 1.45; }
+.cierres-card-time { font-size: var(--text-xs); font-weight: 600; color: var(--color-text); font-variant-numeric: tabular-nums; }
+.cierres-empty { padding: var(--sp-8); text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); border: 1px dashed var(--color-divider); border-radius: var(--r-xl); background: var(--color-surface-2); }
 .live-countdown.is-warn { color: var(--orange2); font-weight: 700; }
 .live-countdown.is-breach { color: var(--red); font-weight: 800; }
 @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
@@ -1151,6 +1180,9 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   margin-bottom: var(--sp-3);
 }
 .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
+.info-item--ticket-closed { grid-column: 1 / -1; padding: var(--sp-3); background: var(--color-surface-2); border-radius: var(--r-md); border: 1px solid rgba(34,197,94,.2); }
+.info-item--ticket-closed .lbl { color: var(--green); }
+.info-item--ticket-closed .ticket-detail-closed-at { color: var(--color-text); font-weight: 700; font-size: var(--text-sm); line-height: 1.4; }
 .info-item {
   padding: var(--sp-2) var(--sp-3);
   background: var(--color-surface-2);
@@ -2173,6 +2205,42 @@ body.holistic-name-gate-open { overflow: hidden; }
 .fade-in.visible { opacity: 1; }
 
 /* ══════════════════════════════════════════════
+   ASISTENCIA — ventana horaria (jornada)
+══════════════════════════════════════════════ */
+.att-window-banner {
+  display: flex; align-items: flex-start; gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--r-lg);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  margin-bottom: var(--sp-4);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-2);
+  color: var(--color-text-muted);
+}
+.att-window-banner.att-window-open {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.35);
+  color: var(--color-text);
+}
+.att-window-banner.att-window-closed {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: var(--color-text);
+}
+.att-window-banner strong { color: var(--color-text); font-weight: 700; }
+.att-register-bar.att-outside-window .att-register-btn-in,
+.att-register-bar.att-outside-window .att-register-btn-out {
+  opacity: 0.5;
+}
+button.att-register-btn:disabled,
+button.att-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════
    DAILY CODE
 ══════════════════════════════════════════════ */
 .att-register-bar {
@@ -2333,6 +2401,10 @@ body.holistic-name-gate-open { overflow: hidden; }
     if(h==='localhost'||h==='127.0.0.1')return window.location.origin;
     return 'https://www.marketingconholistic.com';
   }
+  function __holisticSupabaseAuthStorageKey(u){
+    if(!u||typeof u!=='string')return undefined;
+    try{var ref=new URL(u).hostname.split('.')[0];return ref?'sb-'+ref+'-auth-token':undefined;}catch(e){return undefined;}
+  }
   var hashEarly=window.location.hash||'';
   var hostEarly=window.location.hostname;
   var isLocalEarly=hostEarly==='localhost'||hostEarly==='127.0.0.1';
@@ -2346,7 +2418,9 @@ body.holistic-name-gate-open { overflow: hidden; }
   var lib=window.supabase;
   var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
   if(!lib||typeof createClientFn!=='function'){ console.warn('[Pendientes] auth: createClient no encontrado en window.supabase'); return; }
+  var sk=__holisticSupabaseAuthStorageKey(url);
   var authStorage={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
+  if(sk)authStorage.storageKey=sk;
   var supabase=createClientFn(url,key,{auth:authStorage});
   var hash=window.location.hash||'';
   if(hash.indexOf('access_token')!==-1){
@@ -2360,23 +2434,33 @@ body.holistic-name-gate-open { overflow: hidden; }
     }
     return;
   }
-  var maxAttempts=12;var delayMs=90;var attempt=0;
-  function trySession(){
+  var gateDone=false;
+  function finishGateAllow(){ if(gateDone)return; gateDone=true; }
+  function finishGateDeny(){ if(gateDone)return; gateDone=true; window.location.replace('/acceso-pendientes'); }
+  var __authSub;
+  __authSub=supabase.auth.onAuthStateChange(function(event,session){
+    if(event!=='INITIAL_SESSION')return;
+    try{if(__authSub&&__authSub.data&&__authSub.data.subscription)__authSub.data.subscription.unsubscribe();}catch(_){}
+    if(gateDone)return;
+    if(session){ finishGateAllow(); return; }
+    supabase.auth.getUser().then(function(ur){
+      if(gateDone)return;
+      if(ur.data&&ur.data.user)finishGateAllow();
+      else finishGateDeny();
+    }).catch(function(){ finishGateDeny(); });
+  });
+  setTimeout(function(){
+    if(gateDone)return;
     supabase.auth.getSession().then(function(r){
-      if(r.data&&r.data.session){ return; }
-      attempt++;
-      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
+      if(gateDone)return;
+      if(r.data&&r.data.session){ finishGateAllow(); return; }
       supabase.auth.getUser().then(function(ur){
-        if(ur.data&&ur.data.user){ return; }
-        window.location.replace('/acceso-pendientes');
-      }).catch(function(){ window.location.replace('/acceso-pendientes'); });
-    }).catch(function(){
-      attempt++;
-      if(attempt<maxAttempts){ setTimeout(trySession,delayMs); return; }
-      window.location.replace('/acceso-pendientes');
-    });
-  }
-  trySession();
+        if(gateDone)return;
+        if(ur.data&&ur.data.user)finishGateAllow();
+        else finishGateDeny();
+      }).catch(function(){ finishGateDeny(); });
+    }).catch(function(){ finishGateDeny(); });
+  },12000);
 })();
 </script>
 
@@ -2418,7 +2502,7 @@ body.holistic-name-gate-open { overflow: hidden; }
         <span class="nav-badge orange" id="badge-clients">0</span>
       </button>
 
-      <button class="nav-item" data-view="kanban" onclick="navigate('kanban',this)">
+      <button class="nav-item tareas-admin-only" data-view="kanban" onclick="navigate('kanban',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <rect x="3" y="3" width="5" height="18" rx="1"/>
           <rect x="10" y="3" width="5" height="12" rx="1"/>
@@ -2426,6 +2510,13 @@ body.holistic-name-gate-open { overflow: hidden; }
         </svg>
         Entregables
         <span class="nav-badge orange" id="badge-kanban">0</span>
+      </button>
+
+      <button class="nav-item" data-view="cierres" onclick="navigate('cierres',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Registro de cierres
       </button>
 
       <button class="nav-item" data-view="tickets" onclick="navigate('tickets',this)">
@@ -2534,11 +2625,11 @@ body.holistic-name-gate-open { overflow: hidden; }
       </button>
 
       <!-- New button -->
-      <button class="btn-primary" onclick="openModal('task')" aria-haspopup="dialog">
+      <button class="btn-primary" onclick="openHeaderNuevoModal()" aria-haspopup="dialog">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
-        Nuevo
+        <span id="header-nuevo-label">Nuevo</span>
       </button>
     </div>
   </header>
@@ -2561,13 +2652,13 @@ body.holistic-name-gate-open { overflow: hidden; }
       <div class="welcome-sub" id="dashboard-sub">Resumen de tu operación</div>
     </div>
     <div class="welcome-stats">
-      <div class="welcome-stat">
+      <div class="welcome-stat tareas-admin-only">
         <div class="welcome-stat-num" style="color:#fff" id="welcome-stat-entregables">0</div>
         <div class="welcome-stat-lbl">Entregables</div>
       </div>
-      <div class="welcome-stat">
+      <div class="welcome-stat tareas-admin-only">
         <div class="welcome-stat-num" style="color:#86EFAC" id="welcome-stat-done">0</div>
-        <div class="welcome-stat-lbl">Completados</div>
+        <div class="welcome-stat-lbl">Completados (tablero)</div>
       </div>
       <div class="welcome-stat">
         <div class="welcome-stat-num" style="color:#FCD34D" id="welcome-stat-tickets">0</div>
@@ -2591,14 +2682,14 @@ body.holistic-name-gate-open { overflow: hidden; }
       <div class="stat-value" id="stat-clients">0</div>
       <div class="stat-label">Clientes Activos</div>
     </div>
-    <div class="stat-card fade-in">
+    <div class="stat-card fade-in tareas-admin-only">
       <div class="stat-top">
         <div class="stat-icon" style="background:var(--green-bg);color:var(--green)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
       </div>
       <div class="stat-value" id="stat-done">0</div>
-      <div class="stat-label">Completados Mes</div>
+      <div class="stat-label">Entregables completados</div>
     </div>
     <div class="stat-card fade-in">
       <div class="stat-top">
@@ -2616,7 +2707,7 @@ body.holistic-name-gate-open { overflow: hidden; }
         </div>
       </div>
       <div class="stat-value" id="stat-vencidos">0</div>
-      <div class="stat-label">Vencidos</div>
+      <div class="stat-label">Fuera de plazo</div>
     </div>
   </div>
 
@@ -2625,7 +2716,7 @@ body.holistic-name-gate-open { overflow: hidden; }
     <div class="card fade-in">
       <div class="card-header">
         <h3>Actividad Reciente</h3>
-        <button class="btn-secondary btn-sm" onclick="navigate('kanban')">Ver todo</button>
+        <button class="btn-secondary btn-sm" onclick="dashboardVerTrabajo()">Ver trabajo</button>
       </div>
       <div class="card-body" id="dashboard-activity">
         <p class="empty-state" style="color:var(--color-text-muted);font-size:0.875rem;margin:0">No hay actividad reciente.</p>
@@ -2636,9 +2727,13 @@ body.holistic-name-gate-open { overflow: hidden; }
       <div class="card-header"><h3>Acciones Rápidas</h3></div>
       <div class="card-body">
         <div class="quick-actions">
-          <button class="btn-primary" style="width:100%;justify-content:center" onclick="openModal('task')">
+          <button class="btn-primary tareas-admin-only" style="width:100%;justify-content:center" onclick="openModal('task')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Nuevo Entregable
+            Nuevo entregable (dev)
+          </button>
+          <button class="btn-secondary" style="width:100%;justify-content:center" onclick="navigate('cierres', document.querySelector('.nav-item[data-view=\"cierres\"]'))">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Registro de cierres
           </button>
           <button class="btn-secondary" style="width:100%;justify-content:center" onclick="openModal('ticket')">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
@@ -2684,7 +2779,10 @@ body.holistic-name-gate-open { overflow: hidden; }
 <!-- ══════════════ KANBAN VIEW ══════════════ -->
 <section class="view" id="view-kanban" aria-label="Tablero de entregables">
   <div class="section-header">
-    <h3>Tablero de Entregables</h3>
+    <div>
+      <h3 style="margin-bottom:4px">Entregables (desarrollo / sistema)</h3>
+      <p style="margin:0;font-size:var(--text-xs);color:var(--color-text-muted);max-width:44rem;line-height:1.45">Cola interna para el programador: fallos de sistema, diseño o mejoras que reportan equipo o clientes. Tablero: Por hacer → En progreso → Revisión → <strong>Completado</strong>. El plazo es orientativo; si el ítem ya está completado verás <strong>Completado</strong> (retraso solo si el plazo ya había pasado). Mientras siga activo y pase el plazo verás <strong>Vencido</strong>. El trabajo del equipo operativo se resuelve en <strong>Tickets</strong>, no aquí.</p>
+    </div>
     <div class="section-actions">
       <div class="tabs" role="tablist" aria-label="Filtrar por servicio">
         <button class="tab active" onclick="filterKanban('all',this)">Todos</button>
@@ -2703,8 +2801,8 @@ body.holistic-name-gate-open { overflow: hidden; }
 <section class="view" id="view-tickets" aria-label="Sistema de tickets">
   <div class="section-header">
     <div>
-      <h3 style="margin-bottom:4px">Tickets</h3>
-      <p style="margin:0;font-size:var(--text-xs);color:var(--color-text-muted);max-width:42rem">Cliente opcional, plazo en minutos u horas, capturas visibles en el detalle. El correo de sesión queda como solicitante.</p>
+      <h3 style="margin-bottom:4px">Tickets (equipo)</h3>
+      <p style="margin:0;font-size:var(--text-xs);color:var(--color-text-muted);max-width:44rem;line-height:1.45">Acá se gestiona y <strong>cierra</strong> el trabajo del equipo: prioridad, categoría, asignación y plazo (SLA). No hace falta pasar nada a Entregables. <strong>Vencido</strong> = abierto o en proceso con fecha límite pasada. <strong>Completado</strong> = resuelto en este mismo flujo; si se cerró tarde verás <strong>Completado · retraso</strong>. Para fallos de sistema o diseño que atiende el programador existe el tablero <strong>Entregables</strong> (solo administrador).</p>
     </div>
     <div class="section-actions">
       <div class="tabs" id="ticketTabs" role="tablist">
@@ -2717,7 +2815,24 @@ body.holistic-name-gate-open { overflow: hidden; }
     </div>
   </div>
   <div class="tickets-stats" id="ticketsStats"></div>
+  <p class="tickets-stats-hint" id="ticketsStatsHint" hidden></p>
   <div id="ticketsGrid"></div>
+</section>
+
+<!-- ══════════════ REGISTRO DE CIERRES ══════════════ -->
+<section class="view" id="view-cierres" aria-label="Registro de cierres">
+  <div class="section-header">
+    <div>
+      <h3 style="margin-bottom:4px">Registro de cierres</h3>
+      <p style="margin:0;font-size:var(--text-xs);color:var(--color-text-muted);max-width:44rem;line-height:1.45">Vista por día (hora Perú/Lima) con cierre y duración aproximada. Incluye tickets resueltos por el equipo; los entregables completados del tablero interno solo los ve un administrador.</p>
+    </div>
+    <div class="section-actions cierres-toolbar" role="tablist" aria-label="Filtrar registro">
+      <button type="button" class="tab active" role="tab" aria-selected="true" onclick="cierresSetFilter('all', this)">Todo</button>
+      <button type="button" class="tab" role="tab" aria-selected="false" onclick="cierresSetFilter('tickets', this)">Solo tickets</button>
+      <button type="button" class="tab tareas-admin-only" role="tab" aria-selected="false" onclick="cierresSetFilter('dev', this)">Solo entregables</button>
+    </div>
+  </div>
+  <div id="cierresRoot" class="cierres-root"></div>
 </section>
 
 <!-- ══════════════ CALENDAR VIEW ══════════════ -->
@@ -2771,6 +2886,8 @@ body.holistic-name-gate-open { overflow: hidden; }
       </button>
     </div>
   </div>
+
+  <div id="attWindowBanner" class="att-window-banner att-window-open" role="status" aria-live="polite"></div>
 
   <div id="attMetricsRoot" class="att-metrics-root fade-in" aria-label="Métricas de asistencia">
     <div id="attDashStats" class="att-dash-stats-row"></div>
@@ -2867,13 +2984,17 @@ body.holistic-name-gate-open { overflow: hidden; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <div class="cmd-item-text"><div class="cmd-item-name">Clientes</div><div class="cmd-item-desc">Seguimiento integral de clientes</div></div>
       </div>
-      <div class="cmd-item" onclick="navigate('kanban');closeCmdPalette()" data-cmd="Entregables Kanban">
+      <div class="cmd-item tareas-admin-only" onclick="navigate('kanban');closeCmdPalette()" data-cmd="Entregables Kanban">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="15" rx="1"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Entregables</div><div class="cmd-item-desc">Tablero Kanban de entregas</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Entregables</div><div class="cmd-item-desc">Tablero interno (dev): sistema y diseño</div></div>
+      </div>
+      <div class="cmd-item" onclick="navigate('cierres');closeCmdPalette()" data-cmd="Registro de cierres">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <div class="cmd-item-text"><div class="cmd-item-name">Registro de cierres</div><div class="cmd-item-desc">Por día: horas y duración de lo completado</div></div>
       </div>
       <div class="cmd-item" onclick="navigate('tickets');closeCmdPalette()" data-cmd="Tickets Mesa de Ayuda">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Tickets</div><div class="cmd-item-desc">Mesa de ayuda y soporte</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Tickets</div><div class="cmd-item-desc">Equipo: gestión y cierre aquí (SLA)</div></div>
       </div>
       <div class="cmd-item" onclick="navigate('calendar');closeCmdPalette()" data-cmd="Calendario del equipo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -2888,9 +3009,9 @@ body.holistic-name-gate-open { overflow: hidden; }
         <div class="cmd-item-text"><div class="cmd-item-name">Asistencia</div><div class="cmd-item-desc">Control de asistencia verificada</div></div>
       </div>
       <div class="cmd-section-title">Acciones</div>
-      <div class="cmd-item" onclick="openModal('task');closeCmdPalette()" data-cmd="Nuevo Entregable Crear">
+      <div class="cmd-item tareas-admin-only" onclick="openModal('task');closeCmdPalette()" data-cmd="Nuevo Entregable Crear">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        <div class="cmd-item-text"><div class="cmd-item-name">Nuevo Entregable</div><div class="cmd-item-desc">Crear un nuevo entregable en el tablero</div></div>
+        <div class="cmd-item-text"><div class="cmd-item-name">Nuevo entregable (dev)</div><div class="cmd-item-desc">Solo administrador: tablero interno</div></div>
       </div>
       <div class="cmd-item" onclick="openModal('ticket');closeCmdPalette()" data-cmd="Nuevo Ticket Crear">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 0 0-2 2v3a2 2 0 1 1 0 4v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3a2 2 0 1 1 0-4V7a2 2 0 0 0-2-2H5z"/></svg>
@@ -3028,9 +3149,13 @@ function tryInitSupabase(retryCount) {
     return;
   }
   try {
-    supabase = createClientFn(url, key, {
-      auth: { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true },
-    });
+    var skHead = (function (u) {
+      if (!u || typeof u !== 'string') return undefined;
+      try { var ref = new URL(u).hostname.split('.')[0]; return ref ? 'sb-' + ref + '-auth-token' : undefined; } catch (e) { return undefined; }
+    })(url);
+    var authOpt = { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true };
+    if (skHead) authOpt.storageKey = skHead;
+    supabase = createClientFn(url, key, { auth: authOpt });
     console.log('[Pendientes] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
     tryRunTareasAppBootstrap();
   } catch (e) {
@@ -3324,6 +3449,11 @@ function tareasApplyPermissionUi() {
   document.querySelectorAll('[data-attendance-admin-only]').forEach(function(el) {
     el.style.display = p.admin ? '' : 'none';
   });
+  document.querySelectorAll('.tareas-admin-only').forEach(function(el) {
+    el.style.display = p.admin ? '' : 'none';
+  });
+  var hl = document.getElementById('header-nuevo-label');
+  if (hl) hl.textContent = p.admin ? 'Nuevo' : 'Nuevo ticket';
 }
 function gerenteEmailSlug(email) {
   return String(email || '').trim().toLowerCase().replace(/@/g, '_at_').replace(/\./g, '_').replace(/[^a-z0-9_]/g, '_');
@@ -3462,6 +3592,30 @@ function formatTicketWhen(d) {
   if (dDay.getTime() === yesterday.getTime()) return 'Ayer ' + t;
   return dt.toLocaleDateString('es', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
+/** Fecha y hora de cierre u hito, siempre en zona Lima (consistente con Registro de cierres). */
+function formatTicketDateTimeLima(iso) {
+  if (!iso) return '';
+  try {
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    var datePart = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+    var timePart = new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+    var s = datePart + ' · ' + timePart + ' · Lima';
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  } catch (e) { return ''; }
+}
+function formatTicketDurationClosed(startIso, endIso) {
+  if (!startIso || !endIso) return '';
+  var t0 = new Date(startIso).getTime();
+  var t1 = new Date(endIso).getTime();
+  if (isNaN(t0) || isNaN(t1) || t1 < t0) return '';
+  var m = Math.floor((t1 - t0) / 60000);
+  if (m < 1) return '< 1 min';
+  if (m < 60) return m + ' min';
+  var h = Math.floor(m / 60);
+  var rm = m % 60;
+  return rm ? h + ' h ' + rm + ' min' : h + ' h';
+}
 function formatSlaHours(h) { if (h == null) return ''; if (h < 24) return h + 'h'; return (h / 24) + 'd'; }
 function formatSlaMinutesOrHours(minutos, horasFallback) {
   if (minutos != null && minutos !== '' && !isNaN(Number(minutos))) {
@@ -3478,7 +3632,7 @@ function getLiveCountdownInfo(deadlineIso) {
   if (isNaN(deadline.getTime())) return { text: '—', status: 'ok' };
   var now = new Date();
   var diffMs = deadline.getTime() - now.getTime();
-  if (diffMs <= 0) return { text: 'VENCIDO', status: 'breach' };
+  if (diffMs <= 0) return { text: 'Vencido', status: 'breach' };
   var mins = Math.floor(diffMs / 60000);
   if (mins <= 60) return { text: mins + ' min', status: mins <= 15 ? 'warn' : 'ok' };
   if (mins < 1440) {
@@ -3488,12 +3642,86 @@ function getLiveCountdownInfo(deadlineIso) {
   }
   return { text: (Math.floor(mins / 1440)) + 'd', status: 'ok' };
 }
+
+/** Ticket abierto/en proceso y con fecha límite ya pasada (lo que mostramos como «Vencido»). */
+function ticketIsOpenOverdue(tk) {
+  if (!tk || tk.status === 'closed' || !tk.dueAt) return false;
+  var due = new Date(tk.dueAt);
+  if (isNaN(due.getTime())) return false;
+  return due.getTime() < Date.now();
+}
+
+/** Fila SLA tickets: Completado / Completado · retraso / cuenta atrás / Vencido */
+function getTicketSlaRowUi(tk) {
+  if (!tk) return { text: '—', dot: 'sla-neutral', textCls: '', pulse: false };
+  if (tk.status === 'closed') {
+    if (!tk.dueAt) {
+      return { text: 'Completado', dot: 'sla-done', textCls: 'is-done', pulse: false };
+    }
+    var due = new Date(tk.dueAt);
+    if (isNaN(due.getTime())) {
+      return { text: 'Completado', dot: 'sla-done', textCls: 'is-done', pulse: false };
+    }
+    var ref = tk.updatedAt ? new Date(tk.updatedAt) : new Date();
+    if (isNaN(ref.getTime())) ref = new Date();
+    if (ref.getTime() > due.getTime()) {
+      return { text: 'Completado · retraso', dot: 'sla-done-late', textCls: 'is-done-late', pulse: false };
+    }
+    return { text: 'Completado', dot: 'sla-done', textCls: 'is-done', pulse: false };
+  }
+  if (!tk.dueAt) {
+    return { text: 'Sin vencimiento', dot: 'sla-neutral', textCls: '', pulse: false };
+  }
+  var live = getLiveCountdownInfo(tk.dueAt);
+  return {
+    text: live.text,
+    dot: live.status === 'breach' ? 'sla-breach' : (live.status === 'warn' ? 'sla-warn' : 'sla-ok'),
+    textCls: live.status === 'breach' ? 'is-breach' : (live.status === 'warn' ? 'is-warn' : ''),
+    pulse: live.status === 'breach',
+    live: true
+  };
+}
+
+/** Línea de plazo en tarjeta Kanban (completado vs cuenta atrás). */
+function getKanbanEntregaDeadlineMarkup(t) {
+  var dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
+  var deadlineIso = '';
+  if (t.slaMin && t.createdAt) {
+    var c = new Date(t.createdAt);
+    if (!isNaN(c.getTime())) deadlineIso = new Date(c.getTime() + (Number(t.slaMin) * 60000)).toISOString();
+  }
+  if (t.col === 'done') {
+    var sub = 'Completado';
+    var lineCls = 'kanban-sla-line--done';
+    if (deadlineIso) {
+      var dueD = new Date(deadlineIso);
+      if (!isNaN(dueD.getTime())) {
+        if (dueD.getTime() < Date.now()) {
+          sub = 'Completado · con retraso';
+          lineCls = 'kanban-sla-line--done-late';
+        } else {
+          sub = 'Completado · a tiempo';
+          lineCls = 'kanban-sla-line--done-ontime';
+        }
+      }
+    }
+    return '<span class="card-date ' + lineCls + '">✅ ' + escTareas(sub) + '</span>';
+  }
+  var dateIcon = t.dc === 'dn' ? '✅' : (deadlineIso ? '⏱' : (t.slaMin ? '⏱' : '📅'));
+  if (deadlineIso) {
+    var init = getLiveCountdownInfo(deadlineIso);
+    return '<span class="card-date ' + dateCls + '">' + dateIcon + ' <span class="live-countdown" data-live-deadline="' + escAttrUrlTareas(deadlineIso) + '" data-live-prefix="">' + escTareas(init.text) + '</span></span>';
+  }
+  return '<span class="card-date ' + dateCls + '">' + dateIcon + ' ' + escTareas(t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du) + '</span>';
+}
+
 function updateLiveCountdownBadges() {
   document.querySelectorAll('[data-live-deadline]').forEach(function(el) {
+    if (el.getAttribute('data-live-static') === '1') return;
     var info = getLiveCountdownInfo(el.getAttribute('data-live-deadline'));
     var prefix = el.getAttribute('data-live-prefix') || '';
     el.textContent = prefix + info.text;
-    el.classList.remove('is-warn', 'is-breach');
+    el.classList.remove('is-warn', 'is-breach', 'is-done', 'is-done-late');
     if (info.status === 'warn') el.classList.add('is-warn');
     if (info.status === 'breach') el.classList.add('is-breach');
     if (el.classList.contains('live-sla-text')) {
@@ -3501,7 +3729,7 @@ function updateLiveCountdownBadges() {
     }
     var dot = el.parentElement && el.parentElement.querySelector('.sla-indicator');
     if (dot) {
-      dot.classList.remove('sla-ok', 'sla-warn', 'sla-breach');
+      dot.classList.remove('sla-ok', 'sla-warn', 'sla-breach', 'sla-done', 'sla-done-late', 'sla-neutral');
       dot.classList.add(info.status === 'breach' ? 'sla-breach' : (info.status === 'warn' ? 'sla-warn' : 'sla-ok'));
     }
   });
@@ -4078,7 +4306,7 @@ async function loadTareasData() {
       return (a.n || '').localeCompare(b.n || '', 'es', { sensitivity: 'base' });
     });
     var KT = (kbRes.data || []).map(function(r) {
-      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', slaMin: (r.plazo_minutos != null ? Number(r.plazo_minutos) : null), createdAt: r.created_at || null, sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null, refAdj: Array.isArray(r.adjuntos_referencia) ? r.adjuntos_referencia : [] };
+      return { id: r.id, col: r.columna, tt: r.titulo, ds: r.descripcion || '', notes: r.notas || '', slaMin: (r.plazo_minutos != null ? Number(r.plazo_minutos) : null), createdAt: r.created_at || null, updatedAt: r.updated_at || null, sv: r.servicio || '', tg: r.servicio || '', pr: r.prioridad || 'md', du: formatKanbanDate(r.fecha_entrega), dc: r.estado_fecha || '', pc: r.progreso || 0, tm: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], cl: r.cliente_nombre || '', sb: r.subtareas || '', ticketDbId: r.ticket_id || null, refAdj: Array.isArray(r.adjuntos_referencia) ? r.adjuntos_referencia : [] };
     });
     var MT = {};
     (wlRes.data || []).forEach(function(r) {
@@ -4106,7 +4334,13 @@ async function loadTareasData() {
       var slaLeft = '';
       if (t.sla_vencimiento) {
         var due = new Date(t.sla_vencimiento);
-        if (due < now) { slaLeft = 'VENCIDO'; } else {
+        if (t.status === 'closed') {
+          var upd = t.updated_at ? new Date(t.updated_at) : now;
+          if (isNaN(upd.getTime())) upd = now;
+          slaLeft = upd.getTime() > due.getTime() ? 'Completado · retraso' : 'Completado';
+        } else if (due < now) {
+          slaLeft = 'Vencido';
+        } else {
           var mins = Math.floor((due - now) / 60000);
           if (mins >= 60) slaLeft = Math.floor(mins / 60) + 'h ' + (mins % 60) + 'm';
           else slaLeft = mins + 'm';
@@ -4114,7 +4348,7 @@ async function loadTareasData() {
       }
       var solAdj = Array.isArray(t.adjuntos_solicitud) ? t.adjuntos_solicitud : [];
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
-      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', dueAt: t.sla_vencimiento || null, created: formatTicketWhen(t.created_at), due: formatTicketWhen(t.sla_vencimiento), notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
+      return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', dueAt: t.sla_vencimiento || null, created: formatTicketWhen(t.created_at), createdAtIso: t.created_at || null, due: formatTicketWhen(t.sla_vencimiento), updatedAt: t.updated_at || null, notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
     return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
   } catch (err) {
@@ -4153,6 +4387,7 @@ function reloadTareasData(thenRender) {
     renderers.clients?.();
     renderers.kanban?.();
     renderers.tickets?.();
+    renderers.cierres?.();
     renderers.calendar?.();
     renderers.workload?.();
     renderers.workflows?.();
@@ -4210,12 +4445,30 @@ function clientAvatarMarkup(c, opts) {
 //  NAVIGATION
 // ══════════════════════════════════════════════════════════════════
 const pageNames = {
-  dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables',
-  tickets:'Sistema de Tickets',calendar:'Calendario del equipo',workload:'Equipo de trabajo',
+  dashboard:'Dashboard',clients:'Seguimiento de Clientes',kanban:'Entregables (dev)',
+  cierres:'Registro de cierres',
+  tickets:'Tickets (equipo)',calendar:'Calendario del equipo',workload:'Equipo de trabajo',
   attendance:'Asistencia Verificada'
 };
 
+function openHeaderNuevoModal() {
+  if (typeof tareasEffectivePerms === 'function' && tareasEffectivePerms().admin) openModal('task');
+  else openModal('ticket');
+}
+
+function dashboardVerTrabajo() {
+  if (typeof tareasEffectivePerms === 'function' && tareasEffectivePerms().admin) {
+    navigate('kanban', document.querySelector('.nav-item[data-view="kanban"]'));
+  } else {
+    navigate('cierres', document.querySelector('.nav-item[data-view="cierres"]'));
+  }
+}
+
 function navigate(viewId, btn) {
+  if (viewId === 'kanban' && typeof tareasEffectivePerms === 'function' && !tareasEffectivePerms().admin) {
+    navigate('tickets', document.querySelector('.nav-item[data-view="tickets"]'));
+    return;
+  }
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   const view = document.getElementById('view-' + viewId);
   if (view) view.classList.add('active');
@@ -4229,6 +4482,12 @@ function navigate(viewId, btn) {
   if (active) { active.classList.add('active'); active.setAttribute('aria-current','page'); }
   // Render the view
   if (renderers[viewId]) renderers[viewId]();
+  if (viewId === 'attendance') {
+    attRefreshAttendanceWindowUI();
+    attStartAttendanceWindowTimer();
+  } else {
+    attStopAttendanceWindowTimer();
+  }
   // Close mobile sidebar
   closeMobileSidebar();
   // Trigger fade-ins
@@ -4345,6 +4604,173 @@ function filterClients(status, btn) {
   applyClientListRowVisibility();
 }
 
+// ─── REGISTRO DE CIERRES (tickets resueltos + entregables en «done», vista admin) ───
+function cierresFmtDuration(startIso, endIso) {
+  if (!endIso) return '—';
+  var t1 = new Date(endIso).getTime();
+  if (isNaN(t1)) return '—';
+  var t0 = startIso ? new Date(startIso).getTime() : NaN;
+  if (isNaN(t0) || t0 > t1) return '—';
+  var m = Math.floor((t1 - t0) / 60000);
+  if (m < 1) return '< 1 min';
+  if (m < 60) return m + ' min';
+  var h = Math.floor(m / 60);
+  var rm = m % 60;
+  return rm ? h + ' h ' + rm + ' min' : h + ' h';
+}
+function cierresDayKeyLima(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+  } catch (e) { return ''; }
+}
+function cierresDayHeadingLima(iso) {
+  if (!iso) return '';
+  try {
+    return new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+  } catch (e) { return String(iso); }
+}
+function cierresTimeLima(iso) {
+  if (!iso) return '—';
+  try {
+    return new Intl.DateTimeFormat('es-PE', { timeZone: 'America/Lima', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(iso));
+  } catch (e) { return '—'; }
+}
+function cierresCollectItems(filter) {
+  var admin = tareasEffectivePerms().admin;
+  var items = [];
+  var vis = getVisibleTicketsForSession(tickets);
+  vis.forEach(function(tk) {
+    if (tk.status !== 'closed') return;
+    if (filter === 'dev') return;
+    var endIso = tk.updatedAt || null;
+    if (!endIso) return;
+    var idx = tickets.indexOf(tk);
+    if (idx < 0) return;
+    items.push({
+      kind: 'ticket',
+      ticketIdx: idx,
+      title: tk.title || tk.id,
+      sub: (tk.id || '') + (tk.client ? ' · ' + tk.client : ''),
+      endIso: endIso,
+      startIso: tk.createdAtIso || null,
+      sortTs: new Date(endIso).getTime()
+    });
+  });
+  if (admin && filter !== 'tickets') {
+    (KT || []).forEach(function(k) {
+      if (!k || k.col !== 'done') return;
+      var endIso = k.updatedAt || k.createdAt || null;
+      if (!endIso) return;
+      items.push({
+        kind: 'kt',
+        kanbanId: k.id,
+        title: k.tt || 'Sin título',
+        sub: k.cl ? String(k.cl) : 'Entregable (dev)',
+        endIso: endIso,
+        startIso: k.createdAt || null,
+        sortTs: new Date(endIso).getTime()
+      });
+    });
+  }
+  items.sort(function(a, b) { return b.sortTs - a.sortTs; });
+  return items;
+}
+function cierresOpenItem(it) {
+  if (!it) return;
+  if (it.kind === 'ticket') {
+    navigate('tickets', document.querySelector('.nav-item[data-view="tickets"]'));
+    var ix = it.ticketIdx;
+    setTimeout(function() {
+      var det = document.getElementById('tkDetail-' + ix);
+      if (det && !det.classList.contains('show')) toggleTicketDetail(ix);
+      if (det) det.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
+    return;
+  }
+  navigate('kanban', document.querySelector('.nav-item[data-view="kanban"]'));
+  setTimeout(function() {
+    openEntregableDetailModal(String(it.kanbanId));
+  }, 120);
+}
+function cierresOnCardClick(btn) {
+  if (!btn) return;
+  var k = btn.getAttribute('data-cierre-kind');
+  if (k === 'ticket') {
+    var ix = parseInt(btn.getAttribute('data-ticket-idx'), 10);
+    if (!isNaN(ix)) cierresOpenItem({ kind: 'ticket', ticketIdx: ix });
+  } else if (k === 'kt') {
+    cierresOpenItem({ kind: 'kt', kanbanId: btn.getAttribute('data-kanban-id') });
+  }
+}
+function cierresSetFilter(f, btn) {
+  var bar = document.querySelector('.cierres-toolbar');
+  if (bar) {
+    bar.querySelectorAll('.tab').forEach(function(t) {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    });
+  }
+  if (btn) {
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+  }
+  window.__cierresFilter = f;
+  renderers.cierres();
+}
+
+renderers.cierres = function() {
+  var root = document.getElementById('cierresRoot');
+  if (!root) return;
+  var filter = window.__cierresFilter || 'all';
+  if (!tareasEffectivePerms().admin && filter === 'dev') filter = 'all';
+  var items = cierresCollectItems(filter);
+  if (!items.length) {
+    root.innerHTML = '<div class="cierres-empty" role="status">No hay cierres para mostrar con este filtro.</div>';
+    return;
+  }
+  var byDay = [];
+  var curKey = null;
+  var curList = null;
+  var i, it, dk;
+  for (i = 0; i < items.length; i++) {
+    it = items[i];
+    dk = cierresDayKeyLima(it.endIso);
+    if (dk !== curKey) {
+      curKey = dk;
+      curList = { dayKey: dk, headingIso: it.endIso, rows: [] };
+      byDay.push(curList);
+    }
+    curList.rows.push(it);
+  }
+  var html = '';
+  byDay.forEach(function(block) {
+    html += '<div class="cierres-day">';
+    html += '<h4 class="cierres-day-title">' + escTareas(cierresDayHeadingLima(block.headingIso)) + '</h4>';
+    html += '<div class="cierres-grid">';
+    block.rows.forEach(function(row) {
+      var badge = row.kind === 'ticket'
+        ? '<span class="cierres-card-badge cierres-card-badge--tk">Ticket</span>'
+        : '<span class="cierres-card-badge cierres-card-badge--dev">Entregable</span>';
+      var dur = escTareas(cierresFmtDuration(row.startIso, row.endIso));
+      var tm = escTareas(cierresTimeLima(row.endIso));
+      var title = escTareas(row.title);
+      var sub = escTareas(row.sub);
+      if (row.kind === 'ticket') {
+        html += '<button type="button" class="cierres-card" data-cierre-kind="ticket" data-ticket-idx="' + row.ticketIdx + '" onclick="cierresOnCardClick(this)">';
+      } else {
+        html += '<button type="button" class="cierres-card" data-cierre-kind="kt" data-kanban-id="' + escTareas(String(row.kanbanId)) + '" onclick="cierresOnCardClick(this)">';
+      }
+      html += badge + '<div class="cierres-card-title">' + title + '</div>';
+      html += '<div class="cierres-card-meta">' + sub + '</div>';
+      html += '<div class="cierres-card-time">Cerrado ~ ' + tm + ' · Lima · duración ' + dur + '</div>';
+      html += '</button>';
+    });
+    html += '</div></div>';
+  });
+  root.innerHTML = html;
+};
+
 // ─── KANBAN ───
 renderers.kanban = function(snapshot) {
   var items = Array.isArray(snapshot) ? snapshot.slice() : (Array.isArray(KT) ? KT.slice() : []);
@@ -4362,14 +4788,7 @@ renderers.kanban = function(snapshot) {
     const cardsHtml = tasks.map(t => {
       const avsHtml = (t.tm || []).map(id => makeAvatar(id, 16)).join('');
       const prgColor = t.pc >= 80 ? 'var(--green)' : t.pc >= 50 ? 'var(--color-primary)' : t.pc > 0 ? 'var(--orange2)' : 'var(--color-surface-offset)';
-      const dateCls = t.dc === 'lt' ? 'late' : t.dc === 'sn' ? 'soon' : t.dc === 'dn' ? 'green' : '';
-      var deadlineIso = '';
-      if (t.slaMin && t.createdAt) {
-        var c = new Date(t.createdAt);
-        if (!isNaN(c.getTime())) deadlineIso = new Date(c.getTime() + (Number(t.slaMin) * 60000)).toISOString();
-      }
-      const dateIcon = t.dc === 'dn' ? '✅' : (deadlineIso ? '⏱' : (t.slaMin ? '⏱' : '📅'));
-      const dateLabel = deadlineIso ? '<span class="live-countdown" data-live-deadline="' + deadlineIso + '" data-live-prefix="">' + escTareas(getLiveCountdownInfo(deadlineIso).text) + '</span>' : (t.slaMin ? formatSlaMinutesOrHours(t.slaMin, null) : t.du);
+      const dateLabel = getKanbanEntregaDeadlineMarkup(t);
       const kid = String(t.id || '').replace(/"/g, '&quot;');
       const ticketPill = t.ticketDbId ? '<div class="kanban-ticket-pill">Desde ticket</div>' : '';
       const refPill = (t.refAdj && t.refAdj.length) ? '<div class="kanban-ref-pill" title="Tiene imagen de referencia">📷</div>' : '';
@@ -4384,7 +4803,7 @@ renderers.kanban = function(snapshot) {
           <div class="card-title">${t.tt}</div>
           <div class="card-desc">${t.ds}</div>
           <div class="card-meta">
-            <span class="card-date ${dateCls}">${dateIcon} ${dateLabel || 'Sin fecha'}</span>
+            ${dateLabel || '<span class="card-date">Sin fecha</span>'}
             <div class="kanban-card-participants" aria-label="Participan en esta tarea">${avsHtml}</div>
           </div>
           ${t.pc > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar"><div class="progress-fill" style="width:${t.pc}%;background:${prgColor}"></div></div><span class="progress-pct">${t.pc}%</span></div>` : ''}
@@ -4489,6 +4908,15 @@ function moveKanbanCard(cardId, newColumna) {
   var card = KT.find(function(k){ return k && String(k.id) === idStr; });
   if (!card) return;
   var prevCol = card.col;
+  var nowIso = new Date().toISOString();
+  var payload = { columna: newColumna, orden: 0 };
+  if (newColumna === 'done' && prevCol !== 'done') {
+    payload.updated_at = nowIso;
+    card.updatedAt = nowIso;
+  } else if (prevCol === 'done' && newColumna !== 'done') {
+    payload.updated_at = nowIso;
+    card.updatedAt = nowIso;
+  }
   card.col = newColumna;
   var snapshot = Array.isArray(KT) ? KT.slice() : [];
   var board = document.getElementById('kanbanBoard');
@@ -4497,12 +4925,14 @@ function moveKanbanCard(cardId, newColumna) {
     updateBadges();
   }
   if (supabase) {
-    supabase.from('tareas_kanban').update({ columna: newColumna, orden: 0 }).eq('id', cardId).select('id, columna').maybeSingle().then(function(r) {
+    supabase.from('tareas_kanban').update(payload).eq('id', cardId).select('id, columna, updated_at').maybeSingle().then(function(r) {
       if (r.error) {
         card.col = prevCol;
         if (board) { renderers.kanban(); updateBadges(); }
         alert('Error al mover: ' + (r.error.message||''));
+        return;
       }
+      if (r.data && r.data.updated_at) card.updatedAt = r.data.updated_at;
     });
   }
 }
@@ -4521,15 +4951,20 @@ renderers.tickets = function() {
   var open   = visibleTickets.filter(function(t){ return t.status === 'open'; }).length;
   var prog   = visibleTickets.filter(function(t){ return t.status === 'progress'; }).length;
   var res    = visibleTickets.filter(function(t){ return t.status === 'closed'; }).length;
-  var breach = visibleTickets.filter(function(t){ return t.slaStatus === 'breach'; }).length;
+  var vencidosActivos = visibleTickets.filter(function(t){ return ticketIsOpenOverdue(t); }).length;
 
   document.getElementById('ticketsStats').innerHTML = `
-    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${visibleTickets.length}</div><div class="ticket-stat-lbl">Total</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">${visibleTickets.length}</div><div class="ticket-stat-lbl">Total visibles</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--color-primary);font-variant-numeric:tabular-nums">${open}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--color-primary);display:inline-block;margin-right:3px"></span>Abiertos</div></div>
-    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--orange2);font-variant-numeric:tabular-nums">${prog}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--orange2);display:inline-block;margin-right:3px"></span>En Proceso</div></div>
-    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--red);font-variant-numeric:tabular-nums">${breach}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px"></span>SLA Breach</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--orange2);font-variant-numeric:tabular-nums">${prog}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--orange2);display:inline-block;margin-right:3px"></span>En proceso</div></div>
+    <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--red);font-variant-numeric:tabular-nums">${vencidosActivos}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block;margin-right:3px"></span>Fuera de plazo</div></div>
     <div class="ticket-stat"><div class="ticket-stat-num" style="color:var(--green);font-variant-numeric:tabular-nums">${res}</div><div class="ticket-stat-lbl"><span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;margin-right:3px"></span>Resueltos</div></div>
-    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">—</div><div class="ticket-stat-lbl">Tiempo Promedio</div></div>`;
+    <div class="ticket-stat"><div class="ticket-stat-num" style="font-variant-numeric:tabular-nums">—</div><div class="ticket-stat-lbl">Promedio (próx.)</div></div>`;
+  var hintEl = document.getElementById('ticketsStatsHint');
+  if (hintEl) {
+    hintEl.hidden = false;
+    hintEl.textContent = 'El equipo resuelve todo en Tickets (sin pasar a Entregables). Fuera de plazo = abierto o en proceso con fecha límite pasada. Resueltos: Completado o Completado · retraso.';
+  }
 
   const grid = document.getElementById('ticketsGrid');
   let html = `<div class="tickets-table" role="table">
@@ -4540,7 +4975,7 @@ renderers.tickets = function() {
       <div role="columnheader">Categoría</div>
       <div role="columnheader">Prioridad</div>
       <div role="columnheader">Asignado</div>
-      <div role="columnheader">SLA</div>
+      <div role="columnheader">Plazo / cierre</div>
       <div role="columnheader">Estado</div>
     </div>`;
 
@@ -4549,12 +4984,17 @@ renderers.tickets = function() {
     if (realIdx < 0) realIdx = idx;
     const m = TEAM.find(x => x.id === tk.assignee);
     const stPill = tk.status === 'open' ? 'pill-orange' : tk.status === 'progress' ? 'pill-orange2' : 'pill-green';
-    const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En Proceso' : 'Resuelto';
+    const stTxt  = tk.status === 'open' ? 'Abierto' : tk.status === 'progress' ? 'En proceso' : 'Resuelto';
     const prPill = tk.priority === 'urgente' ? 'pill-red' : tk.priority === 'alta' ? 'pill-orange2' : tk.priority === 'media' ? 'pill-orange' : 'pill-gray';
     const catPill= tk.category === 'Error' ? 'pill-red' : tk.category === 'Cambio' ? 'pill-orange2' : tk.category === 'Mejora' ? 'pill-green' : tk.category === 'Solicitud' ? 'pill-purple' : 'pill-gray';
-    const liveSla = getLiveCountdownInfo(tk.dueAt);
-    const slaDot = liveSla.status === 'ok' ? 'sla-ok' : liveSla.status === 'warn' ? 'sla-warn' : 'sla-breach';
-    const slaColor = liveSla.status === 'ok' ? 'var(--green)' : liveSla.status === 'warn' ? 'var(--orange2)' : 'var(--red)';
+    const slaUi = getTicketSlaRowUi(tk);
+    const slaDot = slaUi.dot;
+    var slaColor = 'var(--color-text-muted)';
+    if (slaUi.textCls === 'is-breach') slaColor = 'var(--red)';
+    else if (slaUi.textCls === 'is-warn') slaColor = 'var(--orange2)';
+    else if (slaUi.textCls === 'is-done-late') slaColor = '#65a30d';
+    else if (slaUi.textCls === 'is-done') slaColor = 'var(--green)';
+    else if (slaUi.live) slaColor = 'var(--green)';
 
     const tlHtml = tk.timeline.map(function(t) {
       return '<div class="tl-entry ' + escTareas(t.type) + '"><div class="who">' + escTareas(t.who) + '</div><div class="what">' + escTareas(t.what) + '</div><div class="when">' + escTareas(t.when) + '</div></div>';
@@ -4585,6 +5025,17 @@ renderers.tickets = function() {
         + '<div class="ticket-attach-grid" id="tkAttRes-' + realIdx + '"></div>'
       : '';
 
+    var ticketClosedMetaHtml = '';
+    if (tk.status === 'closed') {
+      var closedAtStr = tk.updatedAt ? formatTicketDateTimeLima(tk.updatedAt) : '';
+      if (!closedAtStr) closedAtStr = 'Sin marca de hora de cierre (tickets nuevos sí la guardan al resolver).';
+      var durClosed = (tk.createdAtIso && tk.updatedAt) ? formatTicketDurationClosed(tk.createdAtIso, tk.updatedAt) : '';
+      ticketClosedMetaHtml = '<div class="info-item info-item--ticket-closed"><div class="lbl">Cerrado</div><div class="val ticket-detail-closed-at">' + escTareas(closedAtStr) + '</div></div>';
+      if (durClosed) {
+        ticketClosedMetaHtml += '<div class="info-item"><div class="lbl">Del alta al cierre</div><div class="val" style="font-variant-numeric:tabular-nums;color:var(--color-text-muted)">' + escTareas(durClosed) + '</div></div>';
+      }
+    }
+
     html += `
     <div class="ticket-row" data-st="${tk.status}" onclick="toggleTicketDetail(${realIdx})" role="row" tabindex="0" aria-expanded="false" onkeydown="if(event.key==='Enter'||event.key===' ')toggleTicketDetail(${realIdx})">
       <div class="ticket-id" role="cell">${escTareas(tk.id)}</div>
@@ -4593,7 +5044,7 @@ renderers.tickets = function() {
       <div role="cell"><span class="pill ${catPill}">${escTareas(tk.category)}</span></div>
       <div role="cell"><span class="pill ${prPill}">${escTareas(tk.priority)}</span></div>
       <div class="ticket-assignee" role="cell">${assigneeCellHtml}</div>
-      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div><span class="live-sla-text" data-live-deadline="${escAttrUrlTareas(tk.dueAt || '')}" data-live-prefix="" style="color:${slaColor}">${escTareas(liveSla.text || tk.slaLeft)}</span></div>
+      <div class="sla-col" role="cell"><div class="sla-indicator ${slaDot}"></div>${slaUi.live ? '<span class="live-sla-text ' + (slaUi.textCls || '') + '" data-live-deadline="' + escAttrUrlTareas(tk.dueAt || '') + '" data-live-prefix="" style="color:' + slaColor + '">' + escTareas(slaUi.text) + '</span>' : '<span class="live-sla-text ' + (slaUi.textCls || '') + '" data-live-static="1" style="color:' + slaColor + '">' + escTareas(slaUi.text) + '</span>'}</div>
       <div role="cell"><span class="pill ${stPill}">${stTxt}</span></div>
     </div>
     <div class="ticket-detail" id="tkDetail-${realIdx}" role="region" aria-label="Detalle del ticket ${escTareas(tk.id)}">
@@ -4610,6 +5061,7 @@ renderers.tickets = function() {
           <h4>📋 Datos</h4>
           <div class="info-grid">
             <div class="info-item"><div class="lbl">Creado</div><div class="val">${escTareas(tk.created)}</div></div>
+            ${ticketClosedMetaHtml}
             <div class="info-item"><div class="lbl">Vence</div><div class="val" style="color:${slaColor}">${escTareas(tk.due)}</div></div>
             <div class="info-item"><div class="lbl">Plazo acordado</div><div class="val">${escTareas(tk.sla)}</div></div>
             <div class="info-item"><div class="lbl">Cliente</div><div class="val">${tk.client ? escTareas(tk.client) : '—'}</div></div>
@@ -4618,7 +5070,6 @@ renderers.tickets = function() {
             <div class="info-item"><div class="lbl">Categoría</div><div class="val">${escTareas(tk.category)}</div></div>
           </div>
           <div class="ticket-actions">
-            ${tk.status !== 'closed' && supabase && tk.dbId ? `<button type="button" class="btn-primary btn-sm" onclick="event.stopPropagation();createEntregableFromTicket(${realIdx})">📦 Pasar a entregable</button>` : ''}
             ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm" onclick="event.stopPropagation();openReassignTicketModal(${realIdx})">👥 Reasignar</button>` : ''}
             ${tk.status !== 'closed' ? `<button type="button" class="btn-secondary btn-sm btn-success" onclick="event.stopPropagation();openResolveTicketModal(${realIdx})">✅ Resolver con evidencia</button>` : ''}
             ${tk.status === 'open' ? `<button type="button" class="btn-secondary btn-sm btn-warning" onclick="event.stopPropagation();progressTicket('${escTareas(tk.id)}')">▶ Tomar ticket</button>` : ''}
@@ -4730,36 +5181,6 @@ function hydrateTicketAttachmentGrids(idx) {
   }
 }
 
-function createEntregableFromTicket(idx) {
-  var tk = tickets[idx];
-  if (!tk || !tk.dbId || !supabase) return;
-  var titulo = '[' + tk.id + '] ' + tk.title;
-  if (titulo.length > 200) titulo = titulo.slice(0, 197) + '…';
-  var desc = (tk.sub || '').trim();
-  if (tk.createdByEmail) desc += (desc ? '\n\n' : '') + 'Solicitante: ' + tk.createdByEmail;
-  supabase.from('tareas_kanban').insert({
-    columna: 'todo',
-    titulo: titulo,
-    descripcion: desc || tk.title,
-    servicio: 'tag-mk',
-    prioridad: (tk.priority === 'urgente' || tk.priority === 'alta') ? 'hi' : 'md',
-    ticket_id: tk.dbId,
-    cliente_nombre: tk.client || null,
-    equipo_ids: [],
-    progreso: 0,
-    subtareas: '0/1',
-    orden: 0
-  }).select().single().then(function(r) {
-    if (r.error) { alert('Error al crear entregable: ' + (r.error.message || '')); return; }
-    var row = r.data;
-    supabase.from('tareas_tickets').update({ entregable_vinculado: row.titulo, status: 'progress' }).eq('id', tk.dbId).then(function() {
-      reloadTareasData(function() {
-        navigate('kanban', document.querySelector('.nav-item[data-view="kanban"]'));
-      });
-    });
-  });
-}
-
 var _resolveTicketIdx = null;
 var _reassignTicketIdx = null;
 function openReassignTicketModal(idx) {
@@ -4840,7 +5261,7 @@ function submitResolveTicket() {
     reloadTareasData(); closeModal();
   }
   function doUpdate(mergedRes) {
-    var payload = { status: 'closed' };
+    var payload = { status: 'closed', updated_at: new Date().toISOString() };
     if (det) payload.resolucion_detalle = det;
     if (mergedRes && mergedRes.length) payload.adjuntos_resolucion = mergedRes;
     supabase.from('tareas_tickets').update(payload).eq('id', tk.dbId).then(function(r) {
@@ -4963,6 +5384,17 @@ function openEntregableDetailModal(kanbanId) {
   body += '<div class="entregable-detail-block"><h4>Descripción</h4><div class="ticket-desc-body">' + escTareas(k.ds || 'Sin descripción.') + '</div></div>';
   body += '<div class="entregable-detail-block"><h4>Imagen de referencia</h4><p style="font-size:var(--text-xs);color:var(--color-text-faint);margin-bottom:6px">Capturas subidas al crear el entregable (problema, mockup, pantalla).</p><div class="ticket-attach-grid" id="entModalRefImgs"></div></div>';
   body += '<div class="entregable-detail-block"><h4>Cliente y prioridad</h4><p style="font-size:var(--text-sm)">' + escTareas(k.cl || 'Sin cliente') + ' · ' + escTareas(k.pr) + '</p></div>';
+  if (k.col === 'done') {
+    var entDoneAt = k.updatedAt ? formatTicketDateTimeLima(k.updatedAt) : '';
+    if (!entDoneAt) entDoneAt = 'Sin marca de hora al completar; si la necesitás para el registro, mové la tarjeta fuera y otra vez a Completado.';
+    var entDur = (k.createdAt && k.updatedAt) ? formatTicketDurationClosed(k.createdAt, k.updatedAt) : '';
+    body += '<div class="entregable-detail-block entregable-detail-block--done"><h4>Completado en tablero</h4><div class="info-grid" style="margin-top:var(--sp-2)">';
+    body += '<div class="info-item info-item--ticket-closed" style="margin:0"><div class="lbl">Marcado completado</div><div class="val ticket-detail-closed-at">' + escTareas(entDoneAt) + '</div></div>';
+    if (entDur) {
+      body += '<div class="info-item"><div class="lbl">Del alta a completado</div><div class="val" style="font-variant-numeric:tabular-nums;color:var(--color-text-muted)">' + escTareas(entDur) + '</div></div>';
+    }
+    body += '</div></div>';
+  }
   if (k.slaMin) {
     body += '<div class="entregable-detail-block"><h4>Tiempo máximo de cumplimiento</h4><p style="font-size:var(--text-sm)">⏱ ' + escTareas(formatSlaMinutesOrHours(k.slaMin, null)) + '</p></div>';
   }
@@ -5435,7 +5867,112 @@ renderers.workload = function() {
   });
 };
 
-// ─── ATTENDANCE ───
+// ─── ATTENDANCE — jornada 9:00–17:59 hora Perú/Lima (alineado con trigger en BD) ───
+var ATT_WINDOW_TZ = 'America/Lima';
+var ATT_WINDOW_START_MIN = 9 * 60;
+var ATT_WINDOW_END_MIN = 18 * 60;
+var _attWindowUiTimer = null;
+
+function attNowMinutesInTimeZone(timeZone) {
+  try {
+    var parts = new Intl.DateTimeFormat('en-US', { timeZone: timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+    var h = 0, mi = 0;
+    parts.forEach(function (p) {
+      if (p.type === 'hour') h = parseInt(p.value, 10);
+      if (p.type === 'minute') mi = parseInt(p.value, 10);
+    });
+    return h * 60 + mi;
+  } catch (e) {
+    return new Date().getHours() * 60 + new Date().getMinutes();
+  }
+}
+
+function attFormatClockLima() {
+  try {
+    return new Date().toLocaleTimeString('es-PE', { timeZone: ATT_WINDOW_TZ, hour: '2-digit', minute: '2-digit', hour12: false });
+  } catch (e) {
+    return new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+function attIsAttendanceWindowOpen() {
+  var m = attNowMinutesInTimeZone(ATT_WINDOW_TZ);
+  return m >= ATT_WINDOW_START_MIN && m < ATT_WINDOW_END_MIN;
+}
+
+function attAttendanceWindowUserMessage() {
+  if (attIsAttendanceWindowOpen()) {
+    return '<strong>Jornada activa.</strong> Podés marcar entrada o salida hasta las <strong>17:59</strong> (hora Perú/Lima). Ahora en Lima: <strong>' + attFormatClockLima() + '</strong>.';
+  }
+  var mins = attNowMinutesInTimeZone(ATT_WINDOW_TZ);
+  if (mins < ATT_WINDOW_START_MIN) {
+    var until = ATT_WINDOW_START_MIN - mins;
+    var uh = Math.floor(until / 60);
+    var um = until % 60;
+    return '<strong>Fuera de horario.</strong> La asistencia abre a las <strong>9:00</strong> (Lima). Tiempo aprox. hasta la apertura: <strong>' + (uh > 0 ? uh + 'h ' : '') + um + 'm</strong>. Hora Lima: ' + attFormatClockLima() + '.';
+  }
+  return '<strong>Fuera de horario.</strong> El registro de entrada/salida es de <strong>9:00 a 17:59</strong> (hora Perú/Lima). Mañana volvé a intentar en la jornada. Hora Lima: ' + attFormatClockLima() + '.';
+}
+
+function attAttendanceClosedToast() {
+  return 'Asistencia solo entre 9:00 y 17:59 (hora Perú/Lima), según el reloj del servidor.';
+}
+
+function attStopAttendanceWindowTimer() {
+  if (_attWindowUiTimer) {
+    clearInterval(_attWindowUiTimer);
+    _attWindowUiTimer = null;
+  }
+}
+
+function attStartAttendanceWindowTimer() {
+  attStopAttendanceWindowTimer();
+  _attWindowUiTimer = setInterval(function () {
+    var v = document.getElementById('view-attendance');
+    if (!v || !v.classList.contains('active')) {
+      attStopAttendanceWindowTimer();
+      return;
+    }
+    attRefreshAttendanceWindowUI();
+  }, 30000);
+}
+
+function attRefreshAttendanceWindowUI() {
+  var ban = document.getElementById('attWindowBanner');
+  var bar = document.querySelector('#view-attendance .att-register-bar');
+  var open = attIsAttendanceWindowOpen();
+  if (ban) {
+    ban.innerHTML = attAttendanceWindowUserMessage();
+    ban.classList.remove('att-window-open', 'att-window-closed');
+    ban.classList.add(open ? 'att-window-open' : 'att-window-closed');
+  }
+  if (bar) bar.classList.toggle('att-outside-window', !open);
+  var regIn = document.querySelector('#view-attendance .att-register-btn-in');
+  var regOut = document.querySelector('#view-attendance .att-register-btn-out');
+  if (regIn) { regIn.disabled = !open; regIn.setAttribute('aria-disabled', open ? 'false' : 'true'); }
+  if (regOut) { regOut.disabled = !open; regOut.setAttribute('aria-disabled', open ? 'false' : 'true'); }
+  var markAllBtn = document.querySelector('#view-attendance button[data-attendance-admin-only]');
+  if (markAllBtn) {
+    markAllBtn.disabled = !open;
+    markAllBtn.setAttribute('aria-disabled', open ? 'false' : 'true');
+  }
+}
+
+function attCheckinMinutesFromMidnightLima(d) {
+  try {
+    var parts = new Intl.DateTimeFormat('en-US', { timeZone: ATT_WINDOW_TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(d));
+    var h = 0, mi = 0;
+    parts.forEach(function (p) {
+      if (p.type === 'hour') h = parseInt(p.value, 10);
+      if (p.type === 'minute') mi = parseInt(p.value, 10);
+    });
+    return h * 60 + mi;
+  } catch (e) {
+    var x = new Date(d);
+    return x.getHours() * 60 + x.getMinutes();
+  }
+}
+
 function getDailyCodeForDate(d) {
   var t = new Date(d); t.setHours(0,0,0,0);
   var dayOfYear = Math.floor((t - new Date(t.getFullYear(), 0, 0)) / 86400000);
@@ -5448,9 +5985,8 @@ function attGetRealStatus(m) {
   var ciDate = new Date(m.checkinAt); ciDate.setHours(0,0,0,0);
   if (ciDate.getTime() !== today.getTime()) return { key: 'absent', label: 'Ausente', cls: 'att-status-absent' };
   if (m.checkoutAt) return { key: 'present', label: 'Presente', cls: 'att-status-present' };
-  var ciHour = m.checkinAt.getHours();
-  var ciMin = m.checkinAt.getMinutes();
-  if (ciHour > 9 || (ciHour === 9 && ciMin > 15)) return { key: 'late', label: 'Tardanza', cls: 'att-status-late' };
+  var ciMinTotal = attCheckinMinutesFromMidnightLima(m.checkinAt);
+  if (ciMinTotal > 9 * 60 + 15) return { key: 'late', label: 'Tardanza', cls: 'att-status-late' };
   return { key: 'active', label: 'Trabajando', cls: 'att-status-active' };
 }
 
@@ -5588,6 +6124,7 @@ function attShowMessage(msg, isError) {
   if (!isError) setTimeout(function(){ if (el.textContent === msg) el.textContent = ''; }, 4000);
 }
 function attVerifyAndCheckin() {
+  if (!attIsAttendanceWindowOpen()) { attShowMessage(attAttendanceClosedToast(), true); return; }
   var input = document.getElementById('attCodeInput');
   var memberId = document.getElementById('attCodeMember') && document.getElementById('attCodeMember').value;
   if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
@@ -5616,6 +6153,7 @@ function attVerifyAndCheckin() {
   }
 }
 function attVerifyAndCheckout() {
+  if (!attIsAttendanceWindowOpen()) { attShowMessage(attAttendanceClosedToast(), true); return; }
   var input = document.getElementById('attCodeInput');
   var memberId = document.getElementById('attCodeMember') && document.getElementById('attCodeMember').value;
   if (!memberId) { attShowMessage('Selecciona un miembro del equipo.', true); return; }
@@ -5642,6 +6180,7 @@ function attVerifyAndCheckout() {
   }
 }
 function attQuickCheckin(memberId) {
+  if (!attIsAttendanceWindowOpen()) { attShowMessage(attAttendanceClosedToast(), true); return; }
   if (supabase) {
     supabase.from('gerentes').update({ checkin_at: new Date().toISOString(), checkout_at: null, att_active_seconds: 0, att_trust: 'high', att_device: navigator.userAgent.slice(0,120) }).eq('id', memberId).then(function(r) {
       if (r.error) return;
@@ -5655,6 +6194,7 @@ function attQuickCheckin(memberId) {
   }
 }
 function attQuickCheckout(memberId) {
+  if (!attIsAttendanceWindowOpen()) { attShowMessage(attAttendanceClosedToast(), true); return; }
   if (supabase) {
     attFinalHeartbeat(memberId).then(function() {
       return supabase.from('gerentes').update({ checkout_at: new Date().toISOString() }).eq('id', memberId);
@@ -5794,6 +6334,7 @@ renderers.attendance = function() {
   var maxH = Math.max(1, Math.max.apply(null, members.map(attHoursDecimal)));
   var tbody = document.getElementById('attendanceBody');
   if (!tbody) return;
+  var winOpen = attIsAttendanceWindowOpen();
   tbody.innerHTML = members.map(function(m) {
     var st = attGetRealStatus(m);
     var hrs = attHoursDecimal(m);
@@ -5802,10 +6343,14 @@ renderers.attendance = function() {
     var hasCheckin = !!m.checkinAt;
     var hasCheckout = !!m.checkoutAt;
     var checkinBtn = !hasCheckin
-      ? '<button class="att-action-btn checkin" onclick="attQuickCheckin(\'' + m.id + '\')" title="Registrar entrada"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>'
+      ? (winOpen
+        ? '<button type="button" class="att-action-btn checkin" onclick="attQuickCheckin(\'' + m.id + '\')" title="Registrar entrada"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>'
+        : '<button type="button" class="att-action-btn checkin" disabled title="Solo 9:00–17:59 (hora Perú/Lima)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></button>')
       : '';
     var checkoutBtn = hasCheckin && !hasCheckout
-      ? '<button class="att-action-btn checkout" onclick="attQuickCheckout(\'' + m.id + '\')" title="Registrar salida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+      ? (winOpen
+        ? '<button type="button" class="att-action-btn checkout" onclick="attQuickCheckout(\'' + m.id + '\')" title="Registrar salida"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>'
+        : '<button type="button" class="att-action-btn checkout" disabled title="Solo 9:00–17:59 (hora Perú/Lima)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>')
       : '';
 
     var trust = attComputeTrust(m);
@@ -5832,11 +6377,16 @@ renderers.attendance = function() {
 
   updateDashboardStats();
   updateBadges();
+  attRefreshAttendanceWindowUI();
 };
 
 function markAllPresent() {
   if (!tareasEffectivePerms().admin) {
     attShowMessage('Solo administradores pueden marcar a todo el equipo.', true);
+    return;
+  }
+  if (!attIsAttendanceWindowOpen()) {
+    attShowMessage(attAttendanceClosedToast(), true);
     return;
   }
   var members = ATTENDANCE_MEMBERS || [];
@@ -5847,7 +6397,12 @@ function markAllPresent() {
     if (!ids.length) { attShowMessage('Todos ya tienen entrada registrada.', false); return; }
     Promise.all(ids.map(function(id) {
       return supabase.from('gerentes').update({ checkin_at: now, checkout_at: null, att_active_seconds: 0, att_trust: null }).eq('id', id);
-    })).then(function() {
+    })).then(function(rows) {
+      var bad = rows && rows.find(function(r) { return r && r.error; });
+      if (bad && bad.error) {
+        attShowMessage(bad.error.message || attAttendanceClosedToast(), true);
+        return;
+      }
       reloadTareasData(function(){ renderers.attendance(); });
       attShowMessage('Entrada registrada para ' + ids.length + ' miembros.');
     });
@@ -5880,7 +6435,7 @@ function updateDashboardStats() {
   var done = KT.filter(function(k) { return k.col === 'done'; }).length;
   var visTickets = getVisibleTicketsForSession(tickets);
   var tkOpen = visTickets.filter(function(t) { return t.status !== 'closed'; }).length;
-  var vencidos = visTickets.filter(function(t) { return t.slaStatus === 'breach'; }).length;
+  var vencidos = visTickets.filter(function(t) { return ticketIsOpenOverdue(t); }).length;
   var attMembers = ATTENDANCE_MEMBERS || [];
   var present = attMembers.filter(function(m) { var s = attGetRealStatus(m); return s.key !== 'absent'; }).length;
   var set = function(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; };
@@ -5894,8 +6449,10 @@ function updateDashboardStats() {
   set('welcome-stat-asistencia', present + '/' + (attMembers.length || TEAM.length));
   var sub = document.getElementById('dashboard-sub');
   if (sub) {
+    var adm = typeof tareasEffectivePerms === 'function' && tareasEffectivePerms().admin;
     if (total === 0 && tkOpen === 0) sub.textContent = 'Resumen de tu operación';
-    else sub.textContent = (total ? total + ' entregables' : '') + (total && tkOpen ? ' · ' : '') + (tkOpen ? tkOpen + ' tickets abiertos' : '');
+    else if (adm) sub.textContent = (total ? total + ' entregables' : '') + (total && tkOpen ? ' · ' : '') + (tkOpen ? tkOpen + ' tickets abiertos' : '');
+    else sub.textContent = tkOpen ? (tkOpen + ' tickets abiertos') : 'Resumen de tu operación';
   }
   var greet = document.getElementById('dashboard-greeting');
   if (greet) {
@@ -5945,6 +6502,10 @@ function openModal(type) {
   }
 
   if (type === 'task') {
+    if (typeof tareasEffectivePerms === 'function' && !tareasEffectivePerms().admin) {
+      alert('Los entregables del tablero interno son solo para el administrador. Para solicitudes del equipo usá Tickets.');
+      return;
+    }
     title.textContent = 'Nuevo Entregable';
     body.innerHTML = `
       <div class="form-group"><label for="m-name">Nombre</label><input class="form-input" placeholder="Ej: Video Reel — Cliente X" id="m-name"></div>
@@ -6372,6 +6933,10 @@ function uploadTicketAdjuntos(ticketDbId, subfolder, fileList, done) {
 }
 
 function addTask() {
+  if (!tareasEffectivePerms().admin) {
+    alert('Solo el administrador puede crear entregables en el tablero interno.');
+    return;
+  }
   var n = document.getElementById('m-name').value.trim();
   if (!n) { alert('Nombre requerido'); return; }
   var tgMap = {marketing:'tag-mk',branding:'tag-br',video:'tag-vi',social:'tag-so',design:'tag-de'};
@@ -6397,7 +6962,8 @@ function addTask() {
     if (cObj) clNombre = cObj.n || '';
   }
   function pushLocalKanban(equipoId) {
-    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', slaMin: slaMin, createdAt: new Date().toISOString(), sv: sv, tg: tg, pr: pr, du: formatKanbanDate(due) || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null, refAdj: [] });
+    var ca = new Date().toISOString();
+    KT.unshift({ col: 'todo', tt: n, ds: document.getElementById('m-desc').value || '', notes: '', slaMin: slaMin, createdAt: ca, updatedAt: ca, sv: sv, tg: tg, pr: pr, du: formatKanbanDate(due) || 'Sin fecha', dc: '', pc: 0, tm: equipoId ? [equipoId] : [], cl: clNombre, sb: '0/1', ticketDbId: null, refAdj: [] });
     renderers.kanban(); updateBadges(); closeModal();
   }
   var filesEl = document.getElementById('m-files');
@@ -6423,7 +6989,7 @@ function addTask() {
         var row = r.data;
         function pushKtAndClose(refAdj) {
           var ra = refAdj && refAdj.length ? refAdj : [];
-          KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', slaMin: (row.plazo_minutos != null ? Number(row.plazo_minutos) : slaMin), createdAt: row.created_at || new Date().toISOString(), sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null, refAdj: ra });
+          KT.unshift({ id: row.id, col: row.columna, tt: row.titulo, ds: row.descripcion || '', notes: row.notas || '', slaMin: (row.plazo_minutos != null ? Number(row.plazo_minutos) : slaMin), createdAt: row.created_at || new Date().toISOString(), updatedAt: row.updated_at || row.created_at || null, sv: row.servicio || '', tg: row.servicio || '', pr: row.prioridad || 'md', du: formatKanbanDate(row.fecha_entrega) || 'Sin fecha', dc: row.estado_fecha || '', pc: row.progreso || 0, tm: Array.isArray(row.equipo_ids) ? row.equipo_ids : [], cl: row.cliente_nombre || '', sb: row.subtareas || '0/1', ticketDbId: row.ticket_id || null, refAdj: ra });
           renderers.kanban(); updateBadges(); closeModal();
         }
         if (fileList.length) {
@@ -6538,7 +7104,7 @@ function addTicket() {
       id:'TK-'+String(tickets.length+1).padStart(3,'0'), dbId: null, title:n, sub:desc,
       client:clVal, clientColor:clColor, status:'open', priority:pr,
       category:cat, channel:'', assignee:'', assigneeEmail:assignEmail, assigneeEmails: assigneeEmails, sla:slaStr, slaLeft:slaStr, slaStatus:'ok',
-      dueAt: vencimiento.toISOString(), created:'Ahora', due:'Pendiente', notes: notes || '',
+      dueAt: vencimiento.toISOString(), created:'Ahora', due:'Pendiente', updatedAt: null, notes: notes || '',
       timeline:[{who:'Sistema', what:comentarioSistema, when:'Ahora', type:'system'}],
       createdByEmail:'', slaMinutos: slaMinutes, solicitudAdjuntos:[], resolucionAdjuntos:[], resolucionDetalle:''
     });
@@ -7268,7 +7834,7 @@ function evalTicketDeadlinePopups() {
     if (info.status === 'warn') {
       ticketPopupNotifyOnce('warn:' + code, 'Ticket ' + code + ' por vencer: ' + info.text, 'warn', function() { openTicketFromNotification(code); });
     } else if (info.status === 'breach') {
-      ticketPopupNotifyOnce('breach:' + code, 'Ticket ' + code + ' vencido. Revisar ahora.', 'breach', function() { openTicketFromNotification(code); });
+      ticketPopupNotifyOnce('breach:' + code, 'Ticket ' + code + ': fuera de plazo (pendiente de resolver).', 'breach', function() { openTicketFromNotification(code); });
     }
   });
 }

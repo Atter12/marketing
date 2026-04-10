@@ -1421,7 +1421,10 @@ body.kanban-pipeline-dragging {
   var lib=window.supabase;
   var createClientFn=lib&&(lib.createClient||(lib.default&&(lib.default.createClient||lib.default)));
   if(!lib||typeof createClientFn!=='function'){ console.warn('[Creativos] auth: createClient no encontrado en window.supabase'); return; }
-  var supabase=createClientFn(url,key);
+  var skC=(function(u){try{var r=new URL(u).hostname.split('.')[0];return r?'sb-'+r+'-auth-token':undefined;}catch(e){return undefined;}})(url);
+  var authC={persistSession:true,autoRefreshToken:true,storage:localStorage,detectSessionInUrl:true};
+  if(skC)authC.storageKey=skC;
+  var supabase=createClientFn(url,key,{auth:authC});
   var hash=window.location.hash||'';
   if(hash.indexOf('access_token')!==-1){
     var params={}; hash.slice(1).split('&').forEach(function(p){ var kv=p.split('='); if(kv[0]&&kv[1]) params[kv[0]]=decodeURIComponent(kv[1]); });
@@ -1640,7 +1643,10 @@ function tryInitSupabaseCreativos(retryCount) {
     return;
   }
   try {
-    supabase = createClientFn(url, key);
+    var sk2 = (function (u) { try { var r = new URL(u).hostname.split('.')[0]; return r ? 'sb-' + r + '-auth-token' : undefined; } catch (e) { return undefined; } })(url);
+    var authC2 = { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true };
+    if (sk2) authC2.storageKey = sk2;
+    supabase = createClientFn(url, key, { auth: authC2 });
     console.log('[Creativos] Supabase OK');
     if (window.__creativosTriggerLoad) window.__creativosTriggerLoad();
   } catch (e) { console.warn('[Creativos] Supabase init:', e); }

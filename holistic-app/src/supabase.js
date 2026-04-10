@@ -3,9 +3,28 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
 
+/** Misma clave que Pendientes/Creativos (HTML): una sola sesión en localStorage para todo el dominio. */
+function supabaseAuthStorageKey(url) {
+  if (!url) return undefined;
+  try {
+    const ref = new URL(url).hostname.split(".")[0];
+    return ref ? `sb-${ref}-auth-token` : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+const authStorageKey = supabaseAuthStorageKey(supabaseUrl);
+
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true },
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        storage: localStorage,
+        detectSessionInUrl: true,
+        ...(authStorageKey ? { storageKey: authStorageKey } : {}),
+      },
     })
   : null;
 

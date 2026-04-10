@@ -77,6 +77,10 @@
         window.location.replace(pendientesAppUrl() + hashEarly);
         return;
       }
+      function holisticSupabaseAuthStorageKey(u) {
+        if (!u || typeof u !== 'string') return undefined;
+        try { var ref = new URL(u).hostname.split('.')[0]; return ref ? 'sb-' + ref + '-auth-token' : undefined; } catch (e) { return undefined; }
+      }
       var url = window.__SUPABASE_URL__;
       var key = window.__SUPABASE_ANON_KEY__;
       if (!url || !key) {
@@ -84,9 +88,10 @@
         document.getElementById('errorBox').textContent = 'Configuración no disponible.';
         return;
       }
-      var supabase = window.supabase.createClient(url, key, {
-        auth: { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true },
-      });
+      var sk = holisticSupabaseAuthStorageKey(url);
+      var authOpts = { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true };
+      if (sk) authOpts.storageKey = sk;
+      var supabase = window.supabase.createClient(url, key, { auth: authOpts });
       var hash = window.location.hash || '';
       if (hash.indexOf('access_token') !== -1) {
         document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Pendientes…</div>';
