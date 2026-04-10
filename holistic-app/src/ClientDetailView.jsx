@@ -133,6 +133,33 @@ export default function ClientDetailView(props) {
           </div>
           <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>{curC.name}</h2>{curC.codigo && <div style={{ fontSize: 11.5, color: "#5f6577", fontFamily: "var(--font-mono)", marginTop: 2, fontWeight: 600, letterSpacing: "0.02em" }}>Código: {curC.codigo}</div>}<div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12.5, letterSpacing: "0.01em", color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
         </div>,
+        !isCliente && (() => {
+          const gar = (curC.garantesContactos || []).filter((r) => (r?.nombre || "").trim() || (r?.telefono || "").trim() || (r?.email || "").trim());
+          return (
+            <div style={{ marginBottom: 22, padding: "14px 18px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 12, maxWidth: 720 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>Contactos de garante</div>
+              {gar.length === 0 ? (
+                <p style={{ margin: 0, fontSize: 12.5, color: "#64748b", lineHeight: 1.5 }}>No hay contactos cargados. Usá <strong>Editar</strong> y completá al menos 3 (teléfono o correo por contacto).</p>
+              ) : (
+                <ul style={{ margin: 0, paddingLeft: 18, color: "#334155", fontSize: 13, lineHeight: 1.55 }}>
+                  {gar.map((r, i) => (
+                    <li key={i} style={{ marginBottom: 6 }}>
+                      <span style={{ fontWeight: 600 }}>{(r.nombre || "").trim() || "Sin nombre"}</span>
+                      {((r.telefono || "").trim() || (r.email || "").trim()) ? (
+                        <span style={{ color: "#64748b", fontWeight: 400 }}>
+                          {" · "}
+                          {(r.telefono || "").trim() ? `📱 ${(r.telefono || "").trim()}` : ""}
+                          {(r.telefono || "").trim() && (r.email || "").trim() ? " · " : ""}
+                          {(r.email || "").trim() ? `✉ ${(r.email || "").trim()}` : ""}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })(),
         isLikelyBlockedAvatarHotlinkUrl(String(curC.avatar_url || "").replace(/&amp;/gi, "&")) && (
           <div role="alert" style={{ marginBottom: 22, padding: "14px 16px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 13, lineHeight: 1.5, maxWidth: 720 }}>
             <strong style={{ display: "block", marginBottom: 6 }}>Foto del cliente inestable (WhatsApp / Meta)</strong>

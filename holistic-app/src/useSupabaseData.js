@@ -1,6 +1,21 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "./supabase";
 
+function mapGaranteContacto(x) {
+  if (!x || typeof x !== "object") return { nombre: "", telefono: "", email: "" };
+  return {
+    nombre: String(x.nombre ?? x.name ?? "").trim(),
+    telefono: String(x.telefono ?? x.phone ?? "").trim(),
+    email: String(x.email ?? "").trim(),
+  };
+}
+
+function mapGarantesContactos(raw) {
+  if (!raw) return [];
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map(mapGaranteContacto);
+}
+
 function mapCliente(r) {
   if (!r) return r;
   return {
@@ -13,6 +28,7 @@ function mapCliente(r) {
     biz: r.biz ?? "",
     notes: r.notes ?? "",
     avatar_url: r.avatar_url ?? "",
+    garantesContactos: mapGarantesContactos(r.garantes_contactos),
     created: r.created_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10),
   };
 }
@@ -75,7 +91,11 @@ export function useSupabaseData(role, clientId) {
         setManual((mRes.data || []).map(mapManual));
       } else if (role === "cliente" && clientId) {
         const [cRes, gRes, garRes, mRes] = await Promise.all([
-          supabase.from("clientes").select("*").eq("id", clientId).maybeSingle(),
+          supabase
+            .from("clientes")
+            .select("id,name,ig,phones,emails,biz,notes,avatar_url,codigo,created_at")
+            .eq("id", clientId)
+            .maybeSingle(),
           supabase.from("gastos").select("id").eq("client_id", clientId),
           supabase.from("garantias").select("*").eq("client_id", clientId),
           supabase.from("manual").select("*").eq("client_id", clientId).order("fecha", { ascending: false }),
@@ -97,7 +117,7 @@ export function useSupabaseData(role, clientId) {
           .sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
         const gFullRes = await supabase.from("gastos").select("*").eq("client_id", clientId).order("mes", { ascending: false });
         if (gFullRes.error) throw gFullRes.error;
-        const one = cRes.data ? [mapCliente(cRes.data)] : [];
+        const one = cRes.data ? [mapCliente({ ...cRes.data, garantes_contactos: [] })] : [];
         setClients(one);
         setGastos((gFullRes.data || []).map(mapGasto));
         setCobros(cobrosMerged.map(mapCobro));
@@ -127,9 +147,20 @@ export function useSupabaseData(role, clientId) {
   const mutations = {
     saveClient: async (payload) => {
       if (role !== "gerente") return;
-      const { id, newClientId, name, codigo, ig, phones, emails, biz, notes, avatar_url } = payload;
+      const { id, newClientId, name, codigo, ig, phones, emails, biz, notes, avatar_url, garantes_contactos } = payload;
       const genCodigo = () => "CL-" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2, 5).toUpperCase();
-      const row = { name: name?.trim(), ig: ig || null, phones: Array.isArray(phones) ? phones.filter(Boolean) : [], emails: Array.isArray(emails) ? emails.filter(Boolean) : [], biz: biz || null, notes: notes || null, avatar_url: avatar_url || null, codigo: (codigo && String(codigo).trim()) ? String(codigo).trim() : null };
+      const garDb = Array.isArray(garantes_contactos) ? garantes_contactos : [];
+      const row = {
+        name: name?.trim(),
+        ig: ig || null,
+        phones: Array.isArray(phones) ? phones.filter(Boolean) : [],
+        emails: Array.isArray(emails) ? emails.filter(Boolean) : [],
+        biz: biz || null,
+        notes: notes || null,
+        avatar_url: avatar_url || null,
+        codigo: (codigo && String(codigo).trim()) ? String(codigo).trim() : null,
+        garantes_contactos: garDb,
+      };
       const uuidOk = (s) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
       if (id) {
         if (row.codigo === null) delete row.codigo;

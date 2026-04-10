@@ -52,6 +52,31 @@ const mesGastoYYYYMM = (g) => {
 };
 const mesCobro = (c, gastosList) => { if (c.periodoResumen && String(c.periodoResumen).trim()) return normalizePeriod(String(c.periodoResumen).trim()); if (c.gastoId && gastosList && gastosList.length) { const g = gastosList.find((x) => x.id === c.gastoId); if (g && g.mes) return normalizePeriod(g.mes); } return normalizePeriod((c.fecha || "").slice(0, 7)); };
 /** Mes en que la garantía cuenta en el resumen (período explícito, gasto, fecha colocación o alta). */
+const MIN_GARANTES_CONTACTOS = 3;
+const emptyGaranteContactoRow = () => ({ nombre: "", telefono: "", email: "" });
+const mkEmptyGarantesContactos = () => [emptyGaranteContactoRow(), emptyGaranteContactoRow(), emptyGaranteContactoRow()];
+const padGarantesContactosForm = (list) => {
+  const base = (Array.isArray(list) ? list : []).map((r) => ({
+    nombre: String(r?.nombre ?? "").trim(),
+    telefono: String(r?.telefono ?? "").trim(),
+    email: String(r?.email ?? "").trim(),
+  }));
+  while (base.length < MIN_GARANTES_CONTACTOS) base.push(emptyGaranteContactoRow());
+  return base;
+};
+/** Filas con al menos teléfono o email (requisito mínimo por contacto). */
+const garantesContactosValidos = (rows) =>
+  (Array.isArray(rows) ? rows : []).filter((r) => String(r?.telefono ?? "").trim() || String(r?.email ?? "").trim());
+/** Lo que se persiste: solo filas con algún dato. */
+const garantesContactosParaDb = (rows) =>
+  (Array.isArray(rows) ? rows : [])
+    .map((r) => ({
+      nombre: String(r?.nombre ?? "").trim(),
+      telefono: String(r?.telefono ?? "").trim(),
+      email: String(r?.email ?? "").trim(),
+    }))
+    .filter((r) => r.nombre || r.telefono || r.email);
+
 const mesGarantiaResumen = (g, gastosList) => {
   const pr = g.periodoResumen && String(g.periodoResumen).trim();
   if (pr) return normalizePeriod(pr);
@@ -449,13 +474,23 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   /** Orden del Desglose por Usuario (Reportes), mismo criterio que Clientes */
   const [sortReportDesgloseBy, setSortReportDesgloseBy] = useState("nombre");
 
-  const emptyCf = { codigo: "", name: "", ig: "", phones: [""], emails: [""], biz: "", notes: "", avatar_url: "" };
+  const emptyCf = () => ({
+    codigo: "",
+    name: "",
+    ig: "",
+    phones: [""],
+    emails: [""],
+    biz: "",
+    notes: "",
+    avatar_url: "",
+    garantesContactos: mkEmptyGarantesContactos(),
+  });
   const emptyGf = { clientId: clientId || "", fechaMovimiento: td(), mes: tm(), camp: "", gasto: "", fee: "10", notas: "", prepago: false };
   const emptyCof = { gastoIds: [], clientId: "", monto: "", fecha: td(), periodoResumen: "", hora: "", metodo: "", metodoManual: "", notas: "", distribucion: "orden", sinAsignarGasto: false };
   const emptyGaf = { clientId: clientId || "", gastoId: "", tipo: "Cuenta TikTok", desc: "", valor: "", estado: "Vigente", fechaColocacion: "", periodoResumen: "" };
   const emptyMf = { fecha: td(), conc: "", monto: "", tipo: "Gasto", nota: "" };
 
-  const [cf, setCf] = useState(emptyCf);
+  const [cf, setCf] = useState(() => emptyCf());
   const [gf, setGf] = useState(emptyGf);
   const [cof, setCof] = useState(emptyCof);
   const [gaf, setGaf] = useState(emptyGaf);
@@ -918,6 +953,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (type === "client") {
       if (eid) setNewClientDraftId(null);
       else {
+        setCf(emptyCf());
         setNewClientDraftId(
           typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
@@ -935,7 +971,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const closeMdl = () => {
     setModal(null);
     setEditId(null);
-    setCf(emptyCf);
+    setCf(emptyCf());
     setGf({ ...emptyGf, clientId: curCl || "" });
     setCof(emptyCof);
     setGaf({ ...emptyGaf, clientId: curCl || "" });
@@ -961,7 +997,22 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   useEffect(() => {
     if (!modal) return;
-    if (modal === "client" && editId) { const c = clients.find((x) => x.id === editId); if (c) setCf({ codigo: c.codigo || "", name: c.name, ig: c.ig || "", phones: c.phones?.length ? c.phones : [""], emails: c.emails?.length ? c.emails : [""], biz: c.biz || "", notes: c.notes || "", avatar_url: c.avatar_url || "" }); }
+    if (modal === "client" && editId) {
+      const c = clients.find((x) => x.id === editId);
+      if (c) {
+        setCf({
+          codigo: c.codigo || "",
+          name: c.name,
+          ig: c.ig || "",
+          phones: c.phones?.length ? c.phones : [""],
+          emails: c.emails?.length ? c.emails : [""],
+          biz: c.biz || "",
+          notes: c.notes || "",
+          avatar_url: c.avatar_url || "",
+          garantesContactos: padGarantesContactosForm(c.garantesContactos),
+        });
+      }
+    }
     if (modal === "dar-acceso") setAccesoResultado(null);
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
     if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
@@ -1109,6 +1160,10 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!(cf.ig || "").trim()) return alert("Completá Instagram (ej. @usuario o — si no aplica).");
     if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
     if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
+    const garValidos = garantesContactosValidos(cf.garantesContactos);
+    if (garValidos.length < MIN_GARANTES_CONTACTOS) {
+      return alert(`Contactos de garante: obligatorio al menos ${MIN_GARANTES_CONTACTOS} con teléfono o correo (cada uno). Podés agregar más con «Agregar contacto».`);
+    }
     const av = (cf.avatar_url || "").trim().replace(/&amp;/gi, "&");
     if (av && isLikelyBlockedAvatarHotlinkUrl(av)) {
       if (!confirm("Las URLs de WhatsApp / Meta / Instagram suelen dar error 403 en Crédito (el servidor no deja mostrar la imagen aquí). Lo estable es usar «Subir foto» para guardarla en Supabase.\n\n¿Guardar esta URL igualmente?")) return;
@@ -1124,6 +1179,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       biz: (cf.biz || "").trim(),
       notes: (cf.notes || "").trim(),
       avatar_url: av || "",
+      garantes_contactos: garantesContactosParaDb(cf.garantesContactos),
     };
     await mutations.saveClient(c);
     closeMdl();
@@ -1328,7 +1384,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     exportToExcel("garantias_" + td(), "Garantías", headers, rows);
   };
   const expClientes = () => {
-    const headers = ["Código", "Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas"];
+    const fmtGarantesExport = (c) => {
+      const arr = (c.garantesContactos || []).filter((r) => (r?.nombre || "").trim() || (r?.telefono || "").trim() || (r?.email || "").trim());
+      if (!arr.length) return "—";
+      return arr
+        .map((r) => [(r.nombre || "").trim(), (r.telefono || "").trim(), (r.email || "").trim()].filter(Boolean).join(" · "))
+        .join(" | ");
+    };
+    const headers = ["Código", "Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas", "Contactos garante"];
     const rows = clientsSorted.map((c) => [
       c.codigo || "—",
       c.name || "—",
@@ -1336,7 +1399,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       (c.phones || []).filter(Boolean).join("; ") || "—",
       (c.emails || []).filter(Boolean).join("; ") || "—",
       c.biz || "—",
-      (c.notes || "").slice(0, 200) || "—"
+      (c.notes || "").slice(0, 200) || "—",
+      fmtGarantesExport(c),
     ]);
     exportToExcel("clientes_" + td(), "Clientes", headers, rows);
   };
@@ -2723,6 +2787,44 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Correos * <span style={{ fontWeight: 500, color: "#dc2626" }}>(más importante)</span></label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un correo válido (con @).</p></div>
         <Inp label="Negocio *" value={cf.biz} onChange={(e) => setCf({ ...cf, biz: e.target.value })} placeholder="E-commerce... o —" />
         <Inp label="Notas *" type="textarea" value={cf.notes} onChange={(e) => setCf({ ...cf, notes: e.target.value })} placeholder="Info adicional... o —" />
+        <div style={{ marginBottom: 18, padding: "14px 16px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <Users size={18} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--color-text)" }}>Contactos de garante *</span>
+          </div>
+          <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", margin: "0 0 12px", lineHeight: 1.45 }}>
+            Mínimo <strong>{MIN_GARANTES_CONTACTOS}</strong> personas con <strong>teléfono o correo</strong> cada una (nombre opcional). Podés sumar más contactos opcionales.
+          </p>
+          {(cf.garantesContactos || []).map((row, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 10, alignItems: "end", marginBottom: 10, paddingBottom: 10, borderBottom: i < (cf.garantesContactos || []).length - 1 ? "1px solid var(--sidebar-border)" : "none" }}>
+              <div style={{ gridColumn: "1 / -1", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Contacto {i + 1}{i < MIN_GARANTES_CONTACTOS ? " · obligatorio (tel o mail)" : " · opcional"}
+              </div>
+              <Inp label="Nombre" value={row.nombre} onChange={(e) => { const next = [...(cf.garantesContactos || [])]; next[i] = { ...next[i], nombre: e.target.value }; setCf({ ...cf, garantesContactos: next }); }} placeholder="Opcional" />
+              <Inp label="Teléfono / WhatsApp" value={row.telefono} onChange={(e) => { const next = [...(cf.garantesContactos || [])]; next[i] = { ...next[i], telefono: e.target.value }; setCf({ ...cf, garantesContactos: next }); }} placeholder="+51…" />
+              <Inp label="Correo" value={row.email} onChange={(e) => { const next = [...(cf.garantesContactos || [])]; next[i] = { ...next[i], email: e.target.value }; setCf({ ...cf, garantesContactos: next }); }} placeholder="email@…" type="email" />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", minHeight: 40 }}>
+                {i >= MIN_GARANTES_CONTACTOS && (
+                  <button
+                    type="button"
+                    onClick={() => setCf({ ...cf, garantesContactos: (cf.garantesContactos || []).filter((_, j) => j !== i) })}
+                    style={{ padding: "8px 10px", border: "1px solid #fecaca", borderRadius: 8, background: "#fff", color: "#dc2626", fontSize: 11.5, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
+                    title="Quitar contacto opcional"
+                  >
+                    Quitar
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => setCf({ ...cf, garantesContactos: [...(cf.garantesContactos || mkEmptyGarantesContactos()), emptyGaranteContactoRow()] })}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 4, padding: "8px 14px", border: "1px dashed var(--sidebar-border)", borderRadius: 8, background: "var(--color-bg)", color: "var(--sidebar-text-active)", fontSize: 12.5, fontWeight: 600, cursor: "pointer", fontFamily: "'Inter',sans-serif" }}
+          >
+            <Plus size={14} /> Agregar contacto (opcional)
+          </button>
+        </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Foto de perfil</label>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
