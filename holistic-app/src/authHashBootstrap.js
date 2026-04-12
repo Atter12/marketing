@@ -18,9 +18,13 @@ export async function consumeAuthHashIfPresent(client) {
   if (!access_token || !refresh_token) return;
   try {
     const { error } = await client.auth.setSession({ access_token, refresh_token });
-    if (error) console.warn("[authHashBootstrap] setSession:", error.message);
+    if (error) {
+      console.warn("[authHashBootstrap] setSession:", error.message);
+      return;
+    }
   } catch (e) {
     console.warn("[authHashBootstrap]", e);
+    return;
   }
   const { pathname, search } = window.location;
   window.history.replaceState(null, "", pathname + (search || ""));

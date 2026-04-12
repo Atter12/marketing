@@ -39,6 +39,94 @@ const td = () => { const d = new Date(); return d.getFullYear() + "-" + String(d
 const tm = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); };
 const firstDayOfMonth = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-01"; };
 const lastDayOfMonth = (ym) => { const [y, m] = (ym || "").split("-").map(Number); if (!y || !m) return td(); const day = new Date(y, m, 0).getDate(); return `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`; };
+/** Meses absolutos (0 = ene 0000) para iterar rangos sin error en diciembre */
+const absMonthFromYm = (y, m) => y * 12 + (m - 1);
+const ymFromAbsMonth = (am) => {
+  const yy = Math.floor(am / 12);
+  const mm = (am % 12) + 1;
+  return `${yy}-${String(mm).padStart(2, "0")}`;
+};
+/**
+ * Rango de fechas para Métricas / Resumen (gerente): presets fijos alineados al calendario.
+ * weeklyMonthYM: mes para vista semanal (solo un mes); null si el preset abarca varios meses.
+ */
+const computeRepMetricsRange = (preset) => {
+  const now = new Date();
+  const cy = now.getFullYear();
+  const cm = now.getMonth() + 1;
+  const toYmStart = (y, m) => `${y}-${String(m).padStart(2, "0")}-01`;
+  const ymCur = `${cy}-${String(cm).padStart(2, "0")}`;
+
+  if (preset === "this_month") {
+    return {
+      repPerInicio: toYmStart(cy, cm),
+      repPerFin: lastDayOfMonth(ymCur),
+      label: "Este mes",
+      weeklyMonthYM: ymCur,
+    };
+  }
+  if (preset === "prev_month") {
+    const p = new Date(cy, cm - 2, 1);
+    const y = p.getFullYear();
+    const m = p.getMonth() + 1;
+    const ym = `${y}-${String(m).padStart(2, "0")}`;
+    return {
+      repPerInicio: toYmStart(y, m),
+      repPerFin: lastDayOfMonth(ym),
+      label: "Mes anterior",
+      weeklyMonthYM: ym,
+    };
+  }
+  if (preset === "last_3") {
+    const startD = new Date(cy, now.getMonth() - 2, 1);
+    const y0 = startD.getFullYear();
+    const m0 = startD.getMonth() + 1;
+    const ym0 = `${y0}-${String(m0).padStart(2, "0")}`;
+    return {
+      repPerInicio: toYmStart(y0, m0),
+      repPerFin: lastDayOfMonth(ymCur),
+      label: "Últimos 3 meses",
+      weeklyMonthYM: null,
+    };
+  }
+  if (preset === "last_year") {
+    const startD = new Date(cy, now.getMonth() - 11, 1);
+    const y0 = startD.getFullYear();
+    const m0 = startD.getMonth() + 1;
+    const ym0 = `${y0}-${String(m0).padStart(2, "0")}`;
+    return {
+      repPerInicio: toYmStart(y0, m0),
+      repPerFin: lastDayOfMonth(ymCur),
+      label: "Último año",
+      weeklyMonthYM: null,
+    };
+  }
+  return computeRepMetricsRange("this_month");
+};
+/** El preset más acotado que sigue mostrando el mes indicado (p. ej. tras guardar garantía). */
+const repMetricsPresetForYm = (ym) => {
+  const n = normalizePeriod(ym);
+  if (!n) return "this_month";
+  const rT = computeRepMetricsRange("this_month");
+  if (n === rT.repPerInicio.slice(0, 7)) return "this_month";
+  const rP = computeRepMetricsRange("prev_month");
+  if (n === rP.repPerInicio.slice(0, 7)) return "prev_month";
+  const r3 = computeRepMetricsRange("last_3");
+  const i3 = r3.repPerInicio.slice(0, 7);
+  const f3 = r3.repPerFin.slice(0, 7);
+  if (n >= i3 && n <= f3) return "last_3";
+  const rY = computeRepMetricsRange("last_year");
+  const iY = rY.repPerInicio.slice(0, 7);
+  const fY = rY.repPerFin.slice(0, 7);
+  if (n >= iY && n <= fY) return "last_year";
+  return "last_year";
+};
+const REP_METRICS_PRESETS = [
+  { id: "this_month", label: "Este mes" },
+  { id: "prev_month", label: "Mes anterior" },
+  { id: "last_3", label: "Últimos 3 meses" },
+  { id: "last_year", label: "Último año" },
+];
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
 const normalizePeriod = (p) => { if (!p || typeof p !== "string") return ""; const t = String(p).trim(); const i = t.indexOf("-"); if (i === -1) return t; const y = t.slice(0, i), m = t.slice(i + 1); const mon = parseInt(m, 10); if (mon >= 1 && mon <= 12) return `${y}-${String(mon).padStart(2, "0")}`; return t; };
@@ -453,9 +541,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repCl, setRepCl] = useState(role === "cliente" && clientId ? clientId : "all");
   const [repPer, setRepPer] = useState(tm());
   const [repPerInput, setRepPerInput] = useState("");
-  const [repPeriodoMes, setRepPeriodoMes] = useState(tm());
-  const repPerInicio = repPeriodoMes ? repPeriodoMes + "-01" : "2020-01-01";
-  const repPerFin = repPeriodoMes ? lastDayOfMonth(repPeriodoMes) : td();
+  const [repMetricsPreset, setRepMetricsPreset] = useState("this_month");
+  const repMetricsRange = useMemo(() => computeRepMetricsRange(repMetricsPreset), [repMetricsPreset]);
+  const repPerInicio = repMetricsRange.repPerInicio;
+  const repPerFin = repMetricsRange.repPerFin;
+  const repWeeklyMonthYM = repMetricsRange.weeklyMonthYM;
+  const repMetricsLabel = repMetricsRange.label;
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [dashboardPeriodo, setDashboardPeriodo] = useState("");
@@ -662,12 +753,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const reportMonths = useMemo(() => {
     if (repPerInicio && repPerFin) {
       const r = [];
-      let [y, m] = repPerInicio.split("-").map(Number);
+      const [y1, m1] = repPerInicio.split("-").map(Number);
       const [y2, m2] = repPerFin.split("-").map(Number);
-      const endMonth = y2 * 12 + m2;
-      for (let now = y * 12 + m; now <= endMonth; now++) {
-        const yy = Math.floor(now / 12), mm = now % 12 || 12;
-        const key = `${yy}-${String(mm).padStart(2, "0")}`;
+      if (!y1 || !m1 || !y2 || !m2) return months;
+      const startAbs = absMonthFromYm(y1, m1);
+      const endAbs = absMonthFromYm(y2, m2);
+      for (let am = startAbs; am <= endAbs; am++) {
+        const key = ymFromAbsMonth(am);
         r.push({ key, label: fmtM(key) });
       }
       return r;
@@ -711,6 +803,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       });
       const csM = cobros.filter((c) => {
         if (mesCobro(c, gastos) !== m.key) return false;
+        const f = (c.fecha || "").slice(0, 10);
+        if (repPerInicio && repPerFin && (!f || f < repPerInicio || f > repPerFin)) return false;
         if (repCl === "all") return true;
         const g = gastos.find((x) => x.id === c.gastoId);
         return (g && g.clientId === repCl) || c.clientId === repCl;
@@ -733,14 +827,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
 
   /* Resumen / reportes: semanas del mes (1–7, 8–14, …) — ads+fee por fecha de movimiento; cobrado por fecha de pago y período contable del cobro en el mes */
   const repWeeklySeries = useMemo(() => {
-    if (!repPeriodoMes || !repPerInicio || !repPerFin) return [];
-    const ym = normalizePeriod(repPeriodoMes);
+    if (!repWeeklyMonthYM || !repPerInicio || !repPerFin) return [];
+    const ym = normalizePeriod(repWeeklyMonthYM);
     if (!ym) return [];
     const [y, mo] = ym.split("-").map(Number);
     if (!y || !mo) return [];
     const lastD = new Date(y, mo, 0).getDate();
-    const mesIni = (repPerInicio || "").slice(0, 7);
-    const mesFin = (repPerFin || "").slice(0, 7);
+    const mesIni = ym;
+    const mesFin = ym;
     const pad = (day) => `${y}-${String(mo).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const weeks = [];
     for (let start = 1; start <= lastD; start += 7) {
@@ -776,7 +870,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         cobrado,
       };
     });
-  }, [repPeriodoMes, repPerInicio, repPerFin, repCl, sGastos, cobros, gastos]);
+  }, [repWeeklyMonthYM, repPerInicio, repPerFin, repCl, sGastos, cobros, gastos]);
 
   const repWeeklySummary = useMemo(() => {
     if (!repWeeklySeries.length) {
@@ -1048,10 +1142,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   useEffect(() => {
     if (page !== "metricas" || isCliente) return;
     setRepCl("all");
-    const base = tm();
-    const [y, m] = base.split("-").map(Number);
-    const d = new Date(y, m - 2, 1);
-    setRepPeriodoMes(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    setRepMetricsPreset("prev_month");
     setSortReportDesgloseBy("nombre");
   }, [page, isCliente]);
 
@@ -1275,7 +1366,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
-      setRepPeriodoMes(mesGar);
+      setRepMetricsPreset(repMetricsPresetForYm(mesGar));
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -1559,7 +1650,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   };
 
   const goTo = (p, cid = null) => {
-    if (p === "client-detail" && repPeriodoMes && ((!isCliente && (page === "dashboard" || page === "metricas")) || (page === "reportes" && isCliente))) setClientDetailPeriodo(repPeriodoMes);
+    if (p === "client-detail" && repPerInicio && ((!isCliente && (page === "dashboard" || page === "metricas")) || (page === "reportes" && isCliente))) setClientDetailPeriodo(repWeeklyMonthYM || (repPerFin || "").slice(0, 7));
     setPage(p);
     if (cid != null) setCurCl(cid);
     if (p === "client-detail" && isCliente && clientId) setCurCl(clientId);
@@ -2054,7 +2145,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <span className="hm-resumen-pro-wave" aria-hidden>👋</span>
                 </h1>
                 <p className="hm-resumen-pro-date">{resumenHeroDateLabel}</p>
-                <p className="hm-resumen-pro-tagline">Panel financiero del período: inversión, cobros y saldo neto. Ajustá usuario y mes abajo.</p>
+                <p className="hm-resumen-pro-tagline">Panel financiero del período: inversión, cobros y saldo neto. Ajustá usuario y rango abajo.</p>
               </div>
               <div className="hm-resumen-pro-hero-kpis">
                 <div className="hm-resumen-pro-hero-kpi">
@@ -2090,16 +2181,35 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               )}
               <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={18} strokeWidth={2.2} /></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)" }}>Período:</span>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                    <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "var(--color-bg)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "var(--sidebar-text-active)" : "var(--sidebar-text-muted)" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                    <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-active)", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                    <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                    {repPeriodoMes && <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, background: "var(--color-surface-2)", color: "var(--sidebar-text-muted)", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button>}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)", flexShrink: 0 }}>Período</span>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                    {REP_METRICS_PRESETS.map((opt) => {
+                      const active = repMetricsPreset === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setRepMetricsPreset(opt.id)}
+                          style={{
+                            padding: "7px 12px",
+                            borderRadius: 8,
+                            border: active ? "1.5px solid var(--color-primary)" : "1px solid var(--sidebar-border)",
+                            background: active ? "var(--sidebar-active)" : "var(--color-bg)",
+                            color: active ? "var(--color-primary)" : "var(--sidebar-text-active)",
+                            fontSize: 12,
+                            fontWeight: active ? 700 : 600,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
                   </div>
-                  {repPeriodoMes && <span style={{ fontSize: 12, color: "var(--sidebar-text)", fontWeight: 600 }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>}
+                  <span style={{ fontSize: 12, color: "var(--sidebar-text-muted)", fontWeight: 600, width: "100%", marginTop: 2 }}>{repMetricsLabel} · {fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>
                 </div>
               </div>
             </div>
@@ -2123,7 +2233,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div className="hm-pro-card-head">
                 <div>
                   <h4 className="hm-pro-card-title">Tendencia del período</h4>
-                  <p className="hm-pro-card-sub">Cobrado (área coral) e inversión en Ads por mes en el rango seleccionado</p>
+                  <p className="hm-pro-card-sub">Cada punto es un mes del rango: cobrado (área coral, fecha de pago en el rango) vs. gasto Ads (línea azul, fecha de movimiento en el rango)</p>
                 </div>
                 <span className="hm-pro-card-pill">Evolución</span>
               </div>
@@ -2146,19 +2256,19 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
-            {repPeriodoMes ? (
+            {repWeeklyMonthYM ? (
               <div className="hm-weekly-dash-wrap">
                 <div className="hm-weekly-dash-card">
                   <header className="hm-weekly-dash-header">
                     <div className="hm-weekly-dash-header-text">
                       <h3 className="hm-weekly-dash-title">Actividad por semana</h3>
                       <p className="hm-weekly-dash-desc">
-                        Bloques de 7 días del mes. <strong>Barras</strong> (eje izq.): Ads + Fee por fecha de movimiento.
-                        <strong> Línea y área</strong> (eje der.): cobros por fecha de pago en el mes contable.
+                        Solo en <strong>este mes</strong> o <strong>mes anterior</strong>. Bloques de 7 días: <strong>barras</strong> (eje izq.) Ads + Fee por fecha de movimiento;
+                        <strong> línea y área</strong> (eje der.) cobros por fecha de pago con mes contable en ese mes.
                       </p>
                     </div>
                     <div className="hm-weekly-dash-toolbar">
-                      <span className="hm-weekly-dash-chip hm-weekly-dash-chip--primary">{fmtM(repPeriodoMes)}</span>
+                      <span className="hm-weekly-dash-chip hm-weekly-dash-chip--primary">{fmtM(repWeeklyMonthYM)}</span>
                       <span className="hm-weekly-dash-chip">Vista semanal</span>
                     </div>
                   </header>
@@ -2350,8 +2460,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <div className="hm-resumen-pro-aside-card">
                   <div className="hm-resumen-pro-aside-h">Período seleccionado</div>
-                  <div className="hm-resumen-pro-aside-big">{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                  {repPeriodoMes ? <div className="hm-resumen-pro-aside-range">{fmtD(repPerInicio)} — {fmtD(repPerFin)}</div> : <div className="hm-resumen-pro-aside-range">Histórico completo en KPIs</div>}
+                  <div className="hm-resumen-pro-aside-big">{repMetricsLabel}</div>
+                  <div className="hm-resumen-pro-aside-range">{fmtD(repPerInicio)} — {fmtD(repPerFin)}</div>
                 </div>
                 {!isCliente && repCl !== "all" && (
                   <div className="hm-resumen-pro-aside-card">
@@ -2519,7 +2629,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha desde" /><span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepPeriodoMes(p || tm()); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepMetricsPreset(repMetricsPresetForYm(p || tm())); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
@@ -2565,7 +2675,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   <span style={{ display: "inline-flex", width: 10, height: 10, borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #8b5cf6)" }} />
                   Resumen
                 </h2>
-                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Tabla por cliente y totales del período (mismas reglas que en <strong>Métricas</strong>). Filtrá usuario y mes abajo.</p>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--sidebar-text-muted)", maxWidth: 640 }}>Tabla por cliente y totales del período (mismas reglas que en <strong>Métricas</strong>). Filtrá usuario y rango abajo.</p>
               </div>
             </div>
             <div className="hm-page-content hm-metricas-page" style={{ padding: "32px 48px", margin: "0 auto" }}>
@@ -2576,16 +2686,38 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Filtrar por período (mes):</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m - 2, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#c2410c", cursor: "pointer", flexShrink: 0 }} title="Mes anterior"><ChevronLeft size={16} /></button>
-                  <div style={{ minWidth: 90, textAlign: "center", padding: "6px 12px", background: "#f8f9fb", border: "1px solid #e2e4e9", borderRadius: 8, fontSize: 12.5, fontWeight: 600, color: repPeriodoMes ? "#c2410c" : "#9498a8" }}>{repPeriodoMes ? fmtM(repPeriodoMes) : "Todos"}</div>
-                  <button type="button" onClick={() => { const base = repPeriodoMes || tm(); const [y, m] = base.split("-").map(Number); const d = new Date(y, m, 1); setRepPeriodoMes(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }} style={{ width: 34, height: 34, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#c2410c", cursor: "pointer", flexShrink: 0 }} title="Mes siguiente"><ChevronRight size={16} /></button>
-                  <input type="text" placeholder="0125, 02/25, MM/AAAA" value={repPeriodoMes} onChange={(e) => setRepPeriodoMes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setRepPeriodoMes(p); }} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const p = parsePeriodoInput(e.currentTarget.value); if (p) setRepPeriodoMes(p); e.currentTarget.blur(); } }} style={{ width: 95, boxSizing: "border-box", padding: "6px 10px", border: "1px solid #e2e4e9", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 12, outline: "none" }} title="Escribí 0125, 02/25 o MM/AAAA" />
-                  {repPeriodoMes ? <button type="button" onClick={() => setRepPeriodoMes("")} style={{ padding: "5px 10px", border: "1px solid #e2e4e9", borderRadius: 8, background: "#fff", color: "#9498a8", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>Todos</button> : null}
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Período (mismo que Métricas)</span>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                  {REP_METRICS_PRESETS.map((opt) => {
+                    const active = repMetricsPreset === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setRepMetricsPreset(opt.id)}
+                        style={{
+                          padding: "7px 12px",
+                          borderRadius: 8,
+                          border: active ? "1.5px solid #ea580c" : "1px solid #e2e4e9",
+                          background: active ? "#fff7ed" : "#fff",
+                          color: active ? "#c2410c" : "#5f6577",
+                          fontSize: 12,
+                          fontWeight: active ? 700 : 600,
+                          cursor: "pointer",
+                          fontFamily: "inherit",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                <span style={{ fontSize: 11, color: "#9498a8", maxWidth: 520, lineHeight: 1.45 }}>Todo el resumen (tarjetas y tabla) se filtra por período (mes), no por fecha de pago. Cobros: se usa el mes en que cuenta cada pago.{repPeriodoMes ? <> · <span style={{ fontWeight: 600, color: "#5f6577" }}>{fmtD(repPerInicio)} – {fmtD(repPerFin)}</span></> : null}</span>
+                <span style={{ fontSize: 11, color: "#9498a8", maxWidth: 640, lineHeight: 1.45 }}>
+                  Gastos por <strong>fecha de movimiento</strong> en el rango; cobros por <strong>mes contable</strong> y <strong>fecha de pago</strong> en el rango.{" "}
+                  <span style={{ fontWeight: 600, color: "#5f6577" }}>{repMetricsLabel} · {fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>
+                </span>
               </div>
               <div className="hm-detail-stats hm-metricas-kpi-row" style={{ display: "grid" }}>
                 <div style={{ background: "#fff", border: "1px solid #e2e4e9", borderRadius: 10, padding: "14px 16px", minWidth: 0 }}><div style={{ fontSize: 10, fontWeight: 600, color: "#9498a8", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Gasto Ads</div><div style={{ fontFamily: "'Inter', system-ui, sans-serif", fontVariantNumeric: "tabular-nums", fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em" }}>${fmt(repData.t.ads)}</div></div>
