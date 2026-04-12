@@ -73,64 +73,74 @@
       var sk = holisticSupabaseAuthStorageKey(url);
       var authOpts = { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true };
       if (sk) authOpts.storageKey = sk;
+      var urlHash = window.location.hash || '';
       var supabase = window.supabase.createClient(url, key, { auth: authOpts });
-      var hash = window.location.hash || '';
-      if (hash.indexOf('access_token') !== -1) {
+      var creativosUrl = window.location.origin + '/creativos';
+      if (urlHash.indexOf('access_token') !== -1) {
         document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Creativos…</div>';
         var params = {};
-        hash.slice(1).split('&').forEach(function(p) {
+        urlHash.slice(1).split('&').forEach(function(p) {
           var kv = p.split('=');
           if (kv[0] && kv[1]) params[kv[0]] = decodeURIComponent(kv[1]);
         });
         if (params.access_token && params.refresh_token) {
           supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
-            .then(function() { window.location.replace('/creativos'); })
+            .then(function() { window.location.replace(creativosUrl); })
             .catch(function() { window.location.replace('/acceso-creativos'); });
         } else {
-          window.location.replace('/creativos');
+          window.location.replace(creativosUrl);
         }
         return;
       }
-      var redirectTo = window.location.origin + '/creativos';
-      var successBox = document.getElementById('successBox');
-      var btnEl = document.getElementById('btn');
+      function bindLoginForm() {
+        var redirectTo = creativosUrl;
+        var successBox = document.getElementById('successBox');
+        var btnEl = document.getElementById('btn');
 
-      document.getElementById('form').onsubmit = function(e) {
-        e.preventDefault();
-        var emailEl = document.getElementById('email');
-        var errorBox = document.getElementById('errorBox');
-        var email = (emailEl.value || '').trim();
-        if (!email || email.indexOf('@') === -1) {
-          errorBox.style.display = 'flex';
-          errorBox.textContent = 'Indicá un correo válido.';
-          return;
-        }
-        errorBox.style.display = 'none';
-        successBox.style.display = 'none';
-        btnEl.disabled = true;
-        btnEl.textContent = 'Enviando…';
-        supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
-          .then(function(r) {
-            var data = r.data && (r.data.data || r.data);
-            var err = r.error || (data && data.error);
-            if (err) {
-              errorBox.style.display = 'flex';
-              errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
+        document.getElementById('form').onsubmit = function(e) {
+          e.preventDefault();
+          var emailEl = document.getElementById('email');
+          var errorBox = document.getElementById('errorBox');
+          var email = (emailEl.value || '').trim();
+          if (!email || email.indexOf('@') === -1) {
+            errorBox.style.display = 'flex';
+            errorBox.textContent = 'Indicá un correo válido.';
+            return;
+          }
+          errorBox.style.display = 'none';
+          successBox.style.display = 'none';
+          btnEl.disabled = true;
+          btnEl.textContent = 'Enviando…';
+          supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
+            .then(function(r) {
+              var data = r.data && (r.data.data || r.data);
+              var err = r.error || (data && data.error);
+              if (err) {
+                errorBox.style.display = 'flex';
+                errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
+                btnEl.disabled = false;
+                btnEl.textContent = 'Enviar enlace al correo';
+                return;
+              }
+              successBox.style.display = 'flex';
               btnEl.disabled = false;
               btnEl.textContent = 'Enviar enlace al correo';
-              return;
-            }
-            successBox.style.display = 'flex';
-            btnEl.disabled = false;
-            btnEl.textContent = 'Enviar enlace al correo';
-          })
-          .catch(function(err) {
-            errorBox.style.display = 'flex';
-            errorBox.textContent = err.message || 'Error al enviar el enlace.';
-            btnEl.disabled = false;
-            btnEl.textContent = 'Enviar enlace al correo';
-          });
-      };
+            })
+            .catch(function(err) {
+              errorBox.style.display = 'flex';
+              errorBox.textContent = err.message || 'Error al enviar el enlace.';
+              btnEl.disabled = false;
+              btnEl.textContent = 'Enviar enlace al correo';
+            });
+        };
+      }
+      supabase.auth.getSession().then(function(sr) {
+        if (sr.data && sr.data.session) {
+          window.location.replace(creativosUrl);
+          return;
+        }
+        bindLoginForm();
+      });
     })();
   </script>
 </body>

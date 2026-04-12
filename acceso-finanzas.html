@@ -77,6 +77,10 @@
         window.location.replace(finanzasAppUrl() + hashEarly);
         return;
       }
+      function holisticSupabaseAuthStorageKey(u) {
+        if (!u || typeof u !== 'string') return undefined;
+        try { var ref = new URL(u).hostname.split('.')[0]; return ref ? 'sb-' + ref + '-auth-token' : undefined; } catch (e) { return undefined; }
+      }
       var url = window.__SUPABASE_URL__;
       var key = window.__SUPABASE_ANON_KEY__;
       if (!url || !key) {
@@ -84,14 +88,15 @@
         document.getElementById('errorBox').textContent = 'Configuración no disponible.';
         return;
       }
-      var supabase = window.supabase.createClient(url, key, {
-        auth: { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true },
-      });
-      var hash = window.location.hash || '';
-      if (hash.indexOf('access_token') !== -1) {
+      var sk = holisticSupabaseAuthStorageKey(url);
+      var authOptsFin = { persistSession: true, autoRefreshToken: true, storage: localStorage, detectSessionInUrl: true };
+      if (sk) authOptsFin.storageKey = sk;
+      var urlHash = window.location.hash || '';
+      var supabase = window.supabase.createClient(url, key, { auth: authOptsFin });
+      if (urlHash.indexOf('access_token') !== -1) {
         document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Inter,sans-serif;color:#6B7280;">Entrando a Finanzas…</div>';
         var params = {};
-        hash.slice(1).split('&').forEach(function(p) {
+        urlHash.slice(1).split('&').forEach(function(p) {
           var kv = p.split('=');
           if (kv[0] && kv[1]) params[kv[0]] = decodeURIComponent(kv[1]);
         });
@@ -104,46 +109,55 @@
         }
         return;
       }
-      var redirectTo = finanzasAppUrl();
-      var successBox = document.getElementById('successBox');
-      var btnEl = document.getElementById('btn');
+      function bindLoginForm() {
+        var redirectTo = finanzasAppUrl();
+        var successBox = document.getElementById('successBox');
+        var btnEl = document.getElementById('btn');
 
-      document.getElementById('form').onsubmit = function(e) {
-        e.preventDefault();
-        var emailEl = document.getElementById('email');
-        var errorBox = document.getElementById('errorBox');
-        var email = (emailEl.value || '').trim();
-        if (!email || email.indexOf('@') === -1) {
-          errorBox.style.display = 'flex';
-          errorBox.textContent = 'Indicá un correo válido.';
-          return;
-        }
-        errorBox.style.display = 'none';
-        successBox.style.display = 'none';
-        btnEl.disabled = true;
-        btnEl.textContent = 'Enviando…';
-        supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
-          .then(function(r) {
-            var data = r.data && (r.data.data || r.data);
-            var err = r.error || (data && data.error);
-            if (err) {
-              errorBox.style.display = 'flex';
-              errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
+        document.getElementById('form').onsubmit = function(e) {
+          e.preventDefault();
+          var emailEl = document.getElementById('email');
+          var errorBox = document.getElementById('errorBox');
+          var email = (emailEl.value || '').trim();
+          if (!email || email.indexOf('@') === -1) {
+            errorBox.style.display = 'flex';
+            errorBox.textContent = 'Indicá un correo válido.';
+            return;
+          }
+          errorBox.style.display = 'none';
+          successBox.style.display = 'none';
+          btnEl.disabled = true;
+          btnEl.textContent = 'Enviando…';
+          supabase.functions.invoke('magic-link-login', { body: { email: email, redirect_to: redirectTo } })
+            .then(function(r) {
+              var data = r.data && (r.data.data || r.data);
+              var err = r.error || (data && data.error);
+              if (err) {
+                errorBox.style.display = 'flex';
+                errorBox.textContent = err.message || err || 'Error al enviar el enlace.';
+                btnEl.disabled = false;
+                btnEl.textContent = 'Enviar enlace al correo';
+                return;
+              }
+              successBox.style.display = 'flex';
               btnEl.disabled = false;
               btnEl.textContent = 'Enviar enlace al correo';
-              return;
-            }
-            successBox.style.display = 'flex';
-            btnEl.disabled = false;
-            btnEl.textContent = 'Enviar enlace al correo';
-          })
-          .catch(function(err) {
-            errorBox.style.display = 'flex';
-            errorBox.textContent = err.message || 'Error al enviar el enlace.';
-            btnEl.disabled = false;
-            btnEl.textContent = 'Enviar enlace al correo';
-          });
-      };
+            })
+            .catch(function(err) {
+              errorBox.style.display = 'flex';
+              errorBox.textContent = err.message || 'Error al enviar el enlace.';
+              btnEl.disabled = false;
+              btnEl.textContent = 'Enviar enlace al correo';
+            });
+        };
+      }
+      supabase.auth.getSession().then(function(sr) {
+        if (sr.data && sr.data.session) {
+          window.location.replace(finanzasAppUrl());
+          return;
+        }
+        bindLoginForm();
+      });
     })();
   </script>
 </body>

@@ -5,6 +5,7 @@ import ReactDOM from 'react-dom/client';
 import AuthGate from './AuthGate.jsx';
 import Login from './Login.jsx';
 import { supabase } from './supabase.js';
+import { consumeAuthHashIfPresent } from './authHashBootstrap.js';
 
 // En dev Vite sirve public en la raíz (/); con base solo los assets del build llevan prefijo
 const isDev = import.meta.env.DEV;
@@ -33,8 +34,17 @@ function AppRoot() {
   return <AuthGate />;
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <AppRoot />
-  </React.StrictMode>
-);
+async function bootstrap() {
+  if (typeof window !== 'undefined' && supabase) {
+    await consumeAuthHashIfPresent(supabase);
+  }
+  const rootEl = document.getElementById('root');
+  if (!rootEl) return;
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
+      <AppRoot />
+    </React.StrictMode>
+  );
+}
+
+bootstrap();

@@ -4,7 +4,10 @@ import Login from "./Login";
 import App from "./App";
 
 const statuses = { loading: "loading", login: "login", app: "app", unauthorized: "unauthorized" };
-const LOADING_TIMEOUT_MS = 10000;
+/** Contador largo post-check: isGerente / DB pueden tardar; el gate ya no compite con el hash (main.jsx). */
+const LOADING_TIMEOUT_MS = 20000;
+const SESSION_RETRY_MS = 400;
+const SESSION_RETRIES = 8;
 
 export default function AuthGate() {
   const [status, setStatus] = useState(statuses.loading);
@@ -28,9 +31,23 @@ export default function AuthGate() {
       }
     };
 
+    const resolveAuthUser = async () => {
+      for (let attempt = 0; attempt < SESSION_RETRIES; attempt++) {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.warn("[AuthGate] getSession", error.message);
+        if (session?.user?.email) return session.user;
+        if (attempt < SESSION_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, SESSION_RETRY_MS));
+        }
+      }
+      const { data: { user }, error: uerr } = await supabase.auth.getUser();
+      if (uerr) console.warn("[AuthGate] getUser", uerr.message);
+      return user ?? null;
+    };
+
     const check = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const user = await resolveAuthUser();
         if (!mounted.current) return;
         if (!user?.email) {
           setStatus(statuses.login);
@@ -74,9 +91,14 @@ export default function AuthGate() {
       }
     };
 
-    const run = () => {
+    const run = async () => {
       clearLoadingTimeout();
-      check();
+      try {
+        await check();
+      } catch (e) {
+        console.error("[AuthGate] run check:", e);
+      }
+      if (!mounted.current) return;
       timeoutRef.current = window.setTimeout(() => {
         setStatus((s) => {
           if (s === statuses.loading) return statuses.login;
@@ -85,7 +107,7 @@ export default function AuthGate() {
       }, LOADING_TIMEOUT_MS);
     };
 
-    run();
+    void run();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         clearLoadingTimeout();
@@ -95,7 +117,7 @@ export default function AuthGate() {
         setUserEmail(null);
         return;
       }
-      run();
+      void run();
     });
 
     return () => {

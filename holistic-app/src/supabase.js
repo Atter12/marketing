@@ -19,6 +19,7 @@ const authStorageKey = supabaseAuthStorageKey(supabaseUrl);
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
+        flowType: "implicit",
         persistSession: true,
         autoRefreshToken: true,
         storage: localStorage,
