@@ -61,7 +61,6 @@ const computeRepMetricsRange = (preset) => {
     return {
       repPerInicio: toYmStart(cy, cm),
       repPerFin: lastDayOfMonth(ymCur),
-      label: "Este mes",
       weeklyMonthYM: ymCur,
     };
   }
@@ -73,7 +72,6 @@ const computeRepMetricsRange = (preset) => {
     return {
       repPerInicio: toYmStart(y, m),
       repPerFin: lastDayOfMonth(ym),
-      label: "Mes anterior",
       weeklyMonthYM: ym,
     };
   }
@@ -85,7 +83,6 @@ const computeRepMetricsRange = (preset) => {
     return {
       repPerInicio: toYmStart(y0, m0),
       repPerFin: lastDayOfMonth(ymCur),
-      label: "Últimos 3 meses",
       weeklyMonthYM: null,
     };
   }
@@ -93,11 +90,9 @@ const computeRepMetricsRange = (preset) => {
     const startD = new Date(cy, now.getMonth() - 11, 1);
     const y0 = startD.getFullYear();
     const m0 = startD.getMonth() + 1;
-    const ym0 = `${y0}-${String(m0).padStart(2, "0")}`;
     return {
       repPerInicio: toYmStart(y0, m0),
       repPerFin: lastDayOfMonth(ymCur),
-      label: "Último año",
       weeklyMonthYM: null,
     };
   }
@@ -121,13 +116,26 @@ const repMetricsPresetForYm = (ym) => {
   if (n >= iY && n <= fY) return "last_year";
   return "last_year";
 };
-const REP_METRICS_PRESETS = [
-  { id: "this_month", label: "Este mes" },
-  { id: "prev_month", label: "Mes anterior" },
-  { id: "last_3", label: "Últimos 3 meses" },
-  { id: "last_year", label: "Último año" },
-];
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
+/** Mes y año legibles para botones de período (ej. «marzo de 2024»). */
+const fmtMonthYearLong = (ym) => {
+  if (!ym || String(ym).length < 7) return "—";
+  const d = new Date(String(ym).slice(0, 7) + "-15T12:00:00");
+  return d.toLocaleDateString("es-PE", { month: "long", year: "numeric" });
+};
+const capitalizeEs = (s) => (s && s.length ? s.charAt(0).toLocaleUpperCase("es-PE") + s.slice(1) : s);
+/** Etiquetas concretas por preset (mismo criterio que Métricas / Resumen). */
+const buildRepMetricsPresetOptions = () =>
+  (["this_month", "prev_month", "last_3", "last_year"]).map((id) => {
+    const r = computeRepMetricsRange(id);
+    const yi = r.repPerInicio.slice(0, 7);
+    const yf = r.repPerFin.slice(0, 7);
+    const label =
+      id === "this_month" || id === "prev_month"
+        ? capitalizeEs(fmtMonthYearLong(yi))
+        : `${capitalizeEs(fmtMonthYearLong(yi))} – ${capitalizeEs(fmtMonthYearLong(yf))}`;
+    return { id, label };
+  });
 const fmtD = (d) => { if (!d) return "—"; return new Date(d + "T12:00:00").toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }); };
 const normalizePeriod = (p) => { if (!p || typeof p !== "string") return ""; const t = String(p).trim(); const i = t.indexOf("-"); if (i === -1) return t; const y = t.slice(0, i), m = t.slice(i + 1); const mon = parseInt(m, 10); if (mon >= 1 && mon <= 12) return `${y}-${String(mon).padStart(2, "0")}`; return t; };
 /** Período del gasto (YYYY-MM) aunque en BD venga como fecha completa (2026-03-15). */
@@ -546,7 +554,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const repPerInicio = repMetricsRange.repPerInicio;
   const repPerFin = repMetricsRange.repPerFin;
   const repWeeklyMonthYM = repMetricsRange.weeklyMonthYM;
-  const repMetricsLabel = repMetricsRange.label;
+  const repMetricsPresetOptions = useMemo(() => buildRepMetricsPresetOptions(), []);
+  const repMetricsLabel = repMetricsPresetOptions.find((o) => o.id === repMetricsPreset)?.label || "—";
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [dashboardPeriodo, setDashboardPeriodo] = useState("");
@@ -2184,7 +2193,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
                   <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)", flexShrink: 0 }}>Período</span>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                    {REP_METRICS_PRESETS.map((opt) => {
+                    {repMetricsPresetOptions.map((opt) => {
                       const active = repMetricsPreset === opt.id;
                       return (
                         <button
@@ -2689,7 +2698,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
                 <span style={{ fontSize: 12.5, fontWeight: 600, color: "#5f6577" }}>Período (mismo que Métricas)</span>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                  {REP_METRICS_PRESETS.map((opt) => {
+                  {repMetricsPresetOptions.map((opt) => {
                     const active = repMetricsPreset === opt.id;
                     return (
                       <button
