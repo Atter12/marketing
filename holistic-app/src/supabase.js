@@ -23,7 +23,8 @@ export const supabase = supabaseUrl && supabaseAnonKey
         persistSession: true,
         autoRefreshToken: true,
         storage: localStorage,
-        detectSessionInUrl: true,
+        // false: el hash lo consume consumeAuthHashIfPresent (main.jsx) antes de createRoot; evita carrera con GoTrueClient.initialize + lectura del #.
+        detectSessionInUrl: false,
         ...(authStorageKey ? { storageKey: authStorageKey } : {}),
       },
     })
