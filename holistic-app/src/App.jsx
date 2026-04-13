@@ -6,6 +6,7 @@ import { buildClientLedgerRows } from "./clientDetailLedger";
 import CobranzaView from "./CobranzaView";
 import { logHolisticFontDiagnostics } from "./holisticFontDiag.js";
 import TableScrollWrap from "./TableScrollWrap";
+import RepMetricsMonthPicker from "./RepMetricsMonthPicker";
 import { useSupabaseData } from "./useSupabaseData";
 import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
@@ -2241,28 +2242,18 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                     <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--sidebar-text-muted)", flexShrink: 0 }}>Otro mes</span>
-                    <input
-                      type="month"
-                      value={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        if (!v) return;
-                        const n = normalizePeriod(v);
-                        if (!n) return;
+                    <RepMetricsMonthPicker
+                      variant="dashboard"
+                      valueYm={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
+                      displayLabel={repMetricsPreset === "custom" ? repMetricsLabel : "Elegir otro mes…"}
+                      active={repMetricsPreset === "custom"}
+                      onSelectYm={(ym) => {
                         setRepMetricsPreset("custom");
-                        setRepMetricsCustomYm(n);
+                        setRepMetricsCustomYm(ym);
                       }}
-                      title="Cualquier mes (histórico)"
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 8,
-                        border: repMetricsPreset === "custom" ? "1.5px solid var(--color-primary)" : "1px solid var(--sidebar-border)",
-                        background: "var(--color-bg)",
-                        color: "var(--sidebar-text-active)",
-                        fontFamily: "'Inter',sans-serif",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        outline: "none",
+                      onThisMonthShortcut={() => {
+                        setRepMetricsPreset("this_month");
+                        setRepMetricsCustomYm(tm());
                       }}
                     />
                   </div>
@@ -2773,28 +2764,18 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: "#9498a8" }}>Otro mes</span>
-                  <input
-                    type="month"
-                    value={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      if (!v) return;
-                      const n = normalizePeriod(v);
-                      if (!n) return;
+                  <RepMetricsMonthPicker
+                    variant="metricas"
+                    valueYm={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
+                    displayLabel={repMetricsPreset === "custom" ? repMetricsLabel : "Elegir otro mes…"}
+                    active={repMetricsPreset === "custom"}
+                    onSelectYm={(ym) => {
                       setRepMetricsPreset("custom");
-                      setRepMetricsCustomYm(n);
+                      setRepMetricsCustomYm(ym);
                     }}
-                    title="Cualquier mes (histórico)"
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: 8,
-                      border: repMetricsPreset === "custom" ? "1.5px solid #ea580c" : "1px solid #e2e4e9",
-                      background: "#fff",
-                      color: "#5f6577",
-                      fontFamily: "'Inter',sans-serif",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      outline: "none",
+                    onThisMonthShortcut={() => {
+                      setRepMetricsPreset("this_month");
+                      setRepMetricsCustomYm(tm());
                     }}
                   />
                 </div>
