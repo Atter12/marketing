@@ -16,6 +16,22 @@ function supabaseAuthStorageKey(url) {
 
 const authStorageKey = supabaseAuthStorageKey(supabaseUrl);
 
+/** Sin secretos: para consola en handoff / mismatches con Hecom (misma URL → mismo storageKey). */
+export function getSupabaseAuthDebugMeta() {
+  let supabaseHostname = null;
+  try {
+    if (supabaseUrl) supabaseHostname = new URL(supabaseUrl).hostname;
+  } catch {
+    /* ignore */
+  }
+  return {
+    supabaseHostname,
+    storageKey: authStorageKey ?? null,
+    flowType: "implicit",
+    detectSessionInUrl: false,
+  };
+}
+
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {

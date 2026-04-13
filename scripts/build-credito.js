@@ -70,6 +70,8 @@ html = html.replace(/<title>.*?<\/title>/, '<title>Crédito | Holistic Marketing
 const faviconUrl = '/credito-app/favicon/favicon.png?v=2';
 html = html.replace(/<link[^>]*rel=["\']?(?:shortcut )?icon["\']?[^>]*>/gi, '');
 html = html.replace('</head>', `<link rel="icon" type="image/png" href="${faviconUrl}" /><link rel="shortcut icon" type="image/png" href="${faviconUrl}" /></head>`);
+// Primer frame igual que AuthGate loading / Login (evita flash de fondo antes del bundle).
+html = html.replace(/<body[^>]*>/i, '<body style="margin:0;min-height:100%;background:#ffffff">');
 fs.writeFileSync(path.join(root, 'credito.html'), html, 'utf8');
 console.log('Generated credito.html');
 

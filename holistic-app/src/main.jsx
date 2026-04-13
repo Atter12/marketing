@@ -1,12 +1,12 @@
+import { supabase } from './supabase.js';
+import { consumeAuthHashIfPresent } from './authHashBootstrap.js';
+import { isAuthBootstrapDebugEnabled, maskLocationHashForLog } from './authDebug.js';
 import './holistic-design-system.css';
 import './holisticFontDiag.js';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import AuthGate from './AuthGate.jsx';
 import Login from './Login.jsx';
-import { supabase } from './supabase.js';
-import { consumeAuthHashIfPresent } from './authHashBootstrap.js';
-import { isAuthBootstrapDebugEnabled, maskLocationHashForLog } from './authDebug.js';
 
 // En dev Vite sirve public en la raíz (/); con base solo los assets del build llevan prefijo
 const isDev = import.meta.env.DEV;
@@ -35,18 +35,32 @@ function AppRoot() {
   return <AuthGate />;
 }
 
+function shouldLogBootstrap() {
+  if (typeof window === 'undefined') return false;
+  if (isAuthBootstrapDebugEnabled()) return true;
+  const p = window.location.pathname || '';
+  return p === '/credito' || p.startsWith('/credito/');
+}
+
 async function logBootstrapAuthStage(label, client) {
-  if (!isAuthBootstrapDebugEnabled() || !client || typeof window === 'undefined') return;
-  const hashPreview = maskLocationHashForLog(window.location.hash);
+  if (!client || typeof window === 'undefined' || !shouldLogBootstrap()) return;
+  const hash = window.location.hash || '';
+  const verbose = isAuthBootstrapDebugEnabled();
   const { data: { session }, error: sErr } = await client.auth.getSession();
   const { data: { user }, error: uErr } = await client.auth.getUser();
-  console.log(`[bootstrap] ${label}`, {
-    hashPreview,
+  const base = {
+    pathname: window.location.pathname,
+    hashLen: hash.length,
+    includesAccessToken: hash.includes('access_token'),
     hasSession: !!session,
     getSessionError: sErr?.message ?? null,
-    userEmail: user?.email ?? null,
     getUserError: uErr?.message ?? null,
-  });
+  };
+  if (verbose) {
+    console.log(`[bootstrap] ${label}`, { ...base, hashPreview: maskLocationHashForLog(hash), userEmail: user?.email ?? null });
+  } else {
+    console.info(`[bootstrap] ${label}`, base);
+  }
 }
 
 async function bootstrap() {

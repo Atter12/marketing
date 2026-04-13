@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isGerente, getClientIdForUser } from "./supabase";
+import { isAuthBootstrapDebugEnabled } from "./authDebug.js";
 import Login from "./Login";
 import App from "./App";
 
@@ -34,14 +35,17 @@ export default function AuthGate() {
     const resolveAuthUser = async () => {
       for (let attempt = 0; attempt < SESSION_RETRIES; attempt++) {
         const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) console.warn("[AuthGate] getSession", error.message);
+        if (error) console.warn("[AuthGate] getSession error:", error.message);
         if (session?.user?.email) return session.user;
         if (attempt < SESSION_RETRIES - 1) {
           await new Promise((r) => setTimeout(r, SESSION_RETRY_MS));
         }
       }
       const { data: { user }, error: uerr } = await supabase.auth.getUser();
-      if (uerr) console.warn("[AuthGate] getUser", uerr.message);
+      if (uerr) console.warn("[AuthGate] getUser error:", uerr.message);
+      if (!user?.email) {
+        console.warn("[AuthGate] no session/user after retries", { attempts: SESSION_RETRIES });
+      }
       return user ?? null;
     };
 
@@ -58,7 +62,12 @@ export default function AuthGate() {
         }
         const email = user.email;
         setUserEmail(email);
-        const ok = await isGerente();
+        let ok = false;
+        try {
+          ok = await isGerente();
+        } catch (ge) {
+          console.warn("[AuthGate] isGerente threw:", ge?.message || ge);
+        }
         if (!mounted.current) return;
         if (ok) {
           setStatus(statuses.app);
@@ -66,7 +75,12 @@ export default function AuthGate() {
           setClientId(null);
           return;
         }
-        const cid = await getClientIdForUser();
+        let cid = null;
+        try {
+          cid = await getClientIdForUser();
+        } catch (ce) {
+          console.warn("[AuthGate] getClientIdForUser threw:", ce?.message || ce);
+        }
         if (!mounted.current) return;
         if (cid) {
           setStatus(statuses.app);
@@ -74,7 +88,12 @@ export default function AuthGate() {
           setClientId(cid);
           return;
         }
-        console.warn("[AuthGate] Sin rol gerente ni cliente.");
+        console.warn("[AuthGate] Sin rol gerente ni cliente.", {
+          email,
+          isGerente: ok,
+          clientIdResolved: !!cid,
+          verbose: isAuthBootstrapDebugEnabled(),
+        });
         await supabase.auth.signOut();
         if (!mounted.current) return;
         setStatus(statuses.unauthorized);
@@ -135,9 +154,10 @@ export default function AuthGate() {
   };
 
   if (status === statuses.loading) {
+    // Mismo tono que Login (#fff) para evitar parpadeo negro → blanco al resolver auth.
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f111a", fontFamily: "'Inter', sans-serif" }}>
-        <div style={{ color: "#9498a8", fontSize: 14 }}>Cargando…</div>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff", fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ color: "#6b7280", fontSize: 14 }}>Cargando…</div>
       </div>
     );
   }
