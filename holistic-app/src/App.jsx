@@ -50,13 +50,23 @@ const ymFromAbsMonth = (am) => {
  * Rango de fechas para Métricas / Resumen (gerente): presets fijos alineados al calendario.
  * weeklyMonthYM: mes para vista semanal (solo un mes); null si el preset abarca varios meses.
  */
-const computeRepMetricsRange = (preset) => {
+const computeRepMetricsRange = (preset, customYm = "") => {
   const now = new Date();
   const cy = now.getFullYear();
   const cm = now.getMonth() + 1;
   const toYmStart = (y, m) => `${y}-${String(m).padStart(2, "0")}-01`;
   const ymCur = `${cy}-${String(cm).padStart(2, "0")}`;
 
+  if (preset === "custom") {
+    const ym = normalizePeriod(customYm) || ymCur;
+    const [y, m] = ym.split("-").map(Number);
+    if (!y || !m) return computeRepMetricsRange("this_month");
+    return {
+      repPerInicio: toYmStart(y, m),
+      repPerFin: lastDayOfMonth(ym),
+      weeklyMonthYM: ym,
+    };
+  }
   if (preset === "this_month") {
     return {
       repPerInicio: toYmStart(cy, cm),
@@ -98,23 +108,23 @@ const computeRepMetricsRange = (preset) => {
   }
   return computeRepMetricsRange("this_month");
 };
-/** El preset más acotado que sigue mostrando el mes indicado (p. ej. tras guardar garantía). */
-const repMetricsPresetForYm = (ym) => {
+/** Alinea un YYYY-MM a un preset fijo si encaja; si no, «custom» con ese mes (p. ej. histórico fuera del último año). */
+const repMetricsStateForYm = (ym) => {
   const n = normalizePeriod(ym);
-  if (!n) return "this_month";
+  if (!n) return { preset: "this_month", customYm: tm() };
   const rT = computeRepMetricsRange("this_month");
-  if (n === rT.repPerInicio.slice(0, 7)) return "this_month";
+  if (n === rT.repPerInicio.slice(0, 7)) return { preset: "this_month", customYm: n };
   const rP = computeRepMetricsRange("prev_month");
-  if (n === rP.repPerInicio.slice(0, 7)) return "prev_month";
+  if (n === rP.repPerInicio.slice(0, 7)) return { preset: "prev_month", customYm: n };
   const r3 = computeRepMetricsRange("last_3");
   const i3 = r3.repPerInicio.slice(0, 7);
   const f3 = r3.repPerFin.slice(0, 7);
-  if (n >= i3 && n <= f3) return "last_3";
+  if (n >= i3 && n <= f3) return { preset: "last_3", customYm: n };
   const rY = computeRepMetricsRange("last_year");
   const iY = rY.repPerInicio.slice(0, 7);
   const fY = rY.repPerFin.slice(0, 7);
-  if (n >= iY && n <= fY) return "last_year";
-  return "last_year";
+  if (n >= iY && n <= fY) return { preset: "last_year", customYm: n };
+  return { preset: "custom", customYm: n };
 };
 const fmtM = (m) => { if (!m) return "—"; const d = new Date(m + "-15T12:00:00"); return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" }); };
 /** Mes y año legibles para botones de período (ej. «marzo de 2024»). */
@@ -550,12 +560,19 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [repPer, setRepPer] = useState(tm());
   const [repPerInput, setRepPerInput] = useState("");
   const [repMetricsPreset, setRepMetricsPreset] = useState("this_month");
-  const repMetricsRange = useMemo(() => computeRepMetricsRange(repMetricsPreset), [repMetricsPreset]);
+  const [repMetricsCustomYm, setRepMetricsCustomYm] = useState(() => tm());
+  const repMetricsRange = useMemo(
+    () => computeRepMetricsRange(repMetricsPreset, repMetricsPreset === "custom" ? repMetricsCustomYm : ""),
+    [repMetricsPreset, repMetricsCustomYm],
+  );
   const repPerInicio = repMetricsRange.repPerInicio;
   const repPerFin = repMetricsRange.repPerFin;
   const repWeeklyMonthYM = repMetricsRange.weeklyMonthYM;
   const repMetricsPresetOptions = useMemo(() => buildRepMetricsPresetOptions(), []);
-  const repMetricsLabel = repMetricsPresetOptions.find((o) => o.id === repMetricsPreset)?.label || "—";
+  const repMetricsLabel =
+    repMetricsPreset === "custom"
+      ? capitalizeEs(fmtMonthYearLong(normalizePeriod(repMetricsCustomYm) || tm()))
+      : repMetricsPresetOptions.find((o) => o.id === repMetricsPreset)?.label || "—";
   const [expRango, setExpRango] = useState({ gastos: { ini: "", fin: "" }, cobros: { ini: "", fin: "" }, garantias: { ini: "", fin: "" } });
   const [clientDetailPeriodo, setClientDetailPeriodo] = useState("");
   const [dashboardPeriodo, setDashboardPeriodo] = useState("");
@@ -1375,7 +1392,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       setRepCl(gaf.clientId);
       setRepPer(mesGar);
       setRepPerInput(mesGar);
-      setRepMetricsPreset(repMetricsPresetForYm(mesGar));
+      const stGar = repMetricsStateForYm(mesGar);
+      setRepMetricsPreset(stGar.preset);
+      setRepMetricsCustomYm(stGar.customYm);
       setPage("reportes");
     } catch (err) {
       alert(err?.message || "Error al guardar la garantía");
@@ -2190,35 +2209,64 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               )}
               <div className="hm-report-calendar-wrap" style={{ background: "var(--color-surface-2)", border: "1.5px solid var(--sidebar-border)", borderRadius: 14, padding: "12px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><Calendar size={18} strokeWidth={2.2} /></div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", flex: 1, minWidth: 0 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)", flexShrink: 0 }}>Período</span>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-                    {repMetricsPresetOptions.map((opt) => {
-                      const active = repMetricsPreset === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setRepMetricsPreset(opt.id)}
-                          style={{
-                            padding: "7px 12px",
-                            borderRadius: 8,
-                            border: active ? "1.5px solid var(--color-primary)" : "1px solid var(--sidebar-border)",
-                            background: active ? "var(--sidebar-active)" : "var(--color-bg)",
-                            color: active ? "var(--color-primary)" : "var(--sidebar-text-active)",
-                            fontSize: 12,
-                            fontWeight: active ? 700 : 600,
-                            cursor: "pointer",
-                            fontFamily: "inherit",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8, flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, letterSpacing: "0.02em", color: "var(--sidebar-text)", flexShrink: 0 }}>Período</span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+                      {repMetricsPresetOptions.map((opt) => {
+                        const active = repMetricsPreset === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setRepMetricsPreset(opt.id)}
+                            style={{
+                              padding: "7px 12px",
+                              borderRadius: 8,
+                              border: active ? "1.5px solid var(--color-primary)" : "1px solid var(--sidebar-border)",
+                              background: active ? "var(--sidebar-active)" : "var(--color-bg)",
+                              color: active ? "var(--color-primary)" : "var(--sidebar-text-active)",
+                              fontSize: 12,
+                              fontWeight: active ? 700 : 600,
+                              cursor: "pointer",
+                              fontFamily: "inherit",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <span style={{ fontSize: 12, color: "var(--sidebar-text-muted)", fontWeight: 600, width: "100%", marginTop: 2 }}>{repMetricsLabel} · {fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: "var(--sidebar-text-muted)", flexShrink: 0 }}>Otro mes</span>
+                    <input
+                      type="month"
+                      value={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (!v) return;
+                        const n = normalizePeriod(v);
+                        if (!n) return;
+                        setRepMetricsPreset("custom");
+                        setRepMetricsCustomYm(n);
+                      }}
+                      title="Cualquier mes (histórico)"
+                      style={{
+                        padding: "6px 10px",
+                        borderRadius: 8,
+                        border: repMetricsPreset === "custom" ? "1.5px solid var(--color-primary)" : "1px solid var(--sidebar-border)",
+                        background: "var(--color-bg)",
+                        color: "var(--sidebar-text-active)",
+                        fontFamily: "'Inter',sans-serif",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        outline: "none",
+                      }}
+                    />
+                  </div>
+                  <span style={{ fontSize: 12, color: "var(--sidebar-text-muted)", fontWeight: 600 }}>{repMetricsLabel} · {fmtD(repPerInicio)} – {fmtD(repPerFin)}</span>
                 </div>
               </div>
             </div>
@@ -2272,7 +2320,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                     <div className="hm-weekly-dash-header-text">
                       <h3 className="hm-weekly-dash-title">Actividad por semana</h3>
                       <p className="hm-weekly-dash-desc">
-                        Solo en <strong>este mes</strong> o <strong>mes anterior</strong>. Bloques de 7 días: <strong>barras</strong> (eje izq.) Ads + Fee por fecha de movimiento;
+                        Solo cuando el período es <strong>un mes entero</strong> (atajos de un mes o <strong>Otro mes</strong>). Bloques de 7 días: <strong>barras</strong> (eje izq.) Ads + Fee por fecha de movimiento;
                         <strong> línea y área</strong> (eje der.) cobros por fecha de pago con mes contable en ese mes.
                       </p>
                     </div>
@@ -2638,7 +2686,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 />
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="date" value={expRango.gastos.ini} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, ini: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha desde" /><span style={{ color: "var(--sidebar-text-muted)", fontSize: 11 }}>a</span><input type="date" value={expRango.gastos.fin} onChange={(e) => setExpRango((p) => ({ ...p, gastos: { ...p.gastos, fin: e.target.value } }))} style={{ padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none" }} title="Fecha hasta" /></div>
-              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); setRepMetricsPreset(repMetricsPresetForYm(p || tm())); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
+              {!isCliente && <div style={{ display: "flex", alignItems: "center", gap: 6 }}><input type="text" placeholder="Período MM/AAAA" value={gastosPeriodoReportes} onChange={(e) => setGastosPeriodoReportes(e.target.value)} onBlur={(e) => { const p = parsePeriodoInput(e.target.value); if (p) setGastosPeriodoReportes(p); }} style={{ width: 110, padding: "6px 10px", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontSize: 12, fontFamily: "'Inter'", outline: "none", boxSizing: "border-box" }} title="Período para llevar a reportes" /><Btn variant="outline" size="sm" onClick={() => { const p = gastosPeriodoReportes ? parsePeriodoInput(gastosPeriodoReportes) || gastosPeriodoReportes : tm(); setRepCl(filterCliente.gastos || "all"); setRepPer(p || tm()); setRepPerInput(p || tm()); const stR = repMetricsStateForYm(p || tm()); setRepMetricsPreset(stR.preset); setRepMetricsCustomYm(stR.customYm); goTo("reportes"); }}><FileText size={14} /> Ver en reportes</Btn></div>}
             </div>
           </div>
           <div className="hm-page-content" style={{ padding: "32px 48px", maxWidth: "none", margin: "0 auto" }}>
@@ -2722,6 +2770,33 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                       </button>
                     );
                   })}
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "#9498a8" }}>Otro mes</span>
+                  <input
+                    type="month"
+                    value={repMetricsPreset === "custom" ? (normalizePeriod(repMetricsCustomYm) || "") : ""}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (!v) return;
+                      const n = normalizePeriod(v);
+                      if (!n) return;
+                      setRepMetricsPreset("custom");
+                      setRepMetricsCustomYm(n);
+                    }}
+                    title="Cualquier mes (histórico)"
+                    style={{
+                      padding: "6px 10px",
+                      borderRadius: 8,
+                      border: repMetricsPreset === "custom" ? "1.5px solid #ea580c" : "1px solid #e2e4e9",
+                      background: "#fff",
+                      color: "#5f6577",
+                      fontFamily: "'Inter',sans-serif",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      outline: "none",
+                    }}
+                  />
                 </div>
                 <span style={{ fontSize: 11, color: "#9498a8", maxWidth: 640, lineHeight: 1.45 }}>
                   Gastos por <strong>fecha de movimiento</strong> en el rango; cobros por <strong>mes contable</strong> y <strong>fecha de pago</strong> en el rango.{" "}
