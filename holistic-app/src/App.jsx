@@ -502,9 +502,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return () => { cancelled = true; };
   }, [role, userEmail]);
 
-  /** Consola: diagnóstico tipografía (también `window.__HM_LOG_FONTS__()`). Sin “mount+0”: aún no existe `.hm-app` (loader/auth). */
+  /** Consola: diagnóstico tipografía solo en dev (evita ruido en prod; manual: `window.__HM_LOG_FONTS__()`). */
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !import.meta.env.DEV) return;
     const t1 = setTimeout(() => logHolisticFontDiagnostics("t+1.5s"), 1500);
     const t2 = setTimeout(() => logHolisticFontDiagnostics("t+4s"), 4000);
     return () => {

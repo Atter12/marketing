@@ -1,6 +1,6 @@
 import { supabase } from './supabase.js';
 import { consumeAuthHashIfPresent } from './authHashBootstrap.js';
-import { isAuthBootstrapDebugEnabled, maskLocationHashForLog } from './authDebug.js';
+import { isAuthBootstrapDebugEnabled, maskLocationHashForLog, logAuthLine } from './authDebug.js';
 import './holistic-design-system.css';
 import './holisticFontDiag.js';
 import React from 'react';
@@ -57,9 +57,9 @@ async function logBootstrapAuthStage(label, client) {
     getUserError: uErr?.message ?? null,
   };
   if (verbose) {
-    console.log(`[bootstrap] ${label}`, { ...base, hashPreview: maskLocationHashForLog(hash), userEmail: user?.email ?? null });
+    logAuthLine(`[bootstrap] ${label}`, { ...base, hashPreview: maskLocationHashForLog(hash), userEmail: user?.email ?? null });
   } else {
-    console.info(`[bootstrap] ${label}`, base);
+    logAuthLine(`[bootstrap] ${label}`, base);
   }
 }
 

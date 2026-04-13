@@ -28,3 +28,14 @@ export function maskLocationHashForLog(raw) {
     .replace(/refresh_token=[^&]+/gi, "refresh_token=(redacted)")
     .slice(0, 160);
 }
+
+/** Una sola línea JSON: al copiar consola o con bundle minificado no queda solo "Object". */
+export function logAuthLine(tag, data) {
+  let body;
+  try {
+    body = typeof data === "string" ? data : JSON.stringify(data);
+  } catch {
+    body = String(data);
+  }
+  console.info(`${tag} ${body}`);
+}

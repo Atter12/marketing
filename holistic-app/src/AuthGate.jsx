@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase, isGerente, getClientIdForUser } from "./supabase";
-import { isAuthBootstrapDebugEnabled } from "./authDebug.js";
+import { isAuthBootstrapDebugEnabled, logAuthLine } from "./authDebug.js";
 import Login from "./Login";
 import App from "./App";
 
@@ -44,7 +44,7 @@ export default function AuthGate() {
       const { data: { user }, error: uerr } = await supabase.auth.getUser();
       if (uerr) console.warn("[AuthGate] getUser error:", uerr.message);
       if (!user?.email) {
-        console.warn("[AuthGate] no session/user after retries", { attempts: SESSION_RETRIES });
+        logAuthLine("[AuthGate] no session/user after retries", { attempts: SESSION_RETRIES });
       }
       return user ?? null;
     };
@@ -88,7 +88,7 @@ export default function AuthGate() {
           setClientId(cid);
           return;
         }
-        console.warn("[AuthGate] Sin rol gerente ni cliente.", {
+        logAuthLine("[AuthGate] Sin rol gerente ni cliente", {
           email,
           isGerente: ok,
           clientIdResolved: !!cid,
