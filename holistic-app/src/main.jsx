@@ -8,6 +8,11 @@ import ReactDOM from 'react-dom/client';
 import AuthGate from './AuthGate.jsx';
 import Login from './Login.jsx';
 
+// Windows modo oscuro: sin data-theme, holistic-design-system aplica prefers-color-scheme → Métricas casi negras.
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('data-theme', 'light');
+}
+
 // En dev Vite sirve public en la raíz (/); con base solo los assets del build llevan prefijo
 const isDev = import.meta.env.DEV;
 const faviconPath = isDev ? '/favicon/favicon.png' : (import.meta.env.BASE_URL || '/') + 'favicon/favicon.png?v=2';

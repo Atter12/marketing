@@ -66,12 +66,18 @@ const scriptPath = '/credito-app/credito-app.js';
 let html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 html = html.replace(/<script[^>]+src="[^"]+"[^>]*><\/script>/, `<script type="module" crossorigin src="${scriptPath}"></script>`);
 html = html.replace(/<title>.*?<\/title>/, '<title>Crédito | Holistic Marketing</title>');
+if (!/\bdata-theme\s*=\s*["']light["']/i.test(html)) {
+  html = html.replace(/<html([^>]*)>/i, (_m, inner) => {
+    const t = String(inner).trim();
+    return t ? `<html ${t} data-theme="light">` : `<html data-theme="light">`;
+  });
+}
 // Favicon: ruta absoluta + ?v= para evitar caché del navegador; dos links por compatibilidad
 const faviconUrl = '/credito-app/favicon/favicon.png?v=2';
 html = html.replace(/<link[^>]*rel=["\']?(?:shortcut )?icon["\']?[^>]*>/gi, '');
 html = html.replace('</head>', `<link rel="icon" type="image/png" href="${faviconUrl}" /><link rel="shortcut icon" type="image/png" href="${faviconUrl}" /></head>`);
 // Primer frame igual que AuthGate loading / Login (evita flash de fondo antes del bundle).
-html = html.replace(/<body[^>]*>/i, '<body style="margin:0;min-height:100%;background:#ffffff">');
+html = html.replace(/<body[^>]*>/i, '<body style="margin:0;min-height:100%;background:#f5f3ee">');
 fs.writeFileSync(path.join(root, 'credito.html'), html, 'utf8');
 console.log('Generated credito.html');
 
