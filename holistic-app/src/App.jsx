@@ -339,8 +339,8 @@ const Stat = ({ icon, value, label, color, sub }) => (
 const Mdl = ({ open, onClose, title, children, footer }) => {
   if (!open) return null;
   return (
-    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,25,23,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto", animation: "fadeSlideIn .2s ease-out" }}>
-      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "var(--color-surface)", borderRadius: "var(--radius-xl)", width: "94%", maxWidth: 640, boxShadow: "var(--shadow-xl)", border: "1px solid var(--color-divider)", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0, animation: "fadeSlideIn .25s ease-out" }}>
+    <div className="hm-modal-outer" onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(28,25,23,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 48, overflowY: "auto", animation: "hmModalBackdrop .2s ease-out" }}>
+      <div className="hm-modal-box" onClick={(e) => e.stopPropagation()} style={{ background: "var(--color-surface)", borderRadius: "var(--radius-xl)", width: "94%", maxWidth: 640, boxShadow: "var(--shadow-xl)", border: "1px solid var(--color-divider)", marginBottom: 40, overflow: "hidden", boxSizing: "border-box", minWidth: 0, animation: "hmModalBox .22s ease-out" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "var(--sp-5) var(--sp-6)", background: "var(--color-surface)", borderBottom: "1px solid var(--color-divider)", borderRadius: "var(--radius-xl) var(--radius-xl) 0 0", minWidth: 0 }}>
           <h3 style={{ fontSize: "var(--text-lg)", fontWeight: 700, color: "var(--sidebar-text-active)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", letterSpacing: -0.4, fontFamily: "var(--font-display)" }}>{title}</h3>
           <button onClick={onClose} style={{ width: 36, height: 36, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid var(--color-divider)", background: "var(--color-surface-2)", color: "var(--color-text-muted)", borderRadius: "var(--radius-md)", cursor: "pointer", fontSize: 16, transition: "var(--tr)" }} aria-label="Cerrar">✕</button>
@@ -1814,8 +1814,11 @@ button{transition:all .15s ease}
 .stat-card button,.hm-table-wrap button,.hm-modal-box button{transition:all .15s ease}
 
 /* === PAGE TRANSITIONS === */
-@keyframes fadeSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.hm-page-content{animation:fadeSlideIn .3s ease-out;min-width:0;max-width:100%;box-sizing:border-box}
+/* Sin opacity:0 en página: en algunos navegadores/GPU se ve un “flash” oscuro al montar Métricas tras Cargando datos. */
+@keyframes hmPageContentIn{from{transform:translateY(8px)}to{transform:translateY(0)}}
+.hm-page-content{animation:hmPageContentIn .26s ease-out;min-width:0;max-width:100%;box-sizing:border-box}
+@keyframes hmModalBackdrop{from{opacity:0}to{opacity:1}}
+@keyframes hmModalBox{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .hm-page-content > div{min-width:0;max-width:100%;box-sizing:border-box}
 
 /* Main: evita que el flex empuje scroll horizontal a toda la ventana (tablas anchas quedan en su wrap) */
@@ -1835,7 +1838,7 @@ button{transition:all .15s ease}
 /* === CHART CONTAINERS (superficie / radio como .card en Pendientes) === */
 .hm-chart-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:var(--radius-xl);padding:26px 28px;transition:box-shadow var(--tr),border-color var(--tr),transform var(--tr)}
 .hm-chart-card:hover{box-shadow:var(--shadow-md);border-color:var(--color-primary);transform:translateY(-1px)}
-@keyframes debtCardEnter{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes debtCardEnter{from{transform:translateY(10px) scale(0.985)}to{transform:translateY(0) scale(1)}}
 .hm-debt-chart-card{animation:debtCardEnter .5s cubic-bezier(0.34,1.56,0.64,1) both}
 .hm-debt-chart-card:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(220,38,38,.1)!important;border-color:var(--red)!important}
 

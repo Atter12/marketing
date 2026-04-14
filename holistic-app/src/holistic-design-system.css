@@ -897,6 +897,13 @@ table {
   flex-direction: column;
   gap: 1.25rem;
   min-width: 0;
+  /* Evita “hueco” de composición cuando hijos animan u Opacity de Recharts */
+  background: var(--hm-pro-page);
+}
+
+.hm-app .recharts-surface,
+.hm-app .recharts-wrapper {
+  background-color: transparent;
 }
 
 .hm-resumen-pro-alert {
@@ -1246,6 +1253,10 @@ table {
   --hm-pro-tooltip-border: var(--sidebar-border);
   --hm-pro-tooltip-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   --hm-pro-chart-dot-ring: var(--color-surface-2);
+}
+
+[data-theme="dark"] .hm-resumen-pro-main {
+  background: var(--color-bg);
 }
 
 [data-theme="dark"] .hm-resumen-pro-hero {
