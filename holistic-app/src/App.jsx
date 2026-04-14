@@ -852,6 +852,12 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     return { monthly, methods, debt };
   }, [sGastos, cobros, gastos, repCl, repPerInicio, repPerFin, reportMonths, repData.rows]);
 
+  /** Sin puntos con valor > 0: mejor empty state que Recharts en cero (evita bloque raro en el plot). */
+  const repTrendHasPoints = useMemo(
+    () => repCharts.monthly.some((m) => (Number(m.gasto) || 0) > 0 || (Number(m.fee) || 0) > 0 || (Number(m.cobrado) || 0) > 0),
+    [repCharts.monthly]
+  );
+
   /* Resumen / reportes: semanas del mes (1–7, 8–14, …) — ads+fee por fecha de movimiento; cobrado por fecha de pago y período contable del cobro en el mes */
   const repWeeklySeries = useMemo(() => {
     if (!repWeeklyMonthYM || !repPerInicio || !repPerFin) return [];
@@ -1813,7 +1819,7 @@ button{transition:all .15s ease}
 .hm-page-content > div{min-width:0;max-width:100%;box-sizing:border-box}
 
 /* Main: evita que el flex empuje scroll horizontal a toda la ventana (tablas anchas quedan en su wrap) */
-.hm-main{min-width:0;max-width:100%}
+.hm-main{min-width:0;max-width:100%;background:var(--color-bg);align-self:stretch}
 .hm-app{min-width:0}
 
 /* Padding lateral responsive por debajo del escritorio ancho (inline 48px queda ancho en 100% zoom) */
@@ -2285,24 +2291,33 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 </div>
                 <span className="hm-pro-card-pill">Evolución</span>
               </div>
-              <ResponsiveContainer width="100%" height={248}>
-                <ComposedChart data={repCharts.monthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="hmResumenTrendCobArea" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#ff5c39" stopOpacity={0.28} />
-                      <stop offset="100%" stopColor="#ff5c39" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID} vertical={false} />
-                  <XAxis dataKey="name" tick={REP_CHART_TICK} axisLine={false} tickLine={false} />
-                  <YAxis tick={REP_CHART_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} />
-                  <Tooltip contentStyle={REP_CHART_TOOLTIP} />
-                  <Legend wrapperStyle={REP_CHART_LEGEND} />
-                  <Area type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmResumenTrendCobArea)" isAnimationActive={false} dot={false} />
-                  <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#ff5c39" strokeWidth={3} dot={{ r: 4, fill: "#ff5c39", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} />
-                  <Line type="monotone" dataKey="gasto" name="Gasto Ads" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} />
-                </ComposedChart>
-              </ResponsiveContainer>
+              {repTrendHasPoints ? (
+                <div className="hm-pro-chart-surface">
+                  <ResponsiveContainer width="100%" height={248}>
+                    <ComposedChart data={repCharts.monthly} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="hmResumenTrendCobArea" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ff5c39" stopOpacity={0.28} />
+                          <stop offset="100%" stopColor="#ff5c39" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="6 6" stroke={REP_CHART_GRID} vertical={false} />
+                      <XAxis dataKey="name" tick={REP_CHART_TICK} axisLine={false} tickLine={false} />
+                      <YAxis tick={REP_CHART_TICK} axisLine={false} tickLine={false} tickFormatter={(v) => "$" + fmt(v)} domain={[0, "auto"]} />
+                      <Tooltip contentStyle={REP_CHART_TOOLTIP} />
+                      <Legend wrapperStyle={REP_CHART_LEGEND} />
+                      <Area type="monotone" dataKey="cobrado" stroke="none" fill="url(#hmResumenTrendCobArea)" isAnimationActive={false} dot={false} />
+                      <Line type="monotone" dataKey="cobrado" name="Cobrado" stroke="#ff5c39" strokeWidth={3} dot={{ r: 4, fill: "#ff5c39", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} />
+                      <Line type="monotone" dataKey="gasto" name="Gasto Ads" stroke="#2563eb" strokeWidth={2.5} dot={{ r: 4, fill: "#2563eb", stroke: REP_CHART_DOT_RING, strokeWidth: 2 }} activeDot={{ r: 6 }} isAnimationActive={false} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="hm-pro-chart-empty" role="status">
+                  <span className="hm-pro-chart-empty-title">Sin puntos en el gráfico para este período</span>
+                  <span className="hm-pro-chart-empty-body">No hay gastos (fecha de movimiento) ni cobros (fecha de pago) dentro del rango seleccionado. Si esperabas datos, probá otro mes o el preset <strong>Este mes</strong> / <strong>Mes pasado</strong>.</span>
+                </div>
+              )}
             </div>
             {repWeeklyMonthYM ? (
               <div className="hm-weekly-dash-wrap">

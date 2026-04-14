@@ -47,14 +47,23 @@ async function logBootstrapAuthStage(label, client) {
   const hash = window.location.hash || '';
   const verbose = isAuthBootstrapDebugEnabled();
   const { data: { session }, error: sErr } = await client.auth.getSession();
-  const { data: { user }, error: uErr } = await client.auth.getUser();
+  // Antes de consumeAuthHashIfPresent con hash implícito no hay JWT aún: getUser() devuelve "Auth session missing!" y confunde.
+  const skipGetUser =
+    label === 'before consumeAuthHashIfPresent' && hash.includes('access_token') && hash.includes('refresh_token');
+  let user = null;
+  let uErr = null;
+  if (!skipGetUser) {
+    const { data: { user: u }, error: e } = await client.auth.getUser();
+    user = u;
+    uErr = e;
+  }
   const base = {
     pathname: window.location.pathname,
     hashLen: hash.length,
     includesAccessToken: hash.includes('access_token'),
     hasSession: !!session,
     getSessionError: sErr?.message ?? null,
-    getUserError: uErr?.message ?? null,
+    ...(skipGetUser ? { getUserSkipped: 'hash_handoff_pending' } : { getUserError: uErr?.message ?? null }),
   };
   if (verbose) {
     logAuthLine(`[bootstrap] ${label}`, { ...base, hashPreview: maskLocationHashForLog(hash), userEmail: user?.email ?? null });

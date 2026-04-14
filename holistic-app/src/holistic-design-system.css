@@ -1003,6 +1003,54 @@ table {
   border: 1px solid #e2e8f0;
 }
 
+/* Plot Recharts alineado al resto del resumen (evita “bloque oscuro” por contraste / SVG en cero) */
+.hm-pro-chart-surface {
+  width: 100%;
+  min-height: 248px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fafbfd 0%, #f4f7fb 100%);
+  border: 1px solid #eef2f7;
+  overflow: hidden;
+}
+
+.hm-pro-chart-surface .recharts-wrapper,
+.hm-pro-chart-surface .recharts-surface {
+  background: transparent;
+}
+
+.hm-pro-chart-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1.35rem 1.25rem;
+  text-align: center;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fafbfd 0%, #f8fafc 100%);
+  border: 1px dashed #e2e8f0;
+  color: #64748b;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.hm-pro-chart-empty strong {
+  color: #475569;
+  font-weight: 600;
+}
+
+.hm-pro-chart-empty-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.hm-pro-chart-empty-body {
+  font-size: inherit;
+  color: inherit;
+}
+
 .hm-resumen-pro-grid2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1225,6 +1273,25 @@ table {
 [data-theme="dark"] .hm-resumen-pro-aside-card:not(.hm-resumen-pro-aside-card--accent) {
   background: var(--color-surface-2);
   border-color: var(--sidebar-border);
+}
+
+[data-theme="dark"] .hm-pro-chart-surface {
+  background: linear-gradient(180deg, var(--color-surface-2) 0%, var(--color-bg) 100%);
+  border-color: var(--sidebar-border);
+}
+
+[data-theme="dark"] .hm-pro-chart-empty {
+  background: linear-gradient(180deg, var(--color-surface-2) 0%, var(--color-bg) 100%);
+  border-color: var(--sidebar-border);
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .hm-pro-chart-empty-title {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .hm-pro-chart-empty strong {
+  color: var(--color-text-muted);
 }
 
 [data-theme="dark"] .hm-resumen-pro-date,
