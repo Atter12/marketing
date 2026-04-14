@@ -1266,8 +1266,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   }, [curCl, clientDetailPeriodo, curD, curGastosDisplay, curCobrosDisplay, curGarsDisplay]);
 
   /* Early returns only after all hooks have run */
-  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", fontFamily: "'Inter',sans-serif" }}><div style={{ color: "var(--sidebar-text)", fontSize: 15 }}>Cargando datos…</div></div>);
-  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--color-bg)", fontFamily: "'Inter',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "var(--red)", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "var(--sidebar-text-active)", color: "var(--color-text-inverse)", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
+  if (dataLoading) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3ee", fontFamily: "'Inter',sans-serif" }}><div style={{ color: "#4b5563", fontSize: 15 }}>Cargando datos…</div></div>);
+  if (dataError) return (<div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3ee", fontFamily: "'Inter',sans-serif", padding: 20 }}><div style={{ textAlign: "center", maxWidth: 400 }}><p style={{ color: "#b91c1c", fontSize: 15, marginBottom: 20 }}>Error al cargar los datos: {dataError}</p><button type="button" onClick={() => refetchData()} style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#0f172a", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Reintentar</button></div></div>);
 
   /* ═══ CRUD (Supabase mutations) ═══ */
   const validateEmail = (e) => typeof e === "string" && e.trim().includes("@") && e.trim().length >= 5;

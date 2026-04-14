@@ -94,6 +94,9 @@ export default function AuthGate() {
           clientIdResolved: !!cid,
           verbose: isAuthBootstrapDebugEnabled(),
         });
+        logAuthLine("[AuthGate] unauthorized next", {
+          hint: "Sesión válida pero el email no está en gerentes ni en clientes_acceso (o RLS bloqueó la lectura). UI clara abajo.",
+        });
         await supabase.auth.signOut();
         if (!mounted.current) return;
         setStatus(statuses.unauthorized);
@@ -153,6 +156,14 @@ export default function AuthGate() {
     setUserEmail(payload?.userEmail ?? null);
   };
 
+  useEffect(() => {
+    if (status !== statuses.app || typeof window === "undefined") return;
+    const path = window.location.pathname || "";
+    if (path === "/credito" || path.startsWith("/credito/")) {
+      logAuthLine("[AuthGate] ok", { role, hasClientId: !!clientId, email: userEmail || null });
+    }
+  }, [status, role, clientId, userEmail]);
+
   if (status === statuses.loading) {
     // Mismo tono que Login (#fff) para evitar parpadeo negro → blanco al resolver auth.
     return (
@@ -164,10 +175,14 @@ export default function AuthGate() {
 
   if (status === statuses.unauthorized) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(145deg, #0f111a 0%, #1a1d26 100%)", fontFamily: "'Inter', sans-serif", padding: 20 }}>
-        <div style={{ textAlign: "center", maxWidth: 360 }}>
-          <p style={{ color: "#f4f5f7", fontSize: 16, marginBottom: 20 }}>No autorizado. Acceso solo para gerente o clientes con cuenta.</p>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f5f3ee", fontFamily: "'Inter', sans-serif", padding: 24 }}>
+        <div style={{ textAlign: "center", maxWidth: 420, background: "#ffffff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "28px 24px", boxShadow: "0 8px 30px rgba(15,23,42,.08)" }}>
+          <p style={{ color: "#1f2937", fontSize: 16, fontWeight: 600, marginBottom: 10 }}>No autorizado</p>
+          <p style={{ color: "#6b7280", fontSize: 14, lineHeight: 1.6, marginBottom: 22 }}>
+            Tu sesión es válida, pero este correo no tiene panel en Crédito: tiene que existir en <strong>gerentes</strong> o en <strong>clientes_acceso</strong> (y la política RLS tiene que permitir leerlo). Si acabás de recibir el acceso, pedí que verifiquen la fila en Supabase.
+          </p>
           <button
+            type="button"
             onClick={() => setStatus(statuses.login)}
             style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#ea580c", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
           >

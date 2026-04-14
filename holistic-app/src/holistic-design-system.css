@@ -168,10 +168,19 @@
 }
 
 /* Tipografía / render (referencia visual: Pendientes → Crédito + Creativos) */
+html {
+  color-scheme: light;
+}
+
 html,
 body,
 #root {
   font-family: var(--font-body);
+}
+
+#root {
+  min-height: 100%;
+  background: var(--color-bg);
 }
 
 h1, h2, h3, h4, h5, h6 {
