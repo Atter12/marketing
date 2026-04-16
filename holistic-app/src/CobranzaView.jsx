@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   RefreshCw,
   Check,
@@ -479,6 +479,10 @@ export default function CobranzaView({
   onCobranzaJumpConsumed = null,
   /** En false, no se alinean borradores con Gastos (evita falsos “al día” si aún cargan los gastos). */
   gastosReady = true,
+  /** Cambia cuando cambian pendientes/cobros en Gastos: dispara recarga y alineación automática. */
+  debtRevision = "",
+  /** Trae gastos+cobros del servidor sin pantalla de carga global (otra pestaña / refresco periódico). */
+  onSilentRefreshDebt = null,
 }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -552,8 +556,13 @@ export default function CobranzaView({
   const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
   const supabaseAnon = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
 
+  const loadRowsBusyRef = useRef(false);
+  const loadRowsRef = useRef(async () => {});
+
   const loadRows = useCallback(async () => {
     if (!supabase) return;
+    if (loadRowsBusyRef.current) return;
+    loadRowsBusyRef.current = true;
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -607,8 +616,22 @@ export default function CobranzaView({
       }
     } finally {
       setLoading(false);
+      loadRowsBusyRef.current = false;
     }
   }, [supabase, getClienteDeudaNeta, clients, fmtM, userEmail, gastosReady]);
+
+  loadRowsRef.current = loadRows;
+
+  const silentRefreshAndReloadBandeja = useCallback(async () => {
+    if (typeof onSilentRefreshDebt === "function") {
+      try {
+        await onSilentRefreshDebt();
+      } catch (e) {
+        console.warn("[Cobranza] refetch gastos/cobros", e);
+      }
+    }
+    setTimeout(() => loadRowsRef.current(), 0);
+  }, [onSilentRefreshDebt]);
 
   const loadHistorial = useCallback(async () => {
     if (!supabase) return;
@@ -631,7 +654,34 @@ export default function CobranzaView({
 
   useEffect(() => {
     loadRows();
-  }, [loadRows]);
+  }, [loadRows, debtRevision]);
+
+  /**
+   * Otra pestaña u otro usuario puede haber cargado cobros: traemos gastos/cobros del servidor y luego alineamos la bandeja.
+   * Misma pestaña: `debtRevision` ya dispara `loadRows`; este efecto no duplica trabajo si no hay `onSilentRefreshDebt`.
+   */
+  useEffect(() => {
+    if (!supabase || !gastosReady || typeof onSilentRefreshDebt !== "function") return;
+
+    const run = async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") return;
+      try {
+        await onSilentRefreshDebt();
+      } catch (e) {
+        console.warn("[Cobranza] refetch gastos/cobros (timer/vis)", e);
+      }
+      setTimeout(() => loadRowsRef.current(), 0);
+    };
+
+    run();
+    const intervalMs = 60_000;
+    const id = setInterval(run, intervalMs);
+    document.addEventListener("visibilitychange", run);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", run);
+    };
+  }, [supabase, gastosReady, onSilentRefreshDebt]);
 
   useEffect(() => {
     if (!cobranzaJump) return;
@@ -1344,7 +1394,7 @@ export default function CobranzaView({
             Cobranza
           </h2>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 760, lineHeight: 1.45 }}>
-            Con un <strong>mes</strong> elegido, la <strong>bandeja solo lista borradores de ese mes</strong> (mismo criterio que el selector). Los <strong>correos nuevos</strong> usan ese período para el monto. <strong>Al cargar o al pulsar Actualizar</strong>, los borradores en revisión se <strong>alinean solos con Gastos Ads</strong>: si alguien pagó, el mensaje pasa a agradecimiento; si el monto cambió, se actualiza el texto (y si estaba aprobado, vuelve a revisión). Con <strong>Cuenta completa</strong> se muestran todas las filas.
+            Con un <strong>mes</strong> elegido, la <strong>bandeja solo lista borradores de ese mes</strong> (mismo criterio que el selector). Los <strong>correos nuevos</strong> usan ese período para el monto. Los borradores activos se <strong>mantienen alineados solos con Gastos Ads</strong> cuando registrás o cambiás cobros/gastos, cada ~1 min mientras esta pantalla está abierta, y al volver a esta pestaña; también podés usar <strong>Actualizar</strong>. Si alguien pagó, el mensaje pasa a agradecimiento; si el monto cambió, se actualiza el texto (y si estaba aprobado, vuelve a revisión). Con <strong>Cuenta completa</strong> se muestran todas las filas.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -1478,7 +1528,12 @@ export default function CobranzaView({
                   Ver todos los períodos
                 </label>
               ) : null}
-              <Btn variant="outline" size="sm" onClick={loadRows} disabled={loading || busy}>
+              <Btn
+                variant="outline"
+                size="sm"
+                onClick={typeof onSilentRefreshDebt === "function" ? silentRefreshAndReloadBandeja : loadRows}
+                disabled={loading || busy}
+              >
                 <RefreshCw size={14} /> Actualizar
               </Btn>
               <Btn size="sm" onClick={generateDrafts} disabled={busy}>

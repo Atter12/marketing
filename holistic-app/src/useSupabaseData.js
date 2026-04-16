@@ -138,6 +138,19 @@ export function useSupabaseData(role, clientId) {
     }
   }, [role, clientId]);
 
+  /** Solo gastos + cobros, sin tocar `loading` global (para Cobranza u otras vistas en vivo). */
+  const refetchGastosCobros = useCallback(async () => {
+    if (!supabase || role !== "gerente") return;
+    const [gRes, coRes] = await Promise.all([
+      supabase.from("gastos").select("*").order("mes", { ascending: false }),
+      supabase.from("cobros").select("*").order("created_at", { ascending: false }),
+    ]);
+    if (gRes.error) throw gRes.error;
+    if (coRes.error) throw coRes.error;
+    setGastos((gRes.data || []).map(mapGasto));
+    setCobros((coRes.data || []).map(mapCobro));
+  }, [role, supabase]);
+
   useEffect(() => {
     fetchAll();
   }, [fetchAll]);
@@ -340,5 +353,5 @@ const { gastoId, clientId, monto, fecha, periodoResumen, hora, metodo, notas } =
     },
   };
 
-  return { clients, gastos, cobros, garantias, manual, setClients: role === "gerente" ? setClients : () => {}, setGastos: role === "gerente" ? setGastos : () => {}, setCobros: setCobros, setGarantias: role === "gerente" ? setGarantias : () => {}, setManual: role === "gerente" ? setManual : () => {}, loading, error, refetch: fetchAll, mutations, uid };
+  return { clients, gastos, cobros, garantias, manual, setClients: role === "gerente" ? setClients : () => {}, setGastos: role === "gerente" ? setGastos : () => {}, setCobros: setCobros, setGarantias: role === "gerente" ? setGarantias : () => {}, setManual: role === "gerente" ? setManual : () => {}, loading, error, refetch: fetchAll, refetchGastosCobros, mutations, uid };
 }

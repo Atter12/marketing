@@ -483,7 +483,7 @@ const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums",
 /* ═══════ MAIN APP ═══════ */
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
   const sb = useSupabaseData(role, clientId);
-  const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, refetch: refetchData, mutations, uid: uidGen } = sb;
+  const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, refetch: refetchData, refetchGastosCobros, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";
   const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
   const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
@@ -639,6 +639,21 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const t = gTotal(g), f = gFee(g), p = cobros.filter((c) => c.gastoId === g.id).reduce((a, c) => a + parseFloat(c.monto || 0), 0);
     return { ...g, _t: t, _f: f, _p: p, _pend: Math.max(0, t - p), _st: p >= t ? "Pagado" : p > 0 ? "Parcial" : "Pendiente" };
   }), [gastos, cobros]);
+
+  /** Huella de gastos + cobros: al cambiar, Cobranza re-alinea borradores sola (mismo criterio que Pendiente en Gastos). */
+  const cobranzaDebtRevision = useMemo(() => {
+    const gPart = sGastos
+      .map((g) =>
+        [g.id, g.clientId, g.mes ?? "", Number(g._pend ?? 0).toFixed(4), g._st ?? ""].join(":"),
+      )
+      .sort()
+      .join("|");
+    const cPart = cobros
+      .map((c) => [c.id, c.gastoId ?? "", c.clientId ?? "", c.monto, c.fecha ?? ""].join(":"))
+      .sort()
+      .join("|");
+    return `${gPart}::${cPart}`;
+  }, [sGastos, cobros]);
 
   /* Client aggregate data (incluye cobros sin asignar gasto: sin gastoId y con clientId = cid) */
   const cData = useCallback((cid) => {
@@ -2914,6 +2929,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             cobranzaJump={cobranzaJump}
             onCobranzaJumpConsumed={clearCobranzaJump}
             gastosReady={!dataLoading}
+            debtRevision={cobranzaDebtRevision}
+            onSilentRefreshDebt={refetchGastosCobros}
           />
         )}
 
