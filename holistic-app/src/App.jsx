@@ -2913,6 +2913,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             onRefetchClients={refetchData}
             cobranzaJump={cobranzaJump}
             onCobranzaJumpConsumed={clearCobranzaJump}
+            gastosReady={!dataLoading}
           />
         )}
 

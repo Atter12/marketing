@@ -123,6 +123,7 @@ const EVENTO_LABEL = {
   enviado_manual: "Marcado enviado (manual)",
   enviado_resend: "Enviado (Resend)",
   error_envio: "Error al enviar",
+  sincronizado_deuda: "Alineado con Gastos (monto o tipo)",
 };
 
 const SUBJECT_TMPL = "Recordatorio de saldo — {{cliente_nombre}}";
@@ -330,6 +331,142 @@ function defaultFmtM(m) {
   return d.toLocaleDateString("es-PE", { month: "short", year: "numeric" });
 }
 
+const SYNC_ESTADOS = new Set(["pending_approval", "approved", "failed"]);
+const DEUDA_EPS = 0.005;
+
+function periodoYmForCobranzaRow(r) {
+  const v = parseRowVariables(r);
+  if (v.periodo_ym != null && String(v.periodo_ym).trim()) return String(v.periodo_ym).trim();
+  return "";
+}
+
+function etiquetaCorreoFromYm(ym, fmtM) {
+  const fn = typeof fmtM === "function" ? fmtM : defaultFmtM;
+  const y = ym && String(ym).trim();
+  if (y) {
+    return `Este monto corresponde al mes ${fn(y)}: suma del pendiente de cada gasto cuyo período (columna mes) es ese mes — igual que la columna Pendiente al filtrar Gastos Ads por ese mes.`;
+  }
+  return "Este monto es la suma del pendiente de cada gasto del cliente (columna Pendiente en Gastos Ads). Si hay cobros sin vincular a un gasto, puede diferir del resumen «A cobrar» del listado.";
+}
+
+function etiquetaThanksFromYm(ym, fmtM) {
+  const fn = typeof fmtM === "function" ? fmtM : defaultFmtM;
+  const y = ym && String(ym).trim();
+  if (y) {
+    return `respecto al mes ${fn(y)} (sin pendiente en gastos de ese período mes, según Gastos Ads).`;
+  }
+  return "en el conjunto de tu cuenta (suma de pendientes por línea en Gastos).";
+}
+
+/**
+ * Si el pendiente real en Gastos ya no coincide con el borrador guardado, devuelve patch + metadata.
+ * Convierte cobro ↔ agradecimiento cuando el saldo pasa a cero o vuelve a haber deuda (mismo criterio que al generar borradores).
+ */
+function computeSyncPatch(r, ctx) {
+  const { getClienteDeudaNeta, clients, fmtM } = ctx;
+  if (!r?.client_id || !SYNC_ESTADOS.has(r.estado)) return null;
+  if (typeof getClienteDeudaNeta !== "function") return null;
+
+  const periodoYm = periodoYmForCobranzaRow(r);
+  const net = parseFloat(getClienteDeudaNeta(r.client_id, periodoYm));
+  const netSafe = Number.isFinite(net) ? net : 0;
+  const tipo = correoTipo(r);
+  const storedMonto = parseFloat(r.monto_pendiente);
+  const storedSafe = Number.isFinite(storedMonto) ? storedMonto : 0;
+
+  const paid = netSafe <= DEUDA_EPS;
+  const hasDebt = netSafe > DEUDA_EPS;
+
+  let targetTipo = tipo;
+  let needsTipoChange = false;
+  if (tipo === "cobro" && paid) {
+    targetTipo = "agradecimiento";
+    needsTipoChange = true;
+  } else if (tipo === "agradecimiento" && hasDebt) {
+    targetTipo = "cobro";
+    needsTipoChange = true;
+  }
+
+  const montoDiff = targetTipo === "cobro" && hasDebt && Math.abs(netSafe - storedSafe) > DEUDA_EPS;
+
+  if (!needsTipoChange && !montoDiff) return null;
+
+  const c = (clients || []).find((x) => x.id === r.client_id);
+  const clienteNombre = c?.name || r.cliente_nombre || "Cliente";
+  const empresa = c?.biz || parseRowVariables(r).empresa || "";
+
+  const periodoEtiquetaCorreo = etiquetaCorreoFromYm(periodoYm, fmtM);
+  const periodoEtiquetaThanks = etiquetaThanksFromYm(periodoYm, fmtM);
+
+  let vars;
+  let asunto;
+  let cuerpo_html;
+  let monto;
+  if (targetTipo === "agradecimiento") {
+    vars = {
+      cliente_nombre: clienteNombre,
+      empresa,
+      monto_pendiente: fmtMoney(0),
+      moneda: "USD",
+      fecha_limite: "",
+      dias_atraso: "0",
+      ultimo_pago_fecha: "",
+      link_pago: "",
+      resumen_servicios: "",
+      periodo_etiqueta: periodoEtiquetaThanks,
+      periodo_ym: periodoYm || null,
+      tipo_correo: "agradecimiento",
+    };
+    asunto = applyTemplate(THANKS_SUBJECT_TMPL, vars);
+    cuerpo_html = applyTemplate(THANKS_BODY_HTML_TMPL, vars);
+    monto = 0;
+  } else {
+    vars = {
+      cliente_nombre: clienteNombre,
+      empresa,
+      monto_pendiente: fmtMoney(netSafe),
+      moneda: "USD",
+      fecha_limite: "",
+      dias_atraso: "0",
+      ultimo_pago_fecha: "",
+      link_pago: "",
+      resumen_servicios: "",
+      periodo_etiqueta: periodoEtiquetaCorreo,
+      periodo_ym: periodoYm || null,
+      tipo_correo: "cobro",
+    };
+    asunto = applyTemplate(SUBJECT_TMPL, vars);
+    cuerpo_html = applyTemplate(BODY_HTML_TMPL, vars);
+    monto = netSafe;
+  }
+
+  const wasApproved = r.estado === "approved";
+  const patch = {
+    monto_pendiente: monto,
+    asunto,
+    cuerpo_html,
+    cuerpo_texto: htmlToPlainText(cuerpo_html),
+    variables: vars,
+    updated_at: new Date().toISOString(),
+  };
+  if (wasApproved) {
+    patch.estado = "pending_approval";
+    patch.aprobado_por = null;
+    patch.aprobado_at = null;
+  }
+
+  return {
+    id: r.id,
+    patch,
+    eventDetalle: {
+      antes: { tipo, monto: storedSafe },
+      despues: { tipo: targetTipo, monto: netSafe },
+      periodo_ym: periodoYm || null,
+      revirtio_aprobacion: wasApproved,
+    },
+  };
+}
+
 export default function CobranzaView({
   supabase,
   clients = [],
@@ -340,6 +477,8 @@ export default function CobranzaView({
   onRefetchClients,
   cobranzaJump = null,
   onCobranzaJumpConsumed = null,
+  /** En false, no se alinean borradores con Gastos (evita falsos “al día” si aún cargan los gastos). */
+  gastosReady = true,
 }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -416,20 +555,60 @@ export default function CobranzaView({
   const loadRows = useCallback(async () => {
     if (!supabase) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from("cobranza_bandeja")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(400);
-    if (error) {
-      console.error("[Cobranza]", error);
-      alert(error.message || "No se pudo cargar la bandeja. ¿Aplicaste la migración 039?");
-      setRows([]);
-    } else {
-      setRows(data || []);
+    try {
+      const { data, error } = await supabase
+        .from("cobranza_bandeja")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(400);
+      if (error) {
+        console.error("[Cobranza]", error);
+        alert(error.message || "No se pudo cargar la bandeja. ¿Aplicaste la migración 039?");
+        setRows([]);
+        return;
+      }
+      const initial = data || [];
+      setRows(initial);
+
+      if (gastosReady && typeof getClienteDeudaNeta === "function") {
+        const ctx = { getClienteDeudaNeta, clients, fmtM };
+        const syncOps = [];
+        for (const r of initial) {
+          const computed = computeSyncPatch(r, ctx);
+          if (!computed) continue;
+          syncOps.push(
+            (async () => {
+              const { error: upErr } = await supabase
+                .from("cobranza_bandeja")
+                .update(computed.patch)
+                .eq("id", computed.id);
+              if (upErr) {
+                console.warn("[Cobranza] sincronizar deuda", upErr);
+                return;
+              }
+              await supabase.from("cobranza_eventos").insert({
+                correo_id: computed.id,
+                evento: "sincronizado_deuda",
+                detalle: computed.eventDetalle,
+                actor_email: userEmail || null,
+              });
+            })(),
+          );
+        }
+        if (syncOps.length) {
+          await Promise.all(syncOps);
+          const { data: fresh, error: err2 } = await supabase
+            .from("cobranza_bandeja")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(400);
+          if (!err2) setRows(fresh || []);
+        }
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, [supabase]);
+  }, [supabase, getClienteDeudaNeta, clients, fmtM, userEmail, gastosReady]);
 
   const loadHistorial = useCallback(async () => {
     if (!supabase) return;
@@ -1027,6 +1206,14 @@ export default function CobranzaView({
 
   const variablesObj = detail ? parseRowVariables(detail) : {};
 
+  const saldoVivoDetalle = useMemo(() => {
+    if (!detail?.client_id || typeof getClienteDeudaNeta !== "function") return null;
+    if (!SYNC_ESTADOS.has(detail.estado)) return null;
+    const ym = periodoYmForCobranzaRow(detail);
+    const v = parseFloat(getClienteDeudaNeta(detail.client_id, ym));
+    return Number.isFinite(v) ? v : 0;
+  }, [detail, getClienteDeudaNeta]);
+
   const cobranzaAiUrl = useMemo(() => {
     const u = (import.meta.env.VITE_COBRANZA_AI_URL || "").trim();
     if (u) return u.replace(/\/$/, "");
@@ -1157,7 +1344,7 @@ export default function CobranzaView({
             Cobranza
           </h2>
           <p style={{ margin: "6px 0 0", fontSize: 13, color: "#64748b", maxWidth: 760, lineHeight: 1.45 }}>
-            Con un <strong>mes</strong> elegido, la <strong>bandeja solo lista borradores de ese mes</strong> (mismo criterio que el selector). Los <strong>correos nuevos</strong> usan ese período para el monto. Si un agradecimiento quedó mal, <strong>Borradores cobro</strong> puede reemplazar el que está en revisión. Con <strong>Cuenta completa</strong> se muestran todas las filas.
+            Con un <strong>mes</strong> elegido, la <strong>bandeja solo lista borradores de ese mes</strong> (mismo criterio que el selector). Los <strong>correos nuevos</strong> usan ese período para el monto. <strong>Al cargar o al pulsar Actualizar</strong>, los borradores en revisión se <strong>alinean solos con Gastos Ads</strong>: si alguien pagó, el mensaje pasa a agradecimiento; si el monto cambió, se actualiza el texto (y si estaba aprobado, vuelve a revisión). Con <strong>Cuenta completa</strong> se muestran todas las filas.
           </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -2032,6 +2219,17 @@ export default function CobranzaView({
                     Criterio al generar: <strong>Total cuenta</strong> (deuda acumulada) o borrador sin período guardado.
                   </span>
                 )}
+                {saldoVivoDetalle != null ? (
+                  <span style={{ display: "block", marginTop: 8, fontSize: 12.5, color: "#0f766e" }}>
+                    Saldo actual en Gastos Ads (mismo período que este borrador):{" "}
+                    <strong>
+                      {detail.moneda || "USD"} {fmtMoney(saldoVivoDetalle)}
+                    </strong>
+                    {correoTipo(detail) === "cobro" && saldoVivoDetalle <= DEUDA_EPS ? (
+                      <span style={{ color: "#64748b" }}> — sin pendiente; el sistema debería haber cambiado este correo a agradecimiento al actualizar.</span>
+                    ) : null}
+                  </span>
+                ) : null}
                 {detail.ultimo_error ? (
                   <span style={{ display: "block", marginTop: 8, color: "#dc2626", fontSize: 12.5 }}>
                     Último error: {detail.ultimo_error}
