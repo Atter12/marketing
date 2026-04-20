@@ -130,7 +130,7 @@ TRANSCRIPCIÓN del video (voz a texto con Whisper; puede tener errores menores d
 """
 ${transcript}
 """
-${extra ? `\nContexto o brief del equipo (úsalo si aporta; no inventes datos):\n${extra}\n` : ""}
+${extra ? `\nContexto o brief opcional (úsalo si aporta; no inventes datos):\n${extra}\n` : ""}
 
 TAREA:
 1) Entendé la idea central del guion (gancho, problema, beneficio, prueba social, CTA).
@@ -310,7 +310,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       message:
-        "POST multipart (file ≤ ~4 MB) o POST JSON { blobUrl } tras subir a Vercel Blob (hasta 1 GB en almacenamiento; Whisper usa hasta 25 MB por petición).",
+        "POST multipart con archivo pequeño, o POST JSON { blobUrl } para archivos más grandes (hasta 1 GB alojado; la transcripción usa hasta 25 MB por archivo).",
       directUploadMaxBytes: DIRECT_UPLOAD_MAX,
       whisperMaxBytes: WHISPER_MAX_BYTES,
       blobMaxBytes: BLOB_DOWNLOAD_MAX,
@@ -328,7 +328,7 @@ export default async function handler(req, res) {
   if (!openaiKey) {
     return res.status(503).json({
       success: false,
-      error: "OPENAI_API_KEY no configurada (necesaria para Whisper).",
+      error: "Por el momento no podemos pasar el audio a texto. Probá de nuevo más tarde.",
     });
   }
 
@@ -352,7 +352,7 @@ export default async function handler(req, res) {
       if (!isAllowedBlobUrl(blobUrl)) {
         return res.status(400).json({
           success: false,
-          error: "URL de Blob no permitida (solo almacenamiento Vercel Blob público).",
+          error: "No pudimos usar ese enlace. Volvé a subir el archivo desde esta misma página.",
         });
       }
 
@@ -363,7 +363,8 @@ export default async function handler(req, res) {
           if (meta.size > BLOB_DOWNLOAD_MAX) {
             return res.status(413).json({
               success: false,
-              error: `El archivo supera 1 GB (${meta.size} bytes). Pedile al equipo que lo comprima.`,
+              error:
+                "Este archivo supera el tamaño máximo permitido (1 GB). Probá con una versión más liviana o comprimida.",
             });
           }
           if (meta.size > WHISPER_MAX_BYTES) {
@@ -400,7 +401,7 @@ export default async function handler(req, res) {
           return res.status(413).json({
             success: false,
             error:
-              "Archivo mayor al límite de subida directa (~4 MB). Volvé a intentar: el navegador debería subirlo por Vercel Blob automáticamente. Si sigue fallando, falta BLOB_READ_WRITE_TOKEN en Vercel.",
+              "Este archivo es un poco grande para enviarlo directo. Probá de nuevo; si no avanza, usá solo el audio en mp3 o un recorte más corto del video.",
             hint: "large_file_use_blob",
           });
         }
@@ -434,7 +435,7 @@ export default async function handler(req, res) {
     } else {
       return res.status(415).json({
         success: false,
-        error: "Usá multipart/form-data (archivo chico) o application/json con blobUrl (archivo grande).",
+        error: "Subí el archivo desde la herramienta (no pegues enlaces externos salvo que hayas subido el archivo acá antes).",
       });
     }
 

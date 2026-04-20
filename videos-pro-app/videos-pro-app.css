@@ -745,41 +745,6 @@ nav {
   flex-wrap: wrap;
 }
 
-.blob-setup-banner {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  border-radius: 12px;
-  border: 1px solid #fcd34d;
-  background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
-  color: var(--text-dark);
-  font-size: 13px;
-  line-height: 1.55;
-}
-.blob-setup-banner__icon {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #fef3c7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #b45309;
-  font-size: 18px;
-}
-.blob-setup-banner__body p {
-  margin-top: 8px;
-  color: var(--text-medium);
-  font-size: 13px;
-}
-.blob-setup-banner__sub {
-  margin-top: 6px !important;
-  font-size: 12px !important;
-  color: var(--text-light) !important;
-}
 .drop .hint-code {
   font-size: 11px;
   background: rgba(255, 107, 74, 0.1);

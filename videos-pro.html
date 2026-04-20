@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Videos Pro — Guiones con IA desde tu video | EcomTools</title>
-  <meta name="description" content="Subí un video, lo transcribimos con Whisper y generamos tres variaciones del guion con IA. Herramienta interna de Holistic Marketing." />
+  <title>Videos Pro — De tu video a 3 guiones | EcomTools</title>
+  <meta name="description" content="Pasá un video o audio a texto y recibí tres versiones del guion listas para grabar." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -44,76 +44,56 @@
       <div class="hero-badge">
         <span class="pulse" aria-hidden="true"></span>
         <i class="fas fa-video"></i>
-        Videos Pro · uso interno · beta
+        Videos Pro
       </div>
-      <h1>Convertí un video en <span>3 guiones listos</span> para grabar</h1>
+      <h1>De tu video a <span>tres guiones listos</span> para grabar</h1>
       <p class="lead">
-        Subí un video o audio, lo transcribimos con <strong>OpenAI Whisper</strong>
-        y generamos <strong>tres variaciones</strong> del guion principal con
-        <strong>Claude</strong> (Anthropic). GPT entra como respaldo si hace falta.
+        Subís tu video o audio: lo pasamos a texto y te devolvemos <strong>tres versiones</strong> del guion,
+        cada una con un enfoque distinto pero con la misma idea de fondo. Así elegís cuál te cierra más para TikTok, Meta o lo que estés grabando.
       </p>
       <div class="stack-chips">
-        <span class="chip chip--whisper"><i class="fas fa-waveform-lines"></i> Whisper</span>
-        <span class="chip chip--openai"><i class="fas fa-robot"></i> OpenAI</span>
-        <span class="chip chip--claude"><i class="fas fa-sparkles"></i> Claude</span>
-        <span class="chip"><i class="fas fa-bolt" style="color:#f59e0b"></i> 100% procesado en Vercel</span>
+        <span class="chip"><i class="fas fa-closed-captioning"></i> Lo que se dice → texto</span>
+        <span class="chip"><i class="fas fa-layer-group"></i> 3 guiones distintos</span>
+        <span class="chip"><i class="fas fa-language"></i> En español</span>
       </div>
     </div>
   </section>
 
   <section class="tool-section">
     <div class="tool-grid">
-      <!-- Columna izquierda: entrada -->
       <div>
         <div class="card">
-          <h2 class="card-title"><span class="step-n">1</span> Subí tu archivo</h2>
+          <h2 class="card-title"><span class="step-n">1</span> Tu video o audio</h2>
 
-          <div id="blob-setup-banner" class="blob-setup-banner hidden" role="status">
-            <div class="blob-setup-banner__icon"><i class="fas fa-plug-circle-xmark"></i></div>
-            <div class="blob-setup-banner__body">
-              <strong>Falta configurar subidas medianas/grandes</strong>
-              <p>
-                En Vercel el POST directo al servidor solo acepta <strong>~4 MB</strong>. Tu archivo de <strong>5 MB o más</strong> necesita
-                <strong>Vercel Blob</strong>: en el proyecto → <em>Storage → Blob</em> → crear almacén → copiar el token y en
-                <em>Settings → Environment Variables</em> agregar <code>BLOB_READ_WRITE_TOKEN</code> (Production) → <strong>redeploy</strong>.
-              </p>
-              <p class="blob-setup-banner__sub">
-                Después de eso sí podés subir hasta <strong>1 GB</strong> al Blob. <strong>Whisper</strong> sigue transcribiendo como máximo <strong>25 MB</strong> por archivo (si pesa más, exportá solo audio o acortá).
-              </p>
-            </div>
-          </div>
-
-          <div id="drop" class="drop" role="button" tabindex="0" aria-label="Subir archivo de video o audio">
+          <div id="drop" class="drop" role="button" tabindex="0" aria-label="Elegir video o audio">
             <input id="file" type="file" accept="audio/*,video/*,.mp4,.mov,.webm,.m4a,.mp3,.wav" />
             <div class="drop-icon">
               <i class="fas fa-cloud-arrow-up"></i>
             </div>
-            <h3>Arrastrá aquí o tocá para elegir</h3>
-            <p>Video o audio — mp4, webm, mov, mp3, m4a, wav</p>
+            <h3>Arrastrá acá o tocá para elegir</h3>
+            <p>Video o audio: mp4, webm, mov, mp3, m4a, wav</p>
             <p class="hint">
-              <strong>Sin</strong> <code class="hint-code">BLOB_READ_WRITE_TOKEN</code>: máx. <strong>~4 MB</strong> (límite del hosting).
-              <strong>Con</strong> token en Vercel: subida grande por Blob (hasta <strong>1 GB</strong>).
-              <strong>Whisper</strong> (OpenAI): máx. <strong>25 MB</strong> por transcripción — si pesa más, exportá solo audio o acortá.
+              En la práctica, grabaciones larguísimas en calidad muy alta a veces dan error: si pasa, probá exportar <strong>solo el audio</strong> en mp3 o usar un <strong>corte más corto</strong> del video.
             </p>
             <div id="picked" class="hidden"></div>
           </div>
 
           <div class="form-group">
-            <label for="brief">Brief (opcional) <small>marca · tono · producto</small></label>
-            <textarea id="brief" placeholder="Ej.: Tono cercano Perú. Producto crema hidratante. Público mujeres 25–45. Meta: mensajes por WhatsApp."></textarea>
+            <label for="brief">Contexto opcional</label>
+            <textarea id="brief" placeholder="Contanos en pocas líneas: marca, producto, a quién va dirigido, tono (cercano, formal, gracioso…), en qué plataforma lo vas a usar. Cuanto más claro, mejor salen los guiones."></textarea>
           </div>
 
           <button id="btn-run" type="button" class="btn-primary">
             <i class="fas fa-wand-magic-sparkles"></i>
-            Transcribir y generar 3 guiones
+            Generar mis 3 guiones
           </button>
 
           <div id="status" class="status hidden" aria-live="polite"></div>
 
           <div id="progress" class="progress-steps hidden" aria-hidden="true">
             <div class="pstep" data-phase="upload"><i class="fas fa-upload"></i> Subiendo</div>
-            <div class="pstep" data-phase="whisper"><i class="fas fa-waveform-lines"></i> Whisper</div>
-            <div class="pstep" data-phase="scripts"><i class="fas fa-sparkles"></i> Guiones</div>
+            <div class="pstep" data-phase="whisper"><i class="fas fa-microphone-lines"></i> A texto</div>
+            <div class="pstep" data-phase="scripts"><i class="fas fa-pen-fancy"></i> Guiones</div>
           </div>
 
           <div id="err" class="err hidden" role="alert">
@@ -124,24 +104,23 @@
 
         <div class="info-box">
           <i class="fas fa-lightbulb"></i>
-          <strong>Tip:</strong> “Subir el MB” en dos pasos: (1) Vercel Blob para saltar el tope de ~4 MB del serverless. (2) Archivo final ≤ 25 MB para que Whisper lo transcriba (si no, comprimí audio o cortá el clip).
+          <strong>Consejo:</strong> si el video tiene mucho ruido de fondo o música muy fuerte, a veces el texto sale con errores. Cuanto más se escuche clara la voz, mejor.
         </div>
       </div>
 
-      <!-- Columna derecha: resultados -->
       <div class="card card-right" id="results-card">
-        <h2 class="card-title"><span class="step-n">2</span> Resultado</h2>
+        <h2 class="card-title"><span class="step-n">2</span> Tu resultado</h2>
 
         <div id="results-empty" class="results-empty">
           <i class="fas fa-film"></i>
-          <h3>Tus guiones aparecerán aquí</h3>
-          <p>Primero ves la transcripción completa, después las tres variaciones listas para copiar o descargar.</p>
+          <h3>Acá van a aparecer tus guiones</h3>
+          <p>Primero vas a ver todo lo que se dijo transcrito, y abajo las tres versiones del guion para copiar o bajar en un solo archivo de texto.</p>
         </div>
 
         <div id="out-wrap" class="hidden">
           <div class="out-section">
             <div class="section-head">
-              <h3><i class="fas fa-waveform-lines"></i> Transcripción</h3>
+              <h3><i class="fas fa-align-left"></i> Lo que se dijo (texto completo)</h3>
               <button id="btn-copy-transcript" type="button" class="btn btn-ghost btn-sm">
                 <i class="far fa-copy"></i> Copiar
               </button>
@@ -151,17 +130,17 @@
 
           <div class="out-section" style="margin-top:22px">
             <div class="section-head">
-              <h3><i class="fas fa-sparkles"></i> 3 variaciones del guion</h3>
+              <h3><i class="fas fa-sparkles"></i> Tres versiones del guion</h3>
             </div>
             <div id="var-grid" class="var-stack"></div>
           </div>
 
           <div class="download-all">
             <button id="btn-dl-all" type="button" class="btn btn-outline">
-              <i class="fas fa-file-arrow-down"></i> Descargar todo (.txt)
+              <i class="fas fa-file-arrow-down"></i> Bajar todo en un .txt
             </button>
             <button id="btn-reset" type="button" class="btn btn-ghost">
-              <i class="fas fa-rotate-left"></i> Nuevo video
+              <i class="fas fa-rotate-left"></i> Empezar con otro archivo
             </button>
           </div>
 

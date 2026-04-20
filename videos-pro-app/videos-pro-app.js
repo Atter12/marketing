@@ -14,9 +14,9 @@ const BLOB_CLIENT_ESM = "https://esm.sh/@vercel/blob@0.27.3/client";
 
 const PHASES = ["upload", "whisper", "scripts"];
 const PHASE_LABEL = {
-  upload: "Subiendo archivo…",
-  whisper: "Transcribiendo con <strong>Whisper</strong>…",
-  scripts: "Generando <strong>3 variaciones</strong> del guion…",
+  upload: "Subiendo tu archivo…",
+  whisper: "Pasando lo que se escucha a <strong>texto</strong>…",
+  scripts: "Armando las <strong>tres versiones</strong> del guion…",
 };
 
 let lastResult = null;
@@ -81,7 +81,7 @@ function setBusy(busy, phase) {
   if (busy) {
     btn.innerHTML = '<span class="spinner"></span> Procesando…';
   } else {
-    btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Transcribir y generar 3 guiones';
+    btn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i> Generar mis 3 guiones';
   }
 
   if (!busy) {
@@ -130,17 +130,16 @@ function renderResults(data) {
     card.className = "var-card";
     card.innerHTML = `
       <div class="vhead">
-        <span class="vtag"><span class="vn">${i + 1}</span> Variación ${i + 1}</span>
-        <span style="font-size:11px;color:var(--text-light)">${v.script.length.toLocaleString("es")} caracteres</span>
+        <span class="vtag"><span class="vn">${i + 1}</span> Versión ${i + 1}</span>
       </div>
-      <h4>${escapeHtml(v.title || `Variación ${i + 1}`)}</h4>
+      <h4>${escapeHtml(v.title || `Guion opción ${i + 1}`)}</h4>
       <pre>${escapeHtml(v.script)}</pre>
       <div class="mini-actions">
         <button type="button" class="btn btn-ghost btn-sm btn-copy-var" data-i="${i}">
           <i class="far fa-copy"></i> Copiar
         </button>
         <button type="button" class="btn btn-outline btn-sm btn-dl-var" data-i="${i}">
-          <i class="fas fa-download"></i> .txt
+          <i class="fas fa-download"></i> Descargar
         </button>
       </div>
     `;
@@ -159,7 +158,7 @@ function renderResults(data) {
           btn.innerHTML = prev;
         }, 1600);
       } catch {
-        renderError("No se pudo copiar al portapapeles.");
+        renderError("No pudimos copiar automáticamente. Seleccioná el texto con el mouse y usá Copiar del menú.");
       }
     });
   });
@@ -174,12 +173,9 @@ function renderResults(data) {
   });
 
   const meta = $("#meta");
-  if (data.models) {
-    meta.textContent = `Modelos usados · ${data.models.whisper} + ${data.models.scripts}`;
-    meta.classList.remove("hidden");
-  } else {
-    meta.classList.add("hidden");
-  }
+  meta.textContent =
+    "Listo. Si querés otro tono, probá de nuevo cambiando el contexto de arriba o subiendo otro corte del video.";
+  meta.classList.remove("hidden");
 
   $("#results-card").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -207,7 +203,9 @@ function setFile(f) {
   }
 
   if (f.size > BLOB_UPLOAD_MAX) {
-    renderError(`El archivo pesa ${formatBytes(f.size)}. Máximo 1 GB en esta herramienta.`);
+    renderError(
+      `Este archivo pesa ${formatBytes(f.size)}. Por ahora podés subir hasta 1 GB por archivo. Si necesitás procesar algo más grande, escribinos y lo vemos.`,
+    );
     input.value = "";
     return;
   }
@@ -291,13 +289,13 @@ function init() {
   $("#btn-run").addEventListener("click", async () => {
     clearError();
     if (!selectedFile) {
-      renderError("Elegí un archivo de audio o video primero.");
+      renderError("Primero elegí un video o un audio tocando el recuadro de arriba.");
       return;
     }
 
     if (selectedFile.size > WHISPER_MAX) {
       renderError(
-        `Este archivo pesa ${formatBytes(selectedFile.size)}. La API de Whisper solo transcribe hasta ${formatBytes(WHISPER_MAX)} por petición. Exportá solo el audio (mp3 más liviano) o un clip más corto.`,
+        `Este archivo es muy pesado (${formatBytes(selectedFile.size)}) para procesarlo de una sola vez. Probá exportar solo el audio en mp3, o subí un recorte más corto del video (como regla general, menos de 25 MB por archivo suele ir bien).`,
       );
       return;
     }
@@ -318,13 +316,13 @@ function init() {
         const hasBlob = await blobTokenConfigured();
         if (!hasBlob) {
           renderError(
-            "Para archivos mayores a ~4 MB falta configurar Vercel Blob: en el proyecto de Vercel → Storage → Blob → crear almacén y pegar BLOB_READ_WRITE_TOKEN en Environment Variables (Production). Después redeploy.",
+            "Este archivo es un poco grande para subirlo directo desde acá. Probá exportar solo el audio en mp3 o un recorte más corto del video; suele entrar sin problema.",
           );
           setBusy(false);
           return;
         }
         $("#status").innerHTML =
-          '<span class="spinner"></span> <span>Subiendo a <strong>almacenamiento</strong> (puede tardar en archivos grandes)…</span>';
+          '<span class="spinner"></span> <span>Subiendo tu archivo… puede tardar un poco si es largo.</span>';
         const putResult = await uploadToBlob(selectedFile);
         setBusy(true, "whisper");
         res = await fetch(API, {
@@ -356,7 +354,7 @@ function init() {
       console.error(e);
       renderError(
         e?.message ||
-          "Error de red o de subida. Si usás archivo grande, verificá BLOB_READ_WRITE_TOKEN y el almacén de Blob en Vercel.",
+          "Hubo un problema de conexión o de subida. Probá de nuevo; si el archivo es muy grande, esperá un poco más o probá con un recorte más chico.",
       );
       setBusy(false);
     }
@@ -364,16 +362,13 @@ function init() {
 
   $("#btn-dl-all").addEventListener("click", () => {
     if (!lastResult) return;
-    let text = "=== TRANSCRIPCIÓN (Whisper) ===\n\n";
+    let text = "=== LO QUE SE DIJO (texto completo) ===\n\n";
     text += lastResult.transcript + "\n\n";
-    text += "=== TRES VARIACIONES DEL GUION ===\n\n";
+    text += "=== TRES VERSIONES DEL GUION ===\n\n";
     (lastResult.variations || []).forEach((v, i) => {
-      text += `--- Variación ${i + 1}: ${v.title || ""} ---\n\n`;
+      text += `--- Opción ${i + 1}: ${v.title || ""} ---\n\n`;
       text += (v.script || "") + "\n\n";
     });
-    if (lastResult.models) {
-      text += `Modelos: ${lastResult.models.whisper} + ${lastResult.models.scripts}\n`;
-    }
     downloadText("videos-pro-guiones.txt", text.trim());
   });
 
@@ -388,7 +383,7 @@ function init() {
         btn.innerHTML = prev;
       }, 1600);
     } catch {
-      renderError("No se pudo copiar la transcripción.");
+      renderError("No pudimos copiar la transcripción. Seleccioná el texto a mano.");
     }
   });
 
@@ -401,12 +396,6 @@ function init() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  (async function syncBlobBanner() {
-    const banner = $("#blob-setup-banner");
-    if (!banner) return;
-    const ok = await blobTokenConfigured();
-    banner.classList.toggle("hidden", ok);
-  })();
 }
 
 init();
