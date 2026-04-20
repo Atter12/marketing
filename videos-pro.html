@@ -68,6 +68,21 @@
         <div class="card">
           <h2 class="card-title"><span class="step-n">1</span> Subí tu archivo</h2>
 
+          <div id="blob-setup-banner" class="blob-setup-banner hidden" role="status">
+            <div class="blob-setup-banner__icon"><i class="fas fa-plug-circle-xmark"></i></div>
+            <div class="blob-setup-banner__body">
+              <strong>Falta configurar subidas medianas/grandes</strong>
+              <p>
+                En Vercel el POST directo al servidor solo acepta <strong>~4 MB</strong>. Tu archivo de <strong>5 MB o más</strong> necesita
+                <strong>Vercel Blob</strong>: en el proyecto → <em>Storage → Blob</em> → crear almacén → copiar el token y en
+                <em>Settings → Environment Variables</em> agregar <code>BLOB_READ_WRITE_TOKEN</code> (Production) → <strong>redeploy</strong>.
+              </p>
+              <p class="blob-setup-banner__sub">
+                Después de eso sí podés subir hasta <strong>1 GB</strong> al Blob. <strong>Whisper</strong> sigue transcribiendo como máximo <strong>25 MB</strong> por archivo (si pesa más, exportá solo audio o acortá).
+              </p>
+            </div>
+          </div>
+
           <div id="drop" class="drop" role="button" tabindex="0" aria-label="Subir archivo de video o audio">
             <input id="file" type="file" accept="audio/*,video/*,.mp4,.mov,.webm,.m4a,.mp3,.wav" />
             <div class="drop-icon">
@@ -75,7 +90,11 @@
             </div>
             <h3>Arrastrá aquí o tocá para elegir</h3>
             <p>Video o audio — mp4, webm, mov, mp3, m4a, wav</p>
-            <p class="hint">Hasta <strong>1 GB</strong> en almacenamiento (Vercel Blob). Whisper transcribe hasta <strong>25 MB</strong> por archivo: si es más pesado, exportá solo audio o acortá el clip.</p>
+            <p class="hint">
+              <strong>Sin</strong> <code class="hint-code">BLOB_READ_WRITE_TOKEN</code>: máx. <strong>~4 MB</strong> (límite del hosting).
+              <strong>Con</strong> token en Vercel: subida grande por Blob (hasta <strong>1 GB</strong>).
+              <strong>Whisper</strong> (OpenAI): máx. <strong>25 MB</strong> por transcripción — si pesa más, exportá solo audio o acortá.
+            </p>
             <div id="picked" class="hidden"></div>
           </div>
 
@@ -105,7 +124,7 @@
 
         <div class="info-box">
           <i class="fas fa-lightbulb"></i>
-          <strong>Tip:</strong> archivos &gt; ~4 MB suben por <strong>Vercel Blob</strong> (necesitás <code style="font-size:11px;background:#eee;padding:2px 6px;border-radius:4px">BLOB_READ_WRITE_TOKEN</code> en el proyecto). Para pasar el tope de <strong>25 MB de Whisper</strong>, exportá solo audio (mp3) o un clip más corto.
+          <strong>Tip:</strong> “Subir el MB” en dos pasos: (1) Vercel Blob para saltar el tope de ~4 MB del serverless. (2) Archivo final ≤ 25 MB para que Whisper lo transcriba (si no, comprimí audio o cortá el clip).
         </div>
       </div>
 

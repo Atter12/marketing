@@ -400,6 +400,13 @@ function init() {
     clearError();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+
+  (async function syncBlobBanner() {
+    const banner = $("#blob-setup-banner");
+    if (!banner) return;
+    const ok = await blobTokenConfigured();
+    banner.classList.toggle("hidden", ok);
+  })();
 }
 
 init();
