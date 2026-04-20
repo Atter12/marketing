@@ -3,13 +3,20 @@
  */
 
 const API = "/api/videos-pro/process";
-const MAX_BYTES = 4 * 1024 * 1024;
+const BLOB_HANDSHAKE = "/api/videos-pro/blob-upload";
+/** Subida directa al serverless: ~4 MB (límite Vercel). Más grande → Vercel Blob. */
+const DIRECT_UPLOAD_MAX = 4 * 1024 * 1024;
+/** Token de subida en Blob (supervisor). */
+const BLOB_UPLOAD_MAX = 1024 * 1024 * 1024;
+/** OpenAI Whisper por petición. */
+const WHISPER_MAX = 25 * 1024 * 1024;
+const BLOB_CLIENT_ESM = "https://esm.sh/@vercel/blob@0.27.3/client";
 
 const PHASES = ["upload", "whisper", "scripts"];
 const PHASE_LABEL = {
-  upload: 'Subiendo archivo…',
-  whisper: 'Transcribiendo con <strong>Whisper</strong>…',
-  scripts: 'Generando <strong>3 variaciones</strong> del guion…',
+  upload: "Subiendo archivo…",
+  whisper: "Transcribiendo con <strong>Whisper</strong>…",
+  scripts: "Generando <strong>3 variaciones</strong> del guion…",
 };
 
 let lastResult = null;
@@ -199,10 +206,8 @@ function setFile(f) {
     return;
   }
 
-  if (f.size > MAX_BYTES) {
-    renderError(
-      `El archivo pesa ${formatBytes(f.size)}. Máximo ~4 MB en este servidor. Comprimí el audio (mp3 más bajo) o usá un video más corto.`,
-    );
+  if (f.size > BLOB_UPLOAD_MAX) {
+    renderError(`El archivo pesa ${formatBytes(f.size)}. Máximo 1 GB en esta herramienta.`);
     input.value = "";
     return;
   }
@@ -217,6 +222,29 @@ function setFile(f) {
     <span class="fname" title="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
     <span class="fsize">· ${formatBytes(f.size)}</span>
   `;
+}
+
+async function blobTokenConfigured() {
+  try {
+    const r = await fetch(BLOB_HANDSHAKE, { method: "GET" });
+    const j = await r.json().catch(() => ({}));
+    return Boolean(j.blobConfigured);
+  } catch {
+    return false;
+  }
+}
+
+async function uploadToBlob(file) {
+  const { upload } = await import(/* webpackIgnore: true */ BLOB_CLIENT_ESM);
+  const safe = String(file.name || "video.mp4")
+    .replace(/[^\w.-]+/g, "_")
+    .slice(0, 120);
+  const pathname = `videos-pro/${Date.now()}-${safe}`;
+  return upload(pathname, file, {
+    access: "public",
+    handleUploadUrl: `${window.location.origin}${BLOB_HANDSHAKE}`,
+    multipart: file.size > 8 * 1024 * 1024,
+  });
 }
 
 function init() {
@@ -267,18 +295,48 @@ function init() {
       return;
     }
 
-    const fd = new FormData();
-    fd.append("file", selectedFile, selectedFile.name);
-    const brief = $("#brief").value.trim();
-    if (brief) fd.append("brief", brief);
+    if (selectedFile.size > WHISPER_MAX) {
+      renderError(
+        `Este archivo pesa ${formatBytes(selectedFile.size)}. La API de Whisper solo transcribe hasta ${formatBytes(WHISPER_MAX)} por petición. Exportá solo el audio (mp3 más liviano) o un clip más corto.`,
+      );
+      return;
+    }
 
+    const brief = $("#brief").value.trim();
     resetResults();
     setBusy(true, "upload");
 
     try {
-      setTimeout(() => setBusy(true, "whisper"), 400);
-
-      const res = await fetch(API, { method: "POST", body: fd });
+      let res;
+      if (selectedFile.size <= DIRECT_UPLOAD_MAX) {
+        const fd = new FormData();
+        fd.append("file", selectedFile, selectedFile.name);
+        if (brief) fd.append("brief", brief);
+        setTimeout(() => setBusy(true, "whisper"), 300);
+        res = await fetch(API, { method: "POST", body: fd });
+      } else {
+        const hasBlob = await blobTokenConfigured();
+        if (!hasBlob) {
+          renderError(
+            "Para archivos mayores a ~4 MB falta configurar Vercel Blob: en el proyecto de Vercel → Storage → Blob → crear almacén y pegar BLOB_READ_WRITE_TOKEN en Environment Variables (Production). Después redeploy.",
+          );
+          setBusy(false);
+          return;
+        }
+        $("#status").innerHTML =
+          '<span class="spinner"></span> <span>Subiendo a <strong>almacenamiento</strong> (puede tardar en archivos grandes)…</span>';
+        const putResult = await uploadToBlob(selectedFile);
+        setBusy(true, "whisper");
+        res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            blobUrl: putResult.url,
+            originalFilename: selectedFile.name,
+            brief: brief || undefined,
+          }),
+        });
+      }
 
       setBusy(true, "scripts");
 
@@ -296,7 +354,10 @@ function init() {
       renderResults(json);
     } catch (e) {
       console.error(e);
-      renderError(e?.message || "Error de red. Probá de nuevo.");
+      renderError(
+        e?.message ||
+          "Error de red o de subida. Si usás archivo grande, verificá BLOB_READ_WRITE_TOKEN y el almacén de Blob en Vercel.",
+      );
       setBusy(false);
     }
   });

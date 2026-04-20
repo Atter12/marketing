@@ -25,6 +25,10 @@
     "api/videos-pro/process.js": {
       "maxDuration": 120,
       "memory": 1024
+    },
+    "api/videos-pro/blob-upload.js": {
+      "maxDuration": 60,
+      "memory": 512
     }
   },
   "routes": [
