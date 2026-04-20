@@ -133,6 +133,14 @@
       "dest": "/credito.html"
     },
     {
+      "src": "/videos-pro",
+      "dest": "/videos-pro.html"
+    },
+    {
+      "src": "/videos-pro.html",
+      "dest": "/videos-pro.html"
+    },
+    {
       "src": "/login",
       "dest": "/login.html"
     },
