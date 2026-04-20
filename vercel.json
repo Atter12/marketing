@@ -24,11 +24,13 @@
     },
     "api/videos-pro/process.js": {
       "maxDuration": 120,
-      "memory": 1024
+      "memory": 1024,
+      "includeFiles": "node_modules/@vercel/blob/**"
     },
     "api/videos-pro/blob-upload.js": {
       "maxDuration": 60,
-      "memory": 512
+      "memory": 512,
+      "includeFiles": "node_modules/@vercel/blob/**"
     }
   },
   "routes": [

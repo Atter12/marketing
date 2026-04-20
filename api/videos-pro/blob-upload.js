@@ -2,13 +2,40 @@
  * POST /api/videos-pro/blob-upload
  * Handshake para client uploads de @vercel/blob (archivos > ~4.5 MB del body de Vercel).
  *
- * Env: BLOB_READ_WRITE_TOKEN (Vercel Blob → Read/Write token en el proyecto)
+ * Carga `handleUpload` desde `dist/client.js` por ruta real: el bundler de Vercel a veces
+ * no incluye `client.cjs` al resolver el subpath `@vercel/blob/client`.
+ *
+ * Env: BLOB_READ_WRITE_TOKEN
  */
 
-import { handleUpload } from "@vercel/blob/client";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 const LOG = "[videos-pro/blob-upload]";
 const ONE_GB = 1024 * 1024 * 1024;
+
+const require = createRequire(import.meta.url);
+
+/** @type {typeof import("@vercel/blob/client").handleUpload | null} */
+let handleUploadRef = null;
+
+async function getHandleUpload() {
+  if (handleUploadRef) return handleUploadRef;
+  let clientPath;
+  try {
+    const mainEntry = require.resolve("@vercel/blob");
+    clientPath = join(dirname(mainEntry), "client.js");
+  } catch {
+    clientPath = join(process.cwd(), "node_modules", "@vercel", "blob", "dist", "client.js");
+  }
+  const mod = await import(pathToFileURL(clientPath).href);
+  if (typeof mod.handleUpload !== "function") {
+    throw new Error("handleUpload no exportado desde @vercel/blob client");
+  }
+  handleUploadRef = mod.handleUpload;
+  return handleUploadRef;
+}
 
 async function readJsonBody(req) {
   if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
@@ -55,6 +82,7 @@ export default async function handler(req, res) {
   }
 
   try {
+    const handleUpload = await getHandleUpload();
     const jsonResponse = await handleUpload({
       body,
       request: req,
