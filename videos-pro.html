@@ -1,78 +1,69 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light" style="color-scheme: light">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Videos Pro | Holistic Marketing</title>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #fefcf9;
-      --tx: #2d2518;
-      --muted: #8a7e6b;
-      --pri: #f97316;
-      --pri-dark: #ea580c;
-      --card: #fff;
-      --bdr: #f0e6d9;
-      --radius: 16px;
-      --shadow: 0 8px 28px rgba(45, 37, 24, 0.08);
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--tx);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      -webkit-font-smoothing: antialiased;
-    }
-    .wrap {
-      max-width: 420px;
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--bdr);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 32px 28px;
-      text-align: center;
-    }
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--pri-dark);
-      background: #fff7ed;
-      border: 1px solid rgba(249, 115, 22, 0.25);
-      padding: 6px 12px;
-      border-radius: 999px;
-      margin-bottom: 18px;
-    }
-    h1 {
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.25;
-      margin-bottom: 12px;
-    }
-    p {
-      font-size: 15px;
-      line-height: 1.55;
-      color: var(--muted);
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Videos Pro — Guiones | Holistic Marketing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/videos-pro-app/videos-pro-app.css" />
+  <link rel="icon" type="image/png" href="/creativos/favicon/favicon.png" />
 </head>
 <body>
-  <div class="wrap">
-    <div class="badge">Acceso directo</div>
-    <h1>Videos Pro</h1>
-    <p>Esta página solo se abre con el enlace. Aquí definiremos el contenido cuando sigamos.</p>
+  <div class="app">
+    <header class="hero">
+      <div class="badge">Uso interno · enlace directo</div>
+      <h1>Videos Pro</h1>
+      <p class="lead">
+        Subí un <strong>video o audio</strong>. El servidor transcribe el habla con
+        <strong>OpenAI Whisper</strong> y genera <strong>tres variaciones</strong> del guion principal con
+        <strong>Claude</strong> (Anthropic); si Claude no está disponible en el proyecto, usa
+        <strong>GPT</strong> como respaldo.
+      </p>
+    </header>
+
+    <section class="panel">
+      <h2>1. Archivo</h2>
+      <div id="drop" class="drop" role="button" tabindex="0">
+        <input id="file" type="file" accept="audio/*,video/*,.mp4,.mov,.webm,.m4a,.mp3,.wav" />
+        <p>Arrastrá aquí o hacé clic para elegir</p>
+        <p class="hint">Máximo ~4 MB por límite del hosting (ideal: mp3 o clip corto). Formatos típicos: mp4, webm, mp3, m4a, wav.</p>
+        <div id="picked" class="file-name"></div>
+      </div>
+
+      <label class="field" for="brief">
+        <span>Brief opcional (marca, tono, producto — ayuda al modelo)</span>
+        <textarea id="brief" class="brief" placeholder="Ej.: Tono cercano Perú. Producto crema hidratante. Meta: mensajes WhatsApp." ></textarea>
+      </label>
+
+      <div class="actions">
+        <button id="btn-run" type="button" class="btn btn-pri">Transcribir y generar 3 guiones</button>
+        <span id="status" class="status"></span>
+      </div>
+
+      <div id="err" class="err hidden" role="alert"></div>
+    </section>
+
+    <section id="out-wrap" class="panel hidden">
+      <div class="out-section">
+        <h3>Transcripción (Whisper)</h3>
+        <div id="transcript" class="transcript-box"></div>
+      </div>
+
+      <div class="out-section">
+        <h3>Tres variaciones de guion</h3>
+        <div id="var-grid" class="var-grid"></div>
+      </div>
+
+      <div class="actions">
+        <button id="btn-dl-all" type="button" class="btn btn-sec">Descargar todo (.txt)</button>
+      </div>
+      <p id="meta" class="meta hidden"></p>
+    </section>
   </div>
+
+  <script type="module" src="/videos-pro-app/videos-pro-app.js"></script>
 </body>
 </html>

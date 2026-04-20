@@ -21,6 +21,10 @@
     "api/cobranzaClaudeSuggest.js": {
       "maxDuration": 60,
       "memory": 512
+    },
+    "api/videos-pro/process.js": {
+      "maxDuration": 120,
+      "memory": 1024
     }
   },
   "routes": [
