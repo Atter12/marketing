@@ -2,32 +2,32 @@
  * POST /api/videos-pro/blob-upload
  * Handshake para client uploads de @vercel/blob (archivos > ~4.5 MB del body de Vercel).
  *
- * Carga `handleUpload` desde `dist/client.js` por ruta real: el bundler de Vercel a veces
- * no incluye `client.cjs` al resolver el subpath `@vercel/blob/client`.
+ * CommonJS: Vercel ejecuta estas funciones como CJS; evitamos import.meta / ESM puro.
+ * Carga handleUpload desde dist/client.js vía resolve(@vercel/blob) + dynamic import().
  *
  * Env: BLOB_READ_WRITE_TOKEN
  */
 
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
+const { createRequire } = require("node:module");
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const LOG = "[videos-pro/blob-upload]";
 const ONE_GB = 1024 * 1024 * 1024;
 
-const require = createRequire(import.meta.url);
+const requireLocal = createRequire(__filename);
 
-/** @type {typeof import("@vercel/blob/client").handleUpload | null} */
+/** @type {null | ((opts: object) => Promise<object>)} */
 let handleUploadRef = null;
 
 async function getHandleUpload() {
   if (handleUploadRef) return handleUploadRef;
   let clientPath;
   try {
-    const mainEntry = require.resolve("@vercel/blob");
-    clientPath = join(dirname(mainEntry), "client.js");
+    const mainEntry = requireLocal.resolve("@vercel/blob");
+    clientPath = path.join(path.dirname(mainEntry), "client.js");
   } catch {
-    clientPath = join(process.cwd(), "node_modules", "@vercel", "blob", "dist", "client.js");
+    clientPath = path.join(process.cwd(), "node_modules", "@vercel", "blob", "dist", "client.js");
   }
   const mod = await import(pathToFileURL(clientPath).href);
   if (typeof mod.handleUpload !== "function") {
@@ -50,7 +50,7 @@ async function readJsonBody(req) {
   return JSON.parse(raw);
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader("x-videos-pro-endpoint", "blob-upload");
 
   if (req.method === "GET") {
@@ -118,3 +118,5 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: e?.message || "Error en handleUpload" });
   }
 }
+
+module.exports = handler;
