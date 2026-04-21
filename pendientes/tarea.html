@@ -708,11 +708,11 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   background: var(--color-surface);
   border: 1px solid var(--color-divider);
   border-radius: var(--r-xl);
-  overflow: hidden;
+  overflow: visible;
 }
 .clients-thead {
   display: grid;
-  grid-template-columns: minmax(168px, 1.45fr) minmax(96px, 0.85fr) minmax(132px, 1fr) minmax(96px, 0.8fr) minmax(112px, 1fr) 88px 52px minmax(120px, 1.05fr) 84px;
+  grid-template-columns: minmax(188px, 1.5fr) minmax(96px, 0.85fr) minmax(132px, 1fr) minmax(96px, 0.8fr) minmax(112px, 1fr) 88px 52px minmax(120px, 1.05fr) 84px;
   padding: var(--sp-3) var(--sp-4);
   background: var(--color-surface-2);
   border-bottom: 1px solid var(--color-divider);
@@ -726,13 +726,20 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .client-table-row {
   display: grid;
-  grid-template-columns: minmax(168px, 1.45fr) minmax(96px, 0.85fr) minmax(132px, 1fr) minmax(96px, 0.8fr) minmax(112px, 1fr) 88px 52px minmax(120px, 1.05fr) 84px;
+  grid-template-columns: minmax(188px, 1.5fr) minmax(96px, 0.85fr) minmax(132px, 1fr) minmax(96px, 0.8fr) minmax(112px, 1fr) 88px 52px minmax(120px, 1.05fr) 84px;
   padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--color-divider);
   align-items: center;
   gap: var(--sp-2);
   font-size: var(--text-sm);
   transition: background var(--tr);
+  overflow: visible;
+}
+.client-table-row--interactive {
+  cursor: pointer;
+}
+.client-table-row--interactive:active {
+  background: var(--color-primary-highlight);
 }
 .client-table-row:last-child { border-bottom: none; }
 .client-table-row:nth-child(even) { background: var(--color-surface-2); }
@@ -742,6 +749,8 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
   display: flex;
   align-items: flex-start;
   gap: var(--sp-2);
+  position: relative;
+  overflow: visible;
 }
 .client-table-cell--name .client-name-meta { flex: 1; min-width: 0; }
 .client-table-cell--name .team-avatars { margin-top: 4px; }
@@ -785,6 +794,31 @@ h1, h2, h3, h4, h5, h6 { text-wrap: balance; line-height: 1.2; font-family: var(
 }
 .client-avatar.client-avatar--photo img {
   width: 100%; height: 100%; object-fit: cover; display: block;
+}
+/* Lista clientes: foto un poco más grande + zoom suave al hover */
+.client-avatar-cell {
+  position: relative;
+  flex-shrink: 0;
+  align-self: flex-start;
+  line-height: 0;
+  border-radius: var(--r-md);
+}
+.client-avatar-cell .client-avatar {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  will-change: transform;
+}
+.client-avatar-cell:hover {
+  z-index: 30;
+}
+.client-avatar-cell:hover .client-avatar {
+  transform: scale(1.75);
+  transform-origin: center center;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.2);
+}
+.client-avatar-cell:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--r-md);
 }
 .client-name {
   font-size: var(--text-sm);
@@ -4575,9 +4609,11 @@ renderers.clients = function() {
         ? '<span class="pill pill-orange2">Onboarding</span>'
         : `<span class="pill pill-orange">${st || '—'}</span>`;
     return `
-    <div class="client-table-row fade-in" role="row" data-status="${st}">
+    <div class="client-table-row fade-in client-table-row--interactive" role="row" data-status="${st}" data-client-index="${ci}" title="Doble clic en la fila para ver detalle">
       <div class="client-table-cell client-table-cell--name">
-        ${clientAvatarMarkup(c, { w: 36, h: 36 })}
+        <div class="client-avatar-cell" title="Pasa el cursor para ampliar la foto">
+        ${clientAvatarMarkup(c, { w: 52, h: 52, fs: '1rem' })}
+        </div>
         <div class="client-name-meta">
           <div class="client-name">${c.n || '—'}</div>
           <div class="client-type">${c.tp || '—'}</div>
@@ -4592,7 +4628,7 @@ renderers.clients = function() {
       <div class="client-table-cell"><span class="pill ${satPill}" title="Satisfacción">${satLabel}</span></div>
       <div class="client-table-cell client-table-cell--next" title="${String(c.nextAction || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')}">${c.nextAction || '—'}</div>
       <div class="client-table-cell client-table-cell--actions">
-        <button type="button" class="btn-secondary btn-sm" onclick="openClientDetail(${ci})">Ver detalle</button>
+        <button type="button" class="btn-secondary btn-sm" onclick="openClientDetail(${ci})" title="O doble clic en la fila">Ver detalle</button>
       </div>
     </div>`;
   }).join('');
@@ -6698,7 +6734,7 @@ function openClientDetail(idx) {
   var detailSubLine = detailSubParts.join(' · ');
   document.getElementById('modalBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--sp-4);margin-bottom:var(--sp-5)">
-      ${clientAvatarMarkup(c, { w: 50, h: 50, fs: '1.25rem' })}
+      ${clientAvatarMarkup(c, { w: 56, h: 56, fs: '1.25rem' })}
       <div><div style="font-size:var(--text-xl);font-weight:700">${escTareas(c.n || '—')}</div><div style="font-size:var(--text-sm);color:var(--color-text-muted)">${detailSubLine || '—'}</div></div>
     </div>
     <div class="info-grid" style="margin-bottom:var(--sp-5)">
@@ -8004,6 +8040,21 @@ document.addEventListener('DOMContentLoaded', function() {
   var gInp = document.getElementById('holisticNameGateInput');
   if (gBtn) gBtn.addEventListener('click', submitHolisticNameGatePendientes);
   if (gInp) gInp.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); submitHolisticNameGatePendientes(); } });
+  (function initClientsGridRowActions() {
+    var grid = document.getElementById('clientsGrid');
+    if (!grid || grid.dataset.hmClientsDblInit) return;
+    grid.dataset.hmClientsDblInit = '1';
+    grid.addEventListener('dblclick', function(e) {
+      if (e.target.closest('button, a, input, select, textarea')) return;
+      var row = e.target.closest('.client-table-row');
+      if (!row || !grid.contains(row)) return;
+      var ix = row.getAttribute('data-client-index');
+      if (ix == null || ix === '') return;
+      var n = parseInt(ix, 10);
+      if (isNaN(n) || typeof openClientDetail !== 'function') return;
+      openClientDetail(n);
+    });
+  })();
   tryRunTareasAppBootstrap();
   if (!__tareasDataBootstrapDone && !supabase) {
     initViews();
