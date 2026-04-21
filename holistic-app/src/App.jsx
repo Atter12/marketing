@@ -171,9 +171,6 @@ const padGarantesContactosForm = (list) => {
   while (base.length < MIN_GARANTES_CONTACTOS) base.push(emptyGaranteContactoRow());
   return base;
 };
-/** Filas con al menos teléfono o email (requisito mínimo por contacto). */
-const garantesContactosValidos = (rows) =>
-  (Array.isArray(rows) ? rows : []).filter((r) => String(r?.telefono ?? "").trim() || String(r?.email ?? "").trim());
 /** Lo que se persiste: solo filas con algún dato. */
 const garantesContactosParaDb = (rows) =>
   (Array.isArray(rows) ? rows : [])
@@ -1299,10 +1296,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!(cf.ig || "").trim()) return alert("Completá Instagram (ej. @usuario o — si no aplica).");
     if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
     if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
-    const garValidos = garantesContactosValidos(cf.garantesContactos);
-    if (garValidos.length < MIN_GARANTES_CONTACTOS) {
-      return alert(`Contactos de garante: obligatorio al menos ${MIN_GARANTES_CONTACTOS} con teléfono o correo (cada uno). Podés agregar más con «Agregar contacto».`);
-    }
     const av = (cf.avatar_url || "").trim().replace(/&amp;/gi, "&");
     if (av && isLikelyBlockedAvatarHotlinkUrl(av)) {
       if (!confirm("Las URLs de WhatsApp / Meta / Instagram suelen dar error 403 en Crédito (el servidor no deja mostrar la imagen aquí). Lo estable es usar «Subir foto» para guardarla en Supabase.\n\n¿Guardar esta URL igualmente?")) return;
@@ -3023,15 +3016,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         <div style={{ marginBottom: 18, padding: "14px 16px", background: "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <Users size={18} style={{ color: "var(--color-primary)", flexShrink: 0 }} />
-            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--color-text)" }}>Contactos de garante *</span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--color-text)" }}>Contactos de garante <span style={{ fontWeight: 500, color: "var(--sidebar-text-muted)" }}>(recomendado)</span></span>
           </div>
           <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", margin: "0 0 12px", lineHeight: 1.45 }}>
-            Mínimo <strong>{MIN_GARANTES_CONTACTOS}</strong> personas con <strong>teléfono o correo</strong> cada una (nombre opcional). Podés sumar más contactos opcionales.
+            No es obligatorio. Se recomienda registrar hasta <strong>{MIN_GARANTES_CONTACTOS}</strong> personas de referencia con <strong>teléfono o correo</strong> cada una (nombre opcional). Podés sumar más con «Agregar contacto» o dejar vacío.
           </p>
           {(cf.garantesContactos || []).map((row, i) => (
             <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 10, alignItems: "end", marginBottom: 10, paddingBottom: 10, borderBottom: i < (cf.garantesContactos || []).length - 1 ? "1px solid var(--sidebar-border)" : "none" }}>
               <div style={{ gridColumn: "1 / -1", fontSize: 10.5, fontWeight: 600, color: "var(--sidebar-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                Contacto {i + 1}{i < MIN_GARANTES_CONTACTOS ? " · obligatorio (tel o mail)" : " · opcional"}
+                Contacto {i + 1}{i < MIN_GARANTES_CONTACTOS ? " · recomendado (tel o mail)" : " · opcional"}
               </div>
               <Inp label="Nombre" value={row.nombre} onChange={(e) => { const next = [...(cf.garantesContactos || [])]; next[i] = { ...next[i], nombre: e.target.value }; setCf({ ...cf, garantesContactos: next }); }} placeholder="Opcional" />
               <Inp label="Teléfono / WhatsApp" value={row.telefono} onChange={(e) => { const next = [...(cf.garantesContactos || [])]; next[i] = { ...next[i], telefono: e.target.value }; setCf({ ...cf, garantesContactos: next }); }} placeholder="+51…" />
