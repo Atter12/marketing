@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light" style="color-scheme: light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Borrador correo formal | Holistic Marketing</title>
+  <link rel="icon" type="image/png" href="/pendientes/favicon/favicon.png" />
+  <link rel="shortcut icon" type="image/png" href="/pendientes/favicon/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/pendientes/holistic-design-system.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-font-smoothing: antialiased; }
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      color: var(--color-text);
+      background: var(--color-bg);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: var(--color-primary); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    .site-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--sp-4);
+      flex-wrap: wrap;
+      padding: var(--sp-4) var(--sp-6);
+      background: var(--color-surface-2);
+      border-bottom: 1px solid var(--color-border);
+      box-shadow: var(--shadow-sm);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      color: inherit;
+      text-decoration: none;
+    }
+    .brand:hover { text-decoration: none; opacity: 0.92; }
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--r-md);
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    .brand-text {
+      font-weight: 700;
+      font-size: var(--text-lg);
+      letter-spacing: -0.02em;
+      color: var(--color-text);
+    }
+    .brand-text span { color: var(--color-primary); }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      flex-wrap: wrap;
+    }
+    .header-nav a {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-md);
+      text-decoration: none;
+    }
+    .header-nav a:hover {
+      background: var(--color-surface-offset);
+      color: var(--color-text);
+      text-decoration: none;
+    }
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: var(--sp-8) var(--sp-4) var(--sp-12);
+    }
+    .panel {
+      width: 100%;
+      max-width: 560px;
+      background: var(--color-surface-2);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-md);
+      padding: var(--sp-8);
+    }
+    @media (max-width: 520px) {
+      .panel { padding: var(--sp-5); }
+    }
+    .panel h1 {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: var(--sp-2);
+    }
+    .panel .lead {
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+      line-height: 1.55;
+      margin-bottom: var(--sp-6);
+    }
+    .field { margin-bottom: var(--sp-5); }
+    .field label {
+      display: block;
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: var(--sp-2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field input,
+    .field textarea {
+      width: 100%;
+      padding: var(--sp-3) var(--sp-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-lg);
+      background: var(--color-surface);
+      color: var(--color-text);
+      font-family: inherit;
+      font-size: var(--text-base);
+      transition: border-color var(--tr), box-shadow var(--tr);
+    }
+    .field textarea {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+    .field input:focus,
+    .field textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+    .btn-primary {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+      padding: var(--sp-4) var(--sp-5);
+      border: none;
+      border-radius: var(--r-lg);
+      font-family: inherit;
+      font-size: var(--text-base);
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--color-primary);
+      color: var(--color-text-inverse);
+      box-shadow: var(--shadow-sm);
+      transition: background var(--tr), transform var(--tr), box-shadow var(--tr);
+    }
+    .btn-primary:hover {
+      background: var(--color-primary-hover);
+      box-shadow: var(--shadow-md);
+    }
+    .btn-primary:active { transform: scale(0.99); }
+    .callout {
+      margin-top: var(--sp-6);
+      padding: var(--sp-4);
+      border-radius: var(--r-lg);
+      background: var(--color-surface-offset);
+      border: 1px solid var(--color-divider);
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      line-height: 1.55;
+    }
+    .callout strong { color: var(--color-text); }
+    .site-footer {
+      flex-shrink: 0;
+      text-align: center;
+      padding: var(--sp-5);
+      font-size: var(--text-xs);
+      color: var(--color-text-faint);
+      border-top: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+    }
+    .back-row {
+      margin-bottom: var(--sp-5);
+    }
+    .back-row a {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--color-text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+    .back-row a:hover { color: var(--color-primary); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Inicio Holistic Marketing">
+      <span class="brand-mark" aria-hidden="true"><i class="fas fa-envelope"></i></span>
+      <span class="brand-text">Holistic <span>Marketing</span></span>
+    </a>
+    <nav class="header-nav" aria-label="Apps internas">
+      <a href="/credito"><i class="fas fa-wallet" aria-hidden="true"></i> Crédito</a>
+      <a href="/acceso-pendientes"><i class="fas fa-list-check" aria-hidden="true"></i> Pendientes</a>
+      <a href="/#tools"><i class="fas fa-border-all" aria-hidden="true"></i> Herramientas</a>
+    </nav>
+  </header>
+
+  <main class="main">
+    <div class="panel">
+      <div class="back-row">
+        <a href="/#tools"><i class="fas fa-arrow-left" aria-hidden="true"></i> Volver a herramientas</a>
+      </div>
+      <h1>Borrador correo formal</h1>
+      <p class="lead">
+        Redacta el mensaje aquí y abre tu programa de correo con todo listo. El envío lo confirmas tú en Outlook, Gmail u otro cliente; el remitente es la cuenta que tengas configurada allí.
+      </p>
+
+      <div class="field">
+        <label for="to">Para</label>
+        <input id="to" type="email" autocomplete="email" placeholder="correo@empresa.com" />
+      </div>
+      <div class="field">
+        <label for="subject">Asunto</label>
+        <input id="subject" type="text" placeholder="Asunto breve y claro" />
+      </div>
+      <div class="field">
+        <label for="body">Mensaje</label>
+        <textarea id="body" placeholder="Cuerpo del correo…"></textarea>
+      </div>
+
+      <button type="button" class="btn-primary" id="open">
+        <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+        Abrir en mi correo
+      </button>
+
+      <div class="callout">
+        <strong>Nota:</strong> Esta página no envía sola: usa <code style="font-size:0.85em;">mailto:</code>.
+        Para que el nombre comercial aparezca bien, configúralo en tu cuenta de correo o firma.
+        Misma línea visual que <strong>Crédito</strong> y <strong>Pendientes</strong> (Inter, crema, naranja Holistic).
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">© 2026 Holistic Marketing</footer>
+
+  <script>
+    (function () {
+      var defaultBody =
+        "Estimada/o,\n\n" +
+        "Me dirijo a usted por un asunto importante. Agradecería que se pusiera en contacto conmigo al 954 277 610 a la brevedad posible.\n\n" +
+        "Atentamente,\n" +
+        "[Tu nombre completo]";
+
+      var body = document.getElementById("body");
+      var to = document.getElementById("to");
+      var subject = document.getElementById("subject");
+
+      body.value = defaultBody;
+      subject.value = "Solicitud de contacto";
+
+      document.getElementById("open").addEventListener("click", function () {
+        var addr = (to.value || "").trim();
+        if (!addr) {
+          alert("Indica el correo del destinatario (Para).");
+          to.focus();
+          return;
+        }
+        var sub = subject.value || "";
+        var txt = body.value || "";
+        var q = new URLSearchParams();
+        if (sub) q.set("subject", sub);
+        if (txt) q.set("body", txt);
+        var qs = q.toString();
+        var href = "mailto:" + addr + (qs ? "?" + qs : "");
+        if (href.length > 1900) {
+          alert("El mensaje es demasiado largo para abrirlo así. Acórtalo o copia el texto manualmente.");
+          return;
+        }
+        window.location.href = href;
+      });
+    })();
+  </script>
+</body>
+</html>

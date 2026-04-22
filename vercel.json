@@ -87,6 +87,14 @@
       "dest": "/pixel-activator.html"
     },
     {
+      "src": "/borrador-correo-formal",
+      "dest": "/borrador-correo-formal.html"
+    },
+    {
+      "src": "/borrador-correo-formal.html",
+      "dest": "/borrador-correo-formal.html"
+    },
+    {
       "src": "/profit-calculator",
       "dest": "/profit-calculator.html"
     },
