@@ -337,8 +337,7 @@
       </button>
 
       <div class="callout">
-        <strong>Supabase (igual que cobranza):</strong> el nombre de la función (slug) tiene que ser exactamente
-        <code style="font-size:0.85em;">borrador-correo-enviar</code> (palabra <strong>correo</strong> con una sola r; si pusiste <code>corrr</code> por error, el navegador parece fallar por CORS pero en realidad es 404). Los secrets <code>RESEND_*</code> son los de cobranza. README en el repo.
+        <strong>Supabase:</strong> función <code style="font-size:0.85em;">borrador-correo-enviar</code>. En <strong>Edge Functions → Settings</strong> desactivá <strong>Verify JWT</strong> (si está ON, el preflight CORS falla; el JWT igual se valida en el código, igual que cobranza). Secrets <code>RESEND_*</code> = cobranza. Ver README de la función.
       </div>
     </div>
   </main>
@@ -551,9 +550,9 @@
         } catch (err) {
           showStatus(
             false,
-            "Error de red o el slug no coincide. En Supabase la función tiene que llamarse exactamente «" +
+            "Revisá en Supabase: Settings de la función → Verify JWT = OFF, redeploy con --no-verify-jwt, y comprobá el slug «" +
               FN_NAME +
-              "» (correo con una r, no corrreo). Si desplegaste con otro nombre, cambiá la variable FN_NAME en esta página o recreá la función con el nombre correcto. Volvé a desplegar tras actualizar CORS."
+              "». Si Verify JWT está ON, el error parece CORS pero es el preflight OPTIONS sin token."
           );
         } finally {
           setBusy(false);

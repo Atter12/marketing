@@ -1,0 +1,11 @@
+# Configuración de Edge Functions (Supabase CLI).
+# verify_jwt = false: el gateway NO exige JWT antes de ejecutar la función.
+# Así el preflight OPTIONS (CORS) llega bien; el JWT se valida dentro del código (getUser + tabla gerentes).
+# Sin esto, el navegador muestra "CORS" aunque el fallo sea 401 en OPTIONS.
+# Ref: https://supabase.com/docs/guides/functions/function-configuration
+
+[functions.borrador-correo-enviar]
+verify_jwt = false
+
+[functions.cobranza-enviar]
+verify_jwt = false
