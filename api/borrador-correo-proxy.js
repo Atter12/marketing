@@ -7,7 +7,7 @@
  * Vercel: PUBLIC_SUPABASE_URL o SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY o SUPABASE_ANON_KEY
  */
 
-const FN_SLUG = "borrador-correo-enviar";
+const FN_SLUGS = ["borrador-correo-enviar", "borrador-corrreo-enviar"];
 const LOG = "[borrador-correo-proxy]";
 
 function baseUrl() {
@@ -18,10 +18,10 @@ function anonKey() {
   return (process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "").trim();
 }
 
-function edgeUrl() {
+function edgeUrl(slug) {
   const b = baseUrl();
   if (!b) return "";
-  return `${b}/functions/v1/${FN_SLUG}`;
+  return `${b}/functions/v1/${slug}`;
 }
 
 function jsonWithCors(res, status, payload) {
@@ -39,7 +39,7 @@ export default async function handler(req, res) {
       service: "borrador-correo-proxy",
       hasSupabaseUrl: !!url,
       hasAnonKey: key,
-      edgeTarget: url ? edgeUrl() : null,
+      edgeTargets: url ? FN_SLUGS.map((s) => edgeUrl(s)) : [],
       postTo: "POST /api/borrador-correo-proxy (esta ruta; la anterior con carpeta anidada daba 404 en Vercel)",
       hint: !url || !key
         ? "Definí PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y redeploy."
@@ -51,7 +51,8 @@ export default async function handler(req, res) {
     return jsonWithCors(res, 405, { ok: false, error: "Usá POST", step: "method" });
   }
 
-  const target = edgeUrl();
+  const primarySlug = FN_SLUGS[0];
+  const target = edgeUrl(primarySlug);
   const akey = anonKey();
   if (!target || !akey) {
     console.error(LOG, "falta config");
@@ -81,37 +82,66 @@ export default async function handler(req, res) {
     });
   }
 
-  let edgeRes;
-  try {
-    edgeRes = await fetch(target, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: String(auth).trim(),
-        apikey: akey,
-      },
-      body: JSON.stringify({
-        to: payload.to,
-        subject: payload.subject,
-        body: payload.body,
-      }),
-    });
-  } catch (e) {
-    console.error(LOG, "fetch error", e?.message || e);
-    return jsonWithCors(res, 502, {
-      ok: false,
-      error: "No se pudo contactar a Supabase: " + (e?.message || String(e)),
-      step: "edge_fetch",
-      edgeTarget: target,
-    });
+  let edgeRes = null;
+  let data = {};
+  let text = "";
+  let usedSlug = primarySlug;
+  let usedTarget = target;
+  let lastErr = null;
+
+  for (const slug of FN_SLUGS) {
+    const t = edgeUrl(slug);
+    try {
+      const r = await fetch(t, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: String(auth).trim(),
+          apikey: akey,
+        },
+        body: JSON.stringify({
+          to: payload.to,
+          subject: payload.subject,
+          body: payload.body,
+        }),
+      });
+
+      const raw = await r.text();
+      let parsed;
+      try {
+        parsed = raw ? JSON.parse(raw) : {};
+      } catch {
+        parsed = { raw: raw.slice(0, 500) };
+      }
+
+      edgeRes = r;
+      data = parsed;
+      text = raw;
+      usedSlug = slug;
+      usedTarget = t;
+
+      const msg = parsed?.error || parsed?.message || parsed?.raw || raw || r.statusText;
+      const notFound = r.status === 404 && /requested function was not found/i.test(String(msg || ""));
+      if (notFound) {
+        continue;
+      }
+      break;
+    } catch (e) {
+      lastErr = e;
+      usedSlug = slug;
+      usedTarget = t;
+      console.error(LOG, "fetch error", slug, e?.message || e);
+    }
   }
 
-  const text = await edgeRes.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    data = { raw: text.slice(0, 500) };
+  if (!edgeRes) {
+    return jsonWithCors(res, 502, {
+      ok: false,
+      error: "No se pudo contactar a Supabase: " + (lastErr?.message || String(lastErr || "sin detalle")),
+      step: "edge_fetch",
+      edgeTarget: usedTarget,
+      edgeSlug: usedSlug,
+    });
   }
 
   if (!edgeRes.ok) {
@@ -122,11 +152,11 @@ export default async function handler(req, res) {
       hint =
         "Supabase no encontró la función. En el **mismo proyecto** que PUBLIC_SUPABASE_URL, ejecutá: " +
         "`supabase functions deploy " +
-        FN_SLUG +
+        primarySlug +
         " --no-verify-jwt` y verificá en Dashboard el slug exacto «" +
-        FN_SLUG +
+        primarySlug +
         "». La URL debería ser: " +
-        target;
+        usedTarget;
     }
     console.warn(LOG, "edge no OK", edgeRes.status, String(msgStr).slice(0, 200));
     return jsonWithCors(
@@ -137,8 +167,8 @@ export default async function handler(req, res) {
         error: msgStr,
         step: "supabase_function",
         edgeStatus: edgeRes.status,
-        edgeTarget: target,
-        edgeSlug: FN_SLUG,
+        edgeTarget: usedTarget,
+        edgeSlug: usedSlug,
         ...(hint ? { hint } : {}),
       },
     );
@@ -149,6 +179,7 @@ export default async function handler(req, res) {
       ok: true,
       message: data.message || "Correo enviado.",
       id: data.id || null,
+      edgeSlug: usedSlug,
     });
   }
 
