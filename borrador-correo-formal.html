@@ -337,7 +337,8 @@
       </button>
 
       <div class="callout">
-        <strong>Supabase (igual que cobranza):</strong> desplegá la función <code style="font-size:0.85em;">borrador-correo-enviar</code> (ver README en el repo). Los secrets <code style="font-size:0.85em;">RESEND_API_KEY</code> / <code style="font-size:0.85em;">RESEND_FROM</code> son los mismos que ya usás para <strong>cobranza-enviar</strong>; no hace falta repetirlos en Vercel.
+        <strong>Supabase (igual que cobranza):</strong> el nombre de la función (slug) tiene que ser exactamente
+        <code style="font-size:0.85em;">borrador-correo-enviar</code> (palabra <strong>correo</strong> con una sola r; si pusiste <code>corrr</code> por error, el navegador parece fallar por CORS pero en realidad es 404). Los secrets <code>RESEND_*</code> son los de cobranza. README en el repo.
       </div>
     </div>
   </main>
@@ -348,6 +349,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
+      // Slug en Supabase: borrador-correo-enviar (correo, no corrreo)
       var FN_NAME = "borrador-correo-enviar";
 
       var defaultBody =
@@ -549,9 +551,9 @@
         } catch (err) {
           showStatus(
             false,
-            "Error de red o la función «" +
+            "Error de red o el slug no coincide. En Supabase la función tiene que llamarse exactamente «" +
               FN_NAME +
-              "» no está desplegada en Supabase. Revisá el README de la función."
+              "» (correo con una r, no corrreo). Si desplegaste con otro nombre, cambiá la variable FN_NAME en esta página o recreá la función con el nombre correcto. Volvé a desplegar tras actualizar CORS."
           );
         } finally {
           setBusy(false);
