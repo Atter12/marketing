@@ -170,6 +170,57 @@
       box-shadow: var(--shadow-md);
     }
     .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-secondary {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-5);
+      margin-top: var(--sp-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--r-lg);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: var(--color-text-muted);
+      transition: border-color var(--tr), background var(--tr), color var(--tr);
+    }
+    .btn-secondary:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft);
+    }
+    .btn-secondary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .send-status {
+      display: none;
+      margin-bottom: var(--sp-5);
+      padding: var(--sp-4);
+      border-radius: var(--r-lg);
+      font-size: var(--text-sm);
+      line-height: 1.5;
+    }
+    .send-status.visible { display: block; }
+    .send-status.ok {
+      background: rgba(21, 128, 61, 0.1);
+      border: 1px solid rgba(21, 128, 61, 0.25);
+      color: var(--color-success);
+    }
+    .send-status.err {
+      background: var(--color-error-soft);
+      border: 1px solid rgba(197, 48, 48, 0.25);
+      color: var(--color-error);
+    }
     .callout {
       margin-top: var(--sp-6);
       padding: var(--sp-4);
@@ -202,6 +253,36 @@
       gap: var(--sp-2);
     }
     .back-row a:hover { color: var(--color-primary); }
+    .session-bar {
+      margin-bottom: var(--sp-5);
+      padding: var(--sp-4);
+      border-radius: var(--r-lg);
+      font-size: var(--text-sm);
+      line-height: 1.5;
+    }
+    .session-bar.session-ok {
+      background: var(--color-primary-soft);
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      color: var(--color-text);
+    }
+    .session-bar.session-warn {
+      background: var(--color-warning-soft);
+      border: 1px solid rgba(180, 83, 9, 0.2);
+      color: var(--color-warning);
+    }
+    .session-bar a { font-weight: 600; }
+    .session-bar button {
+      margin-left: var(--sp-3);
+      padding: var(--sp-2) var(--sp-3);
+      border-radius: var(--r-md);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-2);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--color-text-muted);
+    }
+    .session-bar button:hover { border-color: var(--color-primary); color: var(--color-primary); }
   </style>
 </head>
 <body>
@@ -224,8 +305,14 @@
       </div>
       <h1>Borrador correo formal</h1>
       <p class="lead">
-        Redacta el mensaje aquí y abre tu programa de correo con todo listo. El envío lo confirmas tú en Outlook, Gmail u otro cliente; el remitente es la cuenta que tengas configurada allí.
+        Redacta destinatario, asunto y mensaje. <strong>Enviar correo</strong> usa la misma vía que <strong>cobranza</strong>: función en <strong>Supabase</strong> + <strong>Resend</strong> y plantilla Holistic. Tenés que estar logueado como <strong>gerente</strong> (misma sesión que Crédito). Opcional: «Abrir en mi correo» para revisar en tu cliente antes de enviar.
       </p>
+
+      <div id="session-bar" class="session-bar session-warn" role="status">
+        Cargando sesión…
+      </div>
+
+      <div id="send-status" class="send-status" role="status" aria-live="polite"></div>
 
       <div class="field">
         <label for="to">Para</label>
@@ -240,52 +327,251 @@
         <textarea id="body" placeholder="Cuerpo del correo…"></textarea>
       </div>
 
-      <button type="button" class="btn-primary" id="open">
+      <button type="button" class="btn-primary" id="send-resend">
+        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+        Enviar correo
+      </button>
+      <button type="button" class="btn-secondary" id="open-mailto">
         <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
-        Abrir en mi correo
+        Abrir en mi correo (mailto)
       </button>
 
       <div class="callout">
-        <strong>Nota:</strong> Esta página no envía sola: usa <code style="font-size:0.85em;">mailto:</code>.
-        Para que el nombre comercial aparezca bien, configúralo en tu cuenta de correo o firma.
-        Misma línea visual que <strong>Crédito</strong> y <strong>Pendientes</strong> (Inter, crema, naranja Holistic).
+        <strong>Supabase (igual que cobranza):</strong> desplegá la función <code style="font-size:0.85em;">borrador-correo-enviar</code> (ver README en el repo). Los secrets <code style="font-size:0.85em;">RESEND_API_KEY</code> / <code style="font-size:0.85em;">RESEND_FROM</code> son los mismos que ya usás para <strong>cobranza-enviar</strong>; no hace falta repetirlos en Vercel.
       </div>
     </div>
   </main>
 
   <footer class="site-footer">© 2026 Holistic Marketing</footer>
 
+  <script src="/credito-app/auth-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
+      var FN_NAME = "borrador-correo-enviar";
+
       var defaultBody =
         "Estimada/o,\n\n" +
         "Me dirijo a usted por un asunto importante. Agradecería que se pusiera en contacto conmigo al 954 277 610 a la brevedad posible.\n\n" +
         "Atentamente,\n" +
         "[Tu nombre completo]";
 
-      var body = document.getElementById("body");
-      var to = document.getElementById("to");
-      var subject = document.getElementById("subject");
+      var bodyEl = document.getElementById("body");
+      var toEl = document.getElementById("to");
+      var subjectEl = document.getElementById("subject");
+      var statusEl = document.getElementById("send-status");
+      var sendBtn = document.getElementById("send-resend");
+      var mailtoBtn = document.getElementById("open-mailto");
+      var sessionBar = document.getElementById("session-bar");
 
-      body.value = defaultBody;
-      subject.value = "Solicitud de contacto";
+      var supabase = null;
+      var supabaseUrl = "";
+      var supabaseAnon = "";
+      var hasSession = false;
 
-      document.getElementById("open").addEventListener("click", function () {
-        var addr = (to.value || "").trim();
-        if (!addr) {
-          alert("Indica el correo del destinatario (Para).");
-          to.focus();
+      bodyEl.value = defaultBody;
+      subjectEl.value = "Solicitud de contacto";
+
+      function showStatus(ok, msg) {
+        statusEl.className = "send-status visible " + (ok ? "ok" : "err");
+        statusEl.textContent = msg;
+      }
+
+      function clearStatus() {
+        statusEl.className = "send-status";
+        statusEl.textContent = "";
+      }
+
+      function esc(s) {
+        return String(s || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function holisticSupabaseAuthStorageKey(u) {
+        if (!u || typeof u !== "string") return undefined;
+        try {
+          var ref = new URL(u).hostname.split(".")[0];
+          return ref ? "sb-" + ref + "-auth-token" : undefined;
+        } catch (e) {
+          return undefined;
+        }
+      }
+
+      function renderSessionBar() {
+        if (!sessionBar) return;
+        if (!supabaseUrl || !supabaseAnon) {
+          sessionBar.className = "session-bar session-warn";
+          sessionBar.innerHTML =
+            "No hay <code>auth-config</code> (Supabase). Abrí esta página desde el sitio desplegado, no como archivo local.";
+          sendBtn.disabled = true;
           return;
         }
-        var sub = subject.value || "";
-        var txt = body.value || "";
+        if (hasSession) {
+          supabase.auth.getUser().then(function (ur) {
+            var email = (ur.data && ur.data.user && ur.data.user.email) || "gerente";
+            sessionBar.className = "session-bar session-ok";
+            sessionBar.innerHTML =
+              "Sesión: <strong>" +
+              esc(email) +
+              '</strong> · <button type="button" id="btn-logout">Cerrar sesión</button>';
+            var lo = document.getElementById("btn-logout");
+            if (lo) {
+              lo.onclick = function () {
+                supabase.auth.signOut().then(function () {
+                  window.location.reload();
+                });
+              };
+            }
+            sendBtn.disabled = false;
+          });
+        } else {
+          sessionBar.className = "session-bar session-warn";
+          sessionBar.innerHTML =
+            'Iniciá sesión como <strong>gerente</strong> (misma cuenta que Crédito / cobranza). ' +
+            '<a href="/credito">Abrir Crédito</a> y volvé a esta página.';
+          sendBtn.disabled = true;
+        }
+      }
+
+      function refreshSession() {
+        if (!supabase) return;
+        supabase.auth.getSession().then(function (sr) {
+          hasSession = !!(sr.data && sr.data.session);
+          renderSessionBar();
+        });
+      }
+
+      var url = window.__SUPABASE_URL__;
+      var key = window.__SUPABASE_ANON_KEY__;
+      if (url && key && window.supabase && window.supabase.createClient) {
+        supabaseUrl = String(url).replace(/\/$/, "");
+        supabaseAnon = key;
+        var sk = holisticSupabaseAuthStorageKey(url);
+        var authOpts = {
+          persistSession: true,
+          autoRefreshToken: true,
+          storage: localStorage,
+          detectSessionInUrl: true,
+        };
+        if (sk) authOpts.storageKey = sk;
+        supabase = window.supabase.createClient(url, key, { auth: authOpts });
+        supabase.auth.onAuthStateChange(function () {
+          refreshSession();
+        });
+        if (window.location.hash && window.location.hash.indexOf("access_token") !== -1) {
+          supabase.auth.getSession().then(function () {
+            try {
+              if (window.history.replaceState) {
+                window.history.replaceState(null, "", window.location.pathname + window.location.search);
+              }
+            } catch (e) {}
+            refreshSession();
+          });
+        } else {
+          refreshSession();
+        }
+      } else {
+        renderSessionBar();
+      }
+
+      function validateFields() {
+        var addr = (toEl.value || "").trim();
+        if (!addr) {
+          showStatus(false, "Indica el correo del destinatario (Para).");
+          toEl.focus();
+          return null;
+        }
+        clearStatus();
+        return {
+          to: addr,
+          subject: (subjectEl.value || "").trim(),
+          body: bodyEl.value || "",
+        };
+      }
+
+      function setBusy(b) {
+        sendBtn.disabled = b || !hasSession;
+        mailtoBtn.disabled = b;
+        if (b) {
+          sendBtn.innerHTML =
+            '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Enviando…';
+        } else {
+          sendBtn.innerHTML =
+            '<i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar correo';
+        }
+      }
+
+      sendBtn.addEventListener("click", async function () {
+        var payload = validateFields();
+        if (!payload) return;
+        if (!payload.subject) {
+          showStatus(false, "El asunto es obligatorio.");
+          subjectEl.focus();
+          return;
+        }
+        if (!supabase || !hasSession) {
+          showStatus(false, "Iniciá sesión como gerente (barra de arriba).");
+          return;
+        }
+
+        var sess = await supabase.auth.getSession();
+        var token = sess.data && sess.data.session && sess.data.session.access_token;
+        if (!token) {
+          showStatus(false, "Sesión caducada. Volvé a entrar desde Crédito.");
+          refreshSession();
+          return;
+        }
+
+        setBusy(true);
+        clearStatus();
+
+        try {
+          var r = await fetch(supabaseUrl + "/functions/v1/" + FN_NAME, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+              apikey: supabaseAnon,
+            },
+            body: JSON.stringify(payload),
+          });
+          var data = await r.json().catch(function () {
+            return {};
+          });
+          if (r.ok && data.ok) {
+            showStatus(true, data.message || "Correo enviado correctamente.");
+          } else {
+            showStatus(false, data.error || data.message || "No se pudo enviar (" + r.status + ").");
+          }
+        } catch (err) {
+          showStatus(
+            false,
+            "Error de red o la función «" +
+              FN_NAME +
+              "» no está desplegada en Supabase. Revisá el README de la función."
+          );
+        } finally {
+          setBusy(false);
+          if (hasSession) sendBtn.disabled = false;
+        }
+      });
+
+      mailtoBtn.addEventListener("click", function () {
+        var payload = validateFields();
+        if (!payload) return;
+        var addr = payload.to;
+        var sub = payload.subject;
+        var txt = payload.body;
         var q = new URLSearchParams();
         if (sub) q.set("subject", sub);
         if (txt) q.set("body", txt);
         var qs = q.toString();
         var href = "mailto:" + addr + (qs ? "?" + qs : "");
         if (href.length > 1900) {
-          alert("El mensaje es demasiado largo para abrirlo así. Acórtalo o copia el texto manualmente.");
+          showStatus(false, "El mensaje es muy largo para mailto. Acórtalo o copia el texto a mano.");
           return;
         }
         window.location.href = href;
