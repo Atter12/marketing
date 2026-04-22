@@ -32,7 +32,7 @@
       "memory": 512,
       "includeFiles": "node_modules/@vercel/blob/**"
     },
-    "api/borrador-correo/proxy.js": {
+    "api/borrador-correo-proxy.js": {
       "maxDuration": 30
     }
   },

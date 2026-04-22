@@ -13,7 +13,7 @@ El nombre de la carpeta y del deploy debe ser exactamente:
 
 ## CORS / navegador
 
-La página **Borrador correo formal** en el sitio público no llama a Supabase desde el browser (evita CORS). Usa el proxy en Vercel: **`/api/borrador-correo/proxy`**, que reenvía al URL de esta Edge Function con el JWT. El navegador solo ve `https://www.marketingconholistic.com/...` (mismo origen).
+La página **Borrador correo formal** no llama a Supabase desde el browser (evita CORS). Usa el proxy en Vercel, ruta plana: **`/api/borrador-correo-proxy`** (archivo `api/borrador-correo-proxy.js`). Reenvía a esta Edge Function. No uses `api/.../carpeta/proxy.js` (en algunos deploys de Vercel eso no existe y responde 404).
 
 En Vercel hace falta `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (mismo criterio que otras APIs del repo, p. ej. `cobranzaClaudeSuggest`).
 

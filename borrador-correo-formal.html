@@ -337,11 +337,11 @@
       </button>
 
       <div class="callout">
-        <strong>Envío:</strong> el navegador habla con <strong>este mismo sitio</strong> (<code>/api/borrador-correo/proxy</code> en Vercel) y el servidor llama a Supabase; así no hay CORS. En Vercel hace falta
+        <strong>Envío:</strong> el navegador llama a <code>/api/borrador-correo-proxy</code> (ruta plana, como otras APIs), no a Supabase directo. En Vercel hace falta
         <code style="font-size:0.85em;">PUBLIC_SUPABASE_URL</code> y
         <code style="font-size:0.85em;">PUBLIC_SUPABASE_ANON_KEY</code> (como otras APIs del proyecto). La Edge Function
         <code>borrador-correo-enviar</code> sigue siendo quien manda con Resend (<code>RESEND_*</code> en Supabase).
-        Comprobá config: <a href="/api/borrador-correo/proxy" target="_blank" rel="noopener">GET proxy (health)</a>.
+        Comprobá: <a href="/api/borrador-correo-proxy" target="_blank" rel="noopener">GET /api/borrador-correo-proxy</a> (debe mostrar <code>edgeTarget</code> y <code>hasAnonKey: true</code>).
       </div>
     </div>
   </main>
@@ -352,7 +352,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
-      var PROXY_PATH = "/api/borrador-correo/proxy";
+      var PROXY_PATH = "/api/borrador-correo-proxy";
 
       var defaultBody =
         "Estimada/o,\n\n" +
@@ -388,12 +388,18 @@
 
       function formatProxyError(data, httpStatus) {
         if (!data || typeof data !== "object") {
-          return "Respuesta inesperada (HTTP " + httpStatus + "). Abrí /api/borrador-correo/proxy en el navegador para ver si Vercel tiene credenciales.";
+          return (
+            "HTTP " +
+            httpStatus +
+            " (¿subiste el deploy con api/borrador-correo-proxy.js?). GET /api/borrador-correo-proxy debe devolver JSON."
+          );
         }
         var p = [];
         if (data.step) p.push("Paso: " + data.step);
         if (data.error) p.push(data.error);
-        if (data.edgeStatus) p.push("Código en Edge: HTTP " + data.edgeStatus);
+        if (data.edgeStatus) p.push("Edge/Supabase: HTTP " + data.edgeStatus);
+        if (data.edgeTarget) p.push("URL llamada: " + data.edgeTarget);
+        if (data.hint) p.push(data.hint);
         if (p.length) return p.join(" — ");
         return "Error (HTTP " + httpStatus + ").";
       }
@@ -567,9 +573,7 @@
             false,
             "No se pudo conectar con el proxy en este sitio. ¿Subiste el último deploy? Detalle: " +
               (err && err.message ? err.message : String(err)) +
-              " · Probá abrir " +
-              PROXY_PATH +
-              " (GET) para ver si Vercel tiene PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY."
+              " · GET " + PROXY_PATH + " debe mostrar hasSupabaseUrl y hasAnonKey en true."
           );
         } finally {
           setBusy(false);

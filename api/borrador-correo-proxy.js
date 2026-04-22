@@ -1,16 +1,14 @@
 /**
- * POST /api/borrador-correo/proxy
- * Reenvía al Edge Function de Supabase (mismo sitio = sin CORS en el navegador).
+ * GET  /api/borrador-correo-proxy  → health (abrir en el navegador)
+ * POST /api/borrador-correo-proxy  → reenvía al Edge Function de Supabase (mismo origen, sin CORS)
  *
- * Vercel env (mismo patrán que otras APIs, p. ej. cobranzaClaudeSuggest):
- *   PUBLIC_SUPABASE_URL  o  SUPABASE_URL
- *   PUBLIC_SUPABASE_ANON_KEY  o  SUPABASE_ANON_KEY
+ * Ruta en un solo .js (plana), igual que cobranzaClaudeSuggest.js, para evitar 404 en Vercel.
  *
- * GET: health y comprobación de config (abrir en el navegador).
+ * Vercel: PUBLIC_SUPABASE_URL o SUPABASE_URL + PUBLIC_SUPABASE_ANON_KEY o SUPABASE_ANON_KEY
  */
 
 const FN_SLUG = "borrador-correo-enviar";
-const LOG = "[borrador-correo/proxy]";
+const LOG = "[borrador-correo-proxy]";
 
 function baseUrl() {
   return (process.env.PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").replace(/\/$/, "");
@@ -42,9 +40,10 @@ export default async function handler(req, res) {
       hasSupabaseUrl: !!url,
       hasAnonKey: key,
       edgeTarget: url ? edgeUrl() : null,
+      postTo: "POST /api/borrador-correo-proxy (esta ruta; la anterior con carpeta anidada daba 404 en Vercel)",
       hint: !url || !key
-        ? "Definí PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel (Settings → Environment Variables) y redeploy."
-        : "Listo. El formulario de Borrador debería usar este proxy (mismo dominio) para evitar CORS con Supabase.",
+        ? "Definí PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y redeploy."
+        : "OK. El formulario envía a esta misma ruta (POST, no a Supabase directo).",
     });
   }
 
@@ -59,7 +58,7 @@ export default async function handler(req, res) {
     return jsonWithCors(res, 503, {
       ok: false,
       error:
-        "El servidor (Vercel) no tiene PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY. Son las mismas de Supabase → Settings → API. Guardalas en el proyecto y redeploy.",
+        "Falta PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel (igual que otras APIs). Project Settings → API en Supabase.",
       step: "vercel_config",
     });
   }
@@ -68,7 +67,7 @@ export default async function handler(req, res) {
   if (!auth || !/^Bearer\s+\S+/i.test(String(auth))) {
     return jsonWithCors(res, 401, {
       ok: false,
-      error: "Falta Authorization: iniciá sesión en Crédito y volvé a esta página.",
+      error: "Falta Authorization. Iniciá sesión en Crédito y volvé.",
       step: "client_auth",
     });
   }
@@ -77,7 +76,7 @@ export default async function handler(req, res) {
   if (!payload || typeof payload !== "object") {
     return jsonWithCors(res, 400, {
       ok: false,
-      error: "Cuerpo JSON inválido o vacío (to, subject, body).",
+      error: "JSON inválido. Enviá { to, subject, body }.",
       step: "body",
     });
   }
@@ -101,9 +100,9 @@ export default async function handler(req, res) {
     console.error(LOG, "fetch error", e?.message || e);
     return jsonWithCors(res, 502, {
       ok: false,
-      error: "No se pudo contactar a Supabase desde el proxy: " + (e?.message || String(e)),
+      error: "No se pudo contactar a Supabase: " + (e?.message || String(e)),
       step: "edge_fetch",
-      target,
+      edgeTarget: target,
     });
   }
 
@@ -117,14 +116,32 @@ export default async function handler(req, res) {
 
   if (!edgeRes.ok) {
     const msg = data.error || data.message || data.raw || text || edgeRes.statusText;
-    console.warn(LOG, "edge no OK", edgeRes.status, String(msg).slice(0, 200));
-    return jsonWithCors(res, edgeRes.status >= 400 && edgeRes.status < 600 ? edgeRes.status : 502, {
-      ok: false,
-      error: typeof msg === "string" ? msg : JSON.stringify(msg),
-      step: "supabase_function",
-      edgeStatus: edgeRes.status,
-      edgeSlug: FN_SLUG,
-    });
+    const msgStr = typeof msg === "string" ? msg : JSON.stringify(msg);
+    let hint;
+    if (edgeRes.status === 404) {
+      hint =
+        "Supabase no encontró la función. En el **mismo proyecto** que PUBLIC_SUPABASE_URL, ejecutá: " +
+        "`supabase functions deploy " +
+        FN_SLUG +
+        " --no-verify-jwt` y verificá en Dashboard el slug exacto «" +
+        FN_SLUG +
+        "». La URL debería ser: " +
+        target;
+    }
+    console.warn(LOG, "edge no OK", edgeRes.status, String(msgStr).slice(0, 200));
+    return jsonWithCors(
+      res,
+      edgeRes.status >= 400 && edgeRes.status < 600 ? edgeRes.status : 502,
+      {
+        ok: false,
+        error: msgStr,
+        step: "supabase_function",
+        edgeStatus: edgeRes.status,
+        edgeTarget: target,
+        edgeSlug: FN_SLUG,
+        ...(hint ? { hint } : {}),
+      },
+    );
   }
 
   if (data.ok) {
