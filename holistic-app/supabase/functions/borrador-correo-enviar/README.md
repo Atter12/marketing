@@ -44,6 +44,22 @@ Comprobar en el dashboard que **Verify JWT** quedó en **OFF** tras el deploy.
 
 Secrets: los mismos que `cobranza-enviar` (`SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, opcional `RESEND_FROM`, `COBRANZA_*` / `EMAIL_*` para marca y logo).
 
+## Mejor entregabilidad (Inbox vs Spam)
+
+Esta función envía en modo **minimalista** (HTML simple + texto plano), porque suele entrar mejor a Inbox que plantillas muy decoradas.
+
+Variables opcionales recomendadas:
+
+- `RESEND_FROM`: remitente con dominio ya verificado (ej. `Holistic Marketing <noreply@marketingconholistic.com>`).
+- `RESEND_REPLY_TO`: buzón real para respuestas (ej. `soporte@marketingconholistic.com`).
+
+Checklist fuera de código (clave):
+
+- SPF y DKIM del dominio en estado **valid** dentro de Resend.
+- DMARC publicado para el dominio (`p=none` al inicio, luego endurecer).
+- Evitar asuntos genéricos repetidos (“Solicitud de contacto” idéntico a todos).
+- Mantener cuerpo con contexto real y evitar mensajes ultra cortos ambiguos.
+
 ## POST
 
 ```json

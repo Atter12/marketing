@@ -29,6 +29,15 @@ function safeHttpsUrl(raw: string | undefined): string | null {
   return u;
 }
 
+function normalizeSubject(raw: string, brandName: string): string {
+  const base = String(raw || "").replace(/\s+/g, " ").trim();
+  if (!base) return `Mensaje de ${brandName}`;
+  // Evita asuntos ultra genéricos que suelen ir a promociones/spam.
+  if (/^solicitud de contacto$/i.test(base)) return `${brandName} · Solicitud de contacto`;
+  if (base.length > 160) return base.slice(0, 160).trim();
+  return base;
+}
+
 /** Texto plano del formulario → HTML seguro (párrafos + br). */
 function plainToInnerHtml(text: string): string {
   const t = String(text || "").trim();
@@ -40,10 +49,7 @@ function plainToInnerHtml(text: string): string {
     .join("");
 }
 
-/**
- * Misma plantilla que cobranza-enviar (cobranzaEmailLayout); solo cambia el texto del bloque intermedio
- * bajo Firma para indicar el origen de la herramienta.
- */
+/** Plantilla minimalista para maximizar entregabilidad (menos decoración HTML). */
 function buildBorradorEmail(opts: {
   innerHtml: string;
   brandName: string;
@@ -54,56 +60,28 @@ function buildBorradorEmail(opts: {
   const brand = escapeHtml(opts.brandName);
   const taglineEsc = escapeHtml(opts.tagline);
   const logo = opts.logoUrl ? escapeHtml(opts.logoUrl) : "";
-  const logoBlock = logo
-    ? `<img src="${logo}" width="140" alt="${brand}" style="display:block;max-width:140px;height:auto;border:0;margin:0 0 12px 0;" />`
-    : "";
-  const headerInner = logo
-    ? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin-top:12px;width:100%;"><tr><td style="vertical-align:middle;padding-right:16px;width:1%;"><img src="${logo}" width="120" alt="" style="display:block;max-width:120px;height:auto;border:0;" /></td><td style="vertical-align:middle;">
-          <div style="font-size:22px;font-weight:800;color:#ffffff;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">${taglineEsc}</div>
-        </td></tr></table>`
-    : `<div style="font-size:22px;font-weight:800;color:#ffffff;margin-top:10px;letter-spacing:-.03em;line-height:1.2;">${brand}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.88);margin-top:8px;line-height:1.45;">${taglineEsc}</div>`;
+  const logoBlock = logo ? `<p style="margin:0 0 12px;"><img src="${logo}" width="120" alt="${brand}" style="display:block;max-width:120px;height:auto;border:0;" /></p>` : "";
+  const inner = opts.innerHtml || "<p>(sin contenido)</p>";
 
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f1f5f9;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f1f5f9;padding:28px 14px;">
+<body style="margin:0;padding:0;background:#f6f7f9;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7f9;padding:20px 10px;">
   <tr><td align="center">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 32px rgba(15,23,42,.08);border:1px solid #e2e8f0;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e6e8eb;">
       <tr>
-        <td style="padding:26px 28px;background:linear-gradient(135deg,#1b2559 0%,#2d3a6e 100%);">
-          <div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:600;">Comunicación oficial</div>
-          ${headerInner}
+        <td style="padding:22px 22px 8px;color:#1f2937;font-size:15px;line-height:1.6;">
+          ${logoBlock}
+          <p style="margin:0 0 10px;font-size:17px;font-weight:700;color:#111827;">${brand}</p>
+          ${inner}
         </td>
       </tr>
       <tr>
-        <td style="padding:28px 28px 8px;color:#0f172a;font-size:15px;line-height:1.65;">
-          ${opts.innerHtml || "<p>(sin contenido)</p>"}
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:8px 28px 20px;">
-          <div style="height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent);"></div>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:0 28px 28px;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #e2e8f0;border-radius:12px;background:#fafafa;padding:18px 20px;">
-            <tr><td>
-              <p style="margin:0 0 10px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;">Firma</p>
-              ${logoBlock}
-              <p style="margin:0;font-size:15px;font-weight:700;color:#0f172a;">${brand}</p>
-              <p style="margin:6px 0 0;font-size:13px;color:#64748b;line-height:1.5;">${taglineEsc}</p>
-              <p style="margin:10px 0 0;font-size:12px;color:#94a3b8;line-height:1.45;">Correo enviado de forma segura desde la herramienta Borrador correo formal (mismo canal que cobranza).</p>
-            </td></tr>
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td style="padding:16px 28px;background:#f8fafc;border-top:1px solid #e2e8f0;">
-          <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;text-align:center;">© ${brand} · Este correo es transaccional.</p>
+        <td style="padding:10px 22px 22px;">
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:8px 0 12px;" />
+          <p style="margin:0;font-size:13px;color:#4b5563;"><strong>${brand}</strong><br/>${taglineEsc}</p>
+          <p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Este correo es transaccional.</p>
         </td>
       </tr>
     </table>
@@ -178,7 +156,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const to = normalizeEmail(String(body.to || ""));
-    const subject = String(body.subject || "").trim();
+    const rawSubject = String(body.subject || "").trim();
     const message = String(body.body || "");
 
     if (!to || !EMAIL_RE.test(to)) {
@@ -187,7 +165,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!subject || subject.length > 500) {
+    if (!rawSubject || rawSubject.length > 500) {
       return new Response(JSON.stringify({ error: "El asunto es obligatorio (máx. 500 caracteres)." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -223,6 +201,8 @@ Deno.serve(async (req) => {
       "https://www.marketingconholistic.com/credito-app/logo/logoh.png"
     ).trim();
     const logoUrl = safeHttpsUrl(logoRaw);
+    const subject = normalizeSubject(rawSubject, brandName);
+    const replyTo = String(Deno.env.get("RESEND_REPLY_TO") || "").trim();
 
     const innerHtml = plainToInnerHtml(message);
     const { html, text } = buildBorradorEmail({
@@ -236,7 +216,14 @@ Deno.serve(async (req) => {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ from, to, subject, html, text }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        html,
+        text,
+        ...(replyTo ? { reply_to: replyTo } : {}),
+      }),
     });
     const resData = await res.json().catch(() => ({}));
     if (!res.ok) {
