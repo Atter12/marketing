@@ -11,9 +11,14 @@ El nombre de la carpeta y del deploy debe ser exactamente:
 - Es **correo** (una sola r entre “co” y “eo”).
 - Si por error desplegás `borrador-corrreo-enviar` (tres r), la URL no existe → **404** y el navegador suele mostrarlo como error **CORS** en el preflight.
 
-## CORS
+## CORS / navegador
 
-La función responde a `OPTIONS` con `204` y `Access-Control-Allow-Methods: GET, POST, OPTIONS` para que el preflight desde `marketingconholistic.com` no falle.
+La página **Borrador correo formal** en el sitio público no llama a Supabase desde el browser (evita CORS). Usa el proxy en Vercel: **`/api/borrador-correo/proxy`**, que reenvía al URL de esta Edge Function con el JWT. El navegador solo ve `https://www.marketingconholistic.com/...` (mismo origen).
+
+En Vercel hace falta `PUBLIC_SUPABASE_URL` y `PUBLIC_SUPABASE_ANON_KEY` (mismo criterio que otras APIs del repo, p. ej. `cobranzaClaudeSuggest`).
+
+La función aún responde bien a `OPTIONS` (CORS) por si alguien la llama directo; el flujo recomendado es vía **proxy**.
+
 
 ## Quién puede llamar
 

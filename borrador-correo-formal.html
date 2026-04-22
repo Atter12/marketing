@@ -337,7 +337,11 @@
       </button>
 
       <div class="callout">
-        <strong>Supabase:</strong> función <code style="font-size:0.85em;">borrador-correo-enviar</code>. En <strong>Edge Functions → Settings</strong> desactivá <strong>Verify JWT</strong> (si está ON, el preflight CORS falla; el JWT igual se valida en el código, igual que cobranza). Secrets <code>RESEND_*</code> = cobranza. Ver README de la función.
+        <strong>Envío:</strong> el navegador habla con <strong>este mismo sitio</strong> (<code>/api/borrador-correo/proxy</code> en Vercel) y el servidor llama a Supabase; así no hay CORS. En Vercel hace falta
+        <code style="font-size:0.85em;">PUBLIC_SUPABASE_URL</code> y
+        <code style="font-size:0.85em;">PUBLIC_SUPABASE_ANON_KEY</code> (como otras APIs del proyecto). La Edge Function
+        <code>borrador-correo-enviar</code> sigue siendo quien manda con Resend (<code>RESEND_*</code> en Supabase).
+        Comprobá config: <a href="/api/borrador-correo/proxy" target="_blank" rel="noopener">GET proxy (health)</a>.
       </div>
     </div>
   </main>
@@ -348,8 +352,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
-      // Slug en Supabase: borrador-correo-enviar (correo, no corrreo)
-      var FN_NAME = "borrador-correo-enviar";
+      var PROXY_PATH = "/api/borrador-correo/proxy";
 
       var defaultBody =
         "Estimada/o,\n\n" +
@@ -381,6 +384,18 @@
       function clearStatus() {
         statusEl.className = "send-status";
         statusEl.textContent = "";
+      }
+
+      function formatProxyError(data, httpStatus) {
+        if (!data || typeof data !== "object") {
+          return "Respuesta inesperada (HTTP " + httpStatus + "). Abrí /api/borrador-correo/proxy en el navegador para ver si Vercel tiene credenciales.";
+        }
+        var p = [];
+        if (data.step) p.push("Paso: " + data.step);
+        if (data.error) p.push(data.error);
+        if (data.edgeStatus) p.push("Código en Edge: HTTP " + data.edgeStatus);
+        if (p.length) return p.join(" — ");
+        return "Error (HTTP " + httpStatus + ").";
       }
 
       function esc(s) {
@@ -530,14 +545,14 @@
         clearStatus();
 
         try {
-          var r = await fetch(supabaseUrl + "/functions/v1/" + FN_NAME, {
+          var r = await fetch(PROXY_PATH, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: "Bearer " + token,
-              apikey: supabaseAnon,
             },
             body: JSON.stringify(payload),
+            credentials: "same-origin",
           });
           var data = await r.json().catch(function () {
             return {};
@@ -545,14 +560,16 @@
           if (r.ok && data.ok) {
             showStatus(true, data.message || "Correo enviado correctamente.");
           } else {
-            showStatus(false, data.error || data.message || "No se pudo enviar (" + r.status + ").");
+            showStatus(false, formatProxyError(data, r.status));
           }
         } catch (err) {
           showStatus(
             false,
-            "Revisá en Supabase: Settings de la función → Verify JWT = OFF, redeploy con --no-verify-jwt, y comprobá el slug «" +
-              FN_NAME +
-              "». Si Verify JWT está ON, el error parece CORS pero es el preflight OPTIONS sin token."
+            "No se pudo conectar con el proxy en este sitio. ¿Subiste el último deploy? Detalle: " +
+              (err && err.message ? err.message : String(err)) +
+              " · Probá abrir " +
+              PROXY_PATH +
+              " (GET) para ver si Vercel tiene PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY."
           );
         } finally {
           setBusy(false);
