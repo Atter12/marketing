@@ -1298,9 +1298,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
     if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
     const av = (cf.avatar_url || "").trim().replace(/&amp;/gi, "&");
-    if (av && isLikelyBlockedAvatarHotlinkUrl(av)) {
-      if (!confirm("Las URLs de WhatsApp / Meta / Instagram suelen dar error 403 en Crédito (el servidor no deja mostrar la imagen aquí). Lo estable es usar «Subir foto» para guardarla en Supabase.\n\n¿Guardar esta URL igualmente?")) return;
-    }
     const c = {
       id: editId || undefined,
       newClientId: !editId && newClientDraftId ? newClientDraftId : undefined,
@@ -3002,12 +2999,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
-        {isLikelyBlockedAvatarHotlinkUrl(String(cf.avatar_url || "").replace(/&amp;/gi, "&")) && (
-          <div role="alert" style={{ marginBottom: 16, padding: "12px 14px", borderRadius: 12, border: "1px solid #fbbf24", background: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#92400e", fontSize: 12.5, lineHeight: 1.5 }}>
-            <strong style={{ display: "block", marginBottom: 4 }}>Foto que no se verá en Crédito ni en Pendientes</strong>
-            Los enlaces de WhatsApp / Meta suelen dar <strong>403</strong> al mostrarse aquí. En Crédito la foto del cliente es la que se sincroniza con el resto del sistema: <strong>subí un archivo</strong> con «{editId ? "Cambiar foto" : "Subir foto"}» (se guarda en Supabase).
-          </div>
-        )}
         <Inp label={editId ? "Código de cliente *" : "Código de cliente"} value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Obligatorio al editar."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram *" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario o —" /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un número.</p></div>
@@ -3054,6 +3045,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Foto de perfil</label>
+          <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", margin: "0 0 10px", lineHeight: 1.45 }}>Solo <strong>subir archivo</strong> (JPG, PNG, WebP o GIF; se guarda en Supabase, mismo criterio que Pendientes si el cliente está vinculado).</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {(editId || newClientDraftId) && (
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
@@ -3083,9 +3075,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 )}
               </div>
             )}
-            <div style={{ flex: "1 1 200px", minWidth: 0 }}>
-              <Inp label="O pegar URL (opcional)" value={cf.avatar_url} onChange={(e) => setCf({ ...cf, avatar_url: e.target.value })} placeholder="https://…" hint="Opcional si ya subiste archivo. Evitá enlaces de WhatsApp (403)." />
-            </div>
           </div>
         </div>
         </Mdl>

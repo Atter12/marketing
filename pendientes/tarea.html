@@ -3573,6 +3573,37 @@ function ensureCurrentSessionMemberActive(done) {
   }).catch(function() { if (done) done(); });
 }
 
+/** Misma convención que Crédito: bucket `avatars`, path `<clientes.id>/avatar.ext` (usa credito_client_id si está vinculado). */
+function uploadTareasClientAvatar(clientRow, file, done) {
+  if (!supabase || !file || !clientRow) { if (done) done(null); return; }
+  var maxB = 5 * 1024 * 1024;
+  if (file.size > maxB) { alert('La imagen no puede superar 5 MB.'); if (done) done(null); return; }
+  var okType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].indexOf(file.type) >= 0;
+  if (!okType) { alert('Usá JPG, PNG, WebP o GIF.'); if (done) done(null); return; }
+  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].indexOf(ext) < 0) ext = 'jpg';
+  var targetId = (clientRow.creditoClientId && String(clientRow.creditoClientId).trim()) || (clientRow.id && String(clientRow.id));
+  if (!targetId) { if (done) done(null); return; }
+  var path = targetId + '/avatar.' + ext;
+  if (marketingStorageActive()) {
+    marketingStorageUpload('avatars', path, file, function(err) {
+      if (err) { console.warn('[Pendientes] avatar cliente marketing-storage', err); if (done) done(null); return; }
+      var base = marketingStorageBase();
+      var pub = base + '/v1/public/avatars/' + path.split('/').map(encodeURIComponent).join('/');
+      var url = pub + (pub.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+      if (done) done(url);
+    });
+    return;
+  }
+  supabase.storage.from('avatars').upload(path, file, { upsert: true }).then(function(up) {
+    if (up.error) { console.warn('[Pendientes] avatar cliente storage', up.error); if (done) done(null); return; }
+    var pub = supabase.storage.from('avatars').getPublicUrl(path);
+    if (!pub || !pub.data || !pub.data.publicUrl) { if (done) done(null); return; }
+    var url = pub.data.publicUrl + (pub.data.publicUrl.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+    if (done) done(url);
+  }).catch(function(e) { console.warn(e); if (done) done(null); });
+}
+
 function uploadGerenteAvatarForEmail(email, file, done) {
   if (!supabase || !file) { if (done) done(null); return; }
   var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
@@ -6602,6 +6633,7 @@ function openModal(type) {
     }, 80);
 
   } else if (type === 'client') {
+    _newClientAvatarFile = null;
     title.textContent = 'Nuevo Cliente';
     body.innerHTML = `
       <div class="form-group"><label for="cl-name">Nombre / Empresa</label><input class="form-input" placeholder="Ej: Luna Beauty" id="cl-name"></div>
@@ -6611,8 +6643,31 @@ function openModal(type) {
         <div class="form-group"><label for="cl-phone">Teléfono</label><input class="form-input" placeholder="+51 999 999 999" id="cl-phone"></div>
       </div>
       <div class="form-group"><label for="cl-cumple">Cumpleaños</label><input class="form-input" type="date" id="cl-cumple"><p class="form-file-hint">Opcional · persona de contacto / titular</p></div>
-      <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>`;
+      <div class="form-group"><label for="cl-notes">Brief / Notas</label><textarea class="form-textarea" placeholder="Objetivos, expectativas..." id="cl-notes"></textarea></div>
+      <div class="form-group">
+        <div style="font-size:0.75rem;font-weight:600;margin-bottom:4px">Foto de perfil <span style="font-weight:500;color:var(--color-text-muted)">(opcional)</span></div>
+        <p class="form-file-hint" style="margin:4px 0 8px">Elegí un archivo; <strong>se sube al guardar</strong> el cliente (JPG, PNG, WebP o GIF, máx. 5 MB).</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          <input type="file" id="cl-new-avatar-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+          <button type="button" class="btn-primary btn-sm" id="cl-new-avatar-pick" ${!supabase ? ' disabled title="Conectá Supabase"' : ''}>Elegir archivo</button>
+          <span id="cl-new-avatar-label" class="form-file-hint" style="margin:0">Sin archivo</span>
+        </div>
+      </div>`;
     footer.innerHTML = `<button class="btn-secondary" onclick="closeModal()">Cancelar</button><button class="btn-primary" onclick="addClient()">Crear Cliente</button>`;
+    setTimeout(function() {
+      _newClientAvatarFile = null;
+      var finp = document.getElementById('cl-new-avatar-file');
+      var pick = document.getElementById('cl-new-avatar-pick');
+      var lab = document.getElementById('cl-new-avatar-label');
+      if (pick && finp) {
+        pick.onclick = function() { if (supabase) finp.click(); else alert('Conecta Supabase para subir la foto.'); };
+        finp.onchange = function(ev) {
+          var f = ev.target.files && ev.target.files[0];
+          _newClientAvatarFile = f || null;
+          if (lab) lab.textContent = f ? (f.name || 'Archivo listo') : 'Sin archivo';
+        };
+      }
+    }, 0);
   } else if (type === 'calendarEvent') {
     if (modalEl) modalEl.classList.add('modal-calendar-event');
     var now = new Date();
@@ -6761,10 +6816,17 @@ function openClientDetail(idx) {
 }
 
 var _editingClientId = null;
+/** Foto al editar cliente: undefined = no tocar, true con URL o null = guardar (incl. quitar). */
+var _clientEditAvatarTouched = false;
+var _clientEditAvatarUrl = null;
+/** Archivo elegido en «Nuevo cliente»; se sube después del INSERT (necesitamos el id de fila). */
+var _newClientAvatarFile = null;
 function openEditClient(id) {
   var c = clients.find(function(x){ return x.id === id; });
   if (!c) return;
   _editingClientId = id;
+  _clientEditAvatarTouched = false;
+  _clientEditAvatarUrl = (c.photo && String(c.photo).trim()) || null;
   var title = document.getElementById('modalTitle');
   var body = document.getElementById('modalBody');
   var footer = document.getElementById('modalFooter');
@@ -6779,13 +6841,63 @@ function openEditClient(id) {
     <div class="form-group"><label for="cl-status">Estado</label><select class="form-select" id="cl-status"><option value="activo" ${c.status==='activo'?'selected':''}>Activo</option><option value="onboarding" ${c.status==='onboarding'?'selected':''}>Onboarding</option></select></div>
     <div class="form-group"><label for="cl-cumple">Cumpleaños</label><input class="form-input" type="date" id="cl-cumple" value="${(c.birthday||'').replace(/"/g,'&quot;')}"><p class="form-file-hint">Opcional · persona de contacto / titular</p></div>
     <div class="form-group"><label for="cl-notes">Notas</label><textarea class="form-textarea" id="cl-notes">${(c.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea></div>
-    <div class="form-group"><label for="cl-avatar-url">URL foto de perfil (opcional)</label><input class="form-input" type="url" id="cl-avatar-url" value="${(c.photo||'').replace(/"/g,'&quot;')}" placeholder="https://… (misma que en Crédito si está vinculado)"><p class="form-file-hint">Si el cliente viene de Crédito, la foto se rellena desde allí; puedes pegar la URL pública del bucket avatars.</p></div>`;
+    <div class="form-group">
+      <div style="font-size:0.75rem;font-weight:600;margin-bottom:4px">Foto de perfil</div>
+      <p class="form-file-hint" style="margin:4px 0 8px">Solo <strong>subir archivo</strong> (JPG, PNG, WebP o GIF, máx. 5 MB). Misma caja de almacenamiento que Crédito si el cliente está vinculado.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <input type="file" id="cl-avatar-file" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+        <button type="button" class="btn-primary btn-sm" id="cl-avatar-pick" ${!supabase ? ' disabled title="Conectá Supabase"' : ''}>Subir o cambiar foto</button>
+        ${(c.photo && String(c.photo).trim()) ? '<button type="button" class="btn-secondary btn-sm" id="cl-avatar-clear" style="border-color:#fecaca;color:#b91c1c">Quitar foto</button>' : ''}
+      </div>
+    </div>`;
   footer.innerHTML = `<button class="btn-secondary" onclick="closeModal();_editingClientId=null">Cancelar</button><button class="btn-primary" onclick="updateClient()">Guardar</button>`;
   showModalOverlay();
+  setTimeout(function() {
+    var cRow = clients.find(function(x) { return x.id === _editingClientId; });
+    var finp = document.getElementById('cl-avatar-file');
+    var pick = document.getElementById('cl-avatar-pick');
+    if (pick && finp) {
+      pick.onclick = function() { if (supabase) finp.click(); else alert('Conecta Supabase para subir la foto.'); };
+    }
+    if (finp) {
+      finp.onchange = function(ev) {
+        var f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        if (!cRow) return;
+        finp.value = '';
+        if (!supabase) { alert('Conecta Supabase para subir la foto.'); return; }
+        pick.disabled = true;
+        pick.textContent = 'Subiendo…';
+        uploadTareasClientAvatar(cRow, f, function(url) {
+          pick.disabled = false;
+          pick.textContent = 'Subir o cambiar foto';
+          if (!url) { alert('No se pudo subir la imagen.'); return; }
+          _clientEditAvatarTouched = true;
+          _clientEditAvatarUrl = url;
+        });
+      };
+    }
+    var clr = document.getElementById('cl-avatar-clear');
+    if (clr) {
+      clr.onclick = function() {
+        _clientEditAvatarTouched = true;
+        _clientEditAvatarUrl = null;
+        clr.textContent = 'Foto: se quita al guardar';
+        clr.style.opacity = '0.7';
+      };
+    }
+  }, 0);
 }
 function updateClient() {
   if (!_editingClientId) return;
   var cPrev = clients.find(function(x) { return x.id === _editingClientId; });
+  var prevPhoto = cPrev && cPrev.photo ? String(cPrev.photo).trim() : '';
+  var avatar_url;
+  if (_clientEditAvatarTouched) {
+    avatar_url = _clientEditAvatarUrl && String(_clientEditAvatarUrl).trim() ? String(_clientEditAvatarUrl).trim() : null;
+  } else {
+    avatar_url = prevPhoto || null;
+  }
   var row = {
     nombre: document.getElementById('cl-name').value.trim(),
     tipo: document.getElementById('cl-ind').value || '',
@@ -6797,7 +6909,7 @@ function updateClient() {
     fee_mensual: cPrev ? (cPrev.monthlyFee || cPrev.budget || '') : '',
     notes: document.getElementById('cl-notes').value || '',
     cumpleanos: (function() { var el = document.getElementById('cl-cumple'); var v = el && el.value.trim(); return v ? v : null; })(),
-    avatar_url: (function() { var el = document.getElementById('cl-avatar-url'); return (el && el.value.trim()) || null; })()
+    avatar_url: avatar_url
   };
   if (!row.nombre) { alert('Nombre requerido'); return; }
   if (supabase) {
@@ -6822,7 +6934,9 @@ function updateClient() {
         phones: row.telefono ? [row.telefono] : [],
         notes: row.notes || null
       };
-      if (row.avatar_url) credUp.avatar_url = row.avatar_url;
+      if (_clientEditAvatarTouched) {
+        credUp.avatar_url = row.avatar_url;
+      }
       supabase.from('clientes').update(credUp).eq('id', linkedCreditoId).then(function(r2) {
         if (r2.error) {
           alert('Datos guardados en Pendientes, pero no se pudo sincronizar con Crédito: ' + (r2.error.message || ''));
@@ -7184,9 +7298,35 @@ function addClient() {
     cumpleanos: (function() { var el = document.getElementById('cl-cumple'); var v = el && el.value.trim(); return v ? v : null; })()
   };
   if (supabase) {
-    supabase.from('tareas_clientes').insert(row).then(function(r) {
+    var pendingAvatar = _newClientAvatarFile;
+    _newClientAvatarFile = null;
+    supabase.from('tareas_clientes').insert(row).select('id').then(function(r) {
       if (r.error) { alert('Error al crear cliente: ' + (r.error.message || '')); return; }
-      reloadTareasData(); closeModal();
+      var row0 = r.data && r.data[0];
+      var newId = row0 && row0.id;
+      function doneOk() {
+        reloadTareasData();
+        closeModal();
+      }
+      if (newId && pendingAvatar) {
+        var fakeRow = { id: newId, creditoClientId: null };
+        uploadTareasClientAvatar(fakeRow, pendingAvatar, function(url) {
+          if (!url) {
+            alert('Cliente creado, pero no se pudo subir la foto. Podés editar el cliente y volver a intentar.');
+            doneOk();
+            return;
+          }
+          supabase.from('tareas_clientes').update({ avatar_url: url }).eq('id', newId).then(function(up) {
+            if (up.error) {
+              console.warn('[Pendientes] avatar_url tras crear cliente', up.error);
+              alert('Cliente creado; la foto se subió pero no se pudo guardar la URL. Editá el cliente si hace falta.');
+            }
+            doneOk();
+          });
+        });
+        return;
+      }
+      doneOk();
     });
   } else {
     clients.push({
