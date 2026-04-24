@@ -400,22 +400,6 @@
                 <input id="empresaDev" placeholder="Marketing con Holistic">
               </div>
               <div>
-                <label for="razonSocial">Razon social</label>
-                <input id="razonSocial" placeholder="Razon social registrada">
-              </div>
-              <div>
-                <label for="rucEmpresa">RUC</label>
-                <input id="rucEmpresa" placeholder="Numero de RUC">
-              </div>
-              <div>
-                <label for="sunarpPartida">Partida SUNARP</label>
-                <input id="sunarpPartida" placeholder="Partida electronica SUNARP">
-              </div>
-              <div>
-                <label for="direccionEmpresa">Direccion fiscal</label>
-                <input id="direccionEmpresa" placeholder="Direccion de la empresa">
-              </div>
-              <div>
                 <label for="cliente">Cliente / Empresa</label>
                 <input id="cliente" placeholder="Nombre del cliente">
               </div>
@@ -561,9 +545,8 @@
           </div>
 
           <div class="legal">
-            El cliente declara haber revisado y aceptado alcance, cronograma, costos y modalidad de pago. La propiedad intelectual del codigo y activos se transfiere al cliente una vez completado el pago total, salvo componentes de terceros sujetos a sus licencias. Retrasos por falta de materiales, feedback o aprobaciones del cliente ajustan el cronograma sin penalidad para el desarrollador. Cambios de alcance, nuevas funcionalidades o integraciones no contempladas se cotizan aparte mediante anexo. En caso de mora superior a 3 dias calendario en cualquier cuota, se podra aplicar un recargo de hasta 5% sobre el saldo pendiente y ajustar la fecha de entrega segun el impacto operativo. Este documento firmado digitalmente tiene validez comercial y legal entre las partes.
+            El cliente declara haber revisado y aceptado alcance, cronograma, costos y modalidad de pago. La propiedad intelectual del codigo y activos se transfiere al cliente una vez completado el pago total, salvo componentes de terceros sujetos a sus licencias. Retrasos por falta de materiales, feedback o aprobaciones del cliente ajustan el cronograma sin penalidad para el desarrollador. Cambios de alcance, nuevas funcionalidades o integraciones no contempladas se cotizan aparte mediante anexo. En caso de mora superior a 3 dias calendario en cualquier cuota, se podra aplicar un recargo de hasta 5% sobre el saldo pendiente y ajustar la fecha de entrega segun el impacto operativo. Este documento firmado digitalmente tiene validez comercial y legal entre las partes, emitido por una empresa legalmente constituida.
           </div>
-          <div class="legal" id="legalEmpresa"></div>
         </aside>
       </div>
     </section>
@@ -573,7 +556,7 @@
     const $ = (id) => document.getElementById(id);
 
     const fields = [
-      "desarrollador", "empresaDev", "razonSocial", "rucEmpresa", "sunarpPartida", "direccionEmpresa", "cliente", "proyecto", "tipo", "duracion", "alcance", "montoTotal",
+      "desarrollador", "empresaDev", "cliente", "proyecto", "tipo", "duracion", "alcance", "montoTotal",
       "modalidad", "semanal", "semanaInicio", "semanaFin", "pago1", "pago2",
       "hito2", "nombreFirmante", "fechaFirma", "nombreDesarrolladorFirma", "fechaFirmaDev",
       "numeroContrato", "fechaEmision"
@@ -600,12 +583,6 @@
         const hito = $("hito2").value || "al finalizar";
         $("vistaPago").textContent = `${money(p1)} inicial + ${money(p2)} ${hito}.`;
       }
-      const empresa = $("empresaDev").value || "Marketing con Holistic";
-      const razon = $("razonSocial").value || "Razon social no especificada";
-      const ruc = $("rucEmpresa").value || "RUC pendiente";
-      const sunarp = $("sunarpPartida").value || "Partida SUNARP pendiente";
-      const direccion = $("direccionEmpresa").value || "Direccion fiscal pendiente";
-      $("legalEmpresa").textContent = `${empresa} (${razon}), identificado con RUC ${ruc}, empresa registrada en SUNARP con Partida ${sunarp}, con domicilio fiscal en ${direccion}. Este contrato se emite en moneda Soles (PEN).`;
     };
 
     const toggleModalidad = () => {
