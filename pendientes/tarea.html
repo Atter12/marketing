@@ -4440,6 +4440,7 @@ async function loadTareasData() {
       }
       var hue = hueFromId(r.id); var c = 'hsl(' + hue + ', 55%, 42%)';
       var photo = (r.avatar_url && String(r.avatar_url).trim()) || '';
+      if (photo && tareasHotlinkAvatarLikelyBlocked(photo)) photo = '';
       return { id: r.id, email: (r.email || '').toLowerCase().trim(), n: name, r: permMiembroLabel(r), permAdmin: tareasPermBool(r.perm_admin), photo: photo, c: c, ci: r.checkin_at ? new Date(r.checkin_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', co: r.checkout_at ? new Date(r.checkout_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' }) : '', checkinAt: r.checkin_at ? new Date(r.checkin_at) : null, checkoutAt: r.checkout_at ? new Date(r.checkout_at) : null, trust: r.att_trust || null, activeSeconds: r.att_active_seconds || 0, lastHeartbeat: r.att_last_heartbeat ? new Date(r.att_last_heartbeat) : null, ip: r.att_ip || '', device: r.att_device || '' };
     });
     var rawClienteRows = dedupeTareasClienteRows(clRes.data || []);
@@ -4455,6 +4456,7 @@ async function loadTareasData() {
       var fotoTareas = (r.avatar_url && String(r.avatar_url).trim()) || '';
       var fotoCredito = (credito && credito.avatar_url) ? String(credito.avatar_url).trim() : '';
       var photo = fotoTareas || fotoCredito;
+      if (photo && tareasHotlinkAvatarLikelyBlocked(photo)) photo = '';
       return { id: r.id, creditoClientId: r.credito_client_id || null, n: n, tp: r.tipo || '', c: r.color || '#666', photo: photo, phases: Array.isArray(r.fases) ? r.fases : [], curr: r.fase_actual || 0, svcs: Array.isArray(r.servicios) ? r.servicios : [], team: Array.isArray(r.equipo_ids) ? r.equipo_ids : [], entregables: r.entregables || 0, done: r.entregables_hechos || 0, tickets: r.tickets_count || 0, meetings: r.meetings_count || 0, satisfaction: satVal, budget: r.presupuesto || '', spent: r.gastado || '', contact: contact, email: email, phone: phone, birthday: tareasCumpleanosIsoFromRow(r), nextAction: r.proxima_accion || '', contractStart: r.contrato_inicio || '', contractEnd: r.contrato_fin || '', monthlyFee: r.fee_mensual || '', health: healthVal, healthTxt: r.health_txt || '', notes: r.notes || '', status: r.status || 'activo' };
     });
     clients.sort(function(a, b) {
@@ -4588,19 +4590,69 @@ function escJsSingleTareas(v) {
     .replace(/\n/g, '\\n');
 }
 
+/** WhatsApp / Meta CDN / Instagram: hotlink desde otro sitio → 403 y consola llena; no pedir la imagen. */
+function tareasHotlinkAvatarLikelyBlocked(url) {
+  if (!url || typeof url !== 'string') return true;
+  var s = url.trim();
+  if (!s) return true;
+  try {
+    var h = new URL(s, typeof location !== 'undefined' && location.href ? location.href : 'https://local/').hostname.toLowerCase();
+    if (h.indexOf('whatsapp') >= 0) return true;
+    if (h.indexOf('wa.me') >= 0) return true;
+    if (h.indexOf('fbcdn.net') >= 0) return true;
+    if (h.indexOf('facebook.com') >= 0 || h.indexOf('fb.com') >= 0) return true;
+    if (h.indexOf('instagram.') >= 0) return true;
+    if (h.indexOf('twimg.com') >= 0) return true;
+    return false;
+  } catch (e) {
+    return true;
+  }
+}
+
+function tareasAvatarImgFallback(ev) {
+  var img = ev && ev.target;
+  if (!img || img.tagName !== 'IMG') return;
+  img.onerror = null;
+  var p = img.parentElement;
+  if (!p) return;
+  var letter = (img.getAttribute('data-fl') || '?').charAt(0);
+  var bg = img.getAttribute('data-bg') || '#666';
+  p.classList.remove('client-avatar--photo');
+  p.classList.add('client-avatar');
+  p.style.background = bg;
+  p.textContent = letter;
+  p.removeAttribute('role');
+  p.setAttribute('aria-hidden', 'true');
+}
+
+function tareasAttAvatarImgFallback(ev) {
+  var img = ev && ev.target;
+  if (!img || img.tagName !== 'IMG') return;
+  img.onerror = null;
+  var p = img.parentElement;
+  if (!p || !p.classList.contains('att-avatar')) return;
+  var letter = (img.getAttribute('data-fl') || '?').charAt(0);
+  var bg = img.getAttribute('data-bg') || '#666';
+  p.classList.remove('has-photo');
+  p.style.background = bg;
+  p.textContent = letter;
+}
+
 /** Avatar con foto (Crédito / tareas_clientes.avatar_url) o iniciales. */
 function clientAvatarMarkup(c, opts) {
   opts = opts || {};
   var w = opts.w != null ? opts.w : 36;
   var h = opts.h != null ? opts.h : 36;
   var fs = opts.fs != null ? opts.fs : '0.875rem';
+  var bg = (c && c.c) ? c.c : '#666';
+  var letterRaw = (c && c.n && c.n[0]) ? String(c.n[0]) : '?';
+  var letter = escTareas(letterRaw);
   var url = (c && c.photo && String(c.photo).trim()) || '';
+  if (url && tareasHotlinkAvatarLikelyBlocked(url)) url = '';
   if (url) {
     var label = (c && c.n) ? escTareas(c.n) : 'Cliente';
-    return '<div class="client-avatar client-avatar--photo" style="width:' + w + 'px;height:' + h + 'px" role="img" aria-label="Foto de ' + label + '"><img src="' + escAttrUrlTareas(url) + '" alt="" loading="lazy" decoding="async"></div>';
+    return '<div class="client-avatar client-avatar--photo" style="width:' + w + 'px;height:' + h + 'px" role="img" aria-label="Foto de ' + label + '"><img src="' + escAttrUrlTareas(url) + '" alt="" loading="lazy" decoding="async" data-fl="' + escAttrUrlTareas(letterRaw.slice(0, 1)) + '" data-bg="' + escAttrUrlTareas(bg) + '" onerror="tareasAvatarImgFallback(event)"></div>';
   }
-  var bg = (c && c.c) ? c.c : '#666';
-  var letter = (c && c.n && c.n[0]) ? escTareas(c.n[0]) : '?';
   return '<div class="client-avatar" style="background:' + bg + ';width:' + w + 'px;height:' + h + 'px;font-size:' + fs + '" aria-hidden="true">' + letter + '</div>';
 }
 
@@ -6524,9 +6576,11 @@ renderers.attendance = function() {
     var hbDot = (m.lastHeartbeat && (Date.now() - m.lastHeartbeat.getTime()) < 180000) ? '<span class="att-heartbeat-icon" title="Señal activa"></span>' : '';
 
     var avPhoto = (m.photo && String(m.photo).trim()) || '';
+    if (avPhoto && tareasHotlinkAvatarLikelyBlocked(avPhoto)) avPhoto = '';
+    var avLetter0 = ((m.n && m.n[0]) || '?').toString().charAt(0);
     var avInner = avPhoto
-      ? '<img src="' + avPhoto.replace(/"/g,'&quot;') + '" alt="">'
-      : ((m.n&&m.n[0])||'?');
+      ? '<img src="' + avPhoto.replace(/"/g,'&quot;') + '" alt="" onerror="tareasAttAvatarImgFallback(event)" data-fl="' + escAttrUrlTareas(avLetter0) + '" data-bg="' + escAttrUrlTareas(m.c || '#666') + '">'
+      : avLetter0;
     var avCls = 'att-avatar' + (avPhoto ? ' has-photo' : '');
     var avStyle = avPhoto ? '' : ('background:' + m.c);
     return '<tr>'
