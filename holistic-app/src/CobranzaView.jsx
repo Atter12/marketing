@@ -23,6 +23,7 @@ import {
   cobranzaTaglineForPreview,
   defaultCobranzaLogoUrlForPreview,
 } from "./cobranzaEmailLayout.js";
+import { DEUDA_NETA_EPS as DEUDA_EPS } from "./debtEpsilon.js";
 
 const TH = {
   textAlign: "left",
@@ -332,7 +333,6 @@ function defaultFmtM(m) {
 }
 
 const SYNC_ESTADOS = new Set(["pending_approval", "approved", "failed"]);
-const DEUDA_EPS = 0.005;
 
 function periodoYmForCobranzaRow(r) {
   const v = parseRowVariables(r);
@@ -1062,7 +1062,7 @@ export default function CobranzaView({
       for (const c of clients) {
         const cid = String(c.id);
         const net = deudaReferencia(c.id);
-        if (net <= 0) continue;
+        if (net <= DEUDA_EPS) continue;
         if (activeClientsByTipo.cobro.has(cid)) continue;
         const email = firstClientEmail(c);
         if (!email) continue;
@@ -1129,7 +1129,7 @@ export default function CobranzaView({
       for (const c of clients) {
         const cid = String(c.id);
         const net = deudaReferencia(c.id);
-        if (net > 0) continue;
+        if (net > DEUDA_EPS) continue;
         if (activeClientsByTipo.thanks.has(cid)) continue;
         const email = firstClientEmail(c);
         if (!email) continue;
