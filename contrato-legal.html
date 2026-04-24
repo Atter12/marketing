@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Great+Vibes&display=swap" rel="stylesheet">
   <link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png?v=2">
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <style>
     :root {
       --bg: #f5f3ee;
@@ -309,6 +310,17 @@
       display: block;
     }
 
+    #firmaPdfImg {
+      display: none;
+      width: 100%;
+      min-height: 120px;
+      max-height: 220px;
+      object-fit: contain;
+      background: #fff;
+      border-radius: 10px;
+      border: 2px solid #fdba74;
+    }
+
     label {
       display: block;
       font-size: 0.8rem;
@@ -426,7 +438,7 @@
       body { background: #fff !important; }
       .doc { box-shadow: none !important; border: 0 !important; }
       .doc-head { background: #fff7ed !important; }
-      .btns, .alert { display: none !important; }
+      .btns, .alert, .pdf-exclude { display: none !important; }
       .section { break-inside: avoid; }
     }
 
@@ -544,16 +556,16 @@
           <div class="signature-wrap">
             <label>Firma</label>
             <canvas id="firmaCliente"></canvas>
-            <div class="btns">
+            <img id="firmaPdfImg" alt="Firma del cliente">
+            <div class="btns pdf-exclude">
               <button type="button" class="btn-danger" id="limpiarFirma">Limpiar firma</button>
             </div>
           </div>
 
-          <div class="btns">
-            <button type="button" class="btn-primary" id="descargarPdf">Descargar PDF del contrato</button>
-            <button type="button" class="btn-secondary" id="imprimir">Imprimir</button>
+          <div class="btns pdf-exclude">
+            <button type="button" class="btn-primary" id="descargarPdf">Descargar PDF</button>
           </div>
-          <div id="estadoAccion" class="state-msg"></div>
+          <div id="estadoAccion" class="state-msg pdf-exclude"></div>
         </div>
 
         <div class="legal">
@@ -573,13 +585,22 @@
     const money = (n) => new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(n || 0));
 
     const readPayload = () => {
+      const sp = new URLSearchParams(window.location.search);
+      const fromQuery = sp.get("d");
+      if (fromQuery) {
+        try {
+          const json = LZString.decompressFromEncodedURIComponent(fromQuery);
+          if (json) return JSON.parse(json);
+        } catch (_) {}
+      }
       const hash = (window.location.hash || "").replace(/^#/, "");
-      if (!hash) return null;
-      try {
-        const json = LZString.decompressFromEncodedURIComponent(hash);
-        if (!json) return null;
-        return JSON.parse(json);
-      } catch (_) { return null; }
+      if (hash) {
+        try {
+          const json = LZString.decompressFromEncodedURIComponent(hash);
+          if (json) return JSON.parse(json);
+        } catch (_) {}
+      }
+      return null;
     };
 
     const fmtDate = (iso) => {
@@ -590,32 +611,50 @@
       } catch (_) { return iso; }
     };
 
-    const renderContract = (data) => {
-      $("viewNumero").textContent = data.nc || "—";
-      $("viewFecha").textContent = fmtDate(data.fe);
-      $("viewDev").textContent = data.d || "—";
-      $("viewEmpresa").textContent = data.e || "—";
-      $("viewCliente").textContent = data.c || "Por completar";
-      $("viewContacto").textContent = data.ce || "—";
-      $("viewProyecto").textContent = data.p || "—";
-      $("viewTipo").textContent = data.t || "—";
-      $("viewDuracion").textContent = `${data.w || 0} semana(s)`;
-      $("viewAlcance").textContent = (data.a && data.a.trim()) ? data.a : "No se registró un alcance detallado. Los entregables acordados son los comunicados entre las partes.";
-      $("viewTotal").textContent = money(data.mt);
+    const fileSlug = (s, fallback) => {
+      const t = (s || "").trim().toLowerCase().replace(/\s+/g, "-");
+      if (!t) return fallback;
+      return t.replace(/[^a-z0-9áéíóúüñ-]/g, "").slice(0, 50) || fallback;
+    };
 
-      const modalidadLabel = data.m === "2partes" ? "Pago en 2 partes" : "Pago semanal";
+    const isCanvasEmpty = (canvas) => {
+      const c = canvas.getContext("2d");
+      if (!c || !canvas.width || !canvas.height) return true;
+      const d = c.getImageData(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < d.data.length; i += 4) {
+        const r = d.data[i], g = d.data[i + 1], b = d.data[i + 2], a = d.data[i + 3];
+        if (a < 2) continue;
+        if (r < 250 || g < 250 || b < 250) return false;
+      }
+      return true;
+    };
+
+    const renderContract = (d) => {
+      $("viewNumero").textContent = d.nc || "—";
+      $("viewFecha").textContent = fmtDate(d.fe);
+      $("viewDev").textContent = d.d || "—";
+      $("viewEmpresa").textContent = d.e || "—";
+      $("viewCliente").textContent = d.c && d.c.trim() ? d.c : "Por completar";
+      $("viewContacto").textContent = d.ce || "—";
+      $("viewProyecto").textContent = d.p || "—";
+      $("viewTipo").textContent = d.t || "—";
+      $("viewDuracion").textContent = `${d.w || 0} semana(s)`;
+      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "No se registró un alcance detallado. Los entregables acordados son los comunicados entre las partes.";
+      $("viewTotal").textContent = money(d.mt);
+
+      const modalidadLabel = d.m === "2partes" ? "Pago en 2 partes" : "Pago semanal";
       $("viewModalidad").textContent = modalidadLabel;
 
       let html = "";
-      if (data.m === "2partes") {
+      if (d.m === "2partes") {
         html = `<table><thead><tr><th>Parte</th><th>Momento</th><th style="text-align:right">Monto</th></tr></thead><tbody>
-          <tr><td>Primera parte</td><td>${(data.h1 || "Al firmar")}</td><td class="amount" style="text-align:right">${money(data.p1)}</td></tr>
-          <tr><td>Segunda parte</td><td>${(data.h2 || "Al finalizar")}</td><td class="amount" style="text-align:right">${money(data.p2)}</td></tr>
-          <tr><td colspan="2"><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money((Number(data.p1)||0)+(Number(data.p2)||0))}</strong></td></tr>
+          <tr><td>Primera parte</td><td>${(d.h1 || "Al firmar")}</td><td class="amount" style="text-align:right">${money(d.p1)}</td></tr>
+          <tr><td>Segunda parte</td><td>${(d.h2 || "Al finalizar")}</td><td class="amount" style="text-align:right">${money(d.p2)}</td></tr>
+          <tr><td colspan="2"><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money((Number(d.p1) || 0) + (Number(d.p2) || 0))}</strong></td></tr>
         </tbody></table>`;
       } else {
-        const ws = Array.isArray(data.ws) ? data.ws : [];
-        const suma = ws.reduce((a,b) => a + Number(b || 0), 0);
+        const ws = Array.isArray(d.ws) ? d.ws : [];
+        const suma = ws.reduce((a, b) => a + Number(b || 0), 0);
         html = `<table><thead><tr><th>Semana</th><th style="text-align:right">Monto</th></tr></thead><tbody>` +
           ws.map((v, i) => `<tr><td>Semana ${i+1}</td><td class="amount" style="text-align:right">${money(v)}</td></tr>`).join("") +
           `<tr><td><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money(suma)}</strong></td></tr>` +
@@ -623,9 +662,9 @@
       }
       $("viewSchedule").innerHTML = html;
 
-      $("scriptSignDev").textContent = data.nd || data.d || "—";
-      $("viewFirmanteDev").textContent = (data.nd || data.d || "—") + (data.e ? ` · ${data.e}` : "");
-      $("viewFechaFirmaDev").textContent = fmtDate(data.fd);
+      $("scriptSignDev").textContent = d.nd || d.d || "—";
+      $("viewFirmanteDev").textContent = (d.nd || d.d || "—") + (d.e ? ` · ${d.e}` : "");
+      $("viewFechaFirmaDev").textContent = fmtDate(d.fd);
     };
 
     const data = readPayload();
@@ -633,19 +672,29 @@
       $("alertNoData").style.display = "block";
     } else {
       renderContract(data);
+      if (data.c) $("nombreCliente").value = data.c;
     }
 
     if (!$("fechaFirmaCliente").value) {
       $("fechaFirmaCliente").value = new Date().toISOString().split("T")[0];
     }
 
+    if (data) {
+      $("nombreCliente").addEventListener("input", () => {
+        const v = ($("nombreCliente").value || "").trim();
+        $("viewCliente").textContent = v || (data.c && data.c.trim() ? data.c : "Por completar");
+      });
+    }
+
     const canvas = $("firmaCliente");
     const ctx = canvas.getContext("2d");
+    const imgPdf = $("firmaPdfImg");
     let drawing = false, lastX = 0, lastY = 0;
 
     const resizeCanvas = () => {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const rect = canvas.getBoundingClientRect();
+      if (rect.width < 2) return;
       canvas.width = Math.floor(rect.width * ratio);
       canvas.height = Math.floor(rect.height * ratio);
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -663,38 +712,98 @@
 
     canvas.addEventListener("mousedown", (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; });
     canvas.addEventListener("mousemove", (e) => { if (!drawing) return; const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; });
-    canvas.addEventListener("mouseup", () => drawing = false);
-    canvas.addEventListener("mouseleave", () => drawing = false);
+    canvas.addEventListener("mouseup", () => { drawing = false; });
+    canvas.addEventListener("mouseleave", () => { drawing = false; });
     canvas.addEventListener("touchstart", (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }, { passive: false });
     canvas.addEventListener("touchmove", (e) => { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; }, { passive: false });
-    canvas.addEventListener("touchend", () => drawing = false);
+    canvas.addEventListener("touchend", () => { drawing = false; });
 
     $("limpiarFirma").addEventListener("click", () => {
       const ratio = Math.max(window.devicePixelRatio || 1, 1);
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width * ratio, rect.height * ratio);
+      imgPdf.style.display = "none";
+      imgPdf.removeAttribute("src");
+      canvas.style.display = "block";
       $("estadoAccion").textContent = "Firma limpiada.";
     });
 
-    const setTitle = () => {
-      const nombre = ($("nombreCliente").value || (data && data.c) || "cliente").trim().replace(/\s+/g, "-").toLowerCase();
-      const proyecto = ((data && data.p) || "proyecto").trim().replace(/\s+/g, "-").toLowerCase();
-      document.title = `contrato-${nombre}-${proyecto}`;
-    };
+    $("descargarPdf").addEventListener("click", async () => {
+      if (!data) {
+        $("estadoAccion").textContent = "No hay datos de contrato.";
+        return;
+      }
+      const nombre = ($("nombreCliente").value || "").trim();
+      if (!nombre) {
+        $("estadoAccion").textContent = "Escribe tu nombre completo.";
+        return;
+      }
+      if (isCanvasEmpty(canvas)) {
+        $("estadoAccion").textContent = "Firma en el recuadro (dedo o mouse).";
+        return;
+      }
 
-    $("descargarPdf").addEventListener("click", () => {
-      setTitle();
-      $("estadoAccion").textContent = "Se abrirá el diálogo para guardar como PDF.";
-      window.print();
+      if (typeof window.html2pdf === "undefined") {
+        $("estadoAccion").textContent = "Error: no se pudo cargar el generador de PDF. Recarga la pagina.";
+        return;
+      }
+
+      const el = $("doc");
+      const btn = $("descargarPdf");
+      const filename = `contrato-${fileSlug(nombre, "cliente")}-${fileSlug(data.p, "proyecto")}.pdf`;
+
+      try {
+        await document.fonts.ready;
+      } catch (_) {}
+
+      const dataUrl = canvas.toDataURL("image/png");
+      imgPdf.src = dataUrl;
+      imgPdf.style.width = "100%";
+      imgPdf.style.maxHeight = "200px";
+      imgPdf.style.objectFit = "contain";
+      imgPdf.style.display = "block";
+      canvas.style.display = "none";
+      document.title = `contrato-${fileSlug(nombre, "c")}-${fileSlug(data.p, "p")}`;
+
+      btn.disabled = true;
+      $("estadoAccion").textContent = "Generando PDF...";
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename,
+        image: { type: "jpeg", quality: 0.94 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          letterRendering: true,
+          scrollY: 0,
+          windowWidth: el.scrollWidth,
+          logging: false,
+          onclone: (doc) => {
+            doc.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
+          },
+        },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"] },
+      };
+      try {
+        await html2pdf().set(opt).from(el).save();
+        $("estadoAccion").textContent = "PDF descargado.";
+      } catch (err) {
+        console.error(err);
+        $("estadoAccion").textContent = "No se pudo generar el PDF. Intenta de nuevo o con otro navegador.";
+      } finally {
+        imgPdf.removeAttribute("src");
+        imgPdf.style.display = "none";
+        canvas.style.display = "block";
+        btn.disabled = false;
+      }
     });
 
-    $("imprimir").addEventListener("click", () => {
-      setTitle();
-      window.print();
-    });
-
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+    if (window.requestAnimationFrame) {
+      requestAnimationFrame(() => { setTimeout(resizeCanvas, 0); });
+    } else {
+      setTimeout(resizeCanvas, 100);
+    }
   </script>
 </body>
 </html>

@@ -630,6 +630,7 @@
             <div id="vistaSchedule" style="margin-top:12px;"></div>
 
             <h3 style="margin-top:18px;">Link para el cliente</h3>
+            <p class="hint" style="margin:0 0 6px;">Se intenta un link <strong>corto</strong> (ej. <code>marketingconholistic.com/abc1</code>) vía el acortador. El cliente toca y entra; si no hay conexión con la API, te mostramos el link largo con los datos encriptados en la URL.</p>
             <div class="link-box">
               <div id="linkDisplay" class="link-display">Genera el link para verlo aquí.</div>
               <div class="btns">
@@ -773,10 +774,25 @@
       fe: $("fechaEmision").value,
     });
 
-    const makeClientLink = () => {
+    const makeClientLongUrl = () => {
       const json = JSON.stringify(getPayload());
       const token = LZString.compressToEncodedURIComponent(json);
-      return `${window.location.origin}/contrato-legal#${token}`;
+      const u = new URL("/contrato-legal", window.location.origin);
+      u.searchParams.set("d", token);
+      return u.toString();
+    };
+
+    const shortenWithApi = async (longUrl) => {
+      try {
+        const r = await fetch("/api/url-shortener/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ originalUrl: longUrl }),
+        });
+        const j = await r.json();
+        if (j.success && j.data && j.data.shortUrl) return j.data.shortUrl;
+      } catch (_) {}
+      return null;
     };
 
     const savePrefs = () => {
@@ -817,17 +833,31 @@
     $("modaSemanal").addEventListener("click", () => setModalidad("semanal"));
     $("moda2Partes").addEventListener("click", () => setModalidad("2partes"));
 
-    $("generarLink").addEventListener("click", () => {
-      const link = makeClientLink();
-      $("linkDisplay").textContent = link;
-      $("estadoAccion").textContent = "Link listo para compartir.";
+    $("generarLink").addEventListener("click", async () => {
+      const longUrl = makeClientLongUrl();
+      $("estadoAccion").textContent = "Generando link corto...";
+      $("generarLink").disabled = true;
+      const short = await shortenWithApi(longUrl);
+      $("generarLink").disabled = false;
+      if (short) {
+        $("linkDisplay").textContent = short;
+        $("estadoAccion").textContent = "Link corto listo. El cliente abre, redirige al contrato y ve todo. Copia y envia.";
+        return;
+      }
+      $("linkDisplay").textContent = longUrl;
+      $("estadoAccion").textContent = "No se pudo acortar ahora. Usa el link completo, o revisa /api/url-shortener y Supabase.";
     });
 
     $("copiarLink").addEventListener("click", async () => {
-      const link = $("linkDisplay").textContent && $("linkDisplay").textContent.startsWith("http") ? $("linkDisplay").textContent : makeClientLink();
-      $("linkDisplay").textContent = link;
+      const shown = ($("linkDisplay").textContent || "").trim();
+      const longUrl = makeClientLongUrl();
+      let toCopy = shown;
+      if (!toCopy || toCopy === "Genera el link para verlo aquí." || !/^https?:/i.test(toCopy)) {
+        toCopy = (await shortenWithApi(longUrl)) || longUrl;
+        $("linkDisplay").textContent = toCopy;
+      }
       try {
-        await navigator.clipboard.writeText(link);
+        await navigator.clipboard.writeText(toCopy);
         $("estadoAccion").textContent = "Link copiado al portapapeles.";
       } catch (_) {
         $("estadoAccion").textContent = "Selecciónalo y cópialo manualmente.";
@@ -835,7 +865,7 @@
     });
 
     $("vistaPrevia").addEventListener("click", () => {
-      window.open(makeClientLink(), "_blank");
+      window.open(makeClientLongUrl(), "_blank");
     });
 
     $("imprimirAdmin").addEventListener("click", () => window.print());
