@@ -387,6 +387,22 @@
       border: 1px solid #fecaca;
     }
 
+    .btn-wa {
+      color: #fff;
+      background: #25D366;
+      border: 1px solid #128C7E;
+      box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+    }
+
+    .btn-wa:hover {
+      filter: brightness(1.06);
+    }
+
+    .btn-wa:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
     .legal {
       margin-top: 14px;
       background: #fff;
@@ -562,9 +578,14 @@
             </div>
           </div>
 
-          <div class="btns pdf-exclude">
+          <div class="btns pdf-exclude" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
             <button type="button" class="btn-primary" id="descargarPdf">Descargar PDF</button>
+            <button type="button" class="btn-wa" id="compartirWhatsapp" title="Compartir o enviar por WhatsApp">Compartir PDF (WhatsApp)</button>
+            </div>
+            <button type="button" class="btn-secondary" id="abrirWhatsapp" disabled title="Solo abre el chat con el mensaje, usando el ultimo PDF generado (sin recalcular)">Solo abrir WhatsApp (sin generar otra vez)</button>
           </div>
+          <p class="muted pdf-exclude" style="font-size:0.8rem; margin:6px 0 0; line-height:1.45;">En el móvil se abre el menú de compartir: elige WhatsApp. En PC, se descarga el PDF y se abre WhatsApp con un mensaje; adjunta el archivo descargado. Tras el primer PDF, guardamos una copia en memoria: el botón gris reabre el mismo mensaje de WhatsApp sin generar otra vez.</p>
           <div id="estadoAccion" class="state-msg pdf-exclude"></div>
         </div>
 
@@ -725,36 +746,67 @@
       imgPdf.style.display = "none";
       imgPdf.removeAttribute("src");
       canvas.style.display = "block";
-      $("estadoAccion").textContent = "Firma limpiada.";
+      olvidarUltimoPdf();
+      $("estadoAccion").textContent = "Firma limpiada. Vuelve a generar el PDF (el anterior dejo de ser valido en memoria).";
     });
 
-    $("descargarPdf").addEventListener("click", async () => {
-      if (!data) {
-        $("estadoAccion").textContent = "No hay datos de contrato.";
-        return;
-      }
-      const nombre = ($("nombreCliente").value || "").trim();
-      if (!nombre) {
-        $("estadoAccion").textContent = "Escribe tu nombre completo.";
-        return;
-      }
-      if (isCanvasEmpty(canvas)) {
-        $("estadoAccion").textContent = "Firma en el recuadro (dedo o mouse).";
-        return;
-      }
+    const resetFirmaView = () => {
+      imgPdf.removeAttribute("src");
+      imgPdf.style.display = "none";
+      canvas.style.display = "block";
+    };
 
-      if (typeof window.html2pdf === "undefined") {
-        $("estadoAccion").textContent = "Error: no se pudo cargar el generador de PDF. Recarga la pagina.";
-        return;
-      }
+    /** Último PDF generado en esta pestaña: sirve para abrir de nuevo el mismo enlace a WhatsApp sin html2pdf. */
+    let ultimoPdf = null;
+    // { blob, filename, text, waUrl, nombre, ts }
+
+    const actualizarBotonSoloWhatsapp = () => {
+      const b = $("abrirWhatsapp");
+      if (b) b.disabled = !ultimoPdf;
+    };
+
+    const guardarUltimoPdf = (blob, filename, nombre) => {
+      const text = buildWhatsappText(nombre);
+      ultimoPdf = {
+        blob,
+        filename,
+        text,
+        nombre,
+        waUrl: "https://api.whatsapp.com/send?text=" + encodeURIComponent(text),
+        ts: Date.now(),
+      };
+      actualizarBotonSoloWhatsapp();
+    };
+
+    const olvidarUltimoPdf = () => {
+      ultimoPdf = null;
+      actualizarBotonSoloWhatsapp();
+    };
+
+    const setPdfBusy = (v) => {
+      $("descargarPdf").disabled = v;
+      const wa = $("compartirWhatsapp");
+      if (wa) wa.disabled = v;
+      const solo = $("abrirWhatsapp");
+      if (solo) solo.disabled = v || !ultimoPdf;
+    };
+
+    const buildWhatsappText = (nombre) => {
+      const n = (data && data.nc) || "—";
+      return `Hola, te comparto el contrato firmado (${n}).\nFirmante: ${nombre}.\n(Marketing con Holistic)`;
+    };
+
+    async function generateContractPdfBlob() {
+      if (!data) throw new Error("no-data");
+      const nombre = ($("nombreCliente").value || "").trim();
+      if (!nombre) throw new Error("no-nombre");
+      if (isCanvasEmpty(canvas)) throw new Error("no-firma");
+      if (typeof window.html2pdf === "undefined") throw new Error("no-lib");
 
       const el = $("doc");
-      const btn = $("descargarPdf");
       const filename = `contrato-${fileSlug(nombre, "cliente")}-${fileSlug(data.p, "proyecto")}.pdf`;
 
-      try {
-        await document.fonts.ready;
-      } catch (_) {}
+      try { await document.fonts.ready; } catch (_) {}
 
       const dataUrl = canvas.toDataURL("image/png");
       imgPdf.src = dataUrl;
@@ -765,8 +817,6 @@
       canvas.style.display = "none";
       document.title = `contrato-${fileSlug(nombre, "c")}-${fileSlug(data.p, "p")}`;
 
-      btn.disabled = true;
-      $("estadoAccion").textContent = "Generando PDF...";
       const opt = {
         margin: [8, 8, 8, 8],
         filename,
@@ -778,26 +828,133 @@
           scrollY: 0,
           windowWidth: el.scrollWidth,
           logging: false,
-          onclone: (doc) => {
-            doc.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
+          onclone: (d) => {
+            d.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
           },
         },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: { mode: ["css", "legacy"] },
       };
+
+      const h2p = html2pdf().set(opt).from(el);
+      let blob;
+      if (typeof h2p.outputPdf === "function") {
+        blob = await h2p.outputPdf("blob");
+      } else if (typeof h2p.output === "function") {
+        blob = await h2p.output("blob");
+      } else {
+        throw new Error("html2pdf sin output");
+      }
+      guardarUltimoPdf(blob, filename, nombre);
+      return { blob, filename, nombre };
+    }
+
+    const errMsg = (e) => {
+      if (e && e.message === "no-nombre") return "Escribe tu nombre completo.";
+      if (e && e.message === "no-firma") return "Firma en el recuadro (dedo o mouse).";
+      if (e && e.message === "no-data") return "No hay datos de contrato.";
+      if (e && e.message === "no-lib") return "Error: no se pudo cargar el generador de PDF. Recarga la pagina.";
+      return "No se pudo generar el PDF. Intenta de nuevo o con otro navegador.";
+    };
+
+    $("descargarPdf").addEventListener("click", async () => {
+      setPdfBusy(true);
+      $("estadoAccion").textContent = "Generando PDF...";
       try {
-        await html2pdf().set(opt).from(el).save();
+        const { blob, filename } = await generateContractPdfBlob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.rel = "noopener";
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3e3);
         $("estadoAccion").textContent = "PDF descargado.";
       } catch (err) {
         console.error(err);
-        $("estadoAccion").textContent = "No se pudo generar el PDF. Intenta de nuevo o con otro navegador.";
+        $("estadoAccion").textContent = errMsg(err);
       } finally {
-        imgPdf.removeAttribute("src");
-        imgPdf.style.display = "none";
-        canvas.style.display = "block";
-        btn.disabled = false;
+        resetFirmaView();
+        setPdfBusy(false);
       }
     });
+
+    $("compartirWhatsapp").addEventListener("click", async () => {
+      setPdfBusy(true);
+      $("estadoAccion").textContent = "Preparando para compartir...";
+      let blob;
+      let filename;
+      let nombre;
+      try {
+        const out = await generateContractPdfBlob();
+        blob = out.blob;
+        filename = out.filename;
+        nombre = out.nombre;
+      } catch (err) {
+        console.error(err);
+        $("estadoAccion").textContent = errMsg(err);
+        setPdfBusy(false);
+        return;
+      } finally {
+        resetFirmaView();
+      }
+
+      const file = new File([blob], filename, { type: "application/pdf" });
+      const text = buildWhatsappText(nombre);
+      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+
+      let puedeArchivo = true;
+      try {
+        if (typeof navigator.canShare === "function") {
+          puedeArchivo = navigator.canShare({ files: [file] });
+        }
+      } catch (_) {
+        puedeArchivo = false;
+      }
+
+      if (navigator.share && puedeArchivo) {
+        try {
+          await navigator.share({ files: [file], title: "Contrato firmado", text });
+          $("estadoAccion").textContent = "Listo. Elige WhatsApp u otra app para enviar el PDF.";
+          setPdfBusy(false);
+          return;
+        } catch (e) {
+          if (e && e.name === "AbortError") {
+            $("estadoAccion").textContent = "Compartir cancelado.";
+            setPdfBusy(false);
+            return;
+          }
+        }
+      }
+
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 3e3);
+        $("estadoAccion").textContent = "Se descargó el PDF. Se abre WhatsApp: en el chat, usa adjuntar archivo y elige el PDF descargado.";
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+      } catch (e) {
+        console.error(e);
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+        $("estadoAccion").textContent = "Abre WhatsApp; si hace falta, descarga el PDF con el botón de arriba y adjuntalo.";
+      } finally {
+        setPdfBusy(false);
+      }
+    });
+
+    $("abrirWhatsapp").addEventListener("click", () => {
+      if (!ultimoPdf) {
+        $("estadoAccion").textContent = "Primero usa Descargar o Compartir: asi se genera y guarda el PDF en memoria en esta pagina.";
+        return;
+      }
+      window.open(ultimoPdf.waUrl, "_blank", "noopener,noreferrer");
+      $("estadoAccion").textContent = "WhatsApp abierto con el mismo texto. El PDF sigue en memoria por si quieres usar otra vez Compartir PDF.";
+    });
+
+    actualizarBotonSoloWhatsapp();
 
     if (window.requestAnimationFrame) {
       requestAnimationFrame(() => { setTimeout(resizeCanvas, 0); });
