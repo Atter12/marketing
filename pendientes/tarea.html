@@ -3119,10 +3119,34 @@ button.att-action-btn:disabled {
 var supabase = null;
 /** Evita UI vacía: DOMContentLoaded puede correr antes de que tryInitSupabase termine (script CDN lento o carga dinámica). */
 var __tareasDataBootstrapDone = false;
-function tryRunTareasAppBootstrap() {
-  if (__tareasDataBootstrapDone || !supabase) return;
-  if (document.readyState === 'loading') return;
+/** Encola el bootstrap: si el documento aún carga, espera a DOMContentLoaded (evita carrera con tryInit inmediato). */
+function scheduleTareasAppBootstrap(reason) {
+  if (!supabase) {
+    console.log('[Pendientes] boot: schedule omitido (sin supabase) ·', reason || '');
+    return;
+  }
+  if (document.readyState === 'loading') {
+    console.log('[Pendientes] boot: schedule · document.loading → espera DOMContentLoaded ·', reason || '');
+    var once = function() {
+      document.removeEventListener('DOMContentLoaded', once);
+      tryRunTareasAppBootstrap('post-DOMContentLoaded');
+    };
+    document.addEventListener('DOMContentLoaded', once);
+    return;
+  }
+  tryRunTareasAppBootstrap(reason || 'inmediato');
+}
+function tryRunTareasAppBootstrap(reason) {
+  if (__tareasDataBootstrapDone) {
+    console.log('[Pendientes] boot: ya completado, skip ·', reason || '');
+    return;
+  }
+  if (!supabase) {
+    console.warn('[Pendientes] boot: sin supabase, skip ·', reason || '');
+    return;
+  }
   __tareasDataBootstrapDone = true;
+  console.log('[Pendientes] boot: inicio loadTareasData ·', reason || '', '| readyState:', document.readyState);
   showTareasLoading(true);
   loadTareasData().then(function(data) {
     if (data) {
@@ -3133,24 +3157,34 @@ function tryRunTareasAppBootstrap() {
       KT = data.KT;
       tickets = data.tickets;
       calI = data.calI;
+      console.log('[Pendientes] boot: OK — equipos:', (TEAM && TEAM.length) || 0, 'clientes:', (clients && clients.length) || 0, 'tickets:', (tickets && tickets.length) || 0, 'kanban:', (KT && KT.length) || 0);
+    } else {
+      console.warn('[Pendientes] boot: loadTareasData devolvió null (errores arriba o RLS).');
     }
     showTareasLoading(false);
     ensureCurrentSessionMemberActive(function() {
-      initViews();
-      initTareasAvatar();
-      initTareasRealtimeSync();
-      attAutoStartHeartbeat();
+      try {
+        initViews();
+        initTareasAvatar();
+        initTareasRealtimeSync();
+        attAutoStartHeartbeat();
+        console.log('[Pendientes] boot: initViews + realtime + asistencia OK');
+      } catch (e) {
+        console.error('[Pendientes] boot: error en init post-carga', e);
+      }
       refreshTareasSessionPerms(function() {
-        maybeShowHolisticNameGatePendientes();
+        try { maybeShowHolisticNameGatePendientes(); } catch (e2) { console.error('[Pendientes] boot: name gate', e2); }
+        console.log('[Pendientes] boot: listo (permisos + name gate).');
       });
     });
   }).catch(function(err) {
-    console.error('[Pendientes] Error cargando datos:', err);
+    console.error('[Pendientes] boot: falló loadTareasData:', (err && err.message) ? err.message : err, err);
+    if (err && err.stack) console.error('[Pendientes] boot: stack', err.stack);
     showTareasLoading(false);
-    initViews();
-    initTareasAvatar();
+    try { initViews(); } catch (e) { console.error('[Pendientes] boot: initViews tras error', e); }
+    try { initTareasAvatar(); } catch (e) { }
     refreshTareasSessionPerms(function() {
-      maybeShowHolisticNameGatePendientes();
+      try { maybeShowHolisticNameGatePendientes(); } catch (e2) { }
     });
   });
 }
@@ -3207,7 +3241,13 @@ function tryInitSupabase(retryCount) {
     if (skHead) authOpt.storageKey = skHead;
     supabase = createClientFn(url, key, { auth: authOpt });
     console.log('[Pendientes] Supabase OK. URL:', url.replace(/https?:\/\//, '').split('/')[0]);
-    tryRunTareasAppBootstrap();
+    scheduleTareasAppBootstrap('tryInit post createClient');
+    setTimeout(function() {
+      if (supabase && !__tareasDataBootstrapDone) {
+        console.warn('[Pendientes] boot: 4s post-Supabase aún no hubo bootstrap; reintento scheduleTareasAppBootstrap');
+        scheduleTareasAppBootstrap('watchdog 4s');
+      }
+    }, 4000);
   } catch (e) {
     console.warn('[Pendientes] Supabase createClient error:', e);
   }
@@ -4303,6 +4343,7 @@ async function loadTareasData() {
     console.warn('[Pendientes] loadTareasData: supabase es null, no se puede cargar. Revisa los logs de tryInitSupabase.');
     return null;
   }
+  console.log('[Pendientes] loadTareasData: inicio Promise.all tablas (clientes, equipo, kanban, tickets, …)');
   var now = new Date();
   var mes = now.getMonth() + 1, anio = now.getFullYear();
   try {
@@ -4464,9 +4505,13 @@ async function loadTareasData() {
       var resAdj = Array.isArray(t.adjuntos_resolucion) ? t.adjuntos_resolucion : [];
       return { id: t.codigo, dbId: t.id, title: t.titulo, sub: t.subtitulo || '', client: t.cliente_nombre || '', clientColor: t.cliente_color || '', status: t.status, priority: t.prioridad || 'media', category: t.categoria || '', channel: t.canal || '', assignee: t.asignado_id || '', assigneeEmail: (t.asignado_email && String(t.asignado_email).trim()) || '', assigneeEmails: Array.isArray(t.asignados_emails) ? t.asignados_emails : ((t.asignado_email && String(t.asignado_email).trim()) ? [String(t.asignado_email).trim()] : []), sla: formatSlaMinutesOrHours(t.sla_minutos, t.sla_horas), slaLeft: slaLeft, slaStatus: t.sla_status || 'ok', dueAt: t.sla_vencimiento || null, created: formatTicketWhen(t.created_at), createdAtIso: t.created_at || null, due: formatTicketWhen(t.sla_vencimiento), updatedAt: t.updated_at || null, notes: t.notas || '', timeline: timeline, createdByEmail: t.creado_por_email || '', slaMinutos: t.sla_minutos != null ? Number(t.sla_minutos) : null, solicitudAdjuntos: solAdj, resolucionAdjuntos: resAdj, resolucionDetalle: t.resolucion_detalle || '' };
     });
-    return { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
+    var out = { TEAM: TEAM, ATTENDANCE_MEMBERS: ATTENDANCE_MEMBERS, MT: MT, clients: clients, KT: KT, tickets: tickets, calI: calI };
+    console.log('[Pendientes] loadTareasData: fin OK (objeto listo).');
+    return out;
   } catch (err) {
-    console.error('[Pendientes] loadTareasData:', err);
+    console.error('[Pendientes] loadTareasData: EXCEPCIÓN', (err && err.message) ? err.message : err, err);
+    if (err && err.code) console.error('[Pendientes] loadTareasData: code', err.code, 'details', err.details || err.hint || '');
+    if (err && err.stack) console.error('[Pendientes] loadTareasData: stack', err.stack);
     return null;
   }
 }
@@ -8392,7 +8437,7 @@ document.addEventListener('DOMContentLoaded', function() {
       openClientDetail(n);
     });
   })();
-  tryRunTareasAppBootstrap();
+  scheduleTareasAppBootstrap('listener DOMContentLoaded');
   if (!__tareasDataBootstrapDone && !supabase) {
     initViews();
     initTareasAvatar();
