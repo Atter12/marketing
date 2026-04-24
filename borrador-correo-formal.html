@@ -202,6 +202,45 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
+    .btn-secondary.btn-toggle-active {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--color-primary-soft);
+    }
+    .auto-hint {
+      display: none;
+      margin-top: var(--sp-2);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-align: center;
+    }
+    .auto-hint.visible { display: block; }
+    .btn-stop-auto {
+      display: none;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-2);
+      padding: var(--sp-3) var(--sp-5);
+      margin-top: var(--sp-2);
+      border: 1px solid var(--color-error);
+      border-radius: var(--r-lg);
+      font-family: inherit;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--color-error-soft);
+      color: var(--color-error);
+      transition: background var(--tr), border-color var(--tr);
+    }
+    .btn-stop-auto.is-visible { display: inline-flex; }
+    .btn-stop-auto:hover {
+      background: rgba(197, 48, 48, 0.15);
+    }
+    .btn-stop-auto:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .send-status {
       display: none;
       margin-bottom: var(--sp-5);
@@ -305,7 +344,7 @@
       </div>
       <h1>Borrador correo formal</h1>
       <p class="lead">
-        Redacta destinatario, asunto y mensaje. <strong>Enviar correo</strong> usa la misma vía que <strong>cobranza</strong>: función en <strong>Supabase</strong> + <strong>Resend</strong> y plantilla Holistic. Tenés que estar logueado como <strong>gerente</strong> (misma sesión que Crédito). Opcional: «Abrir en mi correo» para revisar en tu cliente antes de enviar.
+        Redacta destinatario, asunto y mensaje. <strong>Enviar correo</strong> usa la misma vía que <strong>cobranza</strong>: función en <strong>Supabase</strong> + <strong>Resend</strong> y plantilla Holistic. Tenés que estar logueado como <strong>gerente</strong> (misma sesión que Crédito). <strong>Envío automático cada 1 min</strong> reenvía con los datos del formulario; podés usar otra pestaña u otra app: mientras <strong>esta pestaña siga abierta en el navegador</strong> suele seguir (a veces el SO duerme la pestaña en segundo plano). Si <strong>cerrás la pestaña o el navegador</strong>, deja de enviarse. Usá <strong>Parar</strong> para cortarlo. Opcional: «Abrir en mi correo» para revisar en tu cliente antes de enviar.
       </p>
 
       <div id="session-bar" class="session-bar session-warn" role="status">
@@ -334,6 +373,15 @@
       <button type="button" class="btn-secondary" id="open-mailto">
         <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
         Abrir en mi correo (mailto)
+      </button>
+      <button type="button" class="btn-secondary" id="auto-send-toggle" disabled>
+        <i class="fas fa-clock" aria-hidden="true"></i>
+        <span id="auto-send-label">Envío automático cada 1 min</span>
+      </button>
+      <p id="auto-hint" class="auto-hint" role="status" aria-live="polite"></p>
+      <button type="button" class="btn-stop-auto" id="auto-send-stop" disabled>
+        <i class="fas fa-stop" aria-hidden="true"></i>
+        Parar envío automático
       </button>
 
       <div class="callout">
@@ -366,12 +414,20 @@
       var statusEl = document.getElementById("send-status");
       var sendBtn = document.getElementById("send-resend");
       var mailtoBtn = document.getElementById("open-mailto");
+      var autoSendBtn = document.getElementById("auto-send-toggle");
+      var autoSendLabel = document.getElementById("auto-send-label");
+      var autoHintEl = document.getElementById("auto-hint");
+      var autoStopBtn = document.getElementById("auto-send-stop");
       var sessionBar = document.getElementById("session-bar");
 
       var supabase = null;
       var supabaseUrl = "";
       var supabaseAnon = "";
       var hasSession = false;
+      var autoSendActive = false;
+      var autoCountdownId = null;
+      var autoSecondsLeft = 60;
+      var autoSendLocked = false;
 
       bodyEl.value = defaultBody;
       subjectEl.value = "Holistic Marketing · Solicitud de contacto";
@@ -429,6 +485,8 @@
           sessionBar.innerHTML =
             "No hay <code>auth-config</code> (Supabase). Abrí esta página desde el sitio desplegado, no como archivo local.";
           sendBtn.disabled = true;
+          if (autoSendBtn) autoSendBtn.disabled = true;
+          stopAutoSend();
           return;
         }
         if (hasSession) {
@@ -448,6 +506,7 @@
               };
             }
             sendBtn.disabled = false;
+            if (autoSendBtn) autoSendBtn.disabled = false;
           });
         } else {
           sessionBar.className = "session-bar session-warn";
@@ -455,6 +514,8 @@
             'Iniciá sesión como <strong>gerente</strong> (misma cuenta que Crédito / cobranza). ' +
             '<a href="/credito">Abrir Crédito</a> y volvé a esta página.';
           sendBtn.disabled = true;
+          if (autoSendBtn) autoSendBtn.disabled = true;
+          stopAutoSend();
         }
       }
 
@@ -499,11 +560,13 @@
         renderSessionBar();
       }
 
-      function validateFields() {
+      function validateFields(opts) {
+        opts = opts || {};
+        var doFocus = opts.skipFocus !== true;
         var addr = (toEl.value || "").trim();
         if (!addr) {
           showStatus(false, "Indica el correo del destinatario (Para).");
-          toEl.focus();
+          if (doFocus) toEl.focus();
           return null;
         }
         clearStatus();
@@ -512,6 +575,79 @@
           subject: (subjectEl.value || "").trim(),
           body: bodyEl.value || "",
         };
+      }
+
+      function stopAutoSend() {
+        if (autoCountdownId) {
+          clearInterval(autoCountdownId);
+          autoCountdownId = null;
+        }
+        autoSendActive = false;
+        autoSendLocked = false;
+        if (autoSendBtn) {
+          autoSendBtn.classList.remove("btn-toggle-active");
+          if (autoSendLabel) autoSendLabel.textContent = "Envío automático cada 1 min";
+        }
+        if (autoStopBtn) {
+          autoStopBtn.classList.remove("is-visible");
+          autoStopBtn.disabled = true;
+        }
+        if (autoHintEl) {
+          autoHintEl.className = "auto-hint";
+          autoHintEl.textContent = "";
+        }
+      }
+
+      function updateAutoHint() {
+        if (!autoHintEl || !autoSendActive) return;
+        autoHintEl.className = "auto-hint visible";
+        if (autoSendLocked) {
+          autoHintEl.textContent = "Enviando correo…";
+        } else {
+          autoHintEl.textContent =
+            "Próximo envío en " +
+            autoSecondsLeft +
+            " s. Podés ir a otra pestaña o app; mientras no cierres esta pestaña, sigue. Parar = cortar ahora.";
+        }
+      }
+
+      function startAutoSend() {
+        if (!hasSession || !supabase) return;
+        stopAutoSend();
+        autoSendActive = true;
+        autoSecondsLeft = 60;
+        if (autoSendBtn) {
+          autoSendBtn.classList.add("btn-toggle-active");
+          if (autoSendLabel) autoSendLabel.textContent = "Desactivar envío automático (cada 1 min)";
+        }
+        if (autoStopBtn) {
+          autoStopBtn.classList.add("is-visible");
+          autoStopBtn.disabled = false;
+        }
+        updateAutoHint();
+        autoCountdownId = setInterval(function () {
+          if (!autoSendActive) return;
+          if (autoSendLocked) {
+            updateAutoHint();
+            return;
+          }
+          if (autoSecondsLeft > 0) {
+            autoSecondsLeft--;
+            updateAutoHint();
+            if (autoSecondsLeft === 0) {
+              autoSendLocked = true;
+              updateAutoHint();
+              runSend(true)
+                .catch(function () {})
+                .then(function () {
+                  autoSendLocked = false;
+                  if (!autoSendActive) return;
+                  autoSecondsLeft = 60;
+                  updateAutoHint();
+                });
+            }
+          }
+        }, 1000);
       }
 
       function setBusy(b) {
@@ -526,12 +662,12 @@
         }
       }
 
-      sendBtn.addEventListener("click", async function () {
-        var payload = validateFields();
+      async function runSend(fromAuto) {
+        var payload = validateFields(fromAuto ? { skipFocus: true } : null);
         if (!payload) return;
         if (!payload.subject) {
           showStatus(false, "El asunto es obligatorio.");
-          subjectEl.focus();
+          if (!fromAuto) subjectEl.focus();
           return;
         }
         if (!supabase || !hasSession) {
@@ -548,7 +684,7 @@
         }
 
         setBusy(true);
-        clearStatus();
+        if (!fromAuto) clearStatus();
 
         try {
           var r = await fetch(PROXY_PATH, {
@@ -579,7 +715,31 @@
           setBusy(false);
           if (hasSession) sendBtn.disabled = false;
         }
+      }
+
+      sendBtn.addEventListener("click", function () {
+        runSend(false);
       });
+
+      if (autoSendBtn) {
+        autoSendBtn.addEventListener("click", function () {
+          if (autoSendActive) {
+            stopAutoSend();
+          } else {
+            startAutoSend();
+          }
+        });
+      }
+
+      window.addEventListener("beforeunload", function () {
+        stopAutoSend();
+      });
+
+      if (autoStopBtn) {
+        autoStopBtn.addEventListener("click", function () {
+          stopAutoSend();
+        });
+      }
 
       mailtoBtn.addEventListener("click", function () {
         var payload = validateFields();
