@@ -238,6 +238,14 @@
       "dest": "/backup-dashboard/index.html"
     },
     {
+      "src": "/contrato",
+      "dest": "/contrato.html"
+    },
+    {
+      "src": "/contrato.html",
+      "dest": "/contrato.html"
+    },
+    {
       "src": "/go/([a-zA-Z0-9-_]+)",
       "dest": "/app-link/redirect.html?slug=$1"
     },
