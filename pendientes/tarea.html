@@ -6588,27 +6588,27 @@ function showModalOverlay() {
   var ov = document.getElementById('modalOverlay');
   if (!ov) return;
   ov.classList.add('show');
-  ov.removeAttribute('aria-hidden');
+  ov.setAttribute('aria-hidden', 'false');
 }
 
 function hideModalOverlay() {
   var ov = document.getElementById('modalOverlay');
   if (!ov) return;
-  var ae = document.activeElement;
-  if (ae && ov.contains(ae)) {
+  try {
+    var m = document.getElementById('main-content');
+    if (m) {
+      m.setAttribute('tabindex', '-1');
+      m.focus({ preventScroll: true });
+    }
+  } catch (err0) {}
+  var guard = 0;
+  while (guard++ < 8) {
+    var ae = document.activeElement;
+    if (!ae || !ov.contains(ae)) break;
     try { ae.blur(); } catch (err) {}
   }
   ov.classList.remove('show');
-  requestAnimationFrame(function() {
-    ov.setAttribute('aria-hidden', 'true');
-    try {
-      var m = document.getElementById('main-content');
-      if (m) {
-        m.setAttribute('tabindex', '-1');
-        m.focus({ preventScroll: true });
-      }
-    } catch (err2) {}
-  });
+  ov.setAttribute('aria-hidden', 'true');
 }
 
 function openModal(type) {
