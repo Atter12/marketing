@@ -246,6 +246,14 @@
       "dest": "/contrato.html"
     },
     {
+      "src": "/contrato-legal",
+      "dest": "/contrato-legal.html"
+    },
+    {
+      "src": "/contrato-legal.html",
+      "dest": "/contrato-legal.html"
+    },
+    {
       "src": "/go/([a-zA-Z0-9-_]+)",
       "dest": "/app-link/redirect.html?slug=$1"
     },

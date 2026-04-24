@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Contrato Legal | Marketing con Holistic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+  <style>
+    :root {
+      --bg: #f5f3ee;
+      --surface: #ffffff;
+      --surface-soft: #faf9f6;
+      --surface-offset: #efede8;
+      --text: #1c1a15;
+      --text-muted: #6b6960;
+      --text-faint: #a8a69f;
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --primary-soft: rgba(249, 115, 22, 0.12);
+      --success: #15803d;
+      --success-soft: rgba(21, 128, 61, 0.1);
+      --danger: #dc2626;
+      --border: #d6d3cc;
+      --border-soft: #e5e2da;
+      --shadow-sm: 0 1px 2px rgba(28, 26, 21, 0.05);
+      --shadow-md: 0 4px 16px rgba(28, 26, 21, 0.08);
+      --shadow-lg: 0 14px 36px rgba(28, 26, 21, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: linear-gradient(180deg, #f5f3ee 0%, #efede8 100%);
+      min-height: 100vh;
+    }
+
+    .wrapper {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px 14px 60px;
+    }
+
+    .doc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .doc-head {
+      padding: 24px 24px 18px;
+      background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+      border-bottom: 1px solid #fdba74;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand-row img {
+      height: 42px;
+      max-width: 180px;
+      object-fit: contain;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #7c2d12;
+      background: #fff;
+      border: 1px solid rgba(249, 115, 22, 0.4);
+      border-radius: 999px;
+      padding: 6px 12px;
+    }
+
+    .chip.green {
+      color: var(--success);
+      background: #f0fdf4;
+      border-color: rgba(21, 128, 61, 0.3);
+    }
+
+    h1.title {
+      margin: 14px 0 4px;
+      font-size: clamp(1.5rem, 3.2vw, 2.1rem);
+      letter-spacing: -0.01em;
+      color: #1c1a15;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin: 0;
+    }
+
+    .meta-top {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .meta-top .item {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid #fdba74;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .meta-top .label {
+      font-size: 0.7rem;
+      color: #7c2d12;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .meta-top .value {
+      font-weight: 800;
+      color: #7c2d12;
+      font-size: 1rem;
+    }
+
+    .doc-body {
+      padding: 24px;
+    }
+
+    .section {
+      border: 1px solid var(--border-soft);
+      border-radius: 14px;
+      background: var(--surface-soft);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.02rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 8px 16px;
+      font-size: 0.94rem;
+    }
+
+    .kv .k {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .kv .v {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .scope {
+      white-space: pre-wrap;
+      background: #fff;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-top: 8px;
+      color: #1c1a15;
+      font-size: 0.95rem;
+    }
+
+    .total-banner {
+      background: linear-gradient(135deg, #fff7ed 0%, #fed7aa 100%);
+      border: 1px solid #fdba74;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .total-banner .label {
+      font-size: 0.74rem;
+      color: #7c2d12;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .total-banner .value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.01em;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.94rem;
+      background: #fff;
+      border: 1px solid var(--border-soft);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    th {
+      background: var(--surface-soft);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    tbody tr:last-child td { border-bottom: 0; }
+
+    td.amount { font-weight: 700; color: var(--primary); white-space: nowrap; }
+
+    .sign-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .sign-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .sign-box h3 {
+      margin: 0 0 8px;
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .script-sign {
+      font-family: 'Great Vibes', cursive;
+      color: #1c1a15;
+      font-size: 2.3rem;
+      line-height: 1.2;
+      padding: 10px 4px;
+      border-bottom: 2px solid #0f172a;
+      min-height: 56px;
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+
+    .sign-meta {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .sign-meta strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .signature-wrap {
+      background: #fffaf5;
+      border: 1px solid #fed7aa;
+      border-radius: 12px;
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    #firmaCliente {
+      width: 100%;
+      min-height: 200px;
+      background: #fff;
+      border-radius: 10px;
+      border: 2px dashed #fdba74;
+      touch-action: none;
+      cursor: crosshair;
+      display: block;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-soft);
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .08s ease, box-shadow .15s ease;
+    }
+
+    button:active { transform: translateY(1px); }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      box-shadow: 0 4px 14px rgba(249, 115, 22, 0.3);
+    }
+
+    .btn-primary:hover { box-shadow: 0 6px 18px rgba(249, 115, 22, 0.42); }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: #fff;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .legal {
+      margin-top: 14px;
+      background: #fff;
+      border: 1px solid var(--border-soft);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.88rem;
+      color: #4b5563;
+    }
+
+    .badge-stamp {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1.5px dashed #0f172a;
+      color: #0f172a;
+      margin-top: 8px;
+    }
+
+    .state-msg {
+      color: var(--success);
+      font-size: 0.86rem;
+      min-height: 18px;
+      margin-top: 6px;
+    }
+
+    .alert {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      color: #78350f;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      margin-top: 18px;
+    }
+
+    @media print {
+      body { background: #fff !important; }
+      .doc { box-shadow: none !important; border: 0 !important; }
+      .doc-head { background: #fff7ed !important; }
+      .btns, .alert { display: none !important; }
+      .section { break-inside: avoid; }
+    }
+
+    @media (max-width: 720px) {
+      .sign-card { grid-template-columns: 1fr; }
+      .kv { grid-template-columns: 1fr; gap: 2px 0; }
+      .kv .k { margin-top: 6px; }
+      .meta-top { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      .doc-head, .doc-body { padding: 16px; }
+      h1.title { font-size: 1.3rem; }
+      .total-banner .value { font-size: 1.35rem; }
+      #firmaCliente { min-height: 170px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrapper">
+    <section class="doc" id="doc">
+      <div class="doc-head">
+        <div class="brand-row">
+          <img src="/credito-app/logo/logoh.png" alt="Marketing con Holistic">
+          <span class="chip">Contrato Digital</span>
+          <span class="chip green">Empresa legalmente constituida</span>
+        </div>
+        <h1 class="title">Contrato de servicio profesional</h1>
+        <p class="muted" id="subtitleDoc">Documento generado para el cliente con los términos acordados.</p>
+
+        <div class="meta-top">
+          <div class="item">
+            <div class="label">N° de contrato</div>
+            <div class="value" id="viewNumero">—</div>
+          </div>
+          <div class="item">
+            <div class="label">Fecha de emisión</div>
+            <div class="value" id="viewFecha">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-body">
+        <div id="alertNoData" class="alert" style="display:none;">
+          Este link parece incompleto o expiró. Pide al proveedor que te envíe un nuevo link.
+        </div>
+
+        <div class="section">
+          <h2>Partes del contrato</h2>
+          <div class="kv">
+            <div class="k">Prestador del servicio</div>
+            <div class="v" id="viewDev">—</div>
+            <div class="k">Empresa</div>
+            <div class="v" id="viewEmpresa">—</div>
+            <div class="k">Cliente</div>
+            <div class="v" id="viewCliente">—</div>
+            <div class="k">Contacto</div>
+            <div class="v" id="viewContacto">—</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Detalle del proyecto</h2>
+          <div class="kv">
+            <div class="k">Nombre del proyecto</div>
+            <div class="v" id="viewProyecto">—</div>
+            <div class="k">Tipo de servicio</div>
+            <div class="v" id="viewTipo">—</div>
+            <div class="k">Duración estimada</div>
+            <div class="v" id="viewDuracion">—</div>
+          </div>
+          <div class="scope" id="viewAlcance">—</div>
+        </div>
+
+        <div class="section">
+          <h2>Condiciones económicas</h2>
+          <div class="total-banner">
+            <div>
+              <div class="label">Monto total del contrato</div>
+              <div class="value" id="viewTotal">S/ 0.00</div>
+            </div>
+            <div class="chip" id="viewModalidad">Modalidad</div>
+          </div>
+          <div id="viewSchedule"></div>
+        </div>
+
+        <div class="section">
+          <h2>Firma del prestador</h2>
+          <div class="sign-box">
+            <h3>Firmado digitalmente</h3>
+            <div class="script-sign" id="scriptSignDev">—</div>
+            <div class="sign-meta">
+              <div><strong id="viewFirmanteDev">—</strong></div>
+              <div>Fecha: <span id="viewFechaFirmaDev">—</span></div>
+              <div class="badge-stamp">Empresa legalmente constituida</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Firma del cliente</h2>
+          <p class="muted" style="margin:0 0 10px;">Completa tu nombre y firma en el recuadro para aceptar el contrato.</p>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div>
+              <label for="nombreCliente">Nombre completo</label>
+              <input id="nombreCliente" placeholder="Tu nombre y apellido">
+            </div>
+            <div>
+              <label for="fechaFirmaCliente">Fecha</label>
+              <input id="fechaFirmaCliente" type="date">
+            </div>
+          </div>
+
+          <div class="signature-wrap">
+            <label>Firma</label>
+            <canvas id="firmaCliente"></canvas>
+            <div class="btns">
+              <button type="button" class="btn-danger" id="limpiarFirma">Limpiar firma</button>
+            </div>
+          </div>
+
+          <div class="btns">
+            <button type="button" class="btn-primary" id="descargarPdf">Descargar PDF del contrato</button>
+            <button type="button" class="btn-secondary" id="imprimir">Imprimir</button>
+          </div>
+          <div id="estadoAccion" class="state-msg"></div>
+        </div>
+
+        <div class="legal">
+          El cliente declara haber revisado y aceptado el alcance, cronograma, costos y modalidad de pago descritos en este documento. La propiedad intelectual del código y activos se transfiere al cliente una vez completado el pago total, salvo componentes de terceros sujetos a sus licencias. Retrasos por falta de materiales, feedback o aprobaciones del cliente ajustan el cronograma sin penalidad para el prestador. Cambios de alcance, nuevas funcionalidades o integraciones no contempladas se cotizan aparte mediante anexo. En caso de mora superior a 3 días calendario en cualquier cuota, se podrá aplicar un recargo de hasta 5% sobre el saldo pendiente y ajustar la fecha de entrega según el impacto operativo. Este documento firmado digitalmente tiene validez comercial y legal entre las partes, emitido por una empresa legalmente constituida.
+        </div>
+
+        <div class="footer">
+          © Marketing con Holistic · Contrato digital
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const money = (n) => new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(Number(n || 0));
+
+    const readPayload = () => {
+      const hash = (window.location.hash || "").replace(/^#/, "");
+      if (!hash) return null;
+      try {
+        const json = LZString.decompressFromEncodedURIComponent(hash);
+        if (!json) return null;
+        return JSON.parse(json);
+      } catch (_) { return null; }
+    };
+
+    const fmtDate = (iso) => {
+      if (!iso) return "—";
+      try {
+        const [y, m, d] = iso.split("-");
+        return `${d}/${m}/${y}`;
+      } catch (_) { return iso; }
+    };
+
+    const renderContract = (data) => {
+      $("viewNumero").textContent = data.nc || "—";
+      $("viewFecha").textContent = fmtDate(data.fe);
+      $("viewDev").textContent = data.d || "—";
+      $("viewEmpresa").textContent = data.e || "—";
+      $("viewCliente").textContent = data.c || "Por completar";
+      $("viewContacto").textContent = data.ce || "—";
+      $("viewProyecto").textContent = data.p || "—";
+      $("viewTipo").textContent = data.t || "—";
+      $("viewDuracion").textContent = `${data.w || 0} semana(s)`;
+      $("viewAlcance").textContent = (data.a && data.a.trim()) ? data.a : "No se registró un alcance detallado. Los entregables acordados son los comunicados entre las partes.";
+      $("viewTotal").textContent = money(data.mt);
+
+      const modalidadLabel = data.m === "2partes" ? "Pago en 2 partes" : "Pago semanal";
+      $("viewModalidad").textContent = modalidadLabel;
+
+      let html = "";
+      if (data.m === "2partes") {
+        html = `<table><thead><tr><th>Parte</th><th>Momento</th><th style="text-align:right">Monto</th></tr></thead><tbody>
+          <tr><td>Primera parte</td><td>${(data.h1 || "Al firmar")}</td><td class="amount" style="text-align:right">${money(data.p1)}</td></tr>
+          <tr><td>Segunda parte</td><td>${(data.h2 || "Al finalizar")}</td><td class="amount" style="text-align:right">${money(data.p2)}</td></tr>
+          <tr><td colspan="2"><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money((Number(data.p1)||0)+(Number(data.p2)||0))}</strong></td></tr>
+        </tbody></table>`;
+      } else {
+        const ws = Array.isArray(data.ws) ? data.ws : [];
+        const suma = ws.reduce((a,b) => a + Number(b || 0), 0);
+        html = `<table><thead><tr><th>Semana</th><th style="text-align:right">Monto</th></tr></thead><tbody>` +
+          ws.map((v, i) => `<tr><td>Semana ${i+1}</td><td class="amount" style="text-align:right">${money(v)}</td></tr>`).join("") +
+          `<tr><td><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money(suma)}</strong></td></tr>` +
+          `</tbody></table>`;
+      }
+      $("viewSchedule").innerHTML = html;
+
+      $("scriptSignDev").textContent = data.nd || data.d || "—";
+      $("viewFirmanteDev").textContent = (data.nd || data.d || "—") + (data.e ? ` · ${data.e}` : "");
+      $("viewFechaFirmaDev").textContent = fmtDate(data.fd);
+    };
+
+    const data = readPayload();
+    if (!data) {
+      $("alertNoData").style.display = "block";
+    } else {
+      renderContract(data);
+    }
+
+    if (!$("fechaFirmaCliente").value) {
+      $("fechaFirmaCliente").value = new Date().toISOString().split("T")[0];
+    }
+
+    const canvas = $("firmaCliente");
+    const ctx = canvas.getContext("2d");
+    let drawing = false, lastX = 0, lastY = 0;
+
+    const resizeCanvas = () => {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * ratio);
+      canvas.height = Math.floor(rect.height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.lineWidth = 2.4;
+      ctx.strokeStyle = "#14213d";
+    };
+
+    const getPos = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches && e.touches[0]) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+
+    canvas.addEventListener("mousedown", (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; });
+    canvas.addEventListener("mousemove", (e) => { if (!drawing) return; const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; });
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseleave", () => drawing = false);
+    canvas.addEventListener("touchstart", (e) => { drawing = true; const p = getPos(e); lastX = p.x; lastY = p.y; e.preventDefault(); }, { passive: false });
+    canvas.addEventListener("touchmove", (e) => { if (!drawing) return; e.preventDefault(); const p = getPos(e); ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); lastX = p.x; lastY = p.y; }, { passive: false });
+    canvas.addEventListener("touchend", () => drawing = false);
+
+    $("limpiarFirma").addEventListener("click", () => {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width * ratio, rect.height * ratio);
+      $("estadoAccion").textContent = "Firma limpiada.";
+    });
+
+    const setTitle = () => {
+      const nombre = ($("nombreCliente").value || (data && data.c) || "cliente").trim().replace(/\s+/g, "-").toLowerCase();
+      const proyecto = ((data && data.p) || "proyecto").trim().replace(/\s+/g, "-").toLowerCase();
+      document.title = `contrato-${nombre}-${proyecto}`;
+    };
+
+    $("descargarPdf").addEventListener("click", () => {
+      setTitle();
+      $("estadoAccion").textContent = "Se abrirá el diálogo para guardar como PDF.";
+      window.print();
+    });
+
+    $("imprimir").addEventListener("click", () => {
+      setTitle();
+      window.print();
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+  </script>
+</body>
+</html>
