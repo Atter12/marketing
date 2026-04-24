@@ -4,18 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contrato de Desarrollo | Marketing con Holistic</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/credito-app/favicon/favicon.png?v=2">
   <style>
     :root {
-      --bg: #0b1020;
-      --panel: #131a2f;
-      --panel-soft: #1a2340;
-      --text: #e9ecf8;
-      --muted: #aab3d1;
-      --accent: #5eead4;
-      --accent-2: #60a5fa;
-      --danger: #fb7185;
-      --border: #2b365d;
-      --ok: #34d399;
+      --bg: #f5f3ee;
+      --panel: #faf9f6;
+      --panel-soft: #ffffff;
+      --text: #1c1a15;
+      --muted: #6b6960;
+      --accent: #f97316;
+      --accent-2: #ea580c;
+      --danger: #dc2626;
+      --border: #d6d3cc;
+      --ok: #15803d;
     }
 
     * {
@@ -26,7 +30,7 @@
       margin: 0;
       font-family: "Inter", "Segoe UI", sans-serif;
       color: var(--text);
-      background: radial-gradient(circle at top right, #172248, var(--bg) 55%);
+      background: linear-gradient(180deg, #f5f3ee 0%, #efede8 100%);
       min-height: 100vh;
       line-height: 1.45;
     }
@@ -38,12 +42,11 @@
     }
 
     .card {
-      background: linear-gradient(165deg, rgba(19, 26, 47, 0.95), rgba(13, 18, 34, 0.96));
+      background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 18px;
       padding: 20px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 12px 32px rgba(28, 26, 21, 0.12);
     }
 
     h1, h2, h3 {
@@ -58,7 +61,7 @@
 
     h2 {
       font-size: clamp(1.1rem, 2.5vw, 1.3rem);
-      color: #d7def7;
+      color: #1c1a15;
     }
 
     p {
@@ -75,12 +78,27 @@
       align-items: center;
       gap: 8px;
       font-size: 0.85rem;
-      color: #c9d5ff;
-      background: rgba(96, 165, 250, 0.18);
-      border: 1px solid rgba(96, 165, 250, 0.3);
+      color: #9a3412;
+      background: rgba(249, 115, 22, 0.14);
+      border: 1px solid rgba(249, 115, 22, 0.24);
       border-radius: 999px;
       padding: 6px 12px;
       margin-bottom: 10px;
+    }
+
+    .brand-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand-logo {
+      height: 44px;
+      width: 182px;
+      object-fit: contain;
+      display: block;
     }
 
     .layout {
@@ -92,7 +110,7 @@
     .section {
       border: 1px solid var(--border);
       border-radius: 14px;
-      background: rgba(24, 32, 60, 0.55);
+      background: var(--panel-soft);
       padding: 14px;
       margin-bottom: 12px;
     }
@@ -112,15 +130,15 @@
     label {
       display: block;
       font-size: 0.83rem;
-      color: #b9c2df;
+      color: #6b6960;
       margin-bottom: 6px;
       font-weight: 600;
     }
 
     input, select, textarea {
       width: 100%;
-      border: 1px solid #334172;
-      background: #0f1630;
+      border: 1px solid #ccc9c2;
+      background: #ffffff;
       color: var(--text);
       border-radius: 10px;
       padding: 11px 12px;
@@ -134,8 +152,8 @@
     }
 
     input:focus, select:focus, textarea:focus {
-      border-color: var(--accent-2);
-      box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.18);
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.18);
     }
 
     .full {
@@ -159,14 +177,14 @@
     }
 
     .btn-primary {
-      color: #04131a;
-      background: linear-gradient(135deg, var(--accent), #4ee0ff);
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
     }
 
     .btn-secondary {
-      color: var(--text);
-      background: #243054;
-      border: 1px solid #374c86;
+      color: #1c1a15;
+      background: #fff;
+      border: 1px solid #d6d3cc;
     }
 
     .btn-danger {
@@ -180,8 +198,8 @@
     }
 
     .amount-box {
-      background: linear-gradient(165deg, #0f1734, #151e39);
-      border: 1px solid #32406f;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
       border-radius: 12px;
       padding: 12px;
     }
@@ -189,7 +207,7 @@
     .amount-box strong {
       display: block;
       margin-bottom: 4px;
-      color: #d8e0ff;
+      color: #7c2d12;
     }
 
     .value {
@@ -201,32 +219,32 @@
 
     .small {
       font-size: 0.85rem;
-      color: #b4bfdc;
+      color: #6b6960;
     }
 
-    #firma {
+    #firma, #firmaDev {
       width: 100%;
       min-height: 220px;
       background: #ffffff;
       border-radius: 10px;
-      border: 2px dashed #355186;
+      border: 2px dashed #fdba74;
       touch-action: none;
       cursor: crosshair;
       display: block;
     }
 
     .signature-wrap {
-      background: #0f1630;
-      border: 1px solid #334172;
+      background: #fffaf5;
+      border: 1px solid #fed7aa;
       border-radius: 12px;
       padding: 10px;
     }
 
     .legal {
       font-size: 0.9rem;
-      color: #afbddf;
-      background: rgba(18, 26, 50, 0.75);
-      border: 1px solid #334172;
+      color: #4b5563;
+      background: #fff;
+      border: 1px solid #e5e7eb;
       border-radius: 12px;
       padding: 12px;
       margin-top: 12px;
@@ -247,16 +265,16 @@
     }
 
     .meta-contract .item {
-      border: 1px solid #334172;
+      border: 1px solid #fed7aa;
       border-radius: 10px;
-      background: rgba(15, 22, 48, 0.9);
+      background: #fff7ed;
       padding: 10px;
     }
 
     .meta-contract .label {
       display: block;
       font-size: 0.8rem;
-      color: #aeb9db;
+      color: #7c2d12;
       margin-bottom: 4px;
       font-weight: 600;
     }
@@ -264,7 +282,7 @@
     .meta-contract .content {
       font-size: 0.95rem;
       font-weight: 700;
-      color: #e7ecff;
+      color: #9a3412;
     }
 
     .readonly-tip {
@@ -344,7 +362,10 @@
   <main class="wrapper">
     <section class="card">
       <header class="header">
-        <span class="badge">Contrato Digital · Marketing con Holistic</span>
+        <div class="brand-head">
+          <img class="brand-logo" src="/credito-app/logo/logoh.png" alt="Marketing con Holistic">
+          <span class="badge">Contrato Digital · Marketing con Holistic</span>
+        </div>
         <h1>Contrato de Desarrollo Web y Aplicacion Movil</h1>
         <p>Documento formal para compartir con cliente por link directo, con alcance del proyecto, costos, modalidad de pago y firma digital.</p>
         <input id="numeroContrato" type="hidden">
@@ -379,6 +400,22 @@
                 <input id="empresaDev" placeholder="Marketing con Holistic">
               </div>
               <div>
+                <label for="razonSocial">Razon social</label>
+                <input id="razonSocial" placeholder="Razon social registrada">
+              </div>
+              <div>
+                <label for="rucEmpresa">RUC</label>
+                <input id="rucEmpresa" placeholder="Numero de RUC">
+              </div>
+              <div>
+                <label for="sunarpPartida">Partida SUNARP</label>
+                <input id="sunarpPartida" placeholder="Partida electronica SUNARP">
+              </div>
+              <div>
+                <label for="direccionEmpresa">Direccion fiscal</label>
+                <input id="direccionEmpresa" placeholder="Direccion de la empresa">
+              </div>
+              <div>
                 <label for="cliente">Cliente / Empresa</label>
                 <input id="cliente" placeholder="Nombre del cliente">
               </div>
@@ -410,7 +447,7 @@
             <h2>Estructura de cobro</h2>
             <div class="grid">
               <div>
-                <label for="montoTotal">Monto total (USD)</label>
+                <label for="montoTotal">Monto total (PEN)</label>
                 <input id="montoTotal" type="number" min="0" step="0.01" value="1200">
               </div>
               <div>
@@ -424,7 +461,7 @@
 
             <div id="bloqueSemanal" class="grid-3" style="margin-top:10px;">
               <div>
-                <label for="semanal">Pago por semana (USD)</label>
+                <label for="semanal">Pago por semana (PEN)</label>
                 <input id="semanal" type="number" min="0" step="0.01" value="300">
               </div>
               <div>
@@ -439,11 +476,11 @@
 
             <div id="bloque2Partes" class="grid-3" style="display:none; margin-top:10px;">
               <div>
-                <label for="pago1">Primera parte (USD)</label>
+                <label for="pago1">Primera parte (PEN)</label>
                 <input id="pago1" type="number" min="0" step="0.01" value="600">
               </div>
               <div>
-                <label for="pago2">Segunda parte (USD)</label>
+                <label for="pago2">Segunda parte (PEN)</label>
                 <input id="pago2" type="number" min="0" step="0.01" value="600">
               </div>
               <div>
@@ -526,6 +563,7 @@
           <div class="legal">
             El cliente declara haber revisado y aceptado alcance, cronograma, costos y modalidad de pago. La propiedad intelectual del codigo y activos se transfiere al cliente una vez completado el pago total, salvo componentes de terceros sujetos a sus licencias. Retrasos por falta de materiales, feedback o aprobaciones del cliente ajustan el cronograma sin penalidad para el desarrollador. Cambios de alcance, nuevas funcionalidades o integraciones no contempladas se cotizan aparte mediante anexo. En caso de mora superior a 3 dias calendario en cualquier cuota, se podra aplicar un recargo de hasta 5% sobre el saldo pendiente y ajustar la fecha de entrega segun el impacto operativo. Este documento firmado digitalmente tiene validez comercial y legal entre las partes.
           </div>
+          <div class="legal" id="legalEmpresa"></div>
         </aside>
       </div>
     </section>
@@ -535,7 +573,7 @@
     const $ = (id) => document.getElementById(id);
 
     const fields = [
-      "desarrollador", "empresaDev", "cliente", "proyecto", "tipo", "duracion", "alcance", "montoTotal",
+      "desarrollador", "empresaDev", "razonSocial", "rucEmpresa", "sunarpPartida", "direccionEmpresa", "cliente", "proyecto", "tipo", "duracion", "alcance", "montoTotal",
       "modalidad", "semanal", "semanaInicio", "semanaFin", "pago1", "pago2",
       "hito2", "nombreFirmante", "fechaFirma", "nombreDesarrolladorFirma", "fechaFirmaDev",
       "numeroContrato", "fechaEmision"
@@ -543,7 +581,7 @@
 
     const money = (n) => {
       const v = Number(n || 0);
-      return new Intl.NumberFormat("es-ES", { style: "currency", currency: "USD" }).format(v);
+      return new Intl.NumberFormat("es-PE", { style: "currency", currency: "PEN" }).format(v);
     };
 
     const q = new URLSearchParams(window.location.search);
@@ -562,6 +600,12 @@
         const hito = $("hito2").value || "al finalizar";
         $("vistaPago").textContent = `${money(p1)} inicial + ${money(p2)} ${hito}.`;
       }
+      const empresa = $("empresaDev").value || "Marketing con Holistic";
+      const razon = $("razonSocial").value || "Razon social no especificada";
+      const ruc = $("rucEmpresa").value || "RUC pendiente";
+      const sunarp = $("sunarpPartida").value || "Partida SUNARP pendiente";
+      const direccion = $("direccionEmpresa").value || "Direccion fiscal pendiente";
+      $("legalEmpresa").textContent = `${empresa} (${razon}), identificado con RUC ${ruc}, empresa registrada en SUNARP con Partida ${sunarp}, con domicilio fiscal en ${direccion}. Este contrato se emite en moneda Soles (PEN).`;
     };
 
     const toggleModalidad = () => {
@@ -611,6 +655,8 @@
         $("fechaFirmaDev").value = today;
       }
       generateContractMeta();
+      if (!$("empresaDev").value) $("empresaDev").value = "Marketing con Holistic";
+      if (!$("desarrollador").value) $("desarrollador").value = "Marketing con Holistic";
       toggleModalidad();
     };
 
