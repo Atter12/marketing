@@ -2449,7 +2449,23 @@ button.att-action-btn:disabled {
     if(b)return b;
     var h=window.location.hostname;
     if(h==='localhost'||h==='127.0.0.1')return window.location.origin;
-    return 'https://www.marketingconholistic.com';
+    var known=window.__KNOWN_APP_HOSTS__;
+    if(!known||!Array.isArray(known)){
+      known=['www.marketingconholistic.com','marketingconholistic.com','www.hecom.club','hecom.club'];
+    }
+    for(var i=0;i<known.length;i++){ if(known[i]===h) return window.location.origin; }
+    var fb=(typeof window.__APP_ORIGIN_FALLBACK__==='string'&&window.__APP_ORIGIN_FALLBACK__.trim())?String(window.__APP_ORIGIN_FALLBACK__).replace(/\/$/,''):'https://www.hecom.club';
+    return fb;
+  }
+  function __isKnownAppHost(hostname){
+    var h=hostname||'';
+    if(h==='localhost'||h==='127.0.0.1')return true;
+    var known=window.__KNOWN_APP_HOSTS__;
+    if(!known||!Array.isArray(known)){
+      known=['www.marketingconholistic.com','marketingconholistic.com','www.hecom.club','hecom.club'];
+    }
+    for(var j=0;j<known.length;j++){ if(known[j]===h) return true; }
+    return false;
   }
   function __holisticSupabaseAuthStorageKey(u){
     if(!u||typeof u!=='string')return undefined;
@@ -2458,7 +2474,7 @@ button.att-action-btn:disabled {
   var hashEarly=window.location.hash||'';
   var hostEarly=window.location.hostname;
   var isLocalEarly=hostEarly==='localhost'||hostEarly==='127.0.0.1';
-  var isHolisticHost=hostEarly==='www.marketingconholistic.com'||hostEarly==='marketingconholistic.com';
+  var isHolisticHost=__isKnownAppHost(hostEarly);
   if(hashEarly.indexOf('access_token')!==-1&&!isLocalEarly&&!isHolisticHost){
     window.location.replace(__holisticWebBase()+'/pendientes'+hashEarly);
     return;

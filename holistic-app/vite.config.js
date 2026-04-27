@@ -57,9 +57,18 @@ function authConfigPlugin() {
       const url = process.env.PUBLIC_SUPABASE_URL || '';
       const key = process.env.PUBLIC_SUPABASE_ANON_KEY || '';
       const storageApi = process.env.PUBLIC_MARKETING_STORAGE_API || '';
+      const fallbackOrigin = (process.env.PUBLIC_APP_ORIGIN_FALLBACK || 'https://www.hecom.club').replace(/\/$/, '');
+      const knownHostsRaw =
+        process.env.PUBLIC_KNOWN_APP_HOSTS ||
+        'www.marketingconholistic.com,marketingconholistic.com,www.hecom.club,hecom.club';
+      const knownHostsArr = knownHostsRaw
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const knownHostsJson = JSON.stringify(knownHostsArr);
       writeFileSync(
         out,
-        `window.__SUPABASE_URL__="${url.replace(/"/g, '\\"')}";window.__SUPABASE_ANON_KEY__="${key.replace(/"/g, '\\"')}";window.__MARKETING_STORAGE_API__="${storageApi.replace(/"/g, '\\"')}";\n`,
+        `window.__SUPABASE_URL__="${url.replace(/"/g, '\\"')}";window.__SUPABASE_ANON_KEY__="${key.replace(/"/g, '\\"')}";window.__MARKETING_STORAGE_API__="${storageApi.replace(/"/g, '\\"')}";window.__APP_ORIGIN_FALLBACK__="${fallbackOrigin.replace(/"/g, '\\"')}";window.__KNOWN_APP_HOSTS__=${knownHostsJson};\n`,
         'utf8'
       );
     },

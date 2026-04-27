@@ -11,7 +11,7 @@ const corsHeaders = {
 function getAppUrl(): string {
   const url = Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "";
   if (url) return url.replace(/\/$/, "");
-  return "https://www.marketingconholistic.com/credito";
+  return "https://www.hecom.club/credito";
 }
 
 function escapeHtml(s: string): string {

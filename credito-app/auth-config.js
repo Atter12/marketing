@@ -1,1 +1,1 @@
-window.__SUPABASE_URL__="";window.__SUPABASE_ANON_KEY__="";window.__MARKETING_STORAGE_API__="";
+window.__SUPABASE_URL__="";window.__SUPABASE_ANON_KEY__="";window.__MARKETING_STORAGE_API__="";window.__APP_ORIGIN_FALLBACK__="https://www.hecom.club";window.__KNOWN_APP_HOSTS__=["www.marketingconholistic.com","marketingconholistic.com","www.hecom.club","hecom.club"];

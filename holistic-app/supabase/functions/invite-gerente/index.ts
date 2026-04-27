@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     }
 
     const redirectRaw = typeof body.redirect_to === "string" ? body.redirect_to.trim() : "";
-    const fallback = Deno.env.get("INVITE_REDIRECT_URL") || "https://www.marketingconholistic.com/pendientes/tarea.html";
+    const fallback = Deno.env.get("INVITE_REDIRECT_URL") || "https://www.hecom.club/pendientes/tarea.html";
     const redirectTo = redirectRaw.startsWith("http") ? redirectRaw : fallback;
 
     const useResend = !!Deno.env.get("RESEND_API_KEY");

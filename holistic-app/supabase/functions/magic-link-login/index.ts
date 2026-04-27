@@ -9,10 +9,26 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+/** Sin APP_URL en secrets: Crédito en dominio principal (Hecom); marketingconholistic sigue válido vía redirect explícito. */
+const FALLBACK_CREDITO_APP = "https://www.hecom.club/credito";
+
+function allowedRedirectHosts(): string[] {
+  const raw = Deno.env.get("ALLOWED_APP_REDIRECT_HOSTS");
+  if (raw && raw.trim()) {
+    return raw.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  }
+  return ["www.hecom.club", "hecom.club", "www.marketingconholistic.com", "marketingconholistic.com"];
+}
+
+function isAllowedAppRedirectHost(hostname: string): boolean {
+  const h = String(hostname || "").toLowerCase();
+  return allowedRedirectHosts().includes(h);
+}
+
 function getAppUrl(): string {
   const url = Deno.env.get("APP_URL") || Deno.env.get("PUBLIC_APP_URL") || "";
   if (url) return url.replace(/\/$/, "");
-  return "https://www.marketingconholistic.com/credito";
+  return FALLBACK_CREDITO_APP;
 }
 
 function normalizeEmail(email: string): string {
@@ -96,16 +112,16 @@ Deno.serve(async (req) => {
           try {
             const tr = new URL(trimmedRedirect.startsWith("http") ? trimmedRedirect : `https://${trimmedRedirect}`);
             const th = tr.hostname.toLowerCase();
-            if (th === "www.marketingconholistic.com" || th === "marketingconholistic.com") {
+            if (isAllowedAppRedirectHost(th)) {
               appUrl = trimmedRedirect;
             } else {
-              appUrl = "https://www.marketingconholistic.com/credito";
+              appUrl = FALLBACK_CREDITO_APP;
             }
           } catch {
-            appUrl = "https://www.marketingconholistic.com/credito";
+            appUrl = FALLBACK_CREDITO_APP;
           }
         } else {
-          appUrl = "https://www.marketingconholistic.com/credito";
+          appUrl = FALLBACK_CREDITO_APP;
         }
       }
     } catch {

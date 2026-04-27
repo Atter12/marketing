@@ -1714,7 +1714,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const finanzasExternalUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/finanzas`
-      : "https://www.marketingconholistic.com/finanzas";
+      : "https://www.hecom.club/finanzas";
 
   /* NAV: gerente = Métricas (gráficos/KPIs) + Resumen (tabla desglose); cliente = Mi cuenta, Resumen, … */
   const nav = isCliente
@@ -1734,7 +1734,13 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         { id: "cobranza", icon: <Mail size={18} />, label: "Cobranza", accent: "#e11d48" },
         { id: "garantias", icon: <Shield size={18} />, label: "Garantías", accent: "#7c3aed" },
         { id: "finanzas", icon: <Landmark size={18} />, label: "Finanzas", external: finanzasExternalUrl, section: "Sistema", accent: "#0d9488" },
-        { id: "backup", icon: <HardDrive size={18} />, label: "Copia de seguridad", external: "https://www.marketingconholistic.com/backup-dashboard", accent: "#64748b" },
+        {
+          id: "backup",
+          icon: <HardDrive size={18} />,
+          label: "Copia de seguridad",
+          external: typeof window !== "undefined" ? `${window.location.origin}/backup-dashboard` : "https://www.hecom.club/backup-dashboard",
+          accent: "#64748b",
+        },
       ];
 
   const pct = curDDisplay && (curDDisplay.tG + curDDisplay.tF) > 0 ? (curDDisplay.tP / (curDDisplay.tG + curDDisplay.tF)) * 100 : 0;

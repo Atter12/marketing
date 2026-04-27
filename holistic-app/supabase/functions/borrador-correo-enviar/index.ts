@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
     const logoRaw = (
       Deno.env.get("COBRANZA_LOGO_URL") ||
       Deno.env.get("EMAIL_LOGO_URL") ||
-      "https://www.marketingconholistic.com/credito-app/logo/logoh.png"
+      "https://www.hecom.club/credito-app/logo/logoh.png"
     ).trim();
     const logoUrl = safeHttpsUrl(logoRaw);
     const subject = normalizeSubject(rawSubject, brandName);
