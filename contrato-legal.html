@@ -660,7 +660,7 @@
       $("viewProyecto").textContent = d.p || "—";
       $("viewTipo").textContent = d.t || "—";
       $("viewDuracion").textContent = `${d.w || 0} semana(s)`;
-      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "La persona y la empresa se hacen responsables del prestamo otorgado.";
+      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "Se pagara en 2 meses: S/ 335 por mes (capital total S/ 670). El interes es S/ 35 por cada mes, siendo S/ 70 de interes total. La persona y la empresa se hacen responsables del prestamo.";
       $("viewTotal").textContent = money(d.mt);
 
       const modalidadLabel = d.m === "2partes" ? "Pago en 2 cuotas" : "Pago por cuotas";
