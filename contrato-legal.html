@@ -509,7 +509,7 @@
             <div class="v" id="viewDev">—</div>
             <div class="k">Empresa</div>
             <div class="v" id="viewEmpresa">—</div>
-            <div class="k">Prestatario</div>
+            <div class="k">Yo (deudor)</div>
             <div class="v" id="viewCliente">—</div>
             <div class="k">Contacto</div>
             <div class="v" id="viewContacto">—</div>
@@ -590,7 +590,7 @@
         </div>
 
         <div class="legal">
-          El prestatario declara haber revisado y aceptado el monto, fechas y modalidad de pago descritos en este documento. La persona firmante y la empresa vinculada al contrato se hacen responsables solidariamente del cumplimiento total del prestamo. En caso de mora superior a 3 dias calendario en cualquier cuota, se podra aplicar un recargo de hasta 5% sobre el saldo pendiente. Este documento firmado digitalmente tiene validez comercial y legal entre las partes.
+          El deudor declara haber revisado y aceptado el monto y las fechas de pago descritas en este documento. Este documento firmado digitalmente tiene validez comercial y legal entre las partes.
         </div>
 
         <div class="footer">
@@ -660,7 +660,7 @@
       $("viewProyecto").textContent = d.p || "—";
       $("viewTipo").textContent = d.t || "—";
       $("viewDuracion").textContent = `${d.w || 0} semana(s)`;
-      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "Yo, como prestatario, recibo un prestamo total de S/ 670 y me comprometo a pagarlo en 2 meses: S/ 335 por mes.";
+      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "Recibo S/ 670 y pagare S/ 335 por mes durante 2 meses.";
       $("viewTotal").textContent = money(d.mt);
 
       const modalidadLabel = d.m === "2partes" ? "Pago en 2 cuotas" : "Pago por cuotas";
