@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { supabase, isGerente, getClientIdForUser } from "./supabase";
+import { getSupabase, isGerente, getClientIdForUser } from "./supabase";
 import { isAuthBootstrapDebugEnabled, logAuthLine } from "./authDebug.js";
 import Login from "./Login";
 import App from "./App";
@@ -20,6 +20,7 @@ export default function AuthGate() {
 
   useEffect(() => {
     mounted.current = true;
+    const supabase = getSupabase();
     if (!supabase) {
       setStatus(statuses.login);
       return;

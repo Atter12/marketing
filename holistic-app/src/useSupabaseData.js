@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 
 function mapGaranteContacto(x) {
   if (!x || typeof x !== "object") return { nombre: "", telefono: "", email: "" };
@@ -58,6 +58,7 @@ function mapManual(r) {
 }
 
 export function useSupabaseData(role, clientId) {
+  const supabase = getSupabase();
   const [clients, setClients] = useState([]);
   const [gastos, setGastos] = useState([]);
   const [cobros, setCobros] = useState([]);
@@ -149,7 +150,7 @@ export function useSupabaseData(role, clientId) {
     if (coRes.error) throw coRes.error;
     setGastos((gRes.data || []).map(mapGasto));
     setCobros((coRes.data || []).map(mapCobro));
-  }, [role, supabase]);
+  }, [role]);
 
   useEffect(() => {
     fetchAll();

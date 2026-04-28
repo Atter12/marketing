@@ -1,8 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
-
 /** Misma clave que Pendientes/Creativos (HTML): una sola sesión en localStorage para todo el dominio. */
 function supabaseAuthStorageKey(url) {
   if (!url) return undefined;
@@ -14,40 +11,82 @@ function supabaseAuthStorageKey(url) {
   }
 }
 
-const authStorageKey = supabaseAuthStorageKey(supabaseUrl);
+function buildAuthOptions(url) {
+  const authStorageKey = supabaseAuthStorageKey(url);
+  return {
+    flowType: "implicit",
+    persistSession: true,
+    autoRefreshToken: true,
+    storage: localStorage,
+    // false: el hash lo consume consumeAuthHashIfPresent (main.jsx) antes de createRoot; evita carrera con GoTrueClient.initialize + lectura del #.
+    detectSessionInUrl: false,
+    ...(authStorageKey ? { storageKey: authStorageKey } : {}),
+  };
+}
+
+function trySharedClient() {
+  if (typeof window !== "undefined" && window.__CREDITO_SHARED_SUPABASE__) {
+    return window.__CREDITO_SHARED_SUPABASE__;
+  }
+  return null;
+}
+
+let _windowBackedClient = null;
+
+/** Cliente creado con UMD global (credito.html / auth-config) cuando el build no inyecta PUBLIC_* . */
+function tryWindowGlobalsClient() {
+  if (typeof window === "undefined") return null;
+  if (_windowBackedClient) return _windowBackedClient;
+  const url = window.__SUPABASE_URL__ || "";
+  const key = window.__SUPABASE_ANON_KEY__ || "";
+  const create = window.supabase?.createClient;
+  if (!url || !key || typeof create !== "function") return null;
+  _windowBackedClient = create(url, key, { auth: buildAuthOptions(url) });
+  return _windowBackedClient;
+}
+
+function tryEnvClient() {
+  const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL || "";
+  const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY || "";
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  return createClient(supabaseUrl, supabaseAnonKey, { auth: buildAuthOptions(supabaseUrl) });
+}
+
+/**
+ * Resuelve el cliente en runtime (Hecom: __CREDITO_SHARED_SUPABASE__ / window.__SUPABASE_*).
+ * No usar `export const supabase = …` con solo import.meta.env: el bundler lo pliega a `null` sin .env y AuthGate pierde el chequeo de sesión.
+ */
+export function getSupabase() {
+  return trySharedClient() || tryWindowGlobalsClient() || tryEnvClient();
+}
 
 /** Sin secretos: para consola en handoff / mismatches con Hecom (misma URL → mismo storageKey). */
 export function getSupabaseAuthDebugMeta() {
-  let supabaseHostname = null;
+  let url = "";
   try {
-    if (supabaseUrl) supabaseHostname = new URL(supabaseUrl).hostname;
+    if (typeof window !== "undefined" && window.__SUPABASE_URL__) url = window.__SUPABASE_URL__;
   } catch {
     /* ignore */
   }
+  if (!url) url = import.meta.env.PUBLIC_SUPABASE_URL || "";
+  let supabaseHostname = null;
+  try {
+    if (url) supabaseHostname = new URL(url).hostname;
+  } catch {
+    /* ignore */
+  }
+  const storageKey = supabaseAuthStorageKey(url) ?? null;
   return {
     supabaseHostname,
-    storageKey: authStorageKey ?? null,
+    storageKey,
     flowType: "implicit",
     detectSessionInUrl: false,
   };
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        flowType: "implicit",
-        persistSession: true,
-        autoRefreshToken: true,
-        storage: localStorage,
-        // false: el hash lo consume consumeAuthHashIfPresent (main.jsx) antes de createRoot; evita carrera con GoTrueClient.initialize + lectura del #.
-        detectSessionInUrl: false,
-        ...(authStorageKey ? { storageKey: authStorageKey } : {}),
-      },
-    })
-  : null;
-
 /** Devuelve true si el usuario logueado está en la tabla gerentes */
 export async function isGerente() {
+  const supabase = getSupabase();
   if (!supabase) return false;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return false;
@@ -58,6 +97,7 @@ export async function isGerente() {
 
 /** Devuelve el client_id (uuid) si el usuario es un cliente vinculado; si no, null */
 export async function getClientIdForUser() {
+  const supabase = getSupabase();
   if (!supabase) return null;
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) return null;
@@ -93,6 +133,7 @@ const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
 
 /** Sube una imagen como foto de perfil del cliente y devuelve la URL pública. clientId = uuid del cliente. */
 export async function uploadAvatar(clientId, file) {
+  const supabase = getSupabase();
   if (!supabase || !clientId) throw new Error("Configuración o cliente no disponible");
   if (!file || !ALLOWED_AVATAR_TYPES.includes(file.type)) throw new Error("El archivo debe ser imagen (JPG, PNG, WebP o GIF)");
   if (file.size > MAX_AVATAR_SIZE) throw new Error("La imagen no puede superar 5 MB");
@@ -114,6 +155,7 @@ function gerenteSlug(email) {
 
 /** Sube la foto de perfil del gerente y devuelve la URL pública. email = correo del gerente. */
 export async function uploadGerenteAvatar(email, file) {
+  const supabase = getSupabase();
   if (!supabase || !email) throw new Error("Configuración o correo no disponible");
   if (!file || !ALLOWED_AVATAR_TYPES.includes(file.type)) throw new Error("El archivo debe ser imagen (JPG, PNG, WebP o GIF)");
   if (file.size > MAX_AVATAR_SIZE) throw new Error("La imagen no puede superar 5 MB");
@@ -128,6 +170,7 @@ export async function uploadGerenteAvatar(email, file) {
 
 /** Obtiene el perfil del gerente (id, avatar_url) por email. */
 export async function getGerenteProfile(email) {
+  const supabase = getSupabase();
   if (!supabase || !email) return { id: null, avatar_url: null };
   const { data, error } = await supabase.from("gerentes").select("id, avatar_url").ilike("email", email).maybeSingle();
   if (error) {
@@ -139,6 +182,7 @@ export async function getGerenteProfile(email) {
 
 /** Actualiza la foto de perfil del gerente por email (busca por email y actualiza por id si existe). */
 export async function updateGerenteAvatar(email, avatarUrl) {
+  const supabase = getSupabase();
   if (!supabase || !email) throw new Error("Configuración o correo no disponible");
   const { data: row } = await supabase.from("gerentes").select("id").ilike("email", email).maybeSingle();
   if (row?.id) {
@@ -161,6 +205,7 @@ export function loginToEmail(value) {
 
 /** Solicita magic link para entrar al panel. Solo envía si el email está en gerentes o clientes_acceso. */
 export async function solicitarMagicLink(email, options = {}) {
+  const supabase = getSupabase();
   if (!supabase) throw new Error("App no configurada");
   const e = String(email || "").trim();
   if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
@@ -175,6 +220,7 @@ export async function solicitarMagicLink(email, options = {}) {
 
 /** Valida que el email pueda entrar (gerentes/clientes_acceso). Si ok, el cliente puede llamar signInWithOtp y luego verifyOtp. */
 export async function solicitarCodigoLogin(email) {
+  const supabase = getSupabase();
   if (!supabase) throw new Error("App no configurada");
   const e = String(email || "").trim();
   if (!e || !e.includes("@")) throw new Error("Indicá un correo válido.");
@@ -189,6 +235,7 @@ export async function solicitarCodigoLogin(email) {
 
 /** Verifica el código de 6 dígitos enviado por Supabase (signInWithOtp) y crea la sesión. */
 export async function verificarCodigoLogin(email, token) {
+  const supabase = getSupabase();
   if (!supabase) throw new Error("App no configurada");
   const e = String(email || "").trim();
   const t = String(token || "").trim().replace(/\s/g, "");
@@ -202,6 +249,7 @@ export async function verificarCodigoLogin(email, token) {
 /** Da acceso al panel: envía un email al cliente (correo de la ficha) con un link mágico. Al abrirlo entra al panel.
  *  Opciones: { regenerate: true } para reenviar el link; { redirect_to: url } para la URL de redirección tras el login. */
 export async function darAccesoCliente(clientId, options = {}) {
+  const supabase = getSupabase();
   if (!supabase || !clientId) throw new Error("Cliente no indicado");
   const { data, error } = await supabase.functions.invoke("dar-acceso-cliente", {
     body: { client_id: clientId, regenerate: !!options.regenerate, redirect_to: options.redirect_to || null },
@@ -218,6 +266,7 @@ const MAX_COMPROBANTE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 /** Sube un comprobante de pago para un cobro. Devuelve la ruta a guardar en comprobante_urls. */
 export async function uploadComprobanteCobro(cobroId, file) {
+  const supabase = getSupabase();
   if (!supabase || !cobroId) throw new Error("Configuración o cobro no disponible");
   if (!file || !ALLOWED_COMPROBANTE_TYPES.includes(file.type)) throw new Error("Archivo debe ser imagen (JPG, PNG, WebP, GIF) o PDF");
   if (file.size > MAX_COMPROBANTE_SIZE) throw new Error("El archivo no puede superar 10 MB");
@@ -232,6 +281,7 @@ export async function uploadComprobanteCobro(cobroId, file) {
 
 /** Sube una imagen para una garantía. Devuelve la ruta a guardar en imagen_urls. */
 export async function uploadComprobanteGarantia(garantiaId, file) {
+  const supabase = getSupabase();
   if (!supabase || !garantiaId) throw new Error("Configuración o garantía no disponible");
   if (!file || !ALLOWED_COMPROBANTE_TYPES.includes(file.type)) throw new Error("Archivo debe ser imagen (JPG, PNG, WebP, GIF) o PDF");
   if (file.size > MAX_COMPROBANTE_SIZE) throw new Error("El archivo no puede superar 10 MB");
@@ -246,6 +296,7 @@ export async function uploadComprobanteGarantia(garantiaId, file) {
 
 /** Devuelve una URL firmada para ver un comprobante (bucket privado). path = ej. "cobros/uuid/archivo.jpg". */
 export async function getComprobanteSignedUrl(path, expiresIn = 3600) {
+  const supabase = getSupabase();
   if (!supabase || !path) return null;
   const { data, error } = await supabase.storage.from("comprobantes").createSignedUrl(path, expiresIn);
   if (error) return null;

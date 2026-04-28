@@ -12,7 +12,7 @@ import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { supabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl, isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
+import { getSupabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl, isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
 import { DEUDA_NETA_EPS } from "./debtEpsilon.js";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
@@ -480,6 +480,7 @@ const MN = { fontFamily: "var(--font-body)", fontVariantNumeric: "tabular-nums",
 
 /* ═══════ MAIN APP ═══════ */
 export default function App({ role = "gerente", clientId = null, userEmail = null }) {
+  const supabase = getSupabase();
   const sb = useSupabaseData(role, clientId);
   const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, refetch: refetchData, refetchGastosCobros, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";

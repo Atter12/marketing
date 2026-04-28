@@ -1,4 +1,4 @@
-import { supabase } from './supabase.js';
+import { getSupabase } from './supabase.js';
 import { consumeAuthHashIfPresent } from './authHashBootstrap.js';
 import { isAuthBootstrapDebugEnabled, maskLocationHashForLog, logAuthLine } from './authDebug.js';
 import './holistic-design-system.css';
@@ -35,7 +35,7 @@ function getRedirectFromQuery() {
 function AppRoot() {
   if (isLoginOnly) {
     const redirectTo = getRedirectFromQuery();
-    return <Login supabase={supabase} redirectTo={redirectTo || undefined} variant="plataforma" onSuccess={() => {}} />;
+    return <Login supabase={getSupabase()} redirectTo={redirectTo || undefined} variant="plataforma" onSuccess={() => {}} />;
   }
   return <AuthGate />;
 }
@@ -78,6 +78,7 @@ async function logBootstrapAuthStage(label, client) {
 }
 
 async function bootstrap() {
+  const supabase = typeof window !== 'undefined' ? getSupabase() : null;
   if (typeof window !== 'undefined' && supabase) {
     await logBootstrapAuthStage('before consumeAuthHashIfPresent', supabase);
     await consumeAuthHashIfPresent(supabase);
