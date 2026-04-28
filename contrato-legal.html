@@ -655,7 +655,7 @@
       $("viewFecha").textContent = fmtDate(d.fe);
       $("viewDev").textContent = d.d || "—";
       $("viewEmpresa").textContent = d.e || "—";
-      $("viewCliente").textContent = d.c && d.c.trim() ? d.c : "Por completar";
+      $("viewCliente").textContent = "Por completar";
       $("viewContacto").textContent = d.ce || "—";
       $("viewProyecto").textContent = d.p || "—";
       $("viewTipo").textContent = d.t || "—";
@@ -693,7 +693,7 @@
       $("alertNoData").style.display = "block";
     } else {
       renderContract(data);
-      if (data.c) $("nombreCliente").value = data.c;
+      $("nombreCliente").value = "";
     }
 
     if (!$("fechaFirmaCliente").value) {
@@ -703,7 +703,7 @@
     if (data) {
       $("nombreCliente").addEventListener("input", () => {
         const v = ($("nombreCliente").value || "").trim();
-        $("viewCliente").textContent = v || (data.c && data.c.trim() ? data.c : "Por completar");
+        $("viewCliente").textContent = v || "Por completar";
       });
     }
 

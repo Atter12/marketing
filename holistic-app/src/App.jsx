@@ -517,6 +517,11 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const url = await uploadGerenteAvatar(userEmail, file);
       await updateGerenteAvatar(userEmail, url);
       setGerenteAvatarUrl(url);
+      setLocalGerenteAvatarUrl(url);
+      try { localStorage.setItem("holistic_gerente_avatar_url", url); } catch (_) {}
+      try { localStorage.setItem("hm_gerente_avatar_url", url); } catch (_) {}
+      try { localStorage.setItem("tareas_avatar_url", url); } catch (_) {}
+      try { localStorage.setItem("creativos_avatar_url", url); } catch (_) {}
     } catch (err) {
       alert(err?.message || "Error al subir la foto.");
     } finally {
@@ -527,7 +532,14 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const handleEditarNombreGerente = () => {
     const actual = gerenteNombre.trim() || (userEmail ? userEmail.split("@")[0] : "") || "";
     const n = prompt("Nombre para mostrar en el panel:", actual);
-    if (n != null) { const v = String(n).trim(); setGerenteNombre(v); S.s("gerente_nombre", v); }
+    if (n != null) {
+      const v = String(n).trim();
+      setGerenteNombre(v);
+      S.s("gerente_nombre", v);
+      try { localStorage.setItem("holistic_gerente_nombre", v); } catch (_) {}
+      try { localStorage.setItem("creativos_user_name", v); } catch (_) {}
+      try { console.info("[Holistic Sync][Credito App] name updated", { hasName: !!v }); } catch (_) {}
+    }
   };
 
   const validPages = ["dashboard", "clientes", "gastos", "metricas", "cobros", "cobranza", "reportes", "garantias", "client-detail"];
@@ -2033,13 +2045,42 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (!f || isCliente) return;
-                const r = new FileReader();
-                r.onload = () => {
-                  const dataUrl = r.result;
-                  try { localStorage.setItem("hm_gerente_avatar_url", dataUrl); } catch (_) {}
-                  setLocalGerenteAvatarUrl(dataUrl);
-                };
-                r.readAsDataURL(f);
+                const commitAvatar = typeof window !== "undefined" ? window.__holisticCommitGerenteAvatarFile : null;
+                if (typeof commitAvatar === "function") {
+                  commitAvatar(f, (url) => {
+                    if (url) {
+                      try { localStorage.setItem("holistic_gerente_avatar_url", url); } catch (_) {}
+                      try { localStorage.setItem("hm_gerente_avatar_url", url); } catch (_) {}
+                      try { localStorage.setItem("tareas_avatar_url", url); } catch (_) {}
+                      try { localStorage.setItem("creativos_avatar_url", url); } catch (_) {}
+                      setLocalGerenteAvatarUrl(url);
+                      setGerenteAvatarUrl(url);
+                      try { console.info("[Holistic Sync][Credito App] avatar updated", { hasAvatar: true }); } catch (_) {}
+                      return;
+                    }
+                    const r = new FileReader();
+                    r.onload = () => {
+                      const dataUrl = r.result;
+                      try { localStorage.setItem("holistic_gerente_avatar_url", dataUrl); } catch (_) {}
+                      try { localStorage.setItem("hm_gerente_avatar_url", dataUrl); } catch (_) {}
+                      try { localStorage.setItem("tareas_avatar_url", dataUrl); } catch (_) {}
+                      try { localStorage.setItem("creativos_avatar_url", dataUrl); } catch (_) {}
+                      setLocalGerenteAvatarUrl(dataUrl);
+                    };
+                    r.readAsDataURL(f);
+                  });
+                } else {
+                  const r = new FileReader();
+                  r.onload = () => {
+                    const dataUrl = r.result;
+                    try { localStorage.setItem("holistic_gerente_avatar_url", dataUrl); } catch (_) {}
+                    try { localStorage.setItem("hm_gerente_avatar_url", dataUrl); } catch (_) {}
+                    try { localStorage.setItem("tareas_avatar_url", dataUrl); } catch (_) {}
+                    try { localStorage.setItem("creativos_avatar_url", dataUrl); } catch (_) {}
+                    setLocalGerenteAvatarUrl(dataUrl);
+                  };
+                  r.readAsDataURL(f);
+                }
                 e.target.value = "";
               }}
             />
