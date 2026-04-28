@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, KeyRound, Download, Paperclip, Mail, Activity, Landmark } from "lucide-react";
+import { Shield, DollarSign, Users, CreditCard, Plus, ChevronLeft, ChevronRight, Trash2, Edit3, Search, TrendingUp, BarChart3, Eye, X, Check, AlertCircle, FileText, Home, ArrowUpRight, ArrowDownRight, Calendar, Hash, Percent, Menu, LogOut, HardDrive, ExternalLink, Camera, Download, Paperclip, Mail, Activity, Landmark } from "lucide-react";
 import ClientDetailView from "./ClientDetailView";
 import { buildClientLedgerRows } from "./clientDetailLedger";
 import CobranzaView from "./CobranzaView";
@@ -12,7 +12,7 @@ import { exportToExcel } from "./exportExcel";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { getSupabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, darAccesoCliente, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl, isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
+import { getSupabase, uploadAvatar, uploadGerenteAvatar, getGerenteProfile, updateGerenteAvatar, uploadComprobanteCobro, uploadComprobanteGarantia, getComprobanteSignedUrl, isLikelyBlockedAvatarHotlinkUrl } from "./supabase";
 import { DEUDA_NETA_EPS } from "./debtEpsilon.js";
 
 // Logo: imagen en public/logo/logoh.png (holistic + marketing con gradiente naranja)
@@ -489,8 +489,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [localGerenteAvatarUrl, setLocalGerenteAvatarUrl] = useState(() => { try { if (typeof window === "undefined") return ""; return localStorage.getItem("hm_gerente_avatar_url") || ""; } catch { return ""; } });
   const [uploadingGerenteAvatar, setUploadingGerenteAvatar] = useState(false);
   const avatarInputRef = useRef(null);
-  const [savingAcceso, setSavingAcceso] = useState(false);
-  const [accesoResultado, setAccesoResultado] = useState(null);
   const displayName = isCliente ? (clients[0]?.name || userEmail || "Cliente") : (gerenteNombre.trim() || (userEmail ? (userEmail.split("@")[0] || userEmail) : "") || "Gerente");
   const subLabel = isCliente ? (userEmail || null) : "Gerente";
 
@@ -1116,7 +1114,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     setGf({ ...emptyGf, clientId: curCl || "" });
     setCof(emptyCof);
     setGaf({ ...emptyGaf, clientId: curCl || "" });
-    setAccesoResultado(null);
     setCobroComprobanteFiles([]);
     setCobroEditComprobantePaths([]);
     setCobroEditSignedUrls({});
@@ -1154,7 +1151,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         });
       }
     }
-    if (modal === "dar-acceso") setAccesoResultado(null);
     if (modal === "gasto" && editId) { const g = gastos.find((x) => x.id === editId); if (g) { setGf({ clientId: g.clientId, fechaMovimiento: g.fechaMovimiento || (g.mes ? g.mes + "-15" : td()), mes: g.mes || tm(), camp: g.camp || "", gasto: String(g.gasto), fee: String(g.fee), notas: g.notas || "", prepago: !!g.prepago }); setGfClientNameInput(clients.find((c) => c.id === g.clientId)?.name || ""); } }
     if (modal === "gasto" && !editId && curCl) { setGf((p) => ({ ...p, clientId: curCl })); setGfClientNameInput(clients.find((c) => c.id === curCl)?.name || ""); }
     if (modal === "gasto" && !editId && !curCl) setGfClientNameInput("");
@@ -1316,7 +1312,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     closeMdl();
   };
   const delClient = async (id) => { if (!confirm("¿Eliminar cliente y todos sus datos?")) return; await mutations.delClient(id); closeMdl(); };
-  const submitDarAcceso = async (regenerate = false) => { if (!editId) return; const client = clients.find((c) => c.id === editId); const firstEmail = (client?.emails || []).filter(Boolean)[0]; if (!firstEmail || !String(firstEmail).includes("@")) { alert("Este cliente no tiene correo. Agrega al menos uno en Editar cliente."); return; } try { setSavingAcceso(true); setAccesoResultado(null); const redirectTo = typeof window !== "undefined" ? (window.location.origin + "/credito") : ""; const res = await darAccesoCliente(editId, { regenerate, redirect_to: redirectTo }); setAccesoResultado(res); } catch (err) { alert(err?.message || "Error al dar acceso"); } finally { setSavingAcceso(false); } };
 
   const saveGasto = async () => { if (!gf.clientId || !parseFloat(gf.gasto)) return alert("Completa cliente y gasto"); const periodo = gf.mes || (gf.fechaMovimiento ? gf.fechaMovimiento.slice(0, 7) : tm()); const g = { id: editId || undefined, clientId: gf.clientId, fechaMovimiento: gf.fechaMovimiento || periodo + "-15", mes: periodo, camp: gf.camp || "", gasto: gf.gasto, fee: gf.fee || "10", notas: gf.notas || "", prepago: !!gf.prepago }; await mutations.saveGasto(g); closeMdl(); };
   const delGasto = async (id) => { if (!confirm("¿Eliminar gasto?")) return; await mutations.delGasto(id); };
@@ -2202,8 +2197,15 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <div className="hm-resumen-pro-hero-kpi">
                   <div className="hm-resumen-pro-hero-kpi-icon hm-resumen-pro-hero-kpi-icon--blue"><DollarSign size={20} strokeWidth={2.2} /></div>
                   <div className="hm-resumen-pro-hero-kpi-meta">
-                    <span className="hm-resumen-pro-hero-kpi-label">Inversión (Ads + Fee)</span>
-                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.ads + repData.t.fee)}</span>
+                    <span className="hm-resumen-pro-hero-kpi-label">Ads</span>
+                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.ads)}</span>
+                  </div>
+                </div>
+                <div className="hm-resumen-pro-hero-kpi">
+                  <div className="hm-resumen-pro-hero-kpi-icon hm-resumen-pro-hero-kpi-icon--blue"><Percent size={20} strokeWidth={2.2} /></div>
+                  <div className="hm-resumen-pro-hero-kpi-meta">
+                    <span className="hm-resumen-pro-hero-kpi-label">Fee</span>
+                    <span className="hm-resumen-pro-hero-kpi-val">${fmt(repData.t.fee)}</span>
                   </div>
                 </div>
                 <div className="hm-resumen-pro-hero-kpi">
@@ -2615,7 +2617,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               return (
                 <>
                   <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-clientes" autoFocusScroll><table><thead><tr>{["Cliente", "Código", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h || "actions"} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= DEUDA_NETA_EPS ? "ok" : d.net > DEUDA_NETA_EPS ? "err" : "warn"; const stT = d.gross <= DEUDA_NETA_EPS ? "Al día" : d.net > DEUDA_NETA_EPS ? "Con deuda" : "Cubierto"; const TDC = { ...TD }; const btnSize = { width: 28, height: 28 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 7 }}><Av name={c.name} size={28} avatarUrl={c.avatar_url} /><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 12.5, lineHeight: 1.25 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 10.5, color: "var(--sidebar-text-muted)", lineHeight: 1.2 }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--sidebar-text-active)" }}>{c.codigo || "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "var(--color-blue)" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > DEUDA_NETA_EPS ? <span style={{ background: "#fef2f2", padding: "3px 7px", borderRadius: 6, color: "#e11d48", fontWeight: 600, fontSize: 11 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 3 }}>{(c.emails || []).some((em) => typeof em === "string" && em.includes("@") && em.trim().length >= 5) ? <IBtn onClick={() => jumpToCobranzaCliente(c)} icon={<Mail size={13} />} title="Cobranza: bandeja con búsqueda de este cliente" style={{ ...btnSize, color: "#e11d48" }} /> : null}<IBtn onClick={() => openMdl("dar-acceso", c.id)} icon={<KeyRound size={13} />} title="Dar acceso" style={{ ...btnSize, color: "#059669" }} /><IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= DEUDA_NETA_EPS ? "ok" : d.net > DEUDA_NETA_EPS ? "err" : "warn"; const stT = d.gross <= DEUDA_NETA_EPS ? "Al día" : d.net > DEUDA_NETA_EPS ? "Con deuda" : "Cubierto"; const TDC = { ...TD }; const btnSize = { width: 28, height: 28 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 7 }}><Av name={c.name} size={28} avatarUrl={c.avatar_url} /><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 12.5, lineHeight: 1.25 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 10.5, color: "var(--sidebar-text-muted)", lineHeight: 1.2 }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--sidebar-text-active)" }}>{c.codigo || "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "var(--color-blue)" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > DEUDA_NETA_EPS ? <span style={{ background: "#fef2f2", padding: "3px 7px", borderRadius: 6, color: "#e11d48", fontWeight: 600, fontSize: 11 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 3 }}>{(c.emails || []).some((em) => typeof em === "string" && em.includes("@") && em.trim().length >= 5) ? <IBtn onClick={() => jumpToCobranzaCliente(c)} icon={<Mail size={13} />} title="Cobranza: bandeja con búsqueda de este cliente" style={{ ...btnSize, color: "#e11d48" }} /> : null}<IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -3437,43 +3439,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           </div>
         </div>
       )}
-
-      <Mdl open={modal === "dar-acceso"} onClose={closeMdl} title="Dar acceso al panel" footer={!accesoResultado ? <><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={() => submitDarAcceso(false)} disabled={savingAcceso}>{savingAcceso ? "Enviando…" : "Enviar link por email"}</Btn></> : <><Btn variant="outline" onClick={() => { setAccesoResultado(null); }} style={{ display: accesoResultado?.link ? "inline-flex" : "none" }}>Enviar otro</Btn><Btn onClick={closeMdl}>Cerrar</Btn></>}>
-        {editId && (() => {
-          const ac = clients.find((c) => c.id === editId);
-          const firstEmail = (ac?.emails || []).filter(Boolean)[0];
-          if (!ac) return null;
-          if (accesoResultado) {
-            return (
-              <div style={{ padding: "16px 0" }}>
-                <p style={{ fontSize: 13, color: "#059669", fontWeight: 600, marginBottom: 12 }}>{accesoResultado.message}</p>
-                <div style={{ background: "linear-gradient(135deg, #f5f3ee, #ecfdf5)", borderRadius: 14, padding: 20, fontSize: 14, border: "1px solid #d1fae5" }}>
-                  <div style={{ marginBottom: 8 }}><span style={{ color: "var(--sidebar-text)", fontSize: 12 }}>Correo:</span> <strong style={{ color: "var(--sidebar-text-active)" }}>{accesoResultado.email}</strong></div>
-                  {accesoResultado.link && (
-                    <div style={{ marginTop: 12 }}>
-                      <span style={{ fontSize: 12, color: "var(--sidebar-text)", display: "block", marginBottom: 6 }}>Si no llegó el email, copia este link y compártelo con el cliente:</span>
-                      <input type="text" readOnly value={accesoResultado.link} onClick={(e) => e.target.select()} style={{ width: "100%", padding: "8px 10px", fontSize: 12, border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "monospace", background: "var(--color-surface-2)" }} />
-                    </div>
-                  )}
-                </div>
-                {accesoResultado.alreadyHadAccess && !accesoResultado.link && (
-                  <p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 10 }}>Para reenviar el correo con un nuevo link: <button type="button" onClick={() => submitDarAcceso(true)} disabled={savingAcceso} style={{ background: "none", border: "none", color: "var(--color-blue)", fontWeight: 600, cursor: "pointer", padding: 0, fontFamily: "inherit", fontSize: "inherit", textDecoration: "underline" }}>Reenviar link</button></p>
-                )}
-              </div>
-            );
-          }
-          return (
-            <>
-              <p style={{ marginBottom: 14, fontSize: 13, color: "var(--sidebar-text)" }}>Se enviará un <strong>correo</strong> al cliente con un link. Al abrirlo entrará directo al panel (sin contraseña).</p>
-              <div style={{ background: "linear-gradient(135deg, #f5f3ee, #ecfdf5)", borderRadius: 14, padding: 20, fontSize: 14, border: "1px solid #d1fae5" }}>
-                <span style={{ fontSize: 12, color: "var(--sidebar-text)" }}>Correo al que se enviará: </span>
-                <strong style={{ color: "var(--sidebar-text-active)" }}>{firstEmail || "—"}</strong>
-              </div>
-              {(!firstEmail || !String(firstEmail).includes("@")) && <p style={{ fontSize: 12, color: "#dc2626", marginBottom: 8 }}>Este cliente no tiene correo. Agrega uno en Editar cliente.</p>}
-            </>
-          );
-        })()}
-      </Mdl>
 
       <Mdl open={modal === "garantia"} onClose={closeMdl} title={editId ? "Editar Garantía" : "Nueva Garantía"} footer={<><Btn variant="outline" onClick={closeMdl} disabled={uploadingComprobantes}>Cancelar</Btn><Btn onClick={saveGar} disabled={uploadingComprobantes}>{uploadingComprobantes ? "Subiendo…" : "Guardar"}</Btn></>}>
         <SearchSelect label="Cliente *" options={clientsSorted.map((c) => ({ value: c.id, label: c.name }))} value={gaf.clientId} onChange={(id) => setGaf({ ...gaf, clientId: id, gastoId: "" })} placeholder="Escribí el nombre del cliente..." emptyMessage="Ningún cliente coincide" />

@@ -482,8 +482,8 @@
           <span class="chip">Contrato Digital</span>
           <span class="chip green">Empresa legalmente constituida</span>
         </div>
-        <h1 class="title">Contrato de servicio profesional</h1>
-        <p class="muted" id="subtitleDoc">Documento generado para el cliente con los términos acordados.</p>
+        <h1 class="title">Contrato de prestamo de dinero</h1>
+        <p class="muted" id="subtitleDoc">Documento generado con los terminos acordados entre las partes.</p>
 
         <div class="meta-top">
           <div class="item">
@@ -505,11 +505,11 @@
         <div class="section">
           <h2>Partes del contrato</h2>
           <div class="kv">
-            <div class="k">Prestador del servicio</div>
+            <div class="k">Prestamista</div>
             <div class="v" id="viewDev">—</div>
             <div class="k">Empresa</div>
             <div class="v" id="viewEmpresa">—</div>
-            <div class="k">Cliente</div>
+            <div class="k">Prestatario</div>
             <div class="v" id="viewCliente">—</div>
             <div class="k">Contacto</div>
             <div class="v" id="viewContacto">—</div>
@@ -517,23 +517,23 @@
         </div>
 
         <div class="section">
-          <h2>Detalle del proyecto</h2>
+          <h2>Detalle del prestamo</h2>
           <div class="kv">
-            <div class="k">Nombre del proyecto</div>
+            <div class="k">Concepto</div>
             <div class="v" id="viewProyecto">—</div>
-            <div class="k">Tipo de servicio</div>
+            <div class="k">Tipo de prestamo</div>
             <div class="v" id="viewTipo">—</div>
-            <div class="k">Duración estimada</div>
+            <div class="k">Cantidad de cuotas</div>
             <div class="v" id="viewDuracion">—</div>
           </div>
           <div class="scope" id="viewAlcance">—</div>
         </div>
 
         <div class="section">
-          <h2>Condiciones económicas</h2>
+          <h2>Condiciones economicas</h2>
           <div class="total-banner">
             <div>
-              <div class="label">Monto total del contrato</div>
+              <div class="label">Monto total del prestamo</div>
               <div class="value" id="viewTotal">S/ 0.00</div>
             </div>
             <div class="chip" id="viewModalidad">Modalidad</div>
@@ -556,7 +556,7 @@
 
         <div class="section">
           <h2>Firma del cliente</h2>
-          <p class="muted" style="margin:0 0 10px;">Completa tu nombre y firma en el recuadro para aceptar el contrato.</p>
+          <p class="muted" style="margin:0 0 10px;">Completa tu nombre y firma en el recuadro para aceptar el prestamo.</p>
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <div>
@@ -590,7 +590,7 @@
         </div>
 
         <div class="legal">
-          El cliente declara haber revisado y aceptado el alcance, cronograma, costos y modalidad de pago descritos en este documento. La propiedad intelectual del código y activos se transfiere al cliente una vez completado el pago total, salvo componentes de terceros sujetos a sus licencias. Retrasos por falta de materiales, feedback o aprobaciones del cliente ajustan el cronograma sin penalidad para el prestador. Cambios de alcance, nuevas funcionalidades o integraciones no contempladas se cotizan aparte mediante anexo. En caso de mora superior a 3 días calendario en cualquier cuota, se podrá aplicar un recargo de hasta 5% sobre el saldo pendiente y ajustar la fecha de entrega según el impacto operativo. Este documento firmado digitalmente tiene validez comercial y legal entre las partes, emitido por una empresa legalmente constituida.
+          El prestatario declara haber revisado y aceptado el monto, fechas y modalidad de pago descritos en este documento. La persona firmante y la empresa vinculada al contrato se hacen responsables solidariamente del cumplimiento total del prestamo. En caso de mora superior a 3 dias calendario en cualquier cuota, se podra aplicar un recargo de hasta 5% sobre el saldo pendiente. Este documento firmado digitalmente tiene validez comercial y legal entre las partes.
         </div>
 
         <div class="footer">
@@ -660,17 +660,17 @@
       $("viewProyecto").textContent = d.p || "—";
       $("viewTipo").textContent = d.t || "—";
       $("viewDuracion").textContent = `${d.w || 0} semana(s)`;
-      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "No se registró un alcance detallado. Los entregables acordados son los comunicados entre las partes.";
+      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "La persona y la empresa se hacen responsables del prestamo otorgado.";
       $("viewTotal").textContent = money(d.mt);
 
-      const modalidadLabel = d.m === "2partes" ? "Pago en 2 partes" : "Pago semanal";
+      const modalidadLabel = d.m === "2partes" ? "Pago en 2 cuotas" : "Pago por cuotas";
       $("viewModalidad").textContent = modalidadLabel;
 
       let html = "";
       if (d.m === "2partes") {
         html = `<table><thead><tr><th>Parte</th><th>Momento</th><th style="text-align:right">Monto</th></tr></thead><tbody>
-          <tr><td>Primera parte</td><td>${(d.h1 || "Al firmar")}</td><td class="amount" style="text-align:right">${money(d.p1)}</td></tr>
-          <tr><td>Segunda parte</td><td>${(d.h2 || "Al finalizar")}</td><td class="amount" style="text-align:right">${money(d.p2)}</td></tr>
+          <tr><td>Primera cuota</td><td>${(d.h1 || "12 de mayo")}</td><td class="amount" style="text-align:right">${money(d.p1)}</td></tr>
+          <tr><td>Segunda cuota</td><td>${(d.h2 || "12 de junio")}</td><td class="amount" style="text-align:right">${money(d.p2)}</td></tr>
           <tr><td colspan="2"><strong>Total</strong></td><td class="amount" style="text-align:right"><strong>${money((Number(d.p1) || 0) + (Number(d.p2) || 0))}</strong></td></tr>
         </tbody></table>`;
       } else {

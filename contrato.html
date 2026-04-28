@@ -464,8 +464,8 @@
         <span class="tag-role">Uso interno</span>
       </div>
 
-      <h1>Generador de contrato digital</h1>
-      <p class="subtitle">Completa los datos una sola vez, genera un link corto y envíalo al cliente. El cliente solo firma y descarga su PDF.</p>
+      <h1>Generador de contrato de prestamo</h1>
+      <p class="subtitle">Completa los datos una sola vez, genera un link y envialo al cliente. El cliente completa su nombre, firma y descarga su PDF.</p>
 
       <input id="numeroContrato" type="hidden">
       <input id="fechaEmision" type="hidden">
@@ -485,8 +485,8 @@
         <div>
           <div class="section">
             <div class="section-title">
-              <h2>Datos del desarrollador</h2>
-              <small>Tu información</small>
+              <h2>Datos del prestamista</h2>
+              <small>Persona o empresa que otorga el prestamo</small>
             </div>
             <div class="grid-2">
               <div>
@@ -502,43 +502,43 @@
 
           <div class="section">
             <div class="section-title">
-              <h2>Datos del cliente</h2>
-              <small>El cliente podrá completar su nombre al firmar</small>
+              <h2>Datos del prestatario</h2>
+              <small>La persona que recibe el prestamo</small>
             </div>
             <div class="grid-2">
               <div>
-                <label for="cliente">Cliente / Empresa</label>
-                <input id="cliente" placeholder="Nombre del cliente o empresa">
+                <label for="cliente">Persona que recibe el prestamo</label>
+                <input id="cliente" placeholder="Nombre completo del prestatario">
               </div>
               <div>
-                <label for="clienteEmail">Correo o contacto (opcional)</label>
-                <input id="clienteEmail" placeholder="cliente@correo.com">
+                <label for="clienteEmail">DNI o contacto (opcional)</label>
+                <input id="clienteEmail" placeholder="DNI, telefono o correo">
               </div>
             </div>
           </div>
 
           <div class="section">
             <div class="section-title">
-              <h2>Proyecto</h2>
-              <small>Alcance y entregables</small>
+              <h2>Detalle del prestamo</h2>
+              <small>Motivo y descripcion</small>
             </div>
             <div class="grid-2">
               <div>
-                <label for="proyecto">Nombre del proyecto</label>
-                <input id="proyecto" placeholder="Ej: App de ventas y CRM">
+                <label for="proyecto">Concepto del prestamo</label>
+                <input id="proyecto" placeholder="Ej: Prestamo personal">
               </div>
               <div>
-                <label for="tipo">Tipo de proyecto</label>
+                <label for="tipo">Tipo</label>
                 <select id="tipo">
-                  <option value="Desarrollo web">Desarrollo web</option>
-                  <option value="Aplicación móvil">Aplicación móvil</option>
-                  <option value="Desarrollo web + App móvil">Desarrollo web + App móvil</option>
+                  <option value="Prestamo personal">Prestamo personal</option>
+                  <option value="Prestamo empresarial">Prestamo empresarial</option>
+                  <option value="Prestamo personal y empresarial">Prestamo personal y empresarial</option>
                   <option value="Otro">Otro</option>
                 </select>
               </div>
               <div class="full">
-                <label for="alcance">Alcance y entregables</label>
-                <textarea id="alcance" placeholder="Describe funcionalidades, entregables y objetivos del proyecto."></textarea>
+                <label for="alcance">Condiciones del prestamo</label>
+                <textarea id="alcance" placeholder="Describe las condiciones acordadas del prestamo."></textarea>
               </div>
             </div>
           </div>
@@ -551,12 +551,12 @@
 
             <div class="grid-2">
               <div>
-                <label for="montoTotal">Monto total (S/)</label>
-                <input id="montoTotal" type="number" min="0" step="0.01" value="2800">
+                <label for="montoTotal">Monto total del prestamo (S/)</label>
+                <input id="montoTotal" type="number" min="0" step="0.01" value="600">
               </div>
               <div>
-                <label for="duracion">Cantidad de semanas</label>
-                <input id="duracion" type="number" min="1" step="1" value="4">
+                <label for="duracion">Cantidad de cuotas</label>
+                <input id="duracion" type="number" min="1" step="1" value="2">
               </div>
               <div class="full">
                 <label>Modalidad</label>
@@ -579,20 +579,20 @@
             <div id="bloque2Partes" style="display:none; margin-top:12px;">
               <div class="grid-3">
                 <div>
-                  <label for="pago1">Primera parte (S/)</label>
-                  <input id="pago1" type="number" min="0" step="0.01" value="1400">
+                  <label for="pago1">Primera cuota (S/)</label>
+                  <input id="pago1" type="number" min="0" step="0.01" value="135">
                 </div>
                 <div>
-                  <label for="hito1">Momento del primer pago</label>
-                  <input id="hito1" placeholder="Al firmar el contrato">
+                  <label for="hito1">Fecha del primer pago</label>
+                  <input id="hito1" placeholder="12 de mayo">
                 </div>
                 <div>
-                  <label for="pago2">Segunda parte (S/)</label>
-                  <input id="pago2" type="number" min="0" step="0.01" value="1400">
+                  <label for="pago2">Segunda cuota (S/)</label>
+                  <input id="pago2" type="number" min="0" step="0.01" value="135">
                 </div>
                 <div>
-                  <label for="hito2">Momento del segundo pago</label>
-                  <input id="hito2" placeholder="Al finalizar el proyecto">
+                  <label for="hito2">Fecha del segundo pago</label>
+                  <input id="hito2" placeholder="12 de junio">
                 </div>
               </div>
             </div>
@@ -623,14 +623,14 @@
             <p class="hint" style="margin:4px 0 0;">Lo que verá el cliente en su link.</p>
 
             <div class="total-box">
-              <div class="total-label">Total a pagar</div>
+              <div class="total-label">Total del prestamo</div>
               <div id="vistaTotal" class="total-value">S/ 0.00</div>
             </div>
 
             <div id="vistaSchedule" style="margin-top:12px;"></div>
 
             <h3 style="margin-top:18px;">Link para el cliente</h3>
-            <p class="hint" style="margin:0 0 6px;">Se intenta un link <strong>corto</strong> (ej. <code>marketingconholistic.com/abc1</code>) vía el acortador. El cliente toca y entra; si no hay conexión con la API, te mostramos el link largo con los datos encriptados en la URL.</p>
+            <p class="hint" style="margin:0 0 6px;">Se intenta un link <strong>corto</strong> via el acortador. El cliente entra, firma y descarga su contrato.</p>
             <div class="link-box">
               <div id="linkDisplay" class="link-display">Genera el link para verlo aquí.</div>
               <div class="btns">
@@ -814,9 +814,15 @@
       genContractMeta();
       loadPrefs();
       if (!$("empresaDev").value) $("empresaDev").value = "Marketing con Holistic";
+      if (!$("proyecto").value) $("proyecto").value = "Prestamo personal";
+      if (!$("alcance").value) $("alcance").value = "La persona y la empresa se hacen responsables del prestamo otorgado.";
+      if (!$("hito1").value) $("hito1").value = "12 de mayo";
+      if (!$("hito2").value) $("hito2").value = "12 de junio";
+      if (!$("pago1").value) $("pago1").value = "135";
+      if (!$("pago2").value) $("pago2").value = "135";
       if (!$("fechaFirmaDev").value) $("fechaFirmaDev").value = new Date().toISOString().split("T")[0];
       renderWeeks();
-      setModalidad("semanal");
+      setModalidad("2partes");
       drawSummary();
     };
 
