@@ -538,7 +538,6 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       S.s("gerente_nombre", v);
       try { localStorage.setItem("holistic_gerente_nombre", v); } catch (_) {}
       try { localStorage.setItem("creativos_user_name", v); } catch (_) {}
-      try { console.info("[Holistic Sync][Credito App] name updated", { hasName: !!v }); } catch (_) {}
     }
   };
 
@@ -2055,7 +2054,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                       try { localStorage.setItem("creativos_avatar_url", url); } catch (_) {}
                       setLocalGerenteAvatarUrl(url);
                       setGerenteAvatarUrl(url);
-                      try { console.info("[Holistic Sync][Credito App] avatar updated", { hasAvatar: true }); } catch (_) {}
                       return;
                     }
                     const r = new FileReader();
