@@ -308,11 +308,14 @@
       border-radius: 12px;
       padding: 10px;
       margin-top: 10px;
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
     #firmaCliente {
       width: 100%;
-      min-height: 200px;
+      min-height: 140px;
+      max-height: 180px;
       background: #fff;
       border-radius: 10px;
       border: 2px dashed #fdba74;
@@ -324,12 +327,26 @@
     #firmaPdfImg {
       display: none;
       width: 100%;
-      min-height: 120px;
-      max-height: 220px;
+      min-height: 80px;
+      max-height: 160px;
       object-fit: contain;
+      object-position: center center;
       background: #fff;
       border-radius: 10px;
       border: 2px solid #fdba74;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .pdf-sign-block {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .html2pdf__page-break {
+      height: 0;
+      page-break-before: always;
+      break-before: page;
     }
 
     label {
@@ -474,6 +491,8 @@
       .btns, .alert, .pdf-exclude { display: none !important; }
       .section { break-inside: avoid; page-break-inside: avoid; }
       table { break-inside: avoid; }
+      .pdf-sign-block, .signature-wrap, .legal { break-inside: avoid; page-break-inside: avoid; }
+      .html2pdf__page-break { page-break-before: always; break-before: page; }
     }
 
     @media (max-width: 720px) {
@@ -487,7 +506,7 @@
       .doc-head, .doc-body { padding: 16px; }
       h1.title { font-size: 1.3rem; }
       .total-banner .value { font-size: 1.35rem; }
-      #firmaCliente { min-height: 170px; }
+      #firmaCliente { min-height: 130px; max-height: 170px; }
     }
   </style>
 </head>
@@ -560,6 +579,8 @@
           </div>
           <div id="viewSchedule"></div>
         </div>
+
+        <div class="html2pdf__page-break" aria-hidden="true"></div>
 
         <div class="section pdf-sign-block">
           <h2>Firma del prestamista</h2>
@@ -677,7 +698,15 @@
       $("viewDuracion").textContent = d.m === "2partes"
         ? "2 cuotas"
         : `${d.w || 0} cuota(s) / semana(s)`;
-      $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "Los deudores reciben un prestamo total de S/ 670 y se comprometen a pagar S/ 335 por mes durante 2 meses.";
+      if (d.a && d.a.trim()) {
+        $("viewAlcance").textContent = d.a;
+      } else if (d.m === "2partes") {
+        const tot = (Number(d.p1) || 0) + (Number(d.p2) || 0);
+        $("viewAlcance").textContent =
+          `Los deudores (persona y empresa) reciben un prestamo total de ${money(tot)}, en dos cuotas de ${money(d.p1)} (${d.h1 || "fecha 1"}) y ${money(d.p2)} (${d.h2 || "fecha 2"}).`;
+      } else {
+        $("viewAlcance").textContent = "Los deudores reciben el prestamo segun el cronograma indicado.";
+      }
       const totalVer = d.m === "2partes"
         ? (Number(d.p1) || 0) + (Number(d.p2) || 0)
         : Number(d.mt) || 0;
@@ -824,9 +853,10 @@
       const dataUrl = canvas.toDataURL("image/png");
       imgPdf.src = dataUrl;
       imgPdf.style.width = "100%";
-      imgPdf.style.maxHeight = "none";
-      imgPdf.style.minHeight = "140px";
+      imgPdf.style.maxHeight = "160px";
+      imgPdf.style.minHeight = "80px";
       imgPdf.style.objectFit = "contain";
+      imgPdf.style.objectPosition = "center center";
       imgPdf.style.display = "block";
       canvas.style.display = "none";
       document.title = `contrato-${fileSlug(nombre, "c")}-${fileSlug(data.p, "p")}`;
@@ -846,7 +876,7 @@
       const captureH = Math.ceil(Math.max(el.scrollHeight, el.offsetHeight, el.getBoundingClientRect().height));
 
       const opt = {
-        margin: [8, 8, 8, 8],
+        margin: [10, 10, 10, 10],
         filename,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
@@ -865,6 +895,7 @@
             clonedDoc.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
             const root = clonedDoc.getElementById("doc");
             const wrap = clonedDoc.querySelector(".wrapper");
+            const bodyEl = clonedDoc.querySelector(".doc-body");
             const live = document.getElementById("doc");
             const liveH = live ? Math.ceil(Math.max(live.scrollHeight, live.offsetHeight)) : captureH;
             const liveW = live ? Math.max(794, Math.ceil(live.scrollWidth || 794)) : captureW;
@@ -880,21 +911,38 @@
               wrap.style.maxWidth = "none";
               wrap.style.width = `${liveW}px`;
               wrap.style.margin = "0 auto";
-              wrap.style.padding = "12px 14px 48px";
+              wrap.style.padding = "10px 12px 24px";
             }
+            if (bodyEl) {
+              bodyEl.style.padding = "16px 18px";
+            }
+            clonedDoc.querySelectorAll(".section").forEach((sec) => {
+              sec.style.marginBottom = "10px";
+              sec.style.pageBreakInside = "avoid";
+              sec.style.breakInside = "avoid";
+            });
             clonedDoc.body.style.background = "#ffffff";
             clonedDoc.documentElement.style.background = "#ffffff";
             const sigImg = clonedDoc.getElementById("firmaPdfImg");
             if (sigImg) {
-              sigImg.style.maxHeight = "none";
-              sigImg.style.height = "auto";
+              sigImg.style.maxHeight = "140px";
               sigImg.style.width = "100%";
+              sigImg.style.height = "auto";
               sigImg.style.objectFit = "contain";
+              sigImg.style.objectPosition = "center center";
+            }
+            const signBlock = clonedDoc.querySelector(".pdf-sign-block");
+            if (signBlock) {
+              signBlock.style.pageBreakInside = "avoid";
+              signBlock.style.breakInside = "avoid";
             }
           },
         },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
-        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: [".pdf-sign-block", ".signature-wrap", "#firmaPdfImg", ".legal"],
+        },
       };
 
       const h2p = html2pdf().set(opt).from(el);
