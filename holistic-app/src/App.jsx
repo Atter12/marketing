@@ -601,7 +601,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const [sortReportDesgloseBy, setSortReportDesgloseBy] = useState("nombre");
 
   const emptyCf = () => ({
-    codigo: "",
+    dni: "",
     name: "",
     ig: "",
     phones: [""],
@@ -1031,7 +1031,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const q = gastosSearch.trim().toLowerCase();
       list = list.filter((g) => {
         const c = clients.find((x) => x.id === g.clientId);
-        const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase();
+        const text = `${c?.name || ""} ${c?.dni || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase();
         return text.includes(q);
       });
     }
@@ -1150,7 +1150,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       const c = clients.find((x) => x.id === editId);
       if (c) {
         setCf({
-          codigo: c.codigo || "",
+          dni: c.dni || "",
           name: c.name,
           ig: c.ig || "",
           phones: c.phones?.length ? c.phones : [""],
@@ -1300,8 +1300,8 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     if (!name) return alert("Nombre obligatorio. Completá el nombre del cliente.");
     if (!validEmails.length) return alert("Correo obligatorio (es el dato más importante). Agregá al menos un correo válido que contenga @ y esté completo.");
     if (!phones.length) return alert("Teléfono obligatorio. Agregá al menos un número de teléfono o WhatsApp.");
-    const codigo = (cf.codigo || "").trim();
-    if (editId && !codigo) return alert("Código de cliente obligatorio. Completá el código.");
+    const dniVal = (cf.dni || "").trim();
+    if (editId && !dniVal) return alert("DNI o Id obligatorio. Completá el campo.");
     if (!(cf.ig || "").trim()) return alert("Completá Instagram (ej. @usuario o — si no aplica).");
     if (!(cf.biz || "").trim()) return alert("Completá el negocio o actividad (o — si no aplica).");
     if (!(cf.notes || "").trim()) return alert("Completá las notas (o — si no aplica).");
@@ -1309,7 +1309,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
     const c = {
       id: editId || undefined,
       newClientId: !editId && newClientDraftId ? newClientDraftId : undefined,
-      codigo: codigo || "",
+      dni: dniVal || "",
       name,
       ig: (cf.ig || "").trim(),
       phones,
@@ -1530,9 +1530,9 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
         .map((r) => [(r.nombre || "").trim(), (r.telefono || "").trim(), (r.email || "").trim()].filter(Boolean).join(" · "))
         .join(" | ");
     };
-    const headers = ["Código", "Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas", "Contactos garante"];
+    const headers = ["DNI o Id", "Nombre", "Instagram", "Teléfonos", "Emails", "Negocio", "Notas", "Contactos garante"];
     const rows = clientsSorted.map((c) => [
-      c.codigo || "—",
+      c.dni || "—",
       c.name || "—",
       c.ig || "—",
       (c.phones || []).filter(Boolean).join("; ") || "—",
@@ -1619,7 +1619,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       doc.text(curC.name || "Cliente", 14, y); y += 6;
       doc.setFontSize(9);
       doc.setTextColor(95, 101, 119);
-      if (curC.codigo) { doc.text("Código: " + curC.codigo, 14, y); y += 5; }
+      if (curC.dni) { doc.text("DNI o Id: " + curC.dni, 14, y); y += 5; }
       const phonesStr = (curC.phones || []).filter(Boolean).join(" · ");
       if (phonesStr) { doc.text("Tel: " + phonesStr, 14, y); y += 5; }
       const emailsStr = (curC.emails || []).filter(Boolean).join(" · ");
@@ -2631,7 +2631,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
             {(() => {
               const sinCorreoValido = clients.filter((c) => !(c.emails || []).some((e) => typeof e === "string" && e.trim().includes("@") && e.trim().length >= 5));
               const sinTelefono = clients.filter((c) => !(c.phones || []).filter(Boolean).length);
-              const sinDatos = clients.filter((c) => !(c.name || "").trim() || !(c.codigo || "").trim() || !(c.ig || "").trim() || !(c.biz || "").trim() || !(c.notes || "").trim());
+              const sinDatos = clients.filter((c) => !(c.name || "").trim() || !(c.dni || "").trim() || !(c.ig || "").trim() || !(c.biz || "").trim() || !(c.notes || "").trim());
               const hayAviso = sinCorreoValido.length > 0 || sinTelefono.length > 0 || sinDatos.length > 0;
               return hayAviso ? (
                 <div style={{ marginBottom: 20, padding: "14px 20px", background: "linear-gradient(135deg, #fef2f2 0%, #fff7ed 100%)", border: "1px solid #fecaca", borderRadius: 12, display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -2641,7 +2641,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                     <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#b91c1c", lineHeight: 1.6 }}>
                       {sinCorreoValido.length > 0 && <li><strong>{sinCorreoValido.length}</strong> sin correo válido (agregá al menos uno con @)</li>}
                       {sinTelefono.length > 0 && <li><strong>{sinTelefono.length}</strong> sin teléfono</li>}
-                      {sinDatos.length > 0 && <li><strong>{sinDatos.length}</strong> con nombre, código, Instagram, negocio o notas faltantes</li>}
+                      {sinDatos.length > 0 && <li><strong>{sinDatos.length}</strong> con nombre, DNI o Id, Instagram, negocio o notas faltantes</li>}
                     </ul>
                     <p style={{ margin: "8px 0 0", fontSize: 12, color: "var(--sidebar-text)" }}>Entrá a cada cliente y usá <strong>Editar</strong> para completar los datos. El correo es el más importante.</p>
                   </div>
@@ -2655,8 +2655,8 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
               const clientsPaginated = clientsFilteredAndSorted.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
               return (
                 <>
-                  <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-clientes" autoFocusScroll><table><thead><tr>{["Cliente", "Código", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h || "actions"} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
-                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= DEUDA_NETA_EPS ? "ok" : d.net > DEUDA_NETA_EPS ? "err" : "warn"; const stT = d.gross <= DEUDA_NETA_EPS ? "Al día" : d.net > DEUDA_NETA_EPS ? "Con deuda" : "Cubierto"; const TDC = { ...TD }; const btnSize = { width: 28, height: 28 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 7 }}><Av name={c.name} size={28} avatarUrl={c.avatar_url} /><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 12.5, lineHeight: 1.25 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 10.5, color: "var(--sidebar-text-muted)", lineHeight: 1.2 }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--sidebar-text-active)" }}>{c.codigo || "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "var(--color-blue)" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > DEUDA_NETA_EPS ? <span style={{ background: "#fef2f2", padding: "3px 7px", borderRadius: 6, color: "#e11d48", fontWeight: 600, fontSize: 11 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 3 }}>{(c.emails || []).some((em) => typeof em === "string" && em.includes("@") && em.trim().length >= 5) ? <IBtn onClick={() => jumpToCobranzaCliente(c)} icon={<Mail size={13} />} title="Cobranza: bandeja con búsqueda de este cliente" style={{ ...btnSize, color: "#e11d48" }} /> : null}<IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
+                  <TableScrollWrap className="hm-table-wrap hm-table-sticky-actions hm-table-clientes" autoFocusScroll><table><thead><tr>{["Cliente", "DNI o Id", "Contacto", "Gasto", "Fees", "Cobrado", "Garantías", "Deuda Neta", "Estado", ""].map((h, i) => <th key={h || "actions"} style={TH} className={i === 9 ? "hm-col-actions" : undefined}>{h}</th>)}</tr></thead>
+                    <tbody>{clientsPaginated.map((c) => { const d = cData(c.id); const st = d.gross <= DEUDA_NETA_EPS ? "ok" : d.net > DEUDA_NETA_EPS ? "err" : "warn"; const stT = d.gross <= DEUDA_NETA_EPS ? "Al día" : d.net > DEUDA_NETA_EPS ? "Con deuda" : "Cubierto"; const TDC = { ...TD }; const btnSize = { width: 28, height: 28 }; return <tr key={c.id} onClick={() => goTo("client-detail", c.id)} style={{ cursor: "pointer" }}><td style={TDC}><div style={{ display: "flex", alignItems: "center", gap: 7 }}><Av name={c.name} size={28} avatarUrl={c.avatar_url} /><div style={{ minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 12.5, lineHeight: 1.25 }}>{c.name}</div>{c.biz && <div style={{ fontSize: 10.5, color: "var(--sidebar-text-muted)", lineHeight: 1.2 }}>{c.biz}</div>}</div></div></td><td style={{ ...TDC, fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--sidebar-text-active)" }}>{c.dni || "—"}</td><td style={TDC}><div style={{ display: "flex", flexWrap: "wrap", gap: 2 }}>{(c.phones || []).filter(Boolean).map((p, i) => <span key={"p" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>📱 {p}</span>)}{(c.emails || []).filter(Boolean).map((e, i) => <span key={"e" + i} style={{ padding: "2px 5px", background: "var(--color-bg)", borderRadius: 4, fontSize: 10.5 }}>✉ {e}</span>)}</div></td><td style={{ ...TDC, ...MN, color: "var(--sidebar-text-active)" }}>${fmt(d.tG)}</td><td style={{ ...TDC, ...MN, color: "var(--color-blue)" }}>${fmt(d.tF)}</td><td style={{ ...TDC, ...MN, color: "#059669" }}>${fmt(d.tP)}</td><td style={{ ...TDC, ...MN, color: "#7c3aed" }}>{d.tGar > 0 ? "$" + fmt(d.tGar) : "—"}</td><td style={TDC}>{d.net > DEUDA_NETA_EPS ? <span style={{ background: "#fef2f2", padding: "3px 7px", borderRadius: 6, color: "#e11d48", fontWeight: 600, fontSize: 11 }}>${fmt(d.net)}</span> : <span style={{ ...MN, color: "#059669" }}>${fmt(d.net)}</span>}</td><td style={TDC}><Bdg type={st}>{stT === "Al día" ? "✅ " + stT : stT === "Con deuda" ? "🔴 " + stT : stT}</Bdg></td><td className="hm-col-actions" style={TDC} onClick={(e) => e.stopPropagation()}><div style={{ display: "flex", gap: 3 }}>{(c.emails || []).some((em) => typeof em === "string" && em.includes("@") && em.trim().length >= 5) ? <IBtn onClick={() => jumpToCobranzaCliente(c)} icon={<Mail size={13} />} title="Cobranza: bandeja con búsqueda de este cliente" style={{ ...btnSize, color: "#e11d48" }} /> : null}<IBtn onClick={() => openMdl("client", c.id)} icon={<Edit3 size={13} />} title="Editar" style={btnSize} /><IBtn onClick={() => delClient(c.id)} icon={<Trash2 size={13} />} danger title="Eliminar" style={btnSize} /></div></td></tr>; })}{!clientsPaginated.length && <Empty cols={10} msg={clients.length ? "Ningún cliente coincide con la búsqueda" : "No hay clientes registrados"} />}</tbody></table></TableScrollWrap>
                   {totalPages > 1 && (
                     <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "12px 16px", borderTop: "1px solid #e5e7eb", flexWrap: "wrap" }}>
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
@@ -3047,7 +3047,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
 
       {/* ═══ MODALS ═══ */}
       <Mdl open={modal === "client"} onClose={closeMdl} title={editId ? "Editar Cliente" : "Nuevo Cliente"} footer={<><Btn variant="outline" onClick={closeMdl}>Cancelar</Btn><Btn onClick={saveClient}>Guardar</Btn></>}>
-        <Inp label={editId ? "Código de cliente *" : "Código de cliente"} value={cf.codigo} onChange={(e) => setCf({ ...cf, codigo: e.target.value })} placeholder={editId ? "Ej. CL-ABC12" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional: si lo dejás vacío se asigna uno automático." : "Obligatorio al editar."} />
+        <Inp label={editId ? "DNI o Id *" : "DNI o Id"} value={cf.dni} onChange={(e) => setCf({ ...cf, dni: e.target.value })} placeholder={editId ? "Ej. DNI, CE o identificador" : "Se genera al guardar si está vacío"} hint={!editId ? "Opcional al crear: si está vacío se asigna un código interno automático." : "Obligatorio al editar."} />
         <div className="hm-form-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}><Inp label="Nombre *" value={cf.name} onChange={(e) => setCf({ ...cf, name: e.target.value })} placeholder="Juan Pérez" /><Inp label="Instagram *" value={cf.ig} onChange={(e) => setCf({ ...cf, ig: e.target.value })} placeholder="@usuario o —" /></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Teléfonos / WhatsApp *</label><MultiPhone values={cf.phones} onChange={(v) => setCf({ ...cf, phones: v })} /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un número.</p></div>
         <div style={{ marginBottom: 14 }}><label style={{ display: "block", fontSize: 12.5, fontWeight: 600, color: "var(--color-text)", marginBottom: 5 }}>Correos * <span style={{ fontWeight: 500, color: "#dc2626" }}>(más importante)</span></label><Multi values={cf.emails} onChange={(v) => setCf({ ...cf, emails: v })} placeholder="email@ejemplo.com" type="email" /><p style={{ fontSize: 11, color: "var(--sidebar-text-muted)", marginTop: 4 }}>Al menos un correo válido (con @).</p></div>
@@ -3306,7 +3306,7 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
           )}
           <input type="text" value={cofGastosQuery} onChange={(e) => setCofGastosQuery(e.target.value)} placeholder="Buscar por nombre o código..." disabled={!!cof.sinAsignarGasto} style={{ width: "100%", boxSizing: "border-box", padding: "9px 13px", marginBottom: 8, background: cof.sinAsignarGasto ? "var(--color-bg)" : "var(--color-surface-2)", border: "1px solid var(--sidebar-border)", borderRadius: 8, fontFamily: "'Inter',sans-serif", fontSize: 13, outline: "none" }} />
           <div style={{ maxHeight: 220, overflowY: "auto", border: "1px solid var(--sidebar-border)", borderRadius: 8, padding: 4, opacity: cof.sinAsignarGasto ? 0.6 : 1, pointerEvents: cof.sinAsignarGasto ? "none" : "auto" }}>
-            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
+            {(() => { let pendientes = sGastos.filter((g) => g._st !== "Pagado"); if (cofFilterCliente) pendientes = pendientes.filter((g) => g.clientId === cofFilterCliente); if (cofFilterPeriodo) pendientes = pendientes.filter((g) => (g.mes || "") === cofFilterPeriodo); const filtrados = pendientes.filter((g) => { if (!cofGastosQuery.trim()) return true; const c = clients.find((x) => x.id === g.clientId); const text = `${c?.name || ""} ${c?.dni || ""} ${fmtM(g.mes)} ${g.codigo || ""} ${g.camp || ""}`.toLowerCase(); return text.includes(cofGastosQuery.trim().toLowerCase()); }); if (sGastos.filter((g) => g._st !== "Pagado").length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes</div>; if (pendientes.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>No hay gastos pendientes para este cliente/período. Probá otros filtros.</div>; if (filtrados.length === 0) return <div style={{ padding: 12, fontSize: 12.5, color: "var(--sidebar-text-muted)" }}>Ningún gasto coincide con la búsqueda</div>; return filtrados.map((g) => { const c = clients.find((x) => x.id === g.clientId); const checked = (cof.gastoIds || []).includes(g.id); return (
               <label key={g.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, cursor: "pointer", background: checked ? "linear-gradient(135deg, #ecfdf5, #d1fae5)" : "transparent", border: checked ? "1px solid #86efac" : "1px solid transparent", transition: "all .15s", marginBottom: 2 }}>
                 <input type="checkbox" checked={checked} onChange={() => { const list = checked ? (cof.gastoIds || []).filter((id) => id !== g.id) : [...(cof.gastoIds || []), g.id]; setCof({ ...cof, sinAsignarGasto: false, gastoIds: list }); }} style={{ width: 18, height: 18, cursor: "pointer", accentColor: "#0d9f6e" }} />
                 <span style={{ fontSize: 13, fontWeight: checked ? 600 : 500, color: checked ? "#0d9f6e" : "#1a1d26" }}>{c?.name || "?"} — {fmtM(g.mes)} · {g.camp || "—"} (${fmt(g._pend)}){g.prepago ? " · Prepago" : ""}</span>

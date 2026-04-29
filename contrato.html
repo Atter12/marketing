@@ -465,7 +465,7 @@
       </div>
 
       <h1>Generador de contrato de prestamo</h1>
-      <p class="subtitle">Completa los datos una sola vez, genera un link y envialo al cliente. El cliente completa su nombre, firma y descarga su PDF.</p>
+      <p class="subtitle">Completa los datos, genera el link y envialo a la prestamista (Shirley). Ella pone su nombre, firma y descarga el PDF.</p>
 
       <input id="numeroContrato" type="hidden">
       <input id="fechaEmision" type="hidden">
@@ -485,30 +485,30 @@
         <div>
           <div class="section">
             <div class="section-title">
-              <h2>Datos de quien presta</h2>
-              <small>Persona o empresa que te otorga el prestamo</small>
+              <h2>Prestamista</h2>
+              <small>Quien presta el dinero (firma el contrato en el link)</small>
             </div>
             <div class="grid-2">
-              <div>
-                <label for="desarrollador">Nombre completo</label>
-                <input id="desarrollador" placeholder="Ej: Atter Mayer">
-              </div>
-              <div>
-                <label for="empresaDev">Empresa / marca</label>
-                <input id="empresaDev" placeholder="Marketing con Holistic">
+              <div class="full">
+                <label for="desarrollador">Nombre completo del prestamista</label>
+                <input id="desarrollador" placeholder="Shirley Kiara Melendez Calixto">
               </div>
             </div>
           </div>
 
           <div class="section">
             <div class="section-title">
-              <h2>Tus datos (quien recibe)</h2>
-              <small>Completa aqui tus datos (yo/deudor)</small>
+              <h2>Deudores (quien recibe el prestamo)</h2>
+              <small>Persona y empresa que reciben y se comprometen a pagar</small>
             </div>
             <div class="grid-2">
               <div>
-                <label for="cliente">Nombre del cliente (deudor)</label>
-                <input id="cliente" placeholder="Nombre completo del cliente">
+                <label for="cliente">Persona (deudor)</label>
+                <input id="cliente" placeholder="Atter Basilio Rengifo">
+              </div>
+              <div>
+                <label for="empresaDev">Empresa (deudora)</label>
+                <input id="empresaDev" placeholder="Marketing con Holistic">
               </div>
               <div style="display:none;">
                 <label for="clienteEmail">DNI o contacto (opcional)</label>
@@ -598,29 +598,12 @@
             </div>
           </div>
 
-          <div class="section">
-            <div class="section-title">
-              <h2>Firma del desarrollador</h2>
-              <small>Tu nombre aparecerá como firma estilo manuscrito</small>
-            </div>
-            <div class="grid-2">
-              <div>
-                <label for="nombreDesarrolladorFirma">Nombre de la firma</label>
-                <input id="nombreDesarrolladorFirma" placeholder="Ej: Atter Mayer">
-              </div>
-              <div>
-                <label for="fechaFirmaDev">Fecha de firma</label>
-                <input id="fechaFirmaDev" type="date">
-              </div>
-            </div>
-            <div class="hint">En el contrato del cliente, tu firma aparecerá ya estampada.</div>
-          </div>
         </div>
 
         <aside>
           <div class="resume-card">
             <h3>Resumen del contrato</h3>
-            <p class="hint" style="margin:4px 0 0;">Lo que verá el cliente en su link.</p>
+            <p class="hint" style="margin:4px 0 0;">Lo que verá la prestamista en su link.</p>
 
             <div class="total-box">
               <div class="total-label">Total del prestamo</div>
@@ -629,8 +612,8 @@
 
             <div id="vistaSchedule" style="margin-top:12px;"></div>
 
-            <h3 style="margin-top:18px;">Link para el cliente</h3>
-            <p class="hint" style="margin:0 0 6px;">Se intenta un link <strong>corto</strong> via el acortador. El cliente entra, firma y descarga su contrato.</p>
+            <h3 style="margin-top:18px;">Link para la prestamista</h3>
+            <p class="hint" style="margin:0 0 6px;">Se intenta un link <strong>corto</strong>. Shirley abre el link, confirma su nombre, firma y descarga el PDF.</p>
             <div class="link-box">
               <div id="linkDisplay" class="link-display">Genera el link para verlo aquí.</div>
               <div class="btns">
@@ -655,7 +638,7 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const textFields = ["desarrollador","empresaDev","cliente","clienteEmail","proyecto","tipo","alcance","pago1","pago2","hito1","hito2","nombreDesarrolladorFirma","fechaFirmaDev","numeroContrato","fechaEmision"];
+    const textFields = ["desarrollador","empresaDev","cliente","clienteEmail","proyecto","tipo","alcance","pago1","pago2","hito1","hito2","numeroContrato","fechaEmision"];
     const numberFields = ["montoTotal","duracion"];
 
     const state = {
@@ -768,8 +751,8 @@
       h1: $("hito1").value,
       p2: Number($("pago2").value || 0),
       h2: $("hito2").value,
-      nd: $("nombreDesarrolladorFirma").value,
-      fd: $("fechaFirmaDev").value,
+      nd: "",
+      fd: "",
       nc: $("numeroContrato").value,
       fe: $("fechaEmision").value,
     });
@@ -806,21 +789,21 @@
         const d = JSON.parse(raw);
         if (d.d) $("desarrollador").value = d.d;
         if (d.e) $("empresaDev").value = d.e;
-        if (d.nd) $("nombreDesarrolladorFirma").value = d.nd;
       } catch (_) {}
     };
 
     const init = () => {
       genContractMeta();
       loadPrefs();
+      if (!$("desarrollador").value) $("desarrollador").value = "Shirley Kiara Melendez Calixto";
+      if (!$("cliente").value) $("cliente").value = "Atter Basilio Rengifo";
       if (!$("empresaDev").value) $("empresaDev").value = "Marketing con Holistic";
       if (!$("proyecto").value) $("proyecto").value = "Prestamo personal";
-      if (!$("alcance").value) $("alcance").value = "Recibo S/ 670 y pagare S/ 335 por mes durante 2 meses.";
+      if (!$("alcance").value) $("alcance").value = "Los deudores (persona y empresa) reciben un prestamo total de S/ 670 y se comprometen a pagar S/ 335 por mes durante 2 meses.";
       if (!$("hito1").value) $("hito1").value = "12 de mayo";
       if (!$("hito2").value) $("hito2").value = "12 de junio";
       if (!$("pago1").value) $("pago1").value = "335";
       if (!$("pago2").value) $("pago2").value = "335";
-      if (!$("fechaFirmaDev").value) $("fechaFirmaDev").value = new Date().toISOString().split("T")[0];
       renderWeeks();
       setModalidad("2partes");
       drawSummary();
@@ -829,7 +812,7 @@
     [...textFields, ...numberFields].forEach((id) => {
       const el = $(id);
       if (el) {
-        el.addEventListener("input", () => { drawSummary(); if (["desarrollador","empresaDev","nombreDesarrolladorFirma"].includes(id)) savePrefs(); });
+        el.addEventListener("input", () => { drawSummary(); if (["desarrollador","empresaDev"].includes(id)) savePrefs(); });
         el.addEventListener("change", drawSummary);
       }
     });
@@ -847,7 +830,7 @@
       $("generarLink").disabled = false;
       if (short) {
         $("linkDisplay").textContent = short;
-        $("estadoAccion").textContent = "Link corto listo. El cliente abre, redirige al contrato y ve todo. Copia y envia.";
+        $("estadoAccion").textContent = "Link corto listo. La prestamista abre el link, firma y descarga. Copia y envia.";
         return;
       }
       $("linkDisplay").textContent = longUrl;

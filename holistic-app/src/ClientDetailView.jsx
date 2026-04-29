@@ -105,7 +105,7 @@ export default function ClientDetailView(props) {
 
   return React.createElement("section", null,
     <div className="hm-page-header" style={{ background: "#fff", borderBottom: "1px solid #e2e4e9", padding: "0 36px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 50 }}>
-        <div style={{ fontSize: 13, color: "#9498a8", minWidth: 0 }}>{!isCliente && <><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › </>}<span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span>{curC.codigo && <span style={{ marginLeft: 8, fontSize: 12, color: "#5f6577", fontFamily: "var(--font-mono)" }}>{curC.codigo}</span>}</div>
+        <div style={{ fontSize: 13, color: "#9498a8", minWidth: 0 }}>{!isCliente && <><span onClick={() => goTo("clientes")} style={{ cursor: "pointer" }}>Clientes</span> › </>}<span style={{ color: "#1a1d26", fontWeight: 600 }}>{curC.name}</span>{curC.dni && <span style={{ marginLeft: 8, fontSize: 12, color: "#5f6577", fontFamily: "var(--font-mono)" }}>{curC.dni}</span>}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           {!isCliente && <Btn variant="outline" size="sm" onClick={() => openMdl("client", curCl)}><Edit3 size={14} /> Editar</Btn>}{!isCliente && <Btn size="sm" onClick={() => openMdl("gasto")}><Plus size={14} /> Gasto</Btn>}{!isCliente && <Btn variant="accent" size="sm" onClick={() => openMdl("cobro")}><CreditCard size={14} /> Cobro</Btn>}
         </div>
@@ -132,7 +132,7 @@ export default function ClientDetailView(props) {
               </div>
             )}
           </div>
-          <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>{curC.name}</h2>{curC.codigo && <div style={{ fontSize: 11.5, color: "#5f6577", fontFamily: "var(--font-mono)", marginTop: 2, fontWeight: 600, letterSpacing: "0.02em" }}>Código: {curC.codigo}</div>}<div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12.5, letterSpacing: "0.01em", color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
+          <div style={{ minWidth: 0 }}><h2 style={{ fontSize: 19, fontWeight: 700, fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>{curC.name}</h2>{curC.dni && <div style={{ fontSize: 11.5, color: "#5f6577", fontFamily: "var(--font-mono)", marginTop: 2, fontWeight: 600, letterSpacing: "0.02em" }}>DNI o Id: {curC.dni}</div>}<div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 12.5, letterSpacing: "0.01em", color: "#9498a8", marginTop: 2 }}>{curC.ig && <span style={{ color: "#e1306c" }}>📷 {curC.ig}</span>}{(curC.phones || []).filter(Boolean).map((p, i) => <span key={i}>📱 {p}</span>)}{(curC.emails || []).filter(Boolean).map((e, i) => <span key={i}>✉ {e}</span>)}{curC.biz && <span>🏢 {curC.biz}</span>}</div></div>
         </div>,
         !isCliente && (() => {
           const gar = (curC.garantesContactos || []).filter((r) => (r?.nombre || "").trim() || (r?.telefono || "").trim() || (r?.email || "").trim());

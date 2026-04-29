@@ -20,7 +20,7 @@ function mapCliente(r) {
   if (!r) return r;
   return {
     id: r.id,
-    codigo: r.codigo ?? "",
+    dni: r.dni ?? "",
     name: r.name,
     ig: r.ig ?? "",
     phones: Array.isArray(r.phones) ? r.phones : (r.phones ? [r.phones] : [""]),
@@ -94,7 +94,7 @@ export function useSupabaseData(role, clientId) {
         const [cRes, gRes, garRes, mRes] = await Promise.all([
           supabase
             .from("clientes")
-            .select("id,name,ig,phones,emails,biz,notes,avatar_url,codigo,created_at")
+            .select("id,name,ig,phones,emails,biz,notes,avatar_url,dni,created_at")
             .eq("id", clientId)
             .maybeSingle(),
           supabase.from("gastos").select("id").eq("client_id", clientId),
@@ -161,7 +161,7 @@ export function useSupabaseData(role, clientId) {
   const mutations = {
     saveClient: async (payload) => {
       if (role !== "gerente") return;
-      const { id, newClientId, name, codigo, ig, phones, emails, biz, notes, avatar_url, garantes_contactos } = payload;
+      const { id, newClientId, name, dni, ig, phones, emails, biz, notes, avatar_url, garantes_contactos } = payload;
       const genCodigo = () => "CL-" + Date.now().toString(36).toUpperCase().slice(-5) + Math.random().toString(36).slice(2, 5).toUpperCase();
       const garDb = Array.isArray(garantes_contactos) ? garantes_contactos : [];
       const row = {
@@ -172,18 +172,18 @@ export function useSupabaseData(role, clientId) {
         biz: biz || null,
         notes: notes || null,
         avatar_url: avatar_url || null,
-        codigo: (codigo && String(codigo).trim()) ? String(codigo).trim() : null,
+        dni: (dni && String(dni).trim()) ? String(dni).trim() : null,
         garantes_contactos: garDb,
       };
       const uuidOk = (s) => typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
       if (id) {
-        if (row.codigo === null) delete row.codigo;
+        if (row.dni === null) delete row.dni;
         const { error: e } = await supabase.from("clientes").update(row).eq("id", id);
         if (e) throw e;
         await fetchAll();
         return id;
       } else {
-        if (!row.codigo) row.codigo = genCodigo();
+        if (!row.dni) row.dni = genCodigo();
         const insertRow = { ...row };
         if (uuidOk(newClientId)) insertRow.id = String(newClientId).trim();
         const { data, error: e } = await supabase.from("clientes").insert(insertRow).select("id").single();
