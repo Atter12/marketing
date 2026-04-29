@@ -553,6 +553,7 @@
               <div>
                 <label for="montoTotal">Monto total del prestamo (S/)</label>
                 <input id="montoTotal" type="number" min="0" step="0.01" value="670">
+                <p id="hintTotal2p" class="hint" style="display:none;">En 2 cuotas el total es siempre la suma de ambas (se actualiza solo).</p>
               </div>
               <div>
                 <label for="duracion">Cantidad de cuotas</label>
@@ -704,11 +705,23 @@
       $("moda2Partes").classList.toggle("active", mode === "2partes");
       $("bloqueSemanal").style.display = mode === "semanal" ? "block" : "none";
       $("bloque2Partes").style.display = mode === "2partes" ? "block" : "none";
+      const hint2p = $("hintTotal2p");
+      if (hint2p) hint2p.style.display = mode === "2partes" ? "block" : "none";
       drawSummary();
     };
 
+    const suma2Cuotas = () => {
+      const p1 = Number($("pago1").value || 0);
+      const p2 = Number($("pago2").value || 0);
+      return Number((p1 + p2).toFixed(2));
+    };
+
     const drawSummary = () => {
-      const total = Number($("montoTotal").value || 0);
+      let total = Number($("montoTotal").value || 0);
+      if (state.modalidad === "2partes") {
+        total = suma2Cuotas();
+        $("montoTotal").value = String(total);
+      }
       $("vistaTotal").textContent = money(total);
 
       let html = "";
@@ -744,7 +757,7 @@
       t: $("tipo").value,
       w: Number($("duracion").value || 1),
       a: $("alcance").value,
-      mt: Number($("montoTotal").value || 0),
+      mt: state.modalidad === "2partes" ? suma2Cuotas() : Number($("montoTotal").value || 0),
       m: state.modalidad,
       ws: state.semanas.map((n) => Number(n || 0)),
       p1: Number($("pago1").value || 0),
@@ -821,6 +834,16 @@
     $("autoDistribuir").addEventListener("click", autoDistribute);
     $("modaSemanal").addEventListener("click", () => setModalidad("semanal"));
     $("moda2Partes").addEventListener("click", () => setModalidad("2partes"));
+
+    $("montoTotal").addEventListener("input", () => {
+      if (state.modalidad !== "2partes") return;
+      const mt = Number($("montoTotal").value || 0);
+      const half = Math.floor((mt / 2) * 100) / 100;
+      const rest = Number((mt - half).toFixed(2));
+      $("pago1").value = half;
+      $("pago2").value = rest;
+      drawSummary();
+    });
 
     $("generarLink").addEventListener("click", async () => {
       const longUrl = makeClientLongUrl();

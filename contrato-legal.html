@@ -678,7 +678,10 @@
         ? "2 cuotas"
         : `${d.w || 0} cuota(s) / semana(s)`;
       $("viewAlcance").textContent = (d.a && d.a.trim()) ? d.a : "Los deudores reciben un prestamo total de S/ 670 y se comprometen a pagar S/ 335 por mes durante 2 meses.";
-      $("viewTotal").textContent = money(d.mt);
+      const totalVer = d.m === "2partes"
+        ? (Number(d.p1) || 0) + (Number(d.p2) || 0)
+        : Number(d.mt) || 0;
+      $("viewTotal").textContent = money(totalVer);
 
       const modalidadLabel = d.m === "2partes" ? "Pago en 2 cuotas" : "Pago por cuotas";
       $("viewModalidad").textContent = modalidadLabel;
@@ -815,43 +818,83 @@
 
       try { await document.fonts.ready; } catch (_) {}
 
+      window.scrollTo(0, 0);
+      try { el.scrollIntoView({ block: "start", behavior: "auto" }); } catch (_) {}
+
       const dataUrl = canvas.toDataURL("image/png");
       imgPdf.src = dataUrl;
       imgPdf.style.width = "100%";
-      imgPdf.style.maxHeight = "200px";
+      imgPdf.style.maxHeight = "none";
+      imgPdf.style.minHeight = "140px";
       imgPdf.style.objectFit = "contain";
       imgPdf.style.display = "block";
       canvas.style.display = "none";
       document.title = `contrato-${fileSlug(nombre, "c")}-${fileSlug(data.p, "p")}`;
 
+      await new Promise((resolve, reject) => {
+        const done = () => resolve();
+        if (imgPdf.complete && imgPdf.naturalWidth > 0) done();
+        else {
+          imgPdf.onload = done;
+          imgPdf.onerror = () => reject(new Error("no-img"));
+        }
+      });
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise((r) => setTimeout(r, 120));
+
+      const captureW = Math.max(794, Math.ceil(el.scrollWidth || el.offsetWidth || 794));
+      const captureH = Math.ceil(Math.max(el.scrollHeight, el.offsetHeight, el.getBoundingClientRect().height));
+
       const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [8, 8, 8, 8],
         filename,
-        image: { type: "jpeg", quality: 0.96 },
+        image: { type: "jpeg", quality: 0.98 },
         html2canvas: {
-          scale: Math.min(3, (window.devicePixelRatio || 1) * 2),
+          scale: 2,
           useCORS: true,
           letterRendering: true,
-          scrollY: 0,
-          scrollX: 0,
-          windowWidth: Math.max(960, el.scrollWidth || 960),
           logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          backgroundColor: "#ffffff",
+          width: captureW,
+          height: captureH,
+          windowWidth: captureW,
+          windowHeight: captureH,
           onclone: (clonedDoc) => {
             clonedDoc.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
             const root = clonedDoc.getElementById("doc");
+            const wrap = clonedDoc.querySelector(".wrapper");
+            const live = document.getElementById("doc");
+            const liveH = live ? Math.ceil(Math.max(live.scrollHeight, live.offsetHeight)) : captureH;
+            const liveW = live ? Math.max(794, Math.ceil(live.scrollWidth || 794)) : captureW;
             if (root) {
-              root.style.maxWidth = "794px";
-              root.style.width = "794px";
-              root.style.marginLeft = "auto";
-              root.style.marginRight = "auto";
+              root.style.width = `${liveW}px`;
+              root.style.maxWidth = `${liveW}px`;
+              root.style.height = "auto";
+              root.style.minHeight = `${liveH}px`;
+              root.style.overflow = "visible";
+              root.style.boxSizing = "border-box";
+            }
+            if (wrap) {
+              wrap.style.maxWidth = "none";
+              wrap.style.width = `${liveW}px`;
+              wrap.style.margin = "0 auto";
+              wrap.style.padding = "12px 14px 48px";
             }
             clonedDoc.body.style.background = "#ffffff";
-            const w = clonedDoc.querySelector(".wrapper");
-            if (w) w.style.maxWidth = "none";
+            clonedDoc.documentElement.style.background = "#ffffff";
+            const sigImg = clonedDoc.getElementById("firmaPdfImg");
+            if (sigImg) {
+              sigImg.style.maxHeight = "none";
+              sigImg.style.height = "auto";
+              sigImg.style.width = "100%";
+              sigImg.style.objectFit = "contain";
+            }
           },
         },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"] },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       };
 
       const h2p = html2pdf().set(opt).from(el);
