@@ -137,6 +137,16 @@
       "dest": "/404-tools.html"
     },
     {
+      "src": "/login",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/login.html",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
       "src": "/tiktok-downloader",
       "dest": "/tiktok-downloader.html"
     },
