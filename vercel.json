@@ -42,6 +42,101 @@
       "dest": "/api/$1"
     },
     {
+      "src": "/credito",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/credito/",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/credito.html",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/credito-app/(.*)",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/pendientes",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/pendientes/",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/pendientes/(.*)",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/creativos",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/creativos/",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/creativos/(.*)",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/finanzas",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/finanzas/",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/finanzas/(.*)",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-pendientes",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-creativos",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-finanzas",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-pendientes.html",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-creativos.html",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
+      "src": "/acceso-finanzas.html",
+      "status": 404,
+      "dest": "/404-tools.html"
+    },
+    {
       "src": "/tiktok-downloader",
       "dest": "/tiktok-downloader.html"
     },
