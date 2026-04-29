@@ -343,11 +343,6 @@
       break-inside: avoid;
     }
 
-    .html2pdf__page-break {
-      height: 0;
-      page-break-before: always;
-      break-before: page;
-    }
 
     label {
       display: block;
@@ -492,7 +487,6 @@
       .section { break-inside: avoid; page-break-inside: avoid; }
       table { break-inside: avoid; }
       .pdf-sign-block, .signature-wrap, .legal { break-inside: avoid; page-break-inside: avoid; }
-      .html2pdf__page-break { page-break-before: always; break-before: page; }
     }
 
     @media (max-width: 720px) {
@@ -579,8 +573,6 @@
           </div>
           <div id="viewSchedule"></div>
         </div>
-
-        <div class="html2pdf__page-break" aria-hidden="true"></div>
 
         <div class="section pdf-sign-block">
           <h2>Firma del prestamista</h2>
@@ -870,78 +862,90 @@
         }
       });
       await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise((r) => setTimeout(r, 120));
+      await new Promise((r) => setTimeout(r, 150));
 
-      const captureW = Math.max(794, Math.ceil(el.scrollWidth || el.offsetWidth || 794));
-      const captureH = Math.ceil(Math.max(el.scrollHeight, el.offsetHeight, el.getBoundingClientRect().height));
+      const TARGET_W = 794;
 
       const opt = {
         margin: [10, 10, 10, 10],
         filename,
-        image: { type: "jpeg", quality: 0.98 },
+        image: { type: "jpeg", quality: 0.97 },
         html2canvas: {
           scale: 2,
           useCORS: true,
           letterRendering: true,
           logging: false,
-          scrollX: 0,
-          scrollY: 0,
           backgroundColor: "#ffffff",
-          width: captureW,
-          height: captureH,
-          windowWidth: captureW,
-          windowHeight: captureH,
+          windowWidth: TARGET_W,
           onclone: (clonedDoc) => {
             clonedDoc.querySelectorAll(".pdf-exclude").forEach((n) => n.remove());
-            const root = clonedDoc.getElementById("doc");
+
+            const cHtml = clonedDoc.documentElement;
+            const cBody = clonedDoc.body;
+            cHtml.style.background = "#ffffff";
+            cBody.style.background = "#ffffff";
+            cBody.style.margin = "0";
+            cBody.style.padding = "0";
+            cBody.style.minHeight = "0";
+            cBody.style.width = `${TARGET_W}px`;
+            cHtml.style.width = `${TARGET_W}px`;
+
             const wrap = clonedDoc.querySelector(".wrapper");
-            const bodyEl = clonedDoc.querySelector(".doc-body");
-            const live = document.getElementById("doc");
-            const liveH = live ? Math.ceil(Math.max(live.scrollHeight, live.offsetHeight)) : captureH;
-            const liveW = live ? Math.max(794, Math.ceil(live.scrollWidth || 794)) : captureW;
+            if (wrap) {
+              wrap.style.maxWidth = `${TARGET_W}px`;
+              wrap.style.width = `${TARGET_W}px`;
+              wrap.style.margin = "0";
+              wrap.style.padding = "0";
+            }
+
+            const root = clonedDoc.getElementById("doc");
             if (root) {
-              root.style.width = `${liveW}px`;
-              root.style.maxWidth = `${liveW}px`;
-              root.style.height = "auto";
-              root.style.minHeight = `${liveH}px`;
+              root.style.width = `${TARGET_W}px`;
+              root.style.maxWidth = `${TARGET_W}px`;
+              root.style.margin = "0";
+              root.style.boxShadow = "none";
+              root.style.borderRadius = "0";
+              root.style.border = "0";
               root.style.overflow = "visible";
               root.style.boxSizing = "border-box";
             }
-            if (wrap) {
-              wrap.style.maxWidth = "none";
-              wrap.style.width = `${liveW}px`;
-              wrap.style.margin = "0 auto";
-              wrap.style.padding = "10px 12px 24px";
-            }
-            if (bodyEl) {
-              bodyEl.style.padding = "16px 18px";
-            }
+
+            const head = clonedDoc.querySelector(".doc-head");
+            if (head) head.style.padding = "20px 22px 16px";
+            const bodyEl = clonedDoc.querySelector(".doc-body");
+            if (bodyEl) bodyEl.style.padding = "18px 22px 22px";
+
             clonedDoc.querySelectorAll(".section").forEach((sec) => {
-              sec.style.marginBottom = "10px";
+              sec.style.marginBottom = "12px";
               sec.style.pageBreakInside = "avoid";
               sec.style.breakInside = "avoid";
             });
-            clonedDoc.body.style.background = "#ffffff";
-            clonedDoc.documentElement.style.background = "#ffffff";
+
+            const sigWrap = clonedDoc.querySelector(".signature-wrap");
+            if (sigWrap) {
+              sigWrap.style.pageBreakInside = "avoid";
+              sigWrap.style.breakInside = "avoid";
+            }
             const sigImg = clonedDoc.getElementById("firmaPdfImg");
             if (sigImg) {
-              sigImg.style.maxHeight = "140px";
+              sigImg.style.display = "block";
               sigImg.style.width = "100%";
               sigImg.style.height = "auto";
+              sigImg.style.maxHeight = "150px";
               sigImg.style.objectFit = "contain";
               sigImg.style.objectPosition = "center center";
+              sigImg.style.background = "#ffffff";
+              sigImg.style.border = "2px solid #fdba74";
+              sigImg.style.borderRadius = "10px";
             }
-            const signBlock = clonedDoc.querySelector(".pdf-sign-block");
-            if (signBlock) {
-              signBlock.style.pageBreakInside = "avoid";
-              signBlock.style.breakInside = "avoid";
-            }
+            const sigCanvas = clonedDoc.getElementById("firmaCliente");
+            if (sigCanvas) sigCanvas.style.display = "none";
           },
         },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait", compress: true },
         pagebreak: {
           mode: ["css", "legacy"],
-          avoid: [".pdf-sign-block", ".signature-wrap", "#firmaPdfImg", ".legal"],
+          avoid: [".pdf-sign-block", ".signature-wrap", "#firmaPdfImg", ".legal", ".section"],
         },
       };
 
