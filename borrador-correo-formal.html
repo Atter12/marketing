@@ -45,6 +45,14 @@
       text-decoration: none;
     }
     .brand:hover { text-decoration: none; opacity: 0.92; }
+    .brand-img {
+      height: 72px;
+      width: auto;
+      display: block;
+    }
+    @media (max-width: 768px) {
+      .brand-img { height: 54px; }
+    }
     .brand-mark {
       width: 36px;
       height: 36px;
@@ -327,8 +335,7 @@
 <body>
   <header class="site-header">
     <a class="brand" href="/" aria-label="Inicio Holistic Marketing">
-      <span class="brand-mark" aria-hidden="true"><i class="fas fa-envelope"></i></span>
-      <span class="brand-text">Holistic <span>Marketing</span></span>
+      <img src="logo.png" alt="Holistic Marketing" class="brand-img">
     </a>
     <nav class="header-nav" aria-label="Apps internas">
       <a href="/credito"><i class="fas fa-wallet" aria-hidden="true"></i> Crédito</a>

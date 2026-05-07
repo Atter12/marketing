@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Calculadora Profit | Márgenes, ROI, ROAS y Break-even | EcomTools</title>
+    <title>Calculadora Profit | Márgenes, ROI, ROAS y Break-even | Holistic Marketing</title>
     <meta name="description" content="Calcula márgenes, ROI, ROAS y break-even en segundos para optimizar ganancias en tus campañas.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         :root {
             --primary: #ff6b4a;
@@ -67,16 +68,10 @@
             text-decoration: none;
         }
 
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: var(--primary-gradient);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
+        .logo-img {
+            height: 72px;
+            width: auto;
+            display: block;
         }
 
         .logo span { color: var(--primary); }
@@ -463,6 +458,7 @@
 
         /* Responsive - móvil: mismo orden (form arriba, resultados abajo), más compacto */
         @media (max-width: 768px) {
+            .logo-img { height: 54px; }
             .calc-wrapper {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -526,9 +522,8 @@
     <header>
         <div class="container">
             <nav>
-                <a href="index.html" class="logo">
-                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-                    Holistic <span>Ecom</span> Tools
+                <a href="index.html" class="logo" aria-label="Holistic Marketing - Inicio">
+                    <img src="logo.png" alt="Holistic Marketing" class="logo-img">
                 </a>
                 <a href="index.html" class="back-link">
                     <i class="fas fa-arrow-left"></i>
@@ -673,7 +668,7 @@
 
     <footer>
         <div class="container">
-            <p><a href="index.html">Holistic Ecom Tools</a> · Calculadora Profit</p>
+            <p><a href="index.html">Holistic Marketing</a> · Calculadora Profit</p>
         </div>
     </footer>
 

@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>Analizador de Rendimiento Web | Velocidad y Performance | EcomTools</title>
+    <title>Analizador de Rendimiento Web | Velocidad y Performance | Holistic Marketing</title>
     <meta name="description" content="Evalúa el rendimiento de cualquier página web por URL: velocidad, Core Web Vitals y métricas de experiencia.">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         :root {
             --primary: #ff6b4a;
@@ -66,16 +67,10 @@
             text-decoration: none;
         }
 
-        .logo-icon {
-            width: 36px;
-            height: 36px;
-            background: var(--primary-gradient);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 16px;
+        .logo-img {
+            height: 72px;
+            width: auto;
+            display: block;
         }
 
         .logo span { color: var(--primary); }
@@ -658,6 +653,7 @@
         }
 
         @media (max-width: 640px) {
+            .logo-img { height: 54px; }
             .input-row { flex-direction: column; }
             .input-row input { min-width: 100%; }
             .scores-grid { grid-template-columns: repeat(2, 1fr); }
@@ -684,9 +680,8 @@
     <header>
         <div class="container">
             <nav>
-                <a href="index.html" class="logo">
-                    <div class="logo-icon"><i class="fas fa-bolt"></i></div>
-                    Ecom<span>Tools</span>
+                <a href="index.html" class="logo" aria-label="Holistic Marketing - Inicio">
+                    <img src="logo.png" alt="Holistic Marketing" class="logo-img">
                 </a>
                 <a href="index.html" class="back-link">
                     <i class="fas fa-arrow-left"></i>
