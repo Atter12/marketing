@@ -1,10 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { getSupabase, isGerente, getClientIdForUser } from "./supabase";
 import { isAuthBootstrapDebugEnabled, logAuthLine } from "./authDebug.js";
-import Login from "./Login";
 import App from "./App";
 
-const statuses = { loading: "loading", login: "login", app: "app", unauthorized: "unauthorized" };
+const statuses = { loading: "loading", app: "app", unauthorized: "unauthorized" };
+
+/** Igual contrato que `credito.html` → `redirectLogin`: un solo login en hecom.club. */
+export function redirectToCentralLogin() {
+  if (typeof window === "undefined") return;
+  try {
+    const path = window.location.pathname || "/";
+    const full = `${path}${window.location.search || ""}${window.location.hash || ""}`;
+    sessionStorage.setItem("hecom_intended_path_after_login", full.startsWith("/") ? full : `/${full}`);
+  } catch {
+    /* ignore */
+  }
+  window.location.replace("https://www.hecom.club/login");
+}
+
 /** Contador largo post-check: isGerente / DB pueden tardar; el gate ya no compite con el hash (main.jsx). */
 const LOADING_TIMEOUT_MS = 20000;
 const SESSION_RETRY_MS = 400;
@@ -17,12 +30,14 @@ export default function AuthGate() {
   const [userEmail, setUserEmail] = useState(null);
   const mounted = useRef(true);
   const timeoutRef = useRef(null);
+  /** Evita redirigir al login central cuando hicimos signOut para mostrar pantalla "No autorizado". */
+  const skipCentralLoginOnNextSignOutRef = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
     const supabase = getSupabase();
     if (!supabase) {
-      setStatus(statuses.login);
+      redirectToCentralLogin();
       return;
     }
 
@@ -55,10 +70,7 @@ export default function AuthGate() {
         const user = await resolveAuthUser();
         if (!mounted.current) return;
         if (!user?.email) {
-          setStatus(statuses.login);
-          setRole(null);
-          setClientId(null);
-          setUserEmail(null);
+          redirectToCentralLogin();
           return;
         }
         const email = user.email;
@@ -98,6 +110,7 @@ export default function AuthGate() {
         logAuthLine("[AuthGate] unauthorized next", {
           hint: "Sesión válida pero el email no está en gerentes ni en clientes_acceso (o RLS bloqueó la lectura). UI clara abajo.",
         });
+        skipCentralLoginOnNextSignOutRef.current = true;
         await supabase.auth.signOut();
         if (!mounted.current) return;
         setStatus(statuses.unauthorized);
@@ -107,10 +120,7 @@ export default function AuthGate() {
       } catch (err) {
         console.error("[AuthGate] check error:", err);
         if (!mounted.current) return;
-        setStatus(statuses.login);
-        setRole(null);
-        setClientId(null);
-        setUserEmail(null);
+        redirectToCentralLogin();
       }
     };
 
@@ -120,11 +130,15 @@ export default function AuthGate() {
         await check();
       } catch (e) {
         console.error("[AuthGate] run check:", e);
+        if (mounted.current) redirectToCentralLogin();
       }
       if (!mounted.current) return;
       timeoutRef.current = window.setTimeout(() => {
+        if (!mounted.current) return;
         setStatus((s) => {
-          if (s === statuses.loading) return statuses.login;
+          if (s === statuses.loading) {
+            redirectToCentralLogin();
+          }
           return s;
         });
       }, LOADING_TIMEOUT_MS);
@@ -134,10 +148,14 @@ export default function AuthGate() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         clearLoadingTimeout();
-        setStatus(statuses.login);
         setRole(null);
         setClientId(null);
         setUserEmail(null);
+        if (skipCentralLoginOnNextSignOutRef.current) {
+          skipCentralLoginOnNextSignOutRef.current = false;
+          return;
+        }
+        redirectToCentralLogin();
         return;
       }
       void run();
@@ -150,13 +168,6 @@ export default function AuthGate() {
     };
   }, []);
 
-  const onLoginSuccess = (payload) => {
-    setStatus(statuses.app);
-    setRole(payload?.role ?? "gerente");
-    setClientId(payload?.clientId ?? null);
-    setUserEmail(payload?.userEmail ?? null);
-  };
-
   useEffect(() => {
     if (status !== statuses.app || typeof window === "undefined") return;
     const path = window.location.pathname || "";
@@ -166,7 +177,7 @@ export default function AuthGate() {
   }, [status, role, clientId, userEmail]);
 
   if (status === statuses.loading) {
-    // Mismo tono que Login (#fff) para evitar parpadeo negro → blanco al resolver auth.
+    // Mismo tono que la pantalla de login principal (#fff) para evitar parpadeo.
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#ffffff", fontFamily: "'Inter', sans-serif" }}>
         <div style={{ color: "#6b7280", fontSize: 14 }}>Cargando…</div>
@@ -184,18 +195,14 @@ export default function AuthGate() {
           </p>
           <button
             type="button"
-            onClick={() => setStatus(statuses.login)}
+            onClick={() => redirectToCentralLogin()}
             style={{ padding: "12px 24px", border: "none", borderRadius: 10, background: "#ea580c", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}
           >
-            Volver al login
+            Ir al inicio de sesión
           </button>
         </div>
       </div>
     );
-  }
-
-  if (status === statuses.login) {
-    return <Login supabase={supabase} onSuccess={onLoginSuccess} />;
   }
 
   return <App role={role} clientId={clientId} userEmail={userEmail} />;

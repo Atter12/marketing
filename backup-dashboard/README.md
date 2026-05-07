@@ -4,8 +4,8 @@ Dashboard separado que muestra una **copia de la base de datos** por fecha. Si l
 
 ## Qué hace
 
-- **Exportación diaria**: Un script descarga todo (gerentes, clientes, gastos, cobros, garantías, manual) a un archivo `data/backup.json`.
-- **Dashboard**: Página web que lee ese archivo y permite **filtrar por fecha** (ej. 12 de febrero): ver todos los movimientos de ese día (cobros, gastos, altas de clientes, garantías, etc.).
+- **Exportación diaria**: El script (`npm run export` / `scripts/export-from-supabase.js`) descarga un snapshot **schema v2** de Crédito (clientes, gastos, cobros, garantías, manual, cobranza), Pendientes (`tareas_*`), Creativos (`creativos_*`), Finanzas internas (`finanzas_app_*`), gerentes y `clientes_acceso`. Salida: `data/backup.json`.
+- **Dashboard**: Lee ese JSON **estático** (no llama a Supabase en el navegador). Filtra por rango de fechas; por defecto abre **el mes en curso** para reducir listas vacías al elegir solo «hoy» sin movimiento. Primera tabla: **Por cliente** (orden alfabético) con enlaces Gastos Ads / Cobros / Cobranza / Pendientes / Creativos. Debajo siguen los listados completos por módulo.
 
 ## Acceso
 

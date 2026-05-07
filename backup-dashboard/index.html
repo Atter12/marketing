@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Copia de seguridad — Holistic Marketing</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%233b82f6'/%3E%3C/svg%3E" />
   <style>
     :root {
       --bg: #0c0e14;
@@ -253,7 +254,7 @@
   <div id="app" class="wrap hidden">
     <header class="header">
       <h1>Copia de seguridad — Holistic Marketing</h1>
-      <p class="sub">Consulta movimientos por día o por rango de fechas (ej. del 12 al 14 de un mes). Los datos corresponden a la última exportación diaria.</p>
+      <p class="sub">Crédito, Cobranza, Pendientes, Creativos y Finanzas: consultá por día o por rango. Por defecto se muestra <strong>este mes</strong> para no ver pantallas vacías si hoy no hubo movimientos.</p>
       <div class="export-info" id="metaExport"><span class="dot"></span> Cargando…</div>
     </header>
 
@@ -274,7 +275,7 @@
           <button type="button" data-preset="mes">Este mes</button>
         </div>
       </div>
-      <p class="filtro-hint">Elige un solo día (desde = hasta) o un intervalo. Ejemplo: del 12 al 14 de febrero.</p>
+      <p class="filtro-hint">Elige un solo día (desde = hasta) o un intervalo. Si ves todo en cero, el snapshot puede ser de otro mes: ampliá «Desde» al mes donde está la última exportación (fecha arriba) o pulsá una fecha amplia tipo 2026-01-01 → hoy.</p>
     </div>
 
     <div id="resumen" class="resumen"></div>
@@ -285,7 +286,36 @@
     (function() {
       var CLAVE_ESPERADA = 'holistic2025';
       var STORAGE_KEY = 'backup_dashboard_clave';
-      var data = { exportedAt: null, clientes: [], gastos: [], cobros: [], garantias: [], manual: [], gerentes: [] };
+      var data = {
+        exportedAt: null,
+        schemaVersion: 0,
+        clientes: [],
+        clientes_acceso: [],
+        gastos: [],
+        cobros: [],
+        garantias: [],
+        manual: [],
+        gerentes: [],
+        cobranza_bandeja: [],
+        cobranza_eventos: [],
+        tareas_equipo: [],
+        tareas_clientes: [],
+        tareas_kanban: [],
+        tareas_tickets: [],
+        tareas_workload: [],
+        tareas_calendario: [],
+        tareas_ticket_comentarios: [],
+        creativos_clientes: [],
+        creativos_productos: [],
+        creativos_editores: [],
+        creativos_proyectos: [],
+        finanzas_app_ingresos: [],
+        finanzas_app_gastos: [],
+        finanzas_app_cuentas_cobrar: [],
+        finanzas_app_deudas: [],
+        finanzas_app_sueldos: [],
+        finanzas_app_impuestos: []
+      };
 
       function checkClave() {
         var stored = sessionStorage.getItem(STORAGE_KEY);
@@ -325,14 +355,32 @@
 
       function loadData() {
         var base = window.location.pathname.replace(/\/index\.html$/, '').replace(/\/$/, '') || '.';
-        var url = base + '/data/backup.json';
+        var debug = new URLSearchParams(window.location.search).get('debug') === '1';
+        var url = base + '/data/backup.json' + (debug ? ('?t=' + Date.now()) : '');
         fetch(url)
           .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('No se pudo cargar backup.json')); })
           .then(function(json) {
             data = json;
             if (data.exportedAt) {
               var d = new Date(data.exportedAt);
-              document.getElementById('metaExport').innerHTML = '<span class="dot"></span> Última exportación: ' + d.toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' });
+              var v = data.schemaVersion || 1;
+              document.getElementById('metaExport').innerHTML = '<span class="dot"></span> Última exportación: ' + d.toLocaleString('es-PE', { dateStyle: 'medium', timeStyle: 'short' }) + (v >= 2 ? ' · Snapshot v' + v : ' · <span style="color:#f59e0b">Ejecutá de nuevo el export (npm run export)</span> para incluir Pendientes/Creativos/Cobranza/Finanzas');
+            }
+            if (debug) {
+              console.log('[backup-dashboard]', 'backup.json cargado:', {
+                url: url.replace(/\?.*$/, ''),
+                exportedAt: data.exportedAt,
+                records: {
+                  gerentes: (data.gerentes || []).length,
+                  clientes: (data.clientes || []).length,
+                  gastos: (data.gastos || []).length,
+                  cobros: (data.cobros || []).length,
+                  garantias: (data.garantias || []).length,
+                  cobranza_bandeja: (data.cobranza_bandeja || []).length,
+                  tareas_tickets: (data.tareas_tickets || []).length,
+                  creativos_proyectos: (data.creativos_proyectos || []).length
+                }
+              });
             }
             setDefaultRange();
             render();
@@ -347,11 +395,27 @@
       function todayStr() { return new Date().toISOString().slice(0, 10); }
       function dateStr(iso) { return iso ? String(iso).slice(0, 10) : ''; }
 
+      /** Rango inicial: desde el día 1 del mes de la última exportación hasta hoy (así no queda vacío si el JSON es de feb y estamos en abr). */
       function setDefaultRange() {
         var desde = document.getElementById('desde');
         var hasta = document.getElementById('hasta');
-        if (!desde.value) desde.value = todayStr();
-        if (!hasta.value) hasta.value = todayStr();
+        if (desde.value && hasta.value) return;
+
+        if (data && data.exportedAt) {
+          var e = new Date(data.exportedAt);
+          if (!Number.isNaN(e.getTime())) {
+            var y = e.getFullYear();
+            var mo = e.getMonth();
+            var first = new Date(y, mo, 1);
+            desde.value = first.toISOString().slice(0, 10);
+            hasta.value = todayStr();
+            return;
+          }
+        }
+        var today = new Date();
+        var first = new Date(today.getFullYear(), today.getMonth(), 1);
+        desde.value = first.toISOString().slice(0, 10);
+        hasta.value = todayStr();
       }
 
       function getRange() {
@@ -369,6 +433,30 @@
           if (!d) return false;
           return d >= desde && d <= hasta;
         });
+      }
+
+      /** fecha | created_at | updated_at | tareas_calendario (anio/mes/día) */
+      function filterByFlexibleDate(arr, desde, hasta) {
+        if (!arr || !arr.length) return [];
+        return arr.filter(function(r) {
+          var d = dateStr(r.fecha);
+          if (!d) d = dateStr(r.created_at);
+          if (!d) d = dateStr(r.updated_at);
+          if (!d) d = dateStr(r.prox_pago);
+          if (!d) d = dateStr(r.fecha_emision);
+          if (!d) d = dateStr(r.fecha_pago);
+          if (!d) d = dateStr(r.fecha_vencimiento);
+          if (!d && r.anio != null && r.mes != null && r.dia != null) {
+            d = String(r.anio) + '-' + String(r.mes).padStart(2, '0') + '-' + String(r.dia).padStart(2, '0');
+          }
+          if (!d) return false;
+          return d >= desde && d <= hasta;
+        });
+      }
+
+      function escCell(s) {
+        if (s === null || s === undefined) return '—';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       }
 
       document.querySelectorAll('.presets button').forEach(function(btn) {
@@ -418,6 +506,21 @@
         if (!manualRange.length) manualRange = filterByDateRange(manualList, desde, hasta, 'created_at');
         var gerentesRange = filterByDateRange(data.gerentes || [], desde, hasta, 'created_at');
 
+        var cobranzaRange = filterByFlexibleDate(data.cobranza_bandeja || [], desde, hasta);
+        var cobranzaEventosRange = filterByFlexibleDate(data.cobranza_eventos || [], desde, hasta);
+        var tareasTicketsRange = filterByFlexibleDate(data.tareas_tickets || [], desde, hasta);
+        var tareasKanbanRange = filterByFlexibleDate(data.tareas_kanban || [], desde, hasta);
+        var calendarioRange = filterByFlexibleDate(data.tareas_calendario || [], desde, hasta);
+        var ticketComRange = filterByFlexibleDate(data.tareas_ticket_comentarios || [], desde, hasta);
+        var creativosProjRange = filterByFlexibleDate(data.creativos_proyectos || [], desde, hasta);
+
+        var fiIng = filterByFlexibleDate(data.finanzas_app_ingresos || [], desde, hasta);
+        var fiGas = filterByFlexibleDate(data.finanzas_app_gastos || [], desde, hasta);
+        var fiCta = filterByFlexibleDate(data.finanzas_app_cuentas_cobrar || [], desde, hasta);
+        var fiDeu = filterByFlexibleDate(data.finanzas_app_deudas || [], desde, hasta);
+        var fiSue = filterByFlexibleDate(data.finanzas_app_sueldos || [], desde, hasta);
+        var fiImp = filterByFlexibleDate(data.finanzas_app_impuestos || [], desde, hasta);
+
         var totalCobros = cobrosRange.reduce(function(s, r) { return s + Number(r.monto) || 0; }, 0);
         var totalGastos = gastosRange.reduce(function(s, r) { return s + Number(r.gasto) || 0; }, 0);
         var totalGarantias = garantiasRange.reduce(function(s, r) { return s + Number(r.valor) || 0; }, 0);
@@ -431,7 +534,13 @@
           { n: clientesRange.length, l: 'Clientes (altas)', total: null },
           { n: garantiasRange.length, l: 'Garantías', total: totalGarantias },
           { n: manualRange.length, l: 'Manual', total: totalManual },
-          { n: gerentesRange.length, l: 'Gerentes', total: null }
+          { n: gerentesRange.length, l: 'Gerentes', total: null },
+          { n: cobranzaRange.length, l: 'Cobranza (borradores)', total: null },
+          { n: cobranzaEventosRange.length, l: 'Cobranza eventos', total: null },
+          { n: tareasTicketsRange.length, l: 'Tickets Pendientes', total: null },
+          { n: tareasKanbanRange.length, l: 'Kanban filas', total: null },
+          { n: creativosProjRange.length, l: 'Proyectos Creativos', total: null },
+          { n: fiIng.length + fiGas.length, l: 'Movs. Finanzas (ing+gasto)', total: null }
         ].map(function(c) {
           var totalHtml = c.total != null ? '<div class="total">' + fmt(c.total) + '</div>' : '';
           return '<div class="chip"><div class="n">' + c.n + '</div><div class="l">' + c.l + '</div>' + totalHtml + '</div>';
@@ -443,15 +552,73 @@
         (data.gastos || []).forEach(function(g) { gastosMap[g.id] = g; });
 
         function tbl(titulo, filas, cols) {
-          if (!filas.length) return '<div class="card"><h2>' + titulo + '</h2><p class="empty">Sin movimientos en este rango</p></div>';
-          var th = cols.map(function(c) { return '<th>' + c.label + '</th>'; }).join('');
-          var trs = filas.map(function(r) { return '<tr>' + cols.map(function(c) { return '<td>' + (c.fn ? c.fn(r) : (r[c.key] ?? '—')) + '</td>'; }).join('') + '</tr>'; }).join('');
-          return '<div class="card"><h2>' + titulo + '</h2><table><thead><tr>' + th + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
+          if (!filas.length) return '<div class="card"><h2>' + escCell(titulo) + '</h2><p class="empty">Sin movimientos en este rango</p></div>';
+          var th = cols.map(function(c) { return '<th>' + escCell(c.label) + '</th>'; }).join('');
+          var trs = filas.map(function(r) {
+            return '<tr>' + cols.map(function(c) {
+              var cell = c.fn ? c.fn(r) : (r[c.key] ?? '—');
+              return '<td>' + (typeof cell === 'number' ? cell : escCell(cell)) + '</td>';
+            }).join('') + '</tr>';
+          }).join('');
+          return '<div class="card"><h2>' + escCell(titulo) + '</h2><table><thead><tr>' + th + '</tr></thead><tbody>' + trs + '</tbody></table></div>';
         }
 
         var rangoLabel = desde === hasta ? 'del ' + desde : 'del ' + desde + ' al ' + hasta;
 
+        function vistaPorCliente() {
+          var creativosCredMap = {};
+          (data.creativos_clientes || []).forEach(function(cc) {
+            if (cc && cc.id != null && cc.credito_client_id) creativosCredMap[String(cc.id)] = String(cc.credito_client_id);
+          });
+          var list = (data.clientes || []).slice().sort(function(a, b) {
+            return (a.name || '').toLocaleLowerCase('es').localeCompare((b.name || '').toLocaleLowerCase('es'), 'es');
+          });
+          if (!list.length) {
+            return '<div class="card"><h2>Por cliente (orden alfabético) — ' + escCell(rangoLabel) + '</h2><p class="empty">No hay clientes en el snapshot. Ejecutá el export incluyendo `clientes`.</p></div>';
+          }
+          function proyectosForCred(cid) {
+            return creativosProjRange.filter(function(p) {
+              if (String(p.credito_client_id || '') === cid) return true;
+              var cr = creativosCredMap[String(p.client_id || '')];
+              return cr === cid;
+            });
+          }
+          var rows = list.map(function(c) {
+            var cid = String(c.id);
+            var gs = gastosRange.filter(function(g) { return String(g.client_id) === cid; });
+            var co = cobrosRange.filter(function(x) {
+              if (String(x.client_id || '') === cid) return true;
+              var gid = x.gasto_id && gastosMap[x.gasto_id];
+              return gid && String(gid.client_id) === cid;
+            });
+            var ga = garantiasRange.filter(function(x) { return String(x.client_id) === cid; });
+            var cob = cobranzaRange.filter(function(x) { return String(x.client_id) === cid; });
+            var tfc = (data.tareas_clientes || []).filter(function(t) {
+              return t.credito_client_id != null && String(t.credito_client_id) === cid;
+            });
+            var tfcR = filterByFlexibleDate(tfc, desde, hasta);
+            var proj = proyectosForCred(cid);
+            var n = gs.length + co.length + ga.length + cob.length + proj.length + tfcR.length;
+            if (n === 0) return null;
+            return '<tr>' +
+              '<td><strong>' + escCell(c.name) + '</strong><br/><span style="color:var(--text-soft);font-size:0.75rem">' + escCell(cid.slice(0, 8)) + '…</span></td>' +
+              '<td>' + gs.length + '</td>' +
+              '<td>' + co.length + '</td>' +
+              '<td>' + ga.length + '</td>' +
+              '<td>' + cob.length + '</td>' +
+              '<td>' + tfcR.length + '/' + tfc.length + '</td>' +
+              '<td>' + proj.length + '</td>' +
+            '</tr>';
+          }).filter(Boolean);
+          if (!rows.length) {
+            return '<div class="card"><h2>Por cliente — ' + escCell(rangoLabel) + '</h2><p class="empty">Ningún cliente tiene movimiento en Pendientes/Gastos/Cobranza/Creativos para este rango. Ampliá fechas o revisá datos.</p></div>';
+          }
+          var thead = '<thead><tr><th>Cliente Crédito</th><th>Gastos Ads</th><th>Cobros</th><th>Garantías</th><th>Cobranza</th><th>Pendientes (ficha en rango / total vínculo)</th><th>Creativos proy.</th></tr></thead>';
+          return '<div class="card"><h2>Por cliente (Crédito, Cobranza, Pendientes, Creativos) — ' + escCell(rangoLabel) + '</h2><table>' + thead + '<tbody>' + rows.join('') + '</tbody></table></div>';
+        }
+
         document.getElementById('panels').innerHTML =
+          vistaPorCliente() +
           tbl('Cobros (' + cobrosRange.length + ') — ' + rangoLabel, cobrosRange, [
             { label: 'Fecha', key: 'fecha' },
             { label: 'Hora', fn: function(r) { return r.hora ? String(r.hora).slice(0, 5) : '—'; } },
@@ -491,7 +658,88 @@
           ]) +
           (gerentesRange.length ? tbl('Gerentes (' + gerentesRange.length + ') — ' + rangoLabel, gerentesRange, [
             { label: 'Email', key: 'email' }
-          ]) : '');
+          ]) : '') +
+          tbl('Cobranza — borradores (' + cobranzaRange.length + ') — ' + rangoLabel, cobranzaRange, [
+            { label: 'Cliente', fn: function(r) { return escCell(clientesMap[r.client_id] || r.cliente_nombre); } },
+            { label: 'Email', key: 'email_destino' },
+            { label: 'Estado', key: 'estado' },
+            { label: 'Monto pend.', fn: function(r) { return fmt(r.monto_pendiente); } },
+            { label: 'Asunto', key: 'asunto' }
+          ]) +
+          tbl('Cobranza — eventos (' + cobranzaEventosRange.length + ') — ' + rangoLabel, cobranzaEventosRange, [
+            { label: 'Evento', key: 'evento' },
+            { label: 'Detalle', key: 'detalle' },
+            { label: 'Actor', key: 'actor_email' },
+            { label: 'Creado', key: 'created_at' }
+          ]) +
+          tbl('Pendientes — tickets (' + tareasTicketsRange.length + ') — ' + rangoLabel, tareasTicketsRange, [
+            { label: 'Código', key: 'codigo' },
+            { label: 'Título', key: 'titulo' },
+            { label: 'Cliente', key: 'cliente_nombre' },
+            { label: 'Estado', key: 'status' },
+            { label: 'Creado', key: 'created_at' }
+          ]) +
+          tbl('Pendientes — Kanban (' + tareasKanbanRange.length + ') — ' + rangoLabel, tareasKanbanRange, [
+            { label: 'Columna', key: 'columna' },
+            { label: 'Título', key: 'titulo' },
+            { label: 'Cliente', key: 'cliente_nombre' },
+            { label: 'Prioridad', key: 'prioridad' },
+            { label: 'Actualizado', key: 'updated_at' }
+          ]) +
+          tbl('Pendientes — comentarios tickets (' + ticketComRange.length + ') — ' + rangoLabel, ticketComRange, [
+            { label: 'Ticket', key: 'ticket_id' },
+            { label: 'Quién', key: 'quien' },
+            { label: 'Qué', key: 'que' },
+            { label: 'Creado', key: 'created_at' }
+          ]) +
+          tbl('Pendientes — calendario (' + calendarioRange.length + ') — ' + rangoLabel, calendarioRange, [
+            { label: 'Año', key: 'anio' },
+            { label: 'Mes', key: 'mes' },
+            { label: 'Día', key: 'dia' },
+            { label: 'Notas', key: 'notas' }
+          ]) +
+          tbl('Creativos — proyectos (' + creativosProjRange.length + ') — ' + rangoLabel, creativosProjRange, [
+            { label: 'Cliente Crédito', fn: function(r) { return escCell(clientesMap[r.credito_client_id] || r.credito_client_id); } },
+            { label: 'Nombre', key: 'name' },
+            { label: 'Creado', key: 'created_at' },
+            { label: 'Publicado', key: 'published' }
+          ]) +
+          tbl('Finanzas — ingresos (' + fiIng.length + ') — ' + rangoLabel, fiIng, [
+            { label: 'Fecha', key: 'fecha' },
+            { label: 'Cliente', key: 'cliente' },
+            { label: 'Concepto', key: 'concepto' },
+            { label: 'USD', fn: function(r) { return fmt(r.monto_usd); } },
+            { label: 'Estado', key: 'estado' }
+          ]) +
+          tbl('Finanzas — gastos (' + fiGas.length + ') — ' + rangoLabel, fiGas, [
+            { label: 'Fecha', key: 'fecha' },
+            { label: 'Categoría', key: 'categoria' },
+            { label: 'Concepto', key: 'concepto' },
+            { label: 'USD', fn: function(r) { return fmt(r.monto_usd); } }
+          ]) +
+          tbl('Finanzas — cuentas por cobrar (' + fiCta.length + ') — ' + rangoLabel, fiCta, [
+            { label: 'Cliente', key: 'cliente' },
+            { label: 'Servicio', key: 'servicio' },
+            { label: 'USD', fn: function(r) { return fmt(r.monto_usd); } },
+            { label: 'Vencimiento', key: 'fecha_vencimiento' }
+          ]) +
+          tbl('Finanzas — deudas (' + fiDeu.length + ') — ' + rangoLabel, fiDeu, [
+            { label: 'Banco', key: 'banco' },
+            { label: 'Concepto', key: 'concepto' },
+            { label: 'Total', fn: function(r) { return fmt(r.monto_total); } },
+            { label: 'Próx. pago', key: 'prox_pago' }
+          ]) +
+          tbl('Finanzas — sueldos (' + fiSue.length + ') — ' + rangoLabel, fiSue, [
+            { label: 'Empleado', key: 'empleado' },
+            { label: 'Bruto USD', fn: function(r) { return fmt(r.bruto_usd); } },
+            { label: 'Fecha pago', key: 'fecha_pago' }
+          ]) +
+          tbl('Finanzas — impuestos (' + fiImp.length + ') — ' + rangoLabel, fiImp, [
+            { label: 'Tipo', key: 'tipo' },
+            { label: 'Período', key: 'periodo' },
+            { label: 'USD', fn: function(r) { return fmt(r.monto_usd); } },
+            { label: 'Venc.', key: 'fecha_vencimiento' }
+          ]);
       }
     })();
   </script>

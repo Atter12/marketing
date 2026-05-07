@@ -23,6 +23,22 @@ const S = {
   g: (k) => { try { return JSON.parse(localStorage.getItem("hm_" + k)) || []; } catch { return []; } },
   s: (k, v) => localStorage.setItem("hm_" + k, JSON.stringify(v)),
 };
+/** Pendientes/Creativos/Finanzas escriben `holistic_gerente_nombre` texto plano; Crédito guardaba sólo `hm_gerente_nombre` JSON vía `S.s`. Lee el mismo orden que Finanzas. */
+function readGerenteNombreSynced() {
+  try {
+    if (typeof window === "undefined") return "";
+    const h1 = (localStorage.getItem("holistic_gerente_nombre") || "").trim();
+    const h2 = (localStorage.getItem("creativos_user_name") || "").trim();
+    if (h1) return h1;
+    if (h2) return h2;
+    const hm = localStorage.getItem("hm_gerente_nombre");
+    if (hm == null || hm === "") return "";
+    const p = JSON.parse(hm);
+    return typeof p === "string" ? p : "";
+  } catch {
+    return "";
+  }
+}
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 // Formato fiel a los dígitos en BD: hasta 2 decimales, sin rellenar ceros (11.7 → "11.7", 64.52 → "64.52")
 const fmt = (n) => {
@@ -484,7 +500,7 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
   const sb = useSupabaseData(role, clientId);
   const { clients, gastos, cobros, garantias, manual, loading: dataLoading, error: dataError, refetch: refetchData, refetchGastosCobros, mutations, uid: uidGen } = sb;
   const isCliente = role === "cliente";
-  const [gerenteNombre, setGerenteNombre] = useState(() => { try { if (typeof window === "undefined") return ""; const v = localStorage.getItem("hm_gerente_nombre"); if (v == null) return ""; const p = JSON.parse(v); return typeof p === "string" ? p : ""; } catch { return ""; } });
+  const [gerenteNombre, setGerenteNombre] = useState(() => readGerenteNombreSynced());
   const [gerenteAvatarUrl, setGerenteAvatarUrl] = useState("");
   const [localGerenteAvatarUrl, setLocalGerenteAvatarUrl] = useState(() => { try { if (typeof window === "undefined") return ""; return localStorage.getItem("hm_gerente_avatar_url") || ""; } catch { return ""; } });
   const [uploadingGerenteAvatar, setUploadingGerenteAvatar] = useState(false);
@@ -540,6 +556,26 @@ export default function App({ role = "gerente", clientId = null, userEmail = nul
       try { localStorage.setItem("creativos_user_name", v); } catch (_) {}
     }
   };
+
+  /** Creativos/Pendientes otra pestaña: `storage`. Al volver desde Creativos (storage no cruza misma pestaña), `visibilitychange`. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const keys = ["holistic_gerente_nombre", "creativos_user_name", "hm_gerente_nombre"];
+    const refresh = () => setGerenteNombre(readGerenteNombreSynced());
+    const onStorage = (ev) => {
+      if (!ev.key || keys.indexOf(ev.key) < 0) return;
+      refresh();
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
 
   const validPages = ["dashboard", "clientes", "gastos", "metricas", "cobros", "cobranza", "reportes", "garantias", "client-detail"];
   const getInitialPage = () => {
@@ -2087,12 +2123,6 @@ tbody tr:active{transform:scale(.997);transition:transform .1s}
                 <Av name={displayName} size={44} avatarUrl={clients[0]?.avatar_url} />
               ) : (
                 <Av name={displayName} size={48} avatarUrl={localGerenteAvatarUrl || gerenteAvatarUrl} />
-              )}
-              <div style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, borderRadius: "50%", background: "linear-gradient(135deg, #22c55e, #10b981)", border: "2.5px solid var(--color-surface-2)", boxShadow: "0 1px 4px rgba(0,0,0,.12)" }} />
-              {!isCliente && (
-                <div style={{ position: "absolute", right: -2, bottom: -2, width: 20, height: 20, borderRadius: "50%", background: "var(--color-primary)", color: "var(--color-text-inverse)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 6px var(--color-primary-glow)", pointerEvents: "none" }} title="Clic para poner tu foto">
-                  <Camera size={11} strokeWidth={2.2} />
-                </div>
               )}
             </div>
             <div style={{ minWidth: 0, flex: 1, paddingTop: 2 }}>
