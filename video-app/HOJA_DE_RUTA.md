@@ -6,7 +6,7 @@ Dashboard interno para registrar videos del equipo, evaluar resultado (CPA), ges
 
 ## Visión y alcance (entregables de producto)
 
-**Qué es VideoForge:**
+**Qué es VideoForge:*sd*
 
 - **Registrar videos** que produce el equipo: nombre, cliente, producto, tipo (UGC, Talking Head, etc.), plataforma (Facebook Ads, TikTok, etc.), editor, formato, duración, URL (ej. Drive), notas.
 - **Evaluar resultado (CPA):** por cada video marcar 🏆 Muy bueno, ✅ Bueno, ❌ Malo o pendiente.
