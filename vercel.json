@@ -57,6 +57,10 @@
       "dest": "/404-tools.html"
     },
     {
+      "src": "/credito-app/auth-config.js",
+      "dest": "/credito-app/auth-config.js"
+    },
+    {
       "src": "/credito-app/(.*)",
       "status": 404,
       "dest": "/404-tools.html"
