@@ -1,4 +1,4 @@
-# Hoja de ruta — VideoForge (video-app)
+# Hoja de ruta — VideoFfyfcforge (video-app)
 
 Dashboard interno para registrar videos del equipo, evaluar resultado (CPA), gestionar clientes/productos/editores, ver métricas (win rate) y exponer un portfolio público. Ir marcando con `[ ]` / `[x]` según se implemente.
 
