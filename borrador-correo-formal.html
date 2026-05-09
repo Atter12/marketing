@@ -355,7 +355,7 @@
       </div>
       <h1>Borrador correo formal</h1>
       <p class="lead">
-        Redacta destinatario, asunto y mensaje. <strong>Enviar correo</strong> usa la misma vía que <strong>cobranza</strong>: función en <strong>Supabase</strong> + <strong>Resend</strong> y plantilla Holistic. Tenés que estar logueado como <strong>gerente</strong> (misma sesión que Crédito). <strong>Envío automático cada 1 seg</strong> reenvía con los datos del formulario; podés usar otra pestaña u otra app: mientras <strong>esta pestaña siga abierta en el navegador</strong> suele seguir (a veces el SO duerme la pestaña en segundo plano). Si <strong>cerrás la pestaña o el navegador</strong>, deja de enviarse. Usá <strong>Parar</strong> para cortarlo. Opcional: «Abrir en mi correo» para revisar en tu cliente antes de enviar.
+        Redacta destinatario, asunto y mensaje. <strong>Sin iniciar sesión</strong> podés usar <strong>tu Gmail u otro correo personal</strong>: el botón principal abre tu aplicación de correo (mailto). <strong>Con sesión de gerente</strong>, <strong>Enviar</strong> usa la cuenta Holistic vía <strong>Supabase</strong> + <strong>Resend</strong> (igual que cobranza). <strong>Envío automático cada 1 seg</strong> solo con sesión de gerente; reenvía mientras la pestaña siga abierta. Usá <strong>Parar</strong> para cortarlo.
       </p>
 
       <div id="session-bar" class="session-bar session-warn" role="status">
@@ -383,7 +383,7 @@
       </button>
       <button type="button" class="btn-secondary" id="open-mailto">
         <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
-        Abrir en mi correo (mailto)
+        Abrir en mi correo (alternativa)
       </button>
       <button type="button" class="btn-secondary" id="auto-send-toggle" disabled>
         <i class="fas fa-clock" aria-hidden="true"></i>
@@ -511,29 +511,63 @@
         }
       }
 
+      function updatePrimaryButton() {
+        if (!sendBtn) return;
+        if (!supabaseUrl || !supabaseAnon) {
+          sendBtn.disabled = false;
+          sendBtn.removeAttribute("title");
+          sendBtn.innerHTML =
+            '<i class="fas fa-envelope" aria-hidden="true"></i> Abrir en mi correo (Gmail / personal)';
+          sendBtn.setAttribute(
+            "title",
+            "Abre Gmail, Outlook o tu app de correo; el envío sale desde tu cuenta personal."
+          );
+          if (mailtoBtn) mailtoBtn.style.display = "none";
+          return;
+        }
+        if (hasSession) {
+          sendBtn.disabled = false;
+          sendBtn.removeAttribute("title");
+          sendBtn.innerHTML =
+            '<i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar correo (Holistic / Resend)';
+          if (mailtoBtn) mailtoBtn.style.display = "";
+        } else {
+          sendBtn.disabled = false;
+          sendBtn.innerHTML =
+            '<i class="fas fa-envelope" aria-hidden="true"></i> Abrir en mi correo (tu Gmail / personal)';
+          sendBtn.setAttribute(
+            "title",
+            "Sin sesión de gerente: el mensaje se envía desde tu correo (Gmail, Outlook…), no desde Holistic."
+          );
+          if (mailtoBtn) mailtoBtn.style.display = "none";
+        }
+      }
+
       function renderSessionBar() {
         if (!sessionBar) return;
         if (!supabaseUrl || !supabaseAnon) {
           sessionBar.className = "session-bar session-warn";
           sessionBar.innerHTML =
-            "Falta configuración de Supabase (URL / clave anon). En Vercel definí <code>PUBLIC_SUPABASE_URL</code> y <code>PUBLIC_SUPABASE_ANON_KEY</code> y redeploy. Probá <a href=\"" +
+            "Sin configuración de Supabase no podés usar envío Holistic; igual podés <strong>mandar desde tu Gmail</strong> con el botón principal (abre tu app de correo). Para Resend + gerente: definí <code>PUBLIC_SUPABASE_URL</code> y <code>PUBLIC_SUPABASE_ANON_KEY</code> en Vercel. <a href=\"" +
             esc(PROXY_PATH) +
             '" target="_blank" rel="noopener">GET ' +
             esc(PROXY_PATH) +
-            "</a>: deben verse <code>supabaseUrl</code> y <code>supabaseAnonKey</code>.";
-          sendBtn.disabled = true;
+            "</a>.";
           if (autoSendBtn) autoSendBtn.disabled = true;
           stopAutoSend();
+          updatePrimaryButton();
           return;
         }
         if (hasSession) {
+          updatePrimaryButton();
           supabase.auth.getUser().then(function (ur) {
             var email = (ur.data && ur.data.user && ur.data.user.email) || "gerente";
             sessionBar.className = "session-bar session-ok";
             sessionBar.innerHTML =
-              "Sesión: <strong>" +
+              "Sesión gerente: <strong>" +
               esc(email) +
-              '</strong> · <button type="button" id="btn-logout">Cerrar sesión</button>';
+              '</strong> · <button type="button" id="btn-logout">Cerrar sesión</button>' +
+              " · También podés usar «Abrir en mi correo» para mandar desde tu cuenta personal.";
             var lo = document.getElementById("btn-logout");
             if (lo) {
               lo.onclick = function () {
@@ -542,19 +576,18 @@
                 });
               };
             }
-            sendBtn.disabled = false;
             if (autoSendBtn) autoSendBtn.disabled = false;
+            updatePrimaryButton();
           });
         } else {
           sessionBar.className = "session-bar session-warn";
           sessionBar.innerHTML =
-            'Iniciá sesión como <strong>gerente</strong> (misma cuenta que Crédito / cobranza). ' +
-            '<a href="' +
+            'No iniciaste sesión como gerente. Podés <strong>enviar desde tu Gmail u otro correo personal</strong> con el botón principal (se abre tu programa de correo). Para enviar con la cuenta Holistic (Resend), <a href="' +
             esc(creditoLoginHref()) +
-            '">Abrir Crédito</a> y volvé a esta página.';
-          sendBtn.disabled = true;
+            '">iniciá sesión en Crédito</a> y volvé aquí.';
           if (autoSendBtn) autoSendBtn.disabled = true;
           stopAutoSend();
+          updatePrimaryButton();
         }
       }
 
@@ -749,15 +782,37 @@
       }
 
       function setBusy(b) {
-        sendBtn.disabled = b || !hasSession;
         mailtoBtn.disabled = b;
+        if (!hasSession || !supabase) {
+          sendBtn.disabled = b;
+          if (!b) updatePrimaryButton();
+          return;
+        }
+        sendBtn.disabled = b;
         if (b) {
           sendBtn.innerHTML =
             '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Enviando…';
         } else {
-          sendBtn.innerHTML =
-            '<i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar correo';
+          updatePrimaryButton();
         }
+      }
+
+      function openMailtoComposer() {
+        var payload = validateFields();
+        if (!payload) return;
+        var addr = payload.to;
+        var sub = payload.subject;
+        var txt = payload.body;
+        var q = new URLSearchParams();
+        if (sub) q.set("subject", sub);
+        if (txt) q.set("body", txt);
+        var qs = q.toString();
+        var href = "mailto:" + addr + (qs ? "?" + qs : "");
+        if (href.length > 1900) {
+          showStatus(false, "El mensaje es muy largo para mailto. Acórtalo o copia el texto a mano.");
+          return;
+        }
+        window.location.href = href;
       }
 
       async function runSend(fromAuto) {
@@ -811,12 +866,16 @@
           );
         } finally {
           setBusy(false);
-          if (hasSession) sendBtn.disabled = false;
         }
       }
 
       sendBtn.addEventListener("click", function () {
-        runSend(false);
+        if (hasSession && supabase) {
+          runSend(false);
+          return;
+        }
+        clearStatus();
+        openMailtoComposer();
       });
 
       if (autoSendBtn) {
@@ -840,21 +899,7 @@
       }
 
       mailtoBtn.addEventListener("click", function () {
-        var payload = validateFields();
-        if (!payload) return;
-        var addr = payload.to;
-        var sub = payload.subject;
-        var txt = payload.body;
-        var q = new URLSearchParams();
-        if (sub) q.set("subject", sub);
-        if (txt) q.set("body", txt);
-        var qs = q.toString();
-        var href = "mailto:" + addr + (qs ? "?" + qs : "");
-        if (href.length > 1900) {
-          showStatus(false, "El mensaje es muy largo para mailto. Acórtalo o copia el texto a mano.");
-          return;
-        }
-        window.location.href = href;
+        openMailtoComposer();
       });
     })();
   </script>
