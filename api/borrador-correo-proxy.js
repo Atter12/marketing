@@ -18,6 +18,10 @@ function anonKey() {
   return (process.env.PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "").trim();
 }
 
+function appOriginFallback() {
+  return (process.env.PUBLIC_APP_ORIGIN_FALLBACK || "https://www.hecom.club").replace(/\/$/, "");
+}
+
 function edgeUrl(slug) {
   const b = baseUrl();
   if (!b) return "";
@@ -33,15 +37,21 @@ function jsonWithCors(res, status, payload) {
 export default async function handler(req, res) {
   if (req.method === "GET") {
     const url = baseUrl();
-    const key = !!anonKey();
+    const keyStr = anonKey();
+    const hasKey = !!keyStr;
     return jsonWithCors(res, 200, {
       ok: true,
       service: "borrador-correo-proxy",
       hasSupabaseUrl: !!url,
-      hasAnonKey: key,
+      hasAnonKey: hasKey,
+      /** Misma info que auth-config.js: la anon key es pública (cliente Supabase). Sirve si auth-config.js viene vacío o bloqueado. */
+      supabaseUrl: url || "",
+      supabaseAnonKey: keyStr || "",
+      /** Para enlazar Crédito cuando /credito está oculto en este host (misma sesión Supabase si comparten proyecto). */
+      appOriginFallback: appOriginFallback(),
       edgeTargets: url ? FN_SLUGS.map((s) => edgeUrl(s)) : [],
       postTo: "POST /api/borrador-correo-proxy (esta ruta; la anterior con carpeta anidada daba 404 en Vercel)",
-      hint: !url || !key
+      hint: !url || !hasKey
         ? "Definí PUBLIC_SUPABASE_URL y PUBLIC_SUPABASE_ANON_KEY en Vercel y redeploy."
         : "OK. El formulario envía a esta misma ruta (POST, no a Supabase directo).",
     });
