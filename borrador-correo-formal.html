@@ -355,7 +355,7 @@
       </div>
       <h1>Borrador correo formal</h1>
       <p class="lead">
-        Redacta destinatario, asunto y mensaje. <strong>Sin iniciar sesión</strong> podés usar <strong>tu Gmail u otro correo personal</strong>: el botón principal abre tu aplicación de correo (mailto). <strong>Con sesión de gerente</strong>, <strong>Enviar</strong> usa la cuenta Holistic vía <strong>Supabase</strong> + <strong>Resend</strong> (igual que cobranza). <strong>Envío automático cada 1 seg</strong> solo con sesión de gerente; reenvía mientras la pestaña siga abierta. Usá <strong>Parar</strong> para cortarlo.
+        Redacta destinatario, asunto y mensaje. <strong>Sin iniciar sesión</strong>, el botón principal abre <strong>Gmail en el navegador</strong> con el borrador listo: podés mandar con <strong>cualquier cuenta Google</strong> que tengas (cambiá cuenta dentro de Gmail si hace falta). <strong>Otro correo</strong> (Outlook, Mail de Apple, etc.): botón secundario mailto. <strong>Con sesión de gerente</strong>, <strong>Enviar</strong> usa Holistic vía <strong>Supabase</strong> + <strong>Resend</strong>. <strong>Envío automático cada 1 seg</strong> solo con gerente; usá <strong>Parar</strong> para cortarlo.
       </p>
 
       <div id="session-bar" class="session-bar session-warn" role="status">
@@ -383,7 +383,7 @@
       </button>
       <button type="button" class="btn-secondary" id="open-mailto">
         <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
-        Abrir en mi correo (alternativa)
+        Otro programa de correo (mailto)
       </button>
       <button type="button" class="btn-secondary" id="auto-send-toggle" disabled>
         <i class="fas fa-clock" aria-hidden="true"></i>
@@ -517,12 +517,15 @@
           sendBtn.disabled = false;
           sendBtn.removeAttribute("title");
           sendBtn.innerHTML =
-            '<i class="fas fa-envelope" aria-hidden="true"></i> Abrir en mi correo (Gmail / personal)';
+            '<i class="fab fa-google" aria-hidden="true"></i> Abrir borrador en Gmail (web)';
           sendBtn.setAttribute(
             "title",
-            "Abre Gmail, Outlook o tu app de correo; el envío sale desde tu cuenta personal."
+            "Abre mail.google.com con Para, asunto y texto. Usá la cuenta Google que quieras (cambiá perfil en Gmail si hace falta)."
           );
-          if (mailtoBtn) mailtoBtn.style.display = "none";
+          if (mailtoBtn) {
+            mailtoBtn.style.display = "";
+            mailtoBtn.setAttribute("title", "Abre Outlook, Apple Mail u otra app con mailto (no Gmail web).");
+          }
           return;
         }
         if (hasSession) {
@@ -530,16 +533,22 @@
           sendBtn.removeAttribute("title");
           sendBtn.innerHTML =
             '<i class="fas fa-paper-plane" aria-hidden="true"></i> Enviar correo (Holistic / Resend)';
-          if (mailtoBtn) mailtoBtn.style.display = "";
+          if (mailtoBtn) {
+            mailtoBtn.style.display = "";
+            mailtoBtn.removeAttribute("title");
+          }
         } else {
           sendBtn.disabled = false;
           sendBtn.innerHTML =
-            '<i class="fas fa-envelope" aria-hidden="true"></i> Abrir en mi correo (tu Gmail / personal)';
+            '<i class="fab fa-google" aria-hidden="true"></i> Abrir borrador en Gmail (web)';
           sendBtn.setAttribute(
             "title",
-            "Sin sesión de gerente: el mensaje se envía desde tu correo (Gmail, Outlook…), no desde Holistic."
+            "Gmail web: cualquier cuenta @gmail.com o Google Workspace con la que inicies sesión en el navegador."
           );
-          if (mailtoBtn) mailtoBtn.style.display = "none";
+          if (mailtoBtn) {
+            mailtoBtn.style.display = "";
+            mailtoBtn.setAttribute("title", "Si no usás Gmail web: Outlook, Mail, Thunderbird…");
+          }
         }
       }
 
@@ -548,7 +557,7 @@
         if (!supabaseUrl || !supabaseAnon) {
           sessionBar.className = "session-bar session-warn";
           sessionBar.innerHTML =
-            "Sin configuración de Supabase no podés usar envío Holistic; igual podés <strong>mandar desde tu Gmail</strong> con el botón principal (abre tu app de correo). Para Resend + gerente: definí <code>PUBLIC_SUPABASE_URL</code> y <code>PUBLIC_SUPABASE_ANON_KEY</code> en Vercel. <a href=\"" +
+            "Sin Supabase no hay envío Holistic; igual podés <strong>abrir Gmail en el navegador</strong> con el botón principal (borrador listo; cualquier cuenta Google). Para Resend + gerente: <code>PUBLIC_SUPABASE_URL</code> y <code>PUBLIC_SUPABASE_ANON_KEY</code> en Vercel. <a href=\"" +
             esc(PROXY_PATH) +
             '" target="_blank" rel="noopener">GET ' +
             esc(PROXY_PATH) +
@@ -567,7 +576,7 @@
               "Sesión gerente: <strong>" +
               esc(email) +
               '</strong> · <button type="button" id="btn-logout">Cerrar sesión</button>' +
-              " · También podés usar «Abrir en mi correo» para mandar desde tu cuenta personal.";
+              " · También podés usar Gmail web u «Otro programa (mailto)».";
             var lo = document.getElementById("btn-logout");
             if (lo) {
               lo.onclick = function () {
@@ -582,7 +591,7 @@
         } else {
           sessionBar.className = "session-bar session-warn";
           sessionBar.innerHTML =
-            'No iniciaste sesión como gerente. Podés <strong>enviar desde tu Gmail u otro correo personal</strong> con el botón principal (se abre tu programa de correo). Para enviar con la cuenta Holistic (Resend), <a href="' +
+            'Sin sesión gerente: el botón principal abre <strong>Gmail en el navegador</strong> (cualquier cuenta Google). «Otro programa» usa mailto. Para envío Holistic (Resend), <a href="' +
             esc(creditoLoginHref()) +
             '">iniciá sesión en Crédito</a> y volvé aquí.';
           if (autoSendBtn) autoSendBtn.disabled = true;
@@ -797,6 +806,38 @@
         }
       }
 
+      /** URL de redacción de Gmail (web): respeta la cuenta Google activa en el navegador; podés cambiar cuenta en Gmail. */
+      function buildGmailWebComposeUrl(toAddr, subject, body) {
+        var p = new URLSearchParams();
+        if (toAddr) p.set("to", toAddr);
+        if (subject) p.set("su", subject);
+        if (body) p.set("body", body);
+        return "https://mail.google.com/mail/?view=cm&fs=1&tf=1&" + p.toString();
+      }
+
+      function openGmailWebCompose() {
+        var payload = validateFields();
+        if (!payload) return;
+        var url = buildGmailWebComposeUrl(payload.to, payload.subject, payload.body);
+        if (url.length > 7500) {
+          showStatus(
+            false,
+            "El texto es muy largo para el enlace de Gmail. Acortá el mensaje o usá «Otro programa de correo (mailto)»."
+          );
+          return;
+        }
+        clearStatus();
+        var w = window.open(url, "_blank", "noopener,noreferrer");
+        if (!w) {
+          window.location.href = url;
+          return;
+        }
+        showStatus(
+          true,
+          "En Gmail elegí la cuenta (icono arriba a la derecha), revisá el borrador y enviá."
+        );
+      }
+
       function openMailtoComposer() {
         var payload = validateFields();
         if (!payload) return;
@@ -874,8 +915,7 @@
           runSend(false);
           return;
         }
-        clearStatus();
-        openMailtoComposer();
+        openGmailWebCompose();
       });
 
       if (autoSendBtn) {
