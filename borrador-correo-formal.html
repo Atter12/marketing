@@ -4,12 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Borrador correo formal | Holistic Marketing</title>
-  <link rel="icon" type="image/png" href="/pendientes/favicon/favicon.png" />
-  <link rel="shortcut icon" type="image/png" href="/pendientes/favicon/favicon.png" />
+  <link rel="icon" type="image/png" href="/shared/favicon/favicon.png" />
+  <link rel="shortcut icon" type="image/png" href="/shared/favicon/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/pendientes/holistic-design-system.css" />
+  <link
+    rel="stylesheet"
+    href="/shared/holistic-design-system.css"
+    onerror="console.error('[borrador-correo] CSS failed to load:', this.href, '(usá /shared/* en este sitio; /pendientes/* está bloqueado en Vercel).')"
+  />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -407,7 +411,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
+      var LOG = "[borrador-correo]";
+      function log() {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift(LOG);
+        console.log.apply(console, args);
+      }
+      function logWarn() {
+        var args = Array.prototype.slice.call(arguments);
+        args.unshift(LOG);
+        console.warn.apply(console, args);
+      }
+
       var PROXY_PATH = "/api/borrador-correo-proxy";
+      log("init", "href=", window.location.href);
 
       var defaultBody =
         "Estimada/o,\n\n" +
@@ -549,10 +566,24 @@
         });
       }
 
-      function bootstrapSupabase(urlRaw, keyRaw) {
+      function bootstrapSupabase(urlRaw, keyRaw, sourceTag) {
         var url = String(urlRaw || "").trim();
         var key = String(keyRaw || "").trim();
-        if (!url || !key || !window.supabase || !window.supabase.createClient) return false;
+        if (!window.supabase || !window.supabase.createClient) {
+          logWarn("bootstrap skipped: supabase UMD not loaded", sourceTag || "");
+          return false;
+        }
+        if (!url || !key) {
+          log("bootstrap skip empty config", sourceTag || "", "hasUrl=", !!url, "hasKey=", !!key);
+          return false;
+        }
+        log("bootstrap OK", sourceTag || "", "urlHost=", (function () {
+          try {
+            return new URL(url).hostname;
+          } catch (e) {
+            return "?";
+          }
+        })());
         supabaseUrl = url.replace(/\/$/, "");
         supabaseAnon = key;
         var sk = holisticSupabaseAuthStorageKey(url);
@@ -584,25 +615,45 @@
 
       var wUrl = window.__SUPABASE_URL__;
       var wKey = window.__SUPABASE_ANON_KEY__;
-      if (bootstrapSupabase(wUrl, wKey)) {
+      log(
+        "auth-config script",
+        "hasUrl=",
+        !!(wUrl && String(wUrl).trim()),
+        "hasAnonKey=",
+        !!(wKey && String(wKey).trim())
+      );
+      if (bootstrapSupabase(wUrl, wKey, "auth-config.js")) {
         /* ok desde auth-config.js */
       } else {
+        log("fallback: GET", PROXY_PATH);
         fetch(PROXY_PATH, { credentials: "same-origin" })
           .then(function (r) {
+            log("proxy GET status=", r.status);
             return r.json().catch(function () {
               return {};
             });
           })
           .then(function (data) {
+            log(
+              "proxy GET body",
+              "hasSupabaseUrl=",
+              !!(data && data.supabaseUrl),
+              "hasAnonKey=",
+              !!(data && data.supabaseAnonKey),
+              "appOriginFallback=",
+              data && data.appOriginFallback ? "yes" : "no"
+            );
             if (data && data.appOriginFallback && !String(window.__APP_ORIGIN_FALLBACK__ || "").trim()) {
               window.__APP_ORIGIN_FALLBACK__ = String(data.appOriginFallback).replace(/\/$/, "");
             }
             if (data && data.supabaseUrl && data.supabaseAnonKey) {
-              if (bootstrapSupabase(data.supabaseUrl, data.supabaseAnonKey)) return;
+              if (bootstrapSupabase(data.supabaseUrl, data.supabaseAnonKey, "GET " + PROXY_PATH)) return;
             }
+            logWarn("session bar: sin credenciales Supabase tras proxy");
             renderSessionBar();
           })
-          .catch(function () {
+          .catch(function (err) {
+            logWarn("proxy GET failed", err && err.message ? err.message : err);
             renderSessionBar();
           });
       }
