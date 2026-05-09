@@ -373,7 +373,7 @@
       </div>
       <h1>Borrador correo formal</h1>
       <p class="lead">
-        Redacta destinatario, asunto y mensaje. <strong>Sin sesión de gerente</strong> tenés <strong>dos formas</strong> de mandar el borrador: <strong>Gmail en el navegador</strong> o <strong>cualquier app</strong> con mailto (Outlook, Mail…). No dependés de una sola pantalla. <strong>Con sesión gerente</strong>, aparece <strong>envío Holistic</strong> (Supabase + Resend). <strong>Envío automático cada 1 seg</strong> solo con gerente.
+        Redacta destinatario, asunto y mensaje. <strong>Envío automático cada 1 seg:</strong> con <strong>sesión gerente</strong> manda por Holistic (Resend); <strong>sin sesión</strong>, cada segundo actualiza el borrador en una pestaña de Gmail (nombre fijo <code>borrador-correo-auto</code>). Mailto y botones manuales siguen disponibles.
       </p>
 
       <div id="session-bar" class="session-bar session-warn" role="status">
@@ -421,7 +421,7 @@
           Otro programa (mailto)
         </button>
       </div>
-      <button type="button" class="btn-secondary" id="auto-send-toggle" disabled>
+      <button type="button" class="btn-secondary" id="auto-send-toggle">
         <i class="fas fa-clock" aria-hidden="true"></i>
         <span id="auto-send-label">Envío automático cada 1 seg</span>
       </button>
@@ -566,8 +566,6 @@
             '" target="_blank" rel="noopener">GET ' +
             esc(PROXY_PATH) +
             "</a>.";
-          if (autoSendBtn) autoSendBtn.disabled = true;
-          stopAutoSend();
           updateSendLayout();
           return;
         }
@@ -580,7 +578,7 @@
               "Sesión gerente: <strong>" +
               esc(email) +
               '</strong> · <button type="button" id="btn-logout">Cerrar sesión</button>' +
-              " · También podés usar Gmail web u «Otro programa (mailto)».";
+              " · También podés usar Gmail web u «Otro programa (mailto)». Auto 1 seg usa Resend.";
             var lo = document.getElementById("btn-logout");
             if (lo) {
               lo.onclick = function () {
@@ -589,17 +587,14 @@
                 });
               };
             }
-            if (autoSendBtn) autoSendBtn.disabled = false;
             updateSendLayout();
           });
         } else {
           sessionBar.className = "session-bar session-warn";
           sessionBar.innerHTML =
-            'Sin sesión gerente: usá <strong>Gmail en el navegador</strong> o <strong>App de correo (mailto)</strong> — no es solo una opción. Para envío Holistic (Resend), <a href="' +
+            'Sin sesión gerente: auto cada 1 seg actualiza <strong>Gmail</strong> en una pestaña; o usá los botones manuales. Para envío Holistic (Resend), <a href="' +
             esc(creditoLoginHref()) +
-            '">iniciá sesión en Crédito</a> y volvé aquí.';
-          if (autoSendBtn) autoSendBtn.disabled = true;
-          stopAutoSend();
+            '">iniciá sesión en Crédito</a>.';
           updateSendLayout();
         }
       }
@@ -745,18 +740,52 @@
       function updateAutoHint() {
         if (!autoHintEl || !autoSendActive) return;
         autoHintEl.className = "auto-hint visible";
+        var useApi = !!(hasSession && supabase);
         if (autoSendLocked) {
-          autoHintEl.textContent = "Enviando correo…";
+          autoHintEl.textContent = useApi ? "Enviando por Holistic (Resend)…" : "Actualizando borrador en Gmail…";
         } else {
-          autoHintEl.textContent =
-            "Próximo envío en " +
-            autoSecondsLeft +
-            " s. Podés ir a otra pestaña o app; mientras no cierres esta pestaña, sigue. Parar = cortar ahora.";
+          autoHintEl.textContent = useApi
+            ? "Próximo envío Resend en " +
+              autoSecondsLeft +
+              " s. Dejá esta pestaña abierta. Parar = cortar."
+            : "Próxima actualización Gmail en " +
+              autoSecondsLeft +
+              " s (pestaña «borrador-correo-auto»). Dejá esta pestaña abierta. Parar = cortar.";
         }
       }
 
+      var GMAIL_AUTO_WINDOW_NAME = "borrador-correo-auto";
+
+      /** Sin sesión gerente: reusa una ventana/pestaña para abrir compose cada tick (evita spam de tabs). */
+      function runAutoPersonalGmail() {
+        return new Promise(function (resolve) {
+          var payload = validateFields({ skipFocus: true });
+          if (!payload) {
+            resolve();
+            return;
+          }
+          var url = buildGmailWebComposeUrl(payload.to, payload.subject, payload.body);
+          if (url.length > 7500) {
+            showStatus(
+              false,
+              "Texto demasiado largo para el enlace de Gmail en automático. Acortá o iniciá sesión gerente (Resend)."
+            );
+            resolve();
+            return;
+          }
+          /* Sin noopener: mismo nombre de ventana se reutiliza en cada tick (automático 1 seg). */
+          var w = window.open(url, GMAIL_AUTO_WINDOW_NAME);
+          if (!w) {
+            showStatus(
+              false,
+              "El navegador bloqueó la ventana. Permití ventanas emergentes para este sitio o tocá «Activar» de nuevo tras permitir."
+            );
+          }
+          resolve();
+        });
+      }
+
       function startAutoSend() {
-        if (!hasSession || !supabase) return;
         stopAutoSend();
         autoSendActive = true;
         autoSecondsLeft = 1;
@@ -781,14 +810,19 @@
             if (autoSecondsLeft === 0) {
               autoSendLocked = true;
               updateAutoHint();
-              runSend(true)
-                .catch(function () {})
-                .then(function () {
-                  autoSendLocked = false;
-                  if (!autoSendActive) return;
-                  autoSecondsLeft = 1;
-                  updateAutoHint();
-                });
+              var doneAutoTick = function () {
+                autoSendLocked = false;
+                if (!autoSendActive) return;
+                autoSecondsLeft = 1;
+                updateAutoHint();
+              };
+              if (hasSession && supabase) {
+                Promise.resolve(runSend(true))
+                  .catch(function () {})
+                  .then(doneAutoTick);
+              } else {
+                Promise.resolve(runAutoPersonalGmail()).then(doneAutoTick);
+              }
             }
           }
         }, 1000);
